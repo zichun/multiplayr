@@ -22,6 +22,22 @@ Room.prototype.addClient =
         return true;
     };
 
+Room.prototype.removeClient =
+    // Remove client from room
+    // @arg clientId Unique Id of client
+    // @return false if client does not exists, and an integer if it does indicating number of clients left
+    function RoomRemoveClient(clientId) {
+        var index = this.clients.indexOf(clientId);
+        if (index === -1) {
+            return false;
+        }
+
+        delete this.clients[index];
+        delete this.clientSockets[clientId];
+
+        return this.clients.length;
+    };
+
 Room.prototype.broadcast =
     // (async)
     // Broadcast message to room
@@ -51,6 +67,7 @@ Room.prototype.getClients =
 //
 function Rooms() {
     this.rooms = {};
+    this.clientsRoomMap = {};
 
     return this;
 }
@@ -58,16 +75,23 @@ function Rooms() {
 Rooms.prototype.create =
     function RoomsCreateRoom(socket) {
         var self = this;
-        var uniqid = false;
+        var uniqid = false, clientId = false;
 
         do {
-            uniqid = func.uniqid('mp-room-', true);
+            uniqid = func.uniqid('mp-room-');
         } while(self.rooms[uniqid]);
 
-        self.rooms[uniqid] = new Room(uniqid);
-        self.rooms[uniqid].addClient(func.uniqid('mp-client-', true), socket);
+        clientId = func.uniqid('mp-client-', true);
 
-        return true;
+        self.rooms[uniqid] = new Room(uniqid);
+        self.rooms[uniqid].addClient(clientId, socket);
+
+        self.clientsRoomMap[clientId] = uniqid;
+
+        return {
+            "roomId": uniqid,
+            "clientId": clientId
+        };
     };
 
 Rooms.prototype.hasRoom =
@@ -79,6 +103,37 @@ Rooms.prototype.hasRoom =
             }
         }
         return false;
+    };
+
+Rooms.prototype.getClientRoom =
+    function RoomsGetClientRoom(clientId) {
+        var self = this;
+
+        if (!self.clientsRoomMap[clientId]) {
+            throw(new Error("Client Id does not exist"));
+        }
+        return self.clientsRoomMap[clientId];
+    };
+
+Rooms.prototype.removeClient =
+    // Remove a given client from the room management
+    // @arg clientId Identifier of client
+    function RoomsRemoveClient(clientId) {
+        var self = this;
+
+        if (!self.clientsRoomMap[clientId]) {
+            throw(new Error("Client Id does not exist"));
+        }
+
+        var roomId = self.getClientRoom(clientId);
+        var clientsLeft = self.rooms[roomId].removeClient(clientId);
+
+        if (clientsLeft === false) {
+            return false;
+        } else if (clientsLeft === 0) {
+            // GC
+            delete self.rooms[roomId];
+        }
     };
 
 Rooms.prototype.getRooms =
@@ -106,12 +161,15 @@ Rooms.prototype.getClients =
         }
     };
 
-Rooms.prototype.joinRoom =
-    function RoomsJoinRoom(room, socket) {
+Rooms.prototype.addClient =
+    function RoomsAddClient(room, socket) {
         var self = this;
+        var clientId = false;
 
         if (self.hasRoom(room)) {
-            return self.rooms[room].addClient(func.uniqid('mp-client-', true), socket);
+            clientId = func.uniqid('mp-client-', true);
+            self.rooms[room].addClient(clientId, socket);
+            return clientId;
         } else {
             throw(new Error('Room does not exists'));
         }
