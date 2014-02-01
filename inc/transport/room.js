@@ -1,20 +1,24 @@
-var func = require('inc.js');
+// todo: make all function async for future proofing
 
+var func = require('inc.js');
 
 //
 // Room Class
-// @arg socket  The socket.io object of the host
+// @arg roomId  Unique Identifier of room
 //
-function Room(socket) {
-    this.host = socket;
+function Room(roomId) {
+    this.id = roomId;
     this.clients = [];
+    this.clientSockets = {};
 }
 
 Room.prototype.addClient =
     // Add Client to Room
+    // @arg clientId Unique Id of client
     // @arg socket The socket.io object of the new client
-    function RoomAddClient(socket) {
-        this.clients.push(socket);
+    function RoomAddClient(clientId, socket) {
+        this.clients.push(clientId);
+        this.clientSockets[clientId] = socket;
         return true;
     };
 
@@ -24,15 +28,22 @@ Room.prototype.broadcast =
     // @arg message Message to send
     // @arg cb Callback function
     function RoomBroadcast(message, cb) {
-        function todo(node) {
-            node.emit('room-broadcast', message);
-        }
 
-        todo(this.host);
-        this.clients.forEach(todo);
+        this.clients.forEach(function(node) {
+            this.clientSockets[node].emit('room-broadcast', message);
+        });
 
         // todo: proper callback
         cb(true, 'ok');
+    };
+
+Room.prototype.getClients =
+    function RoomGetClients() {
+        var tr = [];
+        this.clients.forEach(function(client) {
+            tr.push(client);
+        });
+        return client;
     };
 
 //
@@ -50,10 +61,13 @@ Rooms.prototype.create =
         var uniqid = false;
 
         do {
-            uniqid = func.uniqid('mp-', true);
+            uniqid = func.uniqid('mp-room-', true);
         } while(self.rooms[uniqid]);
 
-        self.rooms[uniqid] = new Room(socket);
+        self.rooms[uniqid] = new Room(uniqid);
+        self.rooms[uniqid].addClient(func.uniqid('mp-client-', true), socket);
+
+        return true;
     };
 
 Rooms.prototype.hasRoom =
@@ -81,12 +95,23 @@ Rooms.prototype.getRooms =
         return rooms;
     };
 
+Rooms.prototype.getClients =
+    function RoomsGetClient(room) {
+        var self = this;
+
+        if (self.hasRoom(room)) {
+            return self.rooms[room].getClients();
+        } else {
+            throw(new Error('Room does not exists'));
+        }
+    };
+
 Rooms.prototype.joinRoom =
     function RoomsJoinRoom(room, socket) {
         var self = this;
 
         if (self.hasRoom(room)) {
-            return self.rooms[room].addClient(room);
+            return self.rooms[room].addClient(func.uniqid('mp-client-', true), socket);
         } else {
             throw(new Error('Room does not exists'));
         }
