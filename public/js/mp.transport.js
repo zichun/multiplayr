@@ -1,3 +1,4 @@
+var Mesh =
 (function() {
     // todo: (low priority) proper encapsulation of private data like self.peers, self.socket etc.
 
@@ -138,4 +139,6 @@
             }
         };
 
+
+    return Mesh;
 });
