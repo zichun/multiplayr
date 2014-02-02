@@ -15,6 +15,10 @@ function Init(io) {
             var room = rooms.create(socket);
             roomId = room.roomId;
             clientId = room.clientId;
+            fn({
+                roomId: roomId,
+                clientId: clientId
+            });
         });
 
         socket.on('join-room', function(data, fn) {
@@ -33,6 +37,10 @@ function Init(io) {
             if (rooms.hasRoom(data.room)) {
                 roomId = data.room;
                 clientId = rooms.addClient(data.room, socket);
+                fn({
+                    roomId: roomId,
+                    clientId: clientId
+                });
             } else {
                 return fn({
                     type: 'error',

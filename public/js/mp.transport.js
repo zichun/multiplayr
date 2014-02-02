@@ -1,4 +1,6 @@
 (function() {
+    // todo: (low priority) proper encapsulation of private data like self.peers, self.socket etc.
+
     var Events = ['join-room', 'leave-room', 'message', 'room-broadcast'];
 
     function isFunction(functionToCheck) {
@@ -11,6 +13,8 @@
         var self = this;
 
         self.peers = [];
+        self.roomId = null;
+        self.clientId = null;
 
         self.eventBindings = {};
         Events.forEach(function(evt) {
@@ -49,17 +53,52 @@
 
     Mesh.prototype.create =
         function MeshCreate() {
-            /// todo: implement
+            if (self.roomId !== null) {
+                throw(new Error("Client already belong to a Mesh"));
+            }
+            self.socket.emit('create-room', {}, function(data) {
+                // todo: handle error
+                self.roomId = data.roomId;
+                self.clientId = data.clientId;
+
+                if (isFunction(cb)) {
+                    cb(null, data);
+                }
+            });
         };
 
     Mesh.prototype.join =
-        function MeshJoin(id) {
-            /// todo: implement
+        function MeshJoin(id, cb) {
+            if (self.roomId !== null) {
+                throw(new Error("Client already belong to a Mesh"));
+            }
+            self.socket.emit('join-room', {room: id}, function(data) {
+                // todo: handle error
+                self.roomId = data.roomId;
+                self.clientId = data.clientId;
+
+                if (isFunction(cb)) {
+                    cb(null, data);
+                }
+            });
         };
 
     Mesh.prototype.sendMessage =
-        function MeshSendMessage(clientId, message) {
-            /// todo: implement
+        function MeshSendMessage(clientId, message, cb) {
+            if (self.roomId === null) {
+                throw(new Error("Client does not belong to a Mesh. Call create or join"));
+            }
+            self.socket.emit('send-message',
+                             {
+                                 message: message,
+                                 to: clientId
+                             },
+                             function(data) {
+                                 // todo: handle error
+                                 if (isFunction(cb)) {
+                                     cb(null, data);
+                                 }
+                             });
         };
 
     Mesh.prototype.on =
