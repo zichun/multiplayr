@@ -72,7 +72,11 @@ function init(io) {
         });
 
         socket.on('disconnect', function() {
-            rooms.removeClient(clientId);
+            console.log('wtf');
+            console.log(clientId);
+            if (clientId !== false) {
+                rooms.removeClient(clientId);
+            }
         });
     });
 }

@@ -2,7 +2,7 @@ var Mesh =
 (function() {
     // todo: (low priority) proper encapsulation of private data like self.peers, self.socket etc.
 
-    var Events = ['join-room', 'leave-room', 'message', 'room-broadcast'];
+    var Events = ['join-room', 'leave-room', 'message', 'room-broadcast', 'error'];
 
     function isFunction(functionToCheck) {
         var getType = {};
@@ -45,7 +45,14 @@ var Mesh =
         });
 
         self.on('leave-room', function(data) {
-            self.peers.indexOf(data.message);
+            var ind = self.peers.indexOf(data.message);
+            if (ind >= 0) {
+                self.peers.splice(ind, 1);
+            }
+        });
+
+        self.on('error', function(data) {
+            console.log('Error: ' + data.message);
         });
 
         return this;
@@ -57,8 +64,12 @@ var Mesh =
             if (self.roomId !== null) {
                 throw(new Error("Client already belong to a Mesh"));
             }
+
             self.socket.emit('create-room', {}, function(data) {
-                // todo: handle error
+                if (data.type === 'error') {
+                    return self.emit('error', data);
+                }
+
                 self.roomId = data.roomId;
                 self.clientId = data.clientId;
 
@@ -75,7 +86,10 @@ var Mesh =
                 throw(new Error("Client already belong to a Mesh"));
             }
             self.socket.emit('join-room', {room: id}, function(data) {
-                // todo: handle error
+                if (data.type === 'error') {
+                    return self.emit('error', data);
+                }
+
                 self.roomId = data.roomId;
                 self.clientId = data.clientId;
 
@@ -97,7 +111,12 @@ var Mesh =
                                  to: clientId
                              },
                              function(data) {
-                                 // todo: handle error
+                                 if (data.type === 'error') {
+                                     self.emit('error', data);
+                                     cb(data.message, data);
+                                     return;
+                                 }
+
                                  if (isFunction(cb)) {
                                      cb(null, data);
                                  }

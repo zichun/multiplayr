@@ -83,7 +83,6 @@ Room.prototype.broadcast =
     // @arg cb Callback function
     function RoomBroadcast(type, message, cb) {
         var self = this;
-
         self.clients.forEach(function(node) {
             self.sendMessage(node, 'room-broadcast', { type: type, message: message }, function() {});
         });
@@ -167,14 +166,16 @@ Rooms.prototype.removeClient =
         var roomId = self.getClientRoom(clientId);
         var clientsLeft = self.rooms[roomId].removeClient(clientId);
 
+        delete self.clientsRoomMap[clientId];
+
+        self.rooms[roomId].broadcast('leave-room', clientId, function() {});
+
         if (clientsLeft === false) {
             return false;
         } else if (clientsLeft === 0) {
             // GC
             delete self.rooms[roomId];
         }
-
-        self.broadcast('leave-room', clientId, function() {});
     };
 
 Rooms.prototype.getRooms =
@@ -210,13 +211,14 @@ Rooms.prototype.addClient =
         if (self.hasRoom(room)) {
             clientId = func.uniqid('mp-client-', true);
             self.rooms[room].addClient(clientId, socket);
+            self.clientsRoomMap[clientId] = room;
             return clientId;
         } else {
             throw(new Error('Room does not exists'));
         }
     };
 
-Rooms.prototype.broadcast =
+/*Rooms.prototype.broadcast =
     // (Async)
     // Broadcast a message to a particular room
     // @arg room Name of room
@@ -230,7 +232,7 @@ Rooms.prototype.broadcast =
         } else {
             cb('Room does not exists', false);
         }
-    };
+    };*/
 
 Rooms.prototype.sendMessage =
     function RoomsSendMessage(room, from, to, message, cb) {
