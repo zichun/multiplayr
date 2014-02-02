@@ -1,29 +1,102 @@
-function Mesh(io, uri) {
-    var socket = this.socket = io.connect(uri);
+(function() {
+    var Events = ['join-room', 'leave-room', 'message', 'room-broadcast'];
 
-    socket.on('client-sendmessage', function(data) {
-    });
+    function isFunction(functionToCheck) {
+        var getType = {};
+        return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+    }
 
-    socket.on('room-broadcast', function(data) {
-    });
-}
+    function Mesh(io, uri) {
+        var socket = self.socket = io.connect(uri);
+        var self = this;
 
-Mesh.prototype.create =
-    function MeshCreate() {
-        /// todo: implement
-    };
+        self.peers = [];
 
-Mesh.prototype.join =
-    function MeshJoin(id) {
-        /// todo: implement
-    };
+        self.eventBindings = {};
+        Events.forEach(function(evt) {
+            self.eventBindings[evt] = [];
+        });
 
-Mesh.prototype.sendMessage =
-    function MeshSendMessage(clientId, message) {
-        /// todo: implement
-    };
 
-Mesh.prototype.on =
-    function MeshOn(evt, callback) {
-        /// todo: implement
-    };
+        socket.on('client-sendmessage', function(data) {
+            self.emit('message', data);
+        });
+
+        socket.on('room-broadcast', function(data) {
+            switch(data.type) {
+            case 'join-room':
+                self.emit('join-room', data);
+                break;
+            case 'leave-room':
+                self.emit('leave-room', data);
+                break;
+            default:
+                self.emit('room-broadcast', data);
+                break;
+            }
+        });
+
+        self.on('join-room', function(data) {
+            self.peers.push(data.message);
+        });
+
+        self.on('leave-room', function(data) {
+            self.peers.indexOf(data.message);
+        });
+
+        return this;
+    }
+
+    Mesh.prototype.create =
+        function MeshCreate() {
+            /// todo: implement
+        };
+
+    Mesh.prototype.join =
+        function MeshJoin(id) {
+            /// todo: implement
+        };
+
+    Mesh.prototype.sendMessage =
+        function MeshSendMessage(clientId, message) {
+            /// todo: implement
+        };
+
+    Mesh.prototype.on =
+        function MeshOn(evt, callback) {
+            var self = this;
+            if (Events.indexOf(evt) === -1) {
+                throw(new Error("Invalid event: " + evt));
+            } else if (!isFunction(callback)) {
+                throw(new Error("Invalid callback argument"));
+            } else {
+                self.eventBindings[evt].push(callback);
+            }
+        };
+
+    Mesh.prototype.off =
+        function MeshOff(evt, callback) {
+            if (Events.indexOf(evt) === -1) {
+                throw(new Error("Invalid event: " + evt));
+            } else {
+                var ind = self.eventBindings[evt].indexOf(callback);
+                if (ind >= 0) {
+                    self.eventBindings[evt].splice(ind, 1);
+                }
+            }
+        };
+
+    Mesh.prototype.emit =
+        function MeshEmit(evt, data) {
+            var self = this;
+
+            if (Events.indexOf(evt) === -1) {
+                throw(new Error("Invalid event: " + evt));
+            } else {
+                self.eventBindings[evt].forEach(function(cb) {
+                    cb.call(self, data);
+                });
+            }
+        };
+
+});

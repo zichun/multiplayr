@@ -63,7 +63,7 @@ Room.prototype.removeClient =
             return false;
         }
 
-        delete this.clients[index];
+        this.clients.splice(index, 1);
         delete this.clientSockets[clientId];
 
         return this.clients.length;
@@ -220,7 +220,7 @@ Rooms.prototype.broadcast =
         var self = this;
 
         if (self.hasRoom(room)) {
-            self.rooms(room).broadcast(message, cb);
+            self.rooms[room].broadcast(message, cb);
         } else {
             cb('Room does not exists', false);
         }
@@ -231,7 +231,7 @@ Rooms.prototype.sendMessage =
         var self = this;
 
         if (self.hasRoom(room)) {
-            self.rooms(room).clientSendMessage(from, to, message, cb);
+            self.rooms[room].clientSendMessage(from, to, message, cb);
         } else {
             cb('Room does not exists', false);
         }
