@@ -1,6 +1,6 @@
 // todo: make all function async for future proofing
 
-var func = require('inc.js');
+var func = require('./inc.js');
 
 //
 // Room Class
@@ -14,6 +14,7 @@ function Room(roomId) {
 
 Room.prototype.sendMessage =
     function RoomSendMessage(to, type, message, cb) {
+        var self = this;
         if (!self.hasClient(to)) {
             return cb('Invalid receipient', false);
         } else {
@@ -39,6 +40,11 @@ Room.prototype.clientSendMessage =
                              },
                              cb);
         }
+    };
+
+Room.prototype.hasClient =
+    function RoomHasClient(clientId) {
+        return this.clients.indexOf(clientId) >= 0;
     };
 Room.prototype.addClient =
     // Add Client to Room
@@ -236,3 +242,5 @@ Rooms.prototype.sendMessage =
             cb('Room does not exists', false);
         }
     };
+
+module.exports = Rooms;

@@ -1,8 +1,10 @@
+var Rooms = require('./room.js');
+
 var rooms = new Rooms();
 
-function Init(io) {
+function init(io) {
     io.sockets.on('connection', function (socket) {
-        var roomId, clientId;
+        var roomId = false, clientId = false;
 
         socket.on('create-room', function (data, fn) {
             if (roomId !== false || clientId !== false) {
@@ -76,4 +78,6 @@ function Init(io) {
 }
 
 
-module.export = Init;
+module.exports = {
+    init: init
+};

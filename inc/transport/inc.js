@@ -44,3 +44,7 @@ function uniqid(prefix, more_entropy) {
 
     return retId;
 }
+
+module.exports = {
+    uniqid: uniqid
+};

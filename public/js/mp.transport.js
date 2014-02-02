@@ -10,8 +10,8 @@ var Mesh =
     }
 
     function Mesh(io, uri) {
-        var socket = self.socket = io.connect(uri);
         var self = this;
+        var socket = self.socket = io.connect(uri);
 
         self.peers = [];
         self.roomId = null;
@@ -21,7 +21,6 @@ var Mesh =
         Events.forEach(function(evt) {
             self.eventBindings[evt] = [];
         });
-
 
         socket.on('client-sendmessage', function(data) {
             self.emit('message', data);
@@ -53,7 +52,8 @@ var Mesh =
     }
 
     Mesh.prototype.create =
-        function MeshCreate() {
+        function MeshCreate(cb) {
+            var self = this;
             if (self.roomId !== null) {
                 throw(new Error("Client already belong to a Mesh"));
             }
@@ -70,6 +70,7 @@ var Mesh =
 
     Mesh.prototype.join =
         function MeshJoin(id, cb) {
+            var self = this;
             if (self.roomId !== null) {
                 throw(new Error("Client already belong to a Mesh"));
             }
@@ -86,6 +87,7 @@ var Mesh =
 
     Mesh.prototype.send =
         function MeshSend(clientId, message, cb) {
+            var self = this;
             if (self.roomId === null) {
                 throw(new Error("Client does not belong to a Mesh. Call create or join"));
             }
@@ -139,6 +141,5 @@ var Mesh =
             }
         };
 
-
     return Mesh;
-});
+})();
