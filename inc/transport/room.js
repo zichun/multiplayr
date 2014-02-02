@@ -225,3 +225,14 @@ Rooms.prototype.broadcast =
             cb(false, 'Room does not exists');
         }
     };
+
+Rooms.prototype.sendMessage =
+    function RoomsSendMessage(room, from, to, message, cb) {
+        var self = this;
+
+        if (self.hasRoom(room)) {
+            self.rooms(room).clientSendMessage(from, to, message, cb);
+        } else {
+            cb(false, 'Room does not exists');
+        }
+    };
