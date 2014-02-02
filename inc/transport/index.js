@@ -4,9 +4,10 @@ function Init(io) {
     io.sockets.on('connection', function (socket) {
         var roomId, clientId;
 
-        socket.on('create-room', function () {
+        socket.on('create-room', function (data, fn) {
             if (roomId !== false || clientId !== false) {
-                return socket.emit('error', {
+                return fn({
+                    type: 'error',
                     message: 'Client already belong to an existing mesh'
                 });
             }
@@ -16,13 +17,15 @@ function Init(io) {
             clientId = room.clientId;
         });
 
-        socket.on('join-room', function(data) {
+        socket.on('join-room', function(data, fn) {
             if (typeof data.room !== 'string') {
-                return socket.emit('error', {
+                return fn({
+                    type: 'error',
                     message: 'Invalid request'
                 });
             } else if (roomId !== false || clientId !== false) {
-                return socket.emit('error', {
+                return fn({
+                    type: 'error',
                     message: 'Client already belong to an existing mesh'
                 });
             }
@@ -31,10 +34,31 @@ function Init(io) {
                 roomId = data.room;
                 clientId = rooms.addClient(data.room, socket);
             } else {
-                return socket.emit('error', {
-                    message: 'Room ' + data.room + ' does not exists'
+                return fn({
+                    type: 'error',
+                    message: 'Room ' + data.room + 'does not exists'
                 });
             }
+        });
+
+        socket.on('send-message', function(data, fn) {
+            if (typeof data.message === 'undefined' || typeof data.to !== 'string') {
+                return fn({
+                    type: 'error',
+                    message: 'Invalid request'
+                });
+            }
+
+            rooms.sendMessage(roomId, clientId, data.to, data.message, function(err, doc) {
+                if (err) {
+                    return fn({
+                        type: 'error',
+                        message: err
+                    });
+                } else {
+                    fn(doc);
+                }
+            });
         });
 
         socket.on('disconnect', function() {

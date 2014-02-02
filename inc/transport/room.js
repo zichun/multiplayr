@@ -15,7 +15,7 @@ function Room(roomId) {
 Room.prototype.sendMessage =
     function RoomSendMessage(to, type, message, cb) {
         if (!self.hasClient(to)) {
-            return cb(false, 'Invalid receipient');
+            return cb('Invalid receipient', false);
         } else {
             this.clientSockets[to].emit(type, message);
             // todo: proper callback
@@ -29,7 +29,7 @@ Room.prototype.clientSendMessage =
         var self = this;
 
         if (!self.hasClient(from) || !self.hasClient(to)) {
-            cb(false, 'Invalid sender / receipient');
+            cb('Invalid sender / receipient', false);
         } else {
             self.sendMessage(to,
                              'client-sendmessage',
@@ -83,7 +83,7 @@ Room.prototype.broadcast =
         });
 
         // todo: proper callback
-        cb(true, 'ok');
+        cb(null, true);
     };
 
 Room.prototype.getClients =
@@ -222,7 +222,7 @@ Rooms.prototype.broadcast =
         if (self.hasRoom(room)) {
             self.rooms(room).broadcast(message, cb);
         } else {
-            cb(false, 'Room does not exists');
+            cb('Room does not exists', false);
         }
     };
 
@@ -233,6 +233,6 @@ Rooms.prototype.sendMessage =
         if (self.hasRoom(room)) {
             self.rooms(room).clientSendMessage(from, to, message, cb);
         } else {
-            cb(false, 'Room does not exists');
+            cb('Room does not exists', false);
         }
     };
