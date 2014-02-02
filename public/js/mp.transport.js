@@ -84,8 +84,8 @@ var Mesh =
             });
         };
 
-    Mesh.prototype.sendMessage =
-        function MeshSendMessage(clientId, message, cb) {
+    Mesh.prototype.send =
+        function MeshSend(clientId, message, cb) {
             if (self.roomId === null) {
                 throw(new Error("Client does not belong to a Mesh. Call create or join"));
             }
