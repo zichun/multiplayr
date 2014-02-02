@@ -12,13 +12,44 @@ function Room(roomId) {
     this.clientSockets = {};
 }
 
+Room.prototype.sendMessage =
+    function RoomSendMessage(to, type, message, cb) {
+        if (!self.hasClient(to)) {
+            return cb(false, 'Invalid receipient');
+        } else {
+            this.clientSockets[to].emit(type, message);
+            // todo: proper callback
+        }
+    };
+
+Room.prototype.clientSendMessage =
+    // (async)
+    // Send Messages from a client
+    function RoomClientSendMessage(from, to, message, cb) {
+        var self = this;
+
+        if (!self.hasClient(from) || !self.hasClient(to)) {
+            cb(false, 'Invalid sender / receipient');
+        } else {
+            self.sendMessage(to,
+                             'client-sendmessage',
+                             {
+                                 from: from,
+                                 message: message
+                             },
+                             cb);
+        }
+    };
 Room.prototype.addClient =
     // Add Client to Room
     // @arg clientId Unique Id of client
     // @arg socket The socket.io object of the new client
     function RoomAddClient(clientId, socket) {
-        this.clients.push(clientId);
-        this.clientSockets[clientId] = socket;
+        var self = this;
+
+        self.broadcast('join-room', clientId, function() {});
+        self.clients.push(clientId);
+        self.clientSockets[clientId] = socket;
         return true;
     };
 
@@ -41,12 +72,14 @@ Room.prototype.removeClient =
 Room.prototype.broadcast =
     // (async)
     // Broadcast message to room
+    // @arg type Type of message
     // @arg message Message to send
     // @arg cb Callback function
-    function RoomBroadcast(message, cb) {
+    function RoomBroadcast(type, message, cb) {
+        var self = this;
 
-        this.clients.forEach(function(node) {
-            this.clientSockets[node].emit('room-broadcast', message);
+        self.clients.forEach(function(node) {
+            self.sendMessage(node, 'room-broadcast', { type: type, message: message }, function() {});
         });
 
         // todo: proper callback
@@ -134,6 +167,8 @@ Rooms.prototype.removeClient =
             // GC
             delete self.rooms[roomId];
         }
+
+        self.broadcast('leave-room', clientId, function() {});
     };
 
 Rooms.prototype.getRooms =
