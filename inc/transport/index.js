@@ -72,10 +72,20 @@ function init(io) {
         });
 
         socket.on('disconnect', function() {
-            console.log('wtf');
-            console.log(clientId);
             if (clientId !== false) {
                 rooms.removeClient(clientId);
+            }
+        });
+
+        // Get connected clients to room
+        socket.on('room-clients', function(data, fn) {
+            if (clientId === false) {
+                return fn({
+                        type: 'error',
+                        message: 'Not connected to room yet'
+                });
+            } else {
+                return fn(rooms.getClients(romId));
             }
         });
     });

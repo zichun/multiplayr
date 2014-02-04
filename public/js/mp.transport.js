@@ -67,6 +67,7 @@ var Mesh =
 
             self.socket.emit('create-room', {}, function(data) {
                 if (data.type === 'error') {
+                    if (isFunction(cb)) cb(data.message, data);
                     return self.emit('error', data);
                 }
 
@@ -87,14 +88,34 @@ var Mesh =
             }
             self.socket.emit('join-room', {room: id}, function(data) {
                 if (data.type === 'error') {
+                    if (isFunction(cb)) cb(data.message, data);
                     return self.emit('error', data);
                 }
 
                 self.roomId = data.roomId;
                 self.clientId = data.clientId;
 
+                // Get connected peers
+                self.socket.emit('room-clients', {}, function(data) {
+                    if (data.type === 'error') {
+                        return self.emit('error', data);
+                    } else {
+                        self.updatePeers(data);
+                    }
+                });
+
                 if (isFunction(cb)) {
                     cb(null, data);
+                }
+            });
+        };
+
+    Mesh.prototype.updatePeers =
+        function MeshUpdatePeers(peers) {
+            var self = this;
+            peers.forEach(function(peer) {
+                if (self.peers.indexOf(peer) === -1) {
+                    self.peers.push(peer);
                 }
             });
         };
@@ -112,8 +133,10 @@ var Mesh =
                              },
                              function(data) {
                                  if (data.type === 'error') {
+                                     if (isFunction(cb)) {
+                                         cb(data.message, data);
+                                     }
                                      self.emit('error', data);
-                                     cb(data.message, data);
                                      return;
                                  }
 
