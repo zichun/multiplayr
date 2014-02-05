@@ -160,6 +160,7 @@ var Mesh =
 
     Mesh.prototype.off =
         function MeshOff(evt, callback) {
+            var self = this;
             if (Events.indexOf(evt) === -1) {
                 throw(new Error("Invalid event: " + evt));
             } else {
