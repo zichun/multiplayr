@@ -85,7 +85,7 @@ function init(io) {
                         message: 'Not connected to room yet'
                 });
             } else {
-                return fn(rooms.getClients(romId));
+                return fn(rooms.getClients(roomId));
             }
         });
     });
