@@ -11,7 +11,7 @@ var Mesh =
 
     function Mesh(io, uri) {
         var self = this;
-        var socket = self.socket = io.connect(uri);
+        var socket = self.socket = io.connect(uri, {'force new connection': true});
 
         self.peers = [];
         self.roomId = null;
@@ -94,7 +94,6 @@ var Mesh =
 
                 self.roomId = data.roomId;
                 self.clientId = data.clientId;
-
                 // Get connected peers
                 self.socket.emit('room-clients', {}, function(data) {
                     if (data.type === 'error') {

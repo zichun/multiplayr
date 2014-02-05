@@ -17,5 +17,9 @@ app.get('/', function (req, res) {
     res.sendfile(__dirname + '/index.html');
 });
 
+app.get('/test.html', function (req, res) {
+	res.sendfile(__dirname + '/tests/test.html');
+});
+
 var transport = require('./inc/transport');
 transport.init(io);

@@ -97,7 +97,7 @@ Room.prototype.getClients =
         this.clients.forEach(function(client) {
             tr.push(client);
         });
-        return client;
+        return this.client;
     };
 
 //

@@ -1,0 +1,30 @@
+<html>
+<head>
+	<title>Test</title>
+</head>
+<body>
+	Test cases
+	----------
+
+	Please open the console
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="/js/mp.transport.js"></script>
+	<script src="/js/mp.gameengine.js"></script>
+
+	<script>
+	// This only works because this is the last script tag. All libraries should
+	// 1. load before this
+	// 2. not load on document.onready
+	function test1() {
+		var m1 = new Mesh(io, 'http://localhost:8080');
+		var m2 = new Mesh(io, 'http://localhost:8080');
+		m1.create();
+		setTimeout(function () {
+			m2.join(m1.roomId);
+		}, 100);	
+	}
+
+	test1();
+	
+	</script>
+</body>
