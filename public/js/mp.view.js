@@ -1,79 +1,24 @@
-var MPView = (function() {
+// todo: deprecate MPViewRule. JSON object sufficient
 
-function MPView(name, markup) {
+var MPViewRule = (function() {
+
+function MPViewRule(name, markup, initFunc) {
     var self = this;
 
     self.name = name;
     self.markup = markup;
-    self.eventBindings = {};
-    self.playerObj = {};
-    self.container = document.body;
+    self.initFunc = initFunc;
 
     return self;
 }
 
-MPView.prototype.getName =
-    function MPViewGetName() {
+MPViewRule.prototype.getName =
+    function MPViewRuleGetName() {
         return this.name;
     };
 
-MPView.prototype.emit =
-    function MPViewEmit(evt, data, selfObj) {
-        var self = this;
-        selfObj = selfObj || self.container;
-        if (typeof self.eventBindings[evt] === 'undefined') {
-            return;
-        }
-        self.eventBindings[evt].forEach(function(cb) {
-            cb.call(selfObj, data);
-        });
-    };
-
-MPView.prototype.on =
-    function MPViewOn(evt, cb) {
-        var self = this;
-        if (typeof self.eventBindings[evt] === 'undefined') {
-            self.eventBindings[evt] = [];
-        }
-        self.eventBindings[evt].push(cb);
-    };
-
-MPView.prototype.off =
-    function MPPlayerRuleOff(evt, callback) {
-        var self = this;
-        var ind = self.eventBindings[evt].indexOf(callback);
-        if (ind >= 0) {
-            self.eventBindings[evt].splice(ind, 1);
-        }
-    };
-
-MPView.prototype.getPlayerObj =
-    function MPViewGetPlayerObj() {
-        var self = this;
-        return self.playerObj;
-    };
-
-MPView.prototype.render =
-    function MPViewRender(data, container, playerObj) {
-        var self = this;
-
-        // todo: consider having a ViewRule and a ViewObj ala Player.
-        // player object should not be bound at rule level
-        self.playerObj = playerObj;
-
-        self.container = container || document.body;
-        
-        $(self.container).html(
-            js_tmpl(self.markup, data));
-
-        self.emit('load', {}, $(self.container));
-    };
-
-    return MPView;
+    return MPViewRule;
 })();
-
-
-
 
 
 

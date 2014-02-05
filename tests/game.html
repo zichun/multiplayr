@@ -20,7 +20,13 @@
         <div id="host-container" style="border:1px solid black; height: 300px;">
         </div>
 
-        <div id="client-container" style="margin-top: 10px; border: 1px solid black; height: 300px;">
+        <div id="client0-container" style="margin-top: 10px; border: 1px solid black; height: 300px;">
+        </div>
+
+        <div id="client1-container" style="margin-top: 10px; border: 1px solid black; height: 300px;">
+        </div>
+
+        <div id="client2-container" style="margin-top: 10px; border: 1px solid black; height: 300px;">
         </div>
 
 	<script>
@@ -33,12 +39,23 @@
 
 	function test1() {
             var hostEngine = new MPGameEngine(sirummyrules, document.getElementById('host-container'), io, 'http://localhost:8080');
-            var clientEngine = null;
+            var clientEngines = [];
             hostEngine.host(function(err, data) {
                 var roomId = hostEngine.mesh.roomId;
 
-                clientEngine = new MPGameEngine(sirummyrules, document.getElementById('client-container'), io, 'http://localhost:8080');
-                clientEngine.join(roomId);
+/*                clientEngine = new MPGameEngine(sirummyrules, document.getElementById('client-container'), io, 'http://localhost:8080');
+                clientEngine.join(roomId);*/
+
+                  [0,1,2].forEach(function(i) {
+                      var name = "client"+i+"-container";
+                      var container = document.getElementById(name);
+                      var $button = $('<button>Connect</button>').click(function() {
+                          clientEngines[i] = new MPGameEngine(sirummyrules, container, io, 'http://localhost:8080');
+                          clientEngines[i].join(roomId);
+                      });
+
+                      $(container).append($button);
+                  });
             });
 	}
 

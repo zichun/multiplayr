@@ -67,10 +67,10 @@ sirummyrules.addView('lobby',
 );
 
 sirummyrules.addView('lobby-client',
-    'Welcome. Name: <input type="text" id="name" value="<%=name%>" />',
+    'Welcome. Name: <input type="text" class="name" value="<%=name%>" />',
     function(view) {
         view.on('load', function(playerObj) {
-            $("#name").bind('keyup', function() {
+            $(this).find(".name").bind('keyup', function() {
                 view.getPlayerObj().sendToHost('set-name', this.value);
             });
         });

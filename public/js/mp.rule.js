@@ -87,8 +87,8 @@ MPRule.prototype.addView =
             throw(new Error("View:" + viewName + " alredy exists!"));
         }
 
-        self.views[viewName] = new MPView(viewName, viewMarkup);
-        initFunc.call(self, self.views[viewName]);
+        self.views[viewName] = new MPViewRule(viewName, viewMarkup, initFunc);
+//        initFunc.call(self, self.views[viewName]);
     };
 
     return MPRule;

@@ -2,7 +2,7 @@ var MPPlayer = (function(){
 
 // todo: better constructor with options etc.
 
-function MPPlayer(gameEngine, playerRule, gameRule, container) {
+function MPPlayer(gameEngine, playerRule, gameRule) {
     var self = this;
 
     // todo: proper identification of host
@@ -13,8 +13,6 @@ function MPPlayer(gameEngine, playerRule, gameRule, container) {
     self.gameRule = gameRule;
     self.view = null;
     self.data = {};
-
-    self.container = container || document.body;
 
     return self;
 }
@@ -28,8 +26,8 @@ MPPlayer.prototype.init =
 MPPlayer.prototype.setView =
     function MPPlayerSetView(view, data) {
         var self = this;
-        self.view = self.gameRule.getView(view);
-        self.view.render(data, self.container, self);
+        self.view = self.gameEngine.getView(view);
+        self.view.render(data, self);
     };
 
 MPPlayer.prototype.getView =
