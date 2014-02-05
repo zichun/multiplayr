@@ -1,11 +1,20 @@
 var MPPlayer = (function(){
 
-function MPPlayer(playerRule, gameRule) {
+// todo: better constructor with options etc.
+
+function MPPlayer(gameEngine, playerRule, gameRule, container) {
     var self = this;
 
+    // todo: proper identification of host
+    self.isHost = true;
+
+    self.gameEngine = gameEngine;
     self.playerRule = playerRule;
     self.gameRule = gameRule;
     self.view = null;
+    self.data = {};
+
+    self.container = container || document.body;
 
     return self;
 }
@@ -20,7 +29,7 @@ MPPlayer.prototype.setView =
     function MPPlayerSetView(view, data) {
         var self = this;
         self.view = self.gameRule.getView(view);
-        self.view.render(data);
+        self.view.render(data, self.container, self);
     };
 
 MPPlayer.prototype.getView =
@@ -31,3 +40,19 @@ MPPlayer.prototype.getView =
 
     return MPPlayer;
 })();
+
+MPPlayer.prototype.sendToHost =
+    function MPPlayerSendToHost(type, message, cb) {
+        var self = this;
+
+        self.gameEngine.sendToHost(type, message, cb);
+    };
+
+MPPlayer.prototype.send =
+    function MPPlayerSend(player, type, message) {
+        if (!self.isHost) {
+            throw(new Error("Only host can send stuff to players"));
+        }
+
+        self.gameEngine.send(player, type, message);
+    };

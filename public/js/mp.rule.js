@@ -1,12 +1,15 @@
 var MPRule = (function() {
 
 
-var PlayerEvents = ['message', 'new-player', 'load'];
+var PlayerEvents = ['message', 'client-join', 'client-leave', 'load'];
 
 function MPPlayerRule() {
     var self = this;
 
     self.eventBindings = {};
+    PlayerEvents.forEach(function(evt) {
+        self.eventBindings[evt] = [];
+    });
 
     return self;
 }
@@ -55,10 +58,14 @@ MPPlayerRule.prototype.emit =
 
 
 function MPRule() {
+    var self = this;
+
     self.views = {};
 
     self.hostRule = new MPPlayerRule();
     self.clientRule = new MPPlayerRule();
+
+    return self;
 }
 
 MPRule.prototype.defineHost =
@@ -75,6 +82,7 @@ MPRule.prototype.defineClient =
 
 MPRule.prototype.addView =
     function MPRuleAddView(viewName, viewMarkup, initFunc) {
+        var self = this;
         if (typeof self.views[viewName] !== 'undefined') {
             throw(new Error("View:" + viewName + " alredy exists!"));
         }
@@ -85,3 +93,13 @@ MPRule.prototype.addView =
 
     return MPRule;
 })();
+
+MPRule.prototype.getView =
+    function MPRuleGetView(viewName) {
+        var self = this;
+        if (typeof self.views[viewName] === 'undefined') {
+            throw(new Error("View:" + viewName + " does not exist"));
+        }
+
+        return self.views[viewName];
+    };

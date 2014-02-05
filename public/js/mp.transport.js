@@ -1,13 +1,14 @@
+// todo: use jquery.isFunction or put this into misc library
+function isFunction(functionToCheck) {
+    var getType = {};
+    return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+}
+
 var Mesh =
 (function() {
     // todo: (low priority) proper encapsulation of private data like self.peers, self.socket etc.
 
     var Events = ['join-room', 'leave-room', 'message', 'room-broadcast', 'error'];
-
-    function isFunction(functionToCheck) {
-        var getType = {};
-        return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
-    }
 
     function Mesh(io, uri) {
         var self = this;
@@ -125,6 +126,7 @@ var Mesh =
             if (self.roomId === null) {
                 throw(new Error("Client does not belong to a Mesh. Call create or join"));
             }
+
             self.socket.emit('send-message',
                              {
                                  message: message,
@@ -138,7 +140,6 @@ var Mesh =
                                      self.emit('error', data);
                                      return;
                                  }
-
                                  if (isFunction(cb)) {
                                      cb(null, data);
                                  }

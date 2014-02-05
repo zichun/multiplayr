@@ -21,5 +21,9 @@ app.get('/test.html', function (req, res) {
 	res.sendfile(__dirname + '/tests/test.html');
 });
 
+app.get('/game.html', function (req, res) {
+	res.sendfile(__dirname + '/tests/game.html');
+});
+
 var transport = require('./inc/transport');
 transport.init(io);

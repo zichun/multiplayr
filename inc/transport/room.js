@@ -19,7 +19,8 @@ Room.prototype.sendMessage =
             return cb('Invalid receipient', false);
         } else {
             this.clientSockets[to].emit(type, message);
-            // todo: proper callback
+            cb(null, true);
+            // todo: proper callback bound to emit
         }
     };
 
