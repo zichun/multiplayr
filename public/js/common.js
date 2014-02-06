@@ -34,3 +34,61 @@ function isFunction(functionToCheck) {
     return data ? fn( data ) : fn;
   };
 })();
+
+function setupEventSystem(Class, restrictedEvents) {
+    function initialize() {
+        var self = this;
+        self._EventInit = true;
+
+        self.eventBindings = {};
+        restrictedEvents.forEach(function(evt) {
+            self.eventBindings[evt] = [];
+        });
+    }
+
+    Class.prototype.on =
+        function MeshOn(evt, callback) {
+            var self = this;
+
+            self._EventInit || initialize.call(this);
+
+            if (restrictedEvents.indexOf(evt) === -1) {
+                throw(new Error("Invalid event: " + evt));
+            } else if (!isFunction(callback)) {
+                throw(new Error("Invalid callback argument"));
+            } else {
+                self.eventBindings[evt].push(callback);
+            }
+        };
+
+    Class.prototype.off =
+        function MeshOff(evt, callback) {
+            var self = this;
+
+            self._EventInit || initialize.call(this);
+
+            if (restrictedEvents.indexOf(evt) === -1) {
+                throw(new Error("Invalid event: " + evt));
+            } else {
+                var ind = self.eventBindings[evt].indexOf(callback);
+                if (ind >= 0) {
+                    self.eventBindings[evt].splice(ind, 1);
+                }
+            }
+        };
+
+    Class.prototype.emit =
+        function MeshEmit(evt, data) {
+            var self = this;
+
+            self._EventInit || initialize.call(this);
+
+            if (restrictedEvents.indexOf(evt) === -1) {
+                throw(new Error("Invalid event: " + evt));
+            } else {
+                self.eventBindings[evt].forEach(function(cb) {
+                    cb.call(self, data);
+                });
+            }
+        };
+}

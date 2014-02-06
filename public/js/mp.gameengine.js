@@ -72,7 +72,7 @@ MPView.prototype.getName =
 function MPGameEngine(ruleObj, container, io, uri) {
     var self = this;
 
-    self.mesh = new Mesh(io, uri);
+    self.comm = new MPProtocol(io, uri);
     self.container = container;
     self.playerObj = null;
     self.ruleObj = ruleObj;
@@ -84,7 +84,7 @@ function MPGameEngine(ruleObj, container, io, uri) {
 MPGameEngine.prototype.host =
     function MPGameEngineHost(cb) {
         var self = this;
-        self.mesh.create(function(err, data) {
+        self.comm.create(function(err, data) {
             if (err) {
                 if (isFunction(cb)) {
                     cb(err, false);
@@ -93,7 +93,9 @@ MPGameEngine.prototype.host =
                 }
             }
 
-            self.mesh.on('message', function(data) {
+            self.roomId = data.roomId;
+
+            self.comm.on('message', function(data) {
                 var from = data.from;
                 var message = data.message;
 
@@ -104,14 +106,14 @@ MPGameEngine.prototype.host =
                 }, self.playerObj);
             });
 
-            self.mesh.on('join-room', function(data) {
+            self.comm.on('join-room', function(data) {
                 self.ruleObj.hostRule.emit('client-join', {
                     // todo: unify API naming to be more consistent
                     client: data.message
                 }, self.playerObj);
             });
 
-            self.mesh.on('leave-room', function() {
+            self.comm.on('leave-room', function() {
                 self.ruleObj.hostRule.emit('client-leave', {
                     // todo: unify API naming to be more consistent
                     client: data.message
@@ -130,11 +132,8 @@ MPGameEngine.prototype.host =
 MPGameEngine.prototype.sendToHost =
     function MPGameEngineSendToHost(type, message, cb) {
         var self = this;
-
-        // todo: check if object is properly initialized
-        // todo: need a proper protocol layer that cognizes the notion of a "host"
-        self.mesh.send(
-            self.mesh.peers[0],
+        // todo: to decide whether type is necessary
+        self.comm.sendToHost(
             {
                 type: type,
                 message: message
@@ -143,15 +142,15 @@ MPGameEngine.prototype.sendToHost =
     };
 
 MPGameEngine.prototype.send =
-    function MPGameEngineSend(player, type, message) {
-        // todo: implement
+    function MPGameEngineSend(player, type, message, cb) {
+        self.comm.send(player, type, message, cb);
     };
 
 
 MPGameEngine.prototype.join =
     function MPGameEngineJoin(roomId, cb) {
         var self = this;
-        self.mesh.join(roomId, function(err, data) {
+        self.comm.join(roomId, function(err, data) {
             if (err) {
                 if (isFunction(cb)) {
                     cb(err, false);

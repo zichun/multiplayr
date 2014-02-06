@@ -13,11 +13,6 @@ var Mesh =
         self.roomId = null;
         self.clientId = null;
 
-        self.eventBindings = {};
-        Events.forEach(function(evt) {
-            self.eventBindings[evt] = [];
-        });
-
         socket.on('client-sendmessage', function(data) {
             self.emit('message', data);
         });
@@ -141,43 +136,7 @@ var Mesh =
                              });
         };
 
-    Mesh.prototype.on =
-        function MeshOn(evt, callback) {
-            var self = this;
-            if (Events.indexOf(evt) === -1) {
-                throw(new Error("Invalid event: " + evt));
-            } else if (!isFunction(callback)) {
-                throw(new Error("Invalid callback argument"));
-            } else {
-                self.eventBindings[evt].push(callback);
-            }
-        };
-
-    Mesh.prototype.off =
-        function MeshOff(evt, callback) {
-            var self = this;
-            if (Events.indexOf(evt) === -1) {
-                throw(new Error("Invalid event: " + evt));
-            } else {
-                var ind = self.eventBindings[evt].indexOf(callback);
-                if (ind >= 0) {
-                    self.eventBindings[evt].splice(ind, 1);
-                }
-            }
-        };
-
-    Mesh.prototype.emit =
-        function MeshEmit(evt, data) {
-            var self = this;
-
-            if (Events.indexOf(evt) === -1) {
-                throw(new Error("Invalid event: " + evt));
-            } else {
-                self.eventBindings[evt].forEach(function(cb) {
-                    cb.call(self, data);
-                });
-            }
-        };
+    setupEventSystem(Mesh, Events);
 
     return Mesh;
 })();

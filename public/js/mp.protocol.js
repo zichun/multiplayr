@@ -1,5 +1,9 @@
+// todo: rename. protocol is not the right name
+
 var MPProtocol =
 (function() {
+    var Events = ['join-room', 'leave-room', 'message', 'error'];
+
     function MPProtocol(io, uri) {
         var self = this;
 
@@ -8,14 +12,31 @@ var MPProtocol =
         var isHost = false;
         var host = null;
 
-
         meshObj.on('join-room', function(data) {
+            if (isHost === true) {
+                meshObj.send(data.message, {
+                    type: 'host',
+                    message: host
+                });
+            }
+
+            self.emit('join-room', data);
         });
 
         meshObj.on('leave-room', function(data) {
+            self.emit('leave-room', data);
         });
 
         meshObj.on('message', function(data) {
+            // todo: determine message wrapping nomenclature
+            if (data.message.type === 'host') {
+                host = data.message.message;
+            } else if (data.message.type === 'message') {
+                self.emit('message', {
+                    from: data.from,
+                    message: data.message.message
+                });
+            }
         });
 
         self.create =
@@ -61,7 +82,10 @@ var MPProtocol =
                     // todo: to differ/buffer message and send when host is resolved
                     throw new Error("Have not resolved host");
                 }
-                meshObj.send(host, message, cb);
+                meshObj.send(host, {
+                    type: 'message',
+                    message: message
+                }, cb);
             };
 
         self.broadcast =
@@ -76,7 +100,10 @@ var MPProtocol =
                 if (!isHost) {
                     throw new Error("Only host can send messages");
                 }
-                meshObj.send(clientId, message, cb);
+                meshObj.send(clientId, {
+                    type: 'message',
+                    message: message
+                }, cb);
             };
 
         self.getHost =
@@ -96,6 +123,8 @@ var MPProtocol =
 
         return self;
     }
+
+    setupEventSystem(MPProtocol, Events);
 
     return MPProtocol;
 })();
