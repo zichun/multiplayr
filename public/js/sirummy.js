@@ -13,8 +13,16 @@ sirummyrules.defineHost(function(hostRule) {
 
     hostRule.on('client-join', function(data) {
         var hostObj = this;
+        hostObj.data.playerName[data.from] = data.from;
+
         hostObj.getView().emit('client-join', {
             client: data.client
+        });
+    });
+
+    hostRule.on('client-leave', function(data) {
+        hostObj.getView().emit('client-leave', {
+            client:data.client
         });
     });
 
@@ -56,6 +64,14 @@ sirummyrules.addView('lobby',
             $("#lobby").append('<li player="'+data.client+'">' + data.client +'</li>');
         });
 
+        view.on('client-leave', function(data) {
+            $('#lobby li').each(function() {
+                if ($(this).attr('player') === data.client) {
+                    $(this).remove();
+                }
+            });
+        });
+
         view.on('set-name', function(data) {
             $('#lobby li').each(function() {
                 if ($(this).attr('player') === data.client) {
@@ -67,12 +83,13 @@ sirummyrules.addView('lobby',
 );
 
 sirummyrules.addView('lobby-client',
-    'Welcome. Name: <input type="text" class="name" value="<%=name%>" />',
+    'Welcome. Name: <input type="text" class="name" value="<%=name%>" /><br /><button class="disconnect">Disconnect</button>',
     function(view) {
         view.on('load', function(playerObj) {
             $(this).find(".name").bind('keyup', function() {
                 view.getPlayerObj().sendToHost('set-name', this.value);
             });
+
         });
     });
 
