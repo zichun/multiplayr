@@ -6,27 +6,28 @@
 	Test cases<br />
 	----------<br />
 	<br />
-	Please open the console
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="/js/jquery.js"></script>
 	<script src="/js/mp.transport.js"></script>
         <script src="/js/mp.rule.js"></script>
-        <script src="/js/mp.view.js"></script>
         <script src="/js/mp.player.js"></script>
         <script src="/js/mp.gameengine.js"></script>
-        <script src="/js/sirummy.js"></script>
+        <script src="/gamerules/lobby/lobby.js"></script>
 
-
-        <div id="host-container" style="border:1px solid black; height: 300px;">
+        Host:
+        <div id="host-container" style="margin-bottom: 10px; border:1px solid black; height: 300px;">
         </div>
 
-        <div id="client0-container" style="margin-top: 10px; border: 1px solid black; height: 300px;">
+        Client 0:
+        <div id="client0-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
         </div>
 
-        <div id="client1-container" style="margin-top: 10px; border: 1px solid black; height: 300px;">
+        Client 1:
+        <div id="client1-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
         </div>
 
-        <div id="client2-container" style="margin-top: 10px; border: 1px solid black; height: 300px;">
+        Client 2:
+        <div id="client2-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
         </div>
 
 	<script>
@@ -38,19 +39,19 @@
 	}
 
 	function test1() {
-            var hostEngine = new MPGameEngine(sirummyrules, document.getElementById('host-container'), io, 'http://localhost:8080');
+            var hostEngine = new MPGameEngine(lobby, document.getElementById('host-container'), io, 'http://localhost:8080');
             var clientEngines = [];
             hostEngine.host(function(err, data) {
                 var roomId = hostEngine.mesh.roomId;
 
-/*                clientEngine = new MPGameEngine(sirummyrules, document.getElementById('client-container'), io, 'http://localhost:8080');
+/*                clientEngine = new MPGameEngine(lobby, document.getElementById('client-container'), io, 'http://localhost:8080');
                 clientEngine.join(roomId);*/
 
                   [0,1,2].forEach(function(i) {
                       var name = "client"+i+"-container";
                       var container = document.getElementById(name);
                       var $button = $('<button>Connect</button>').click(function() {
-                          clientEngines[i] = new MPGameEngine(sirummyrules, container, io, 'http://localhost:8080');
+                          clientEngines[i] = new MPGameEngine(lobby, container, io, 'http://localhost:8080');
                           clientEngines[i].join(roomId);
                       });
 

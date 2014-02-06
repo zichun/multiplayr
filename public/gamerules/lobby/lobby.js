@@ -1,8 +1,8 @@
-var sirummyrules = new MPRule();
+var lobby = new MPRule();
 
 //MPRule.addPlugin()
 
-sirummyrules.defineHost(function(hostRule) {
+lobby.defineHost(function(hostRule) {
 
     hostRule.on('load', function(data) {
         var hostObj = this;
@@ -46,7 +46,7 @@ sirummyrules.defineHost(function(hostRule) {
 });
 
 
-sirummyrules.defineClient(function(client) {
+lobby.defineClient(function(client) {
     client.on('load', function() {
         var clientObj = this;
         clientObj.setView('lobby-client', {name: ''});
@@ -54,7 +54,7 @@ sirummyrules.defineClient(function(client) {
 });
 
 
-sirummyrules.addView('lobby',
+lobby.addView('lobby',
     'Connected Clients: <ul id="lobby"></ul>',
     function(view) {
         view.on('load', function() {
@@ -82,7 +82,7 @@ sirummyrules.addView('lobby',
     }
 );
 
-sirummyrules.addView('lobby-client',
+lobby.addView('lobby-client',
     'Welcome. Name: <input type="text" class="name" value="<%=name%>" /><br /><button class="disconnect">Disconnect</button>',
     function(view) {
         view.on('load', function(playerObj) {
