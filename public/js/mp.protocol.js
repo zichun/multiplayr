@@ -8,6 +8,16 @@ var MPProtocol =
         var isHost = false;
         var host = null;
 
+
+        meshObj.on('join-room', function(data) {
+        });
+
+        meshObj.on('leave-room', function(data) {
+        });
+
+        meshObj.on('message', function(data) {
+        });
+
         self.create =
             function MPProtocolCreate(cb) {
                 meshObj.create(function(err, data) {
@@ -47,6 +57,11 @@ var MPProtocol =
 
         self.sendToHost =
             function MPProtocolSendToHost(message, cb) {
+                if (host === null) {
+                    // todo: to differ/buffer message and send when host is resolved
+                    throw new Error("Have not resolved host");
+                }
+                meshObj.send(host, message, cb);
             };
 
         self.broadcast =
@@ -54,16 +69,19 @@ var MPProtocol =
                 if (!isHost) {
                     throw new Error("Only host can broadcast");
                 }
+                // todo: implement with proper callback
             };
         self.send =
             function MPProtocolSend(clientId, message, cb) {
                 if (!isHost) {
                     throw new Error("Only host can send messages");
                 }
+                meshObj.send(clientId, message, cb);
             };
 
         self.getHost =
-            function MPProtocolGetHost() {
+            function MPProtocolGetHostId() {
+                return host;
             };
 
         self.getRoomId =
