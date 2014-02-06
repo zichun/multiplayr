@@ -1,9 +1,4 @@
 // todo: use jquery.isFunction or put this into misc library
-function isFunction(functionToCheck) {
-    var getType = {};
-    return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
-}
-
 var Mesh =
 (function() {
     // todo: (low priority) proper encapsulation of private data like self.peers, self.socket etc.
