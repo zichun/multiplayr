@@ -156,6 +156,7 @@ MPGameEngine.prototype.sendToHost =
 
 MPGameEngine.prototype.send =
     function MPGameEngineSend(player, data, cb) {
+        var self = this;
         self.comm.send(player, data, cb);
     };
 

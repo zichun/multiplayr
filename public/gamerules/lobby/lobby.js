@@ -20,6 +20,9 @@ lobby.defineHost(function(hostRule) {
         hostObj.getView().emit('client-join', {
             client: data.client
         });
+
+        hostObj.clientSetView(data.client, 'lobby-client', {name: data.client}, function() {
+        });
     });
 
     hostRule.on('client-leave', function(data) {
@@ -45,7 +48,7 @@ lobby.defineHost(function(hostRule) {
 lobby.defineClient(function(client) {
     client.on('load', function() {
         var clientObj = this;
-        clientObj.setView('lobby-client', {name: ''});
+//        clientObj.setView('lobby-client', {name: ''});
     });
 });
 

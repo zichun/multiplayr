@@ -47,6 +47,7 @@ MPPlayer.prototype.sendToHost =
 
 MPPlayer.prototype.send =
     function MPPlayerSend(player, message, cb) {
+        var self = this;
         if (!self.isHost) {
             throw(new Error("Only host can send stuff to players"));
         }
