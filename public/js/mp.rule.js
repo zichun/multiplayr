@@ -7,7 +7,7 @@ function MPPlayerRule() {
     var self = this;
 
     self.eventBindings = {};
-    self.onMessageBindings = {};
+    self.methods = {};
 
     PlayerEvents.forEach(function(evt) {
         self.eventBindings[evt] = [];
@@ -40,16 +40,6 @@ MPPlayerRule.prototype.off =
                 self.eventBindings[evt].splice(ind, 1);
             }
         }
-    };
-
-
-MPPlayerRule.prototype.onMessage =
-    function MPPlayerRuleOnMessage(type, cb) {
-        var self = this;
-        if (typeof self.onMessageBindings[type] === 'undefined') {
-            self.onMessageBindings[type] = [];
-        }
-        self.onMessageBindings[type].push(cb);
     };
 
 function MPRule() {
@@ -100,4 +90,10 @@ MPRule.prototype.getView =
         }
 
         return self.views[viewName];
+    };
+
+MPRule.prototype.addPlugin =
+    function MPRuleAddPlugin(fn) {
+        var self = this;
+        fn.call(self);
     };

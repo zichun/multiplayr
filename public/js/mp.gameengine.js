@@ -91,12 +91,6 @@ function initialize(playerRule, playerObj) {
         });
     }
 
-    for (evt in playerRule.onMessageBindings) {
-        playerRule.onMessageBindings[evt].forEach(function(cb) {
-            playerObj.onMessage(evt, cb);
-        });
-    }
-
     self.comm.on('message', function(data) {
         var from = data.from;
         var message = data.message;
@@ -122,10 +116,9 @@ function initialize(playerRule, playerObj) {
         }, self.playerObj);
     });
 
-    playerObj.on('message', function(data) {
-        playerObj.emitMessage(data.type, data.from, data.message, self.playerObj);
-    });
-
+    for (var method in playerRule.methods) {
+        playerObj[method] = playerRule.methods[method];
+    }
 }
 
 MPGameEngine.prototype.host =
@@ -155,20 +148,15 @@ MPGameEngine.prototype.host =
     };
 
 MPGameEngine.prototype.sendToHost =
-    function MPGameEngineSendToHost(type, message, cb) {
+    function MPGameEngineSendToHost(data, cb) {
         var self = this;
         // todo: to decide whether type is necessary
-        self.comm.sendToHost(
-            {
-                type: type,
-                message: message
-            },
-            cb);
+        self.comm.sendToHost(data, cb);
     };
 
 MPGameEngine.prototype.send =
-    function MPGameEngineSend(player, type, message, cb) {
-        self.comm.send(player, type, message, cb);
+    function MPGameEngineSend(player, data, cb) {
+        self.comm.send(player, data, cb);
     };
 
 
@@ -210,5 +198,3 @@ MPGameEngine.prototype.getView =
 
     return MPGameEngine;
 })();
-
-

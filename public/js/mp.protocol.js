@@ -77,14 +77,14 @@ var MPProtocol =
             };
 
         self.sendToHost =
-            function MPProtocolSendToHost(message, cb) {
+            function MPProtocolSendToHost(data, cb) {
                 if (host === null) {
                     // todo: to differ/buffer message and send when host is resolved
                     throw new Error("Have not resolved host");
                 }
                 meshObj.send(host, {
                     type: 'message',
-                    message: message
+                    message: data
                 }, cb);
             };
 
@@ -96,13 +96,13 @@ var MPProtocol =
                 // todo: implement with proper callback
             };
         self.send =
-            function MPProtocolSend(clientId, message, cb) {
+            function MPProtocolSend(clientId, data, cb) {
                 if (!isHost) {
                     throw new Error("Only host can send messages");
                 }
                 meshObj.send(clientId, {
                     type: 'message',
-                    message: message
+                    message: data
                 }, cb);
             };
 

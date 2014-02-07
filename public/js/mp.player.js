@@ -1,6 +1,5 @@
 var MPPlayer = (function(){
 
-
 var MPPlayerEvents = ['client-leave', 'client-join', 'message', 'load'];
 
 // todo: better constructor with options etc.
@@ -40,44 +39,22 @@ MPPlayer.prototype.getView =
     };
 
 MPPlayer.prototype.sendToHost =
-    function MPPlayerSendToHost(type, message, cb) {
+    function MPPlayerSendToHost(data, cb) {
         var self = this;
 
-        self.gameEngine.sendToHost(type, message, cb);
+        self.gameEngine.sendToHost(data, cb);
     };
 
 MPPlayer.prototype.send =
-    function MPPlayerSend(player, type, message) {
+    function MPPlayerSend(player, message, cb) {
         if (!self.isHost) {
             throw(new Error("Only host can send stuff to players"));
         }
 
-        self.gameEngine.send(player, type, message);
+        self.gameEngine.send(player, message, cb);
     };
 
 setupEventSystem(MPPlayer, MPPlayerEvents);
 
-
-// todo: temp. this should be sugar-ized
-MPPlayer.prototype.onMessage =
-    function MPPlayerOnMessage(type, cb) {
-        var self = this;
-        if (typeof self.onMessageBindings[type] === 'undefined') {
-            self.onMessageBindings[type] = [];
-        }
-        self.onMessageBindings[type].push(cb);
-    };
-
-MPPlayer.prototype.emitMessage =
-    function MPPlayerEmitMessage(type, from, message) {
-        var self = this;
-        if (typeof self.onMessageBindings[type] !== 'undefined') {
-            self.onMessageBindings[type].forEach(function(cb) {
-                cb.call(self, from, message);
-            });
-        }
-    };
-
     return MPPlayer;
 })();
-

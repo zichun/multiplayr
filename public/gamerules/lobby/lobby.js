@@ -2,6 +2,8 @@ var lobby = new MPRule();
 
 //MPRule.addPlugin()
 
+lobby.addPlugin(Sugar());
+
 lobby.defineHost(function(hostRule) {
 
     hostRule.on('load', function(data) {
@@ -81,7 +83,7 @@ lobby.addView('lobby-client',
     function(view) {
         view.on('load', function(playerObj) {
             $(this).find(".name").bind('keyup', function() {
-                view.getPlayerObj().sendToHost('set-name', this.value);
+                view.getPlayerObj().sendMessage('set-name', this.value);
             });
 
         });
