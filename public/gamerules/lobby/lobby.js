@@ -13,7 +13,7 @@ lobby.defineHost(function(hostRule) {
 
     hostRule.on('client-join', function(data) {
         var hostObj = this;
-        hostObj.data.playerName[data.from] = data.from;
+        hostObj.data.playerName[data.client] = data.client;
 
         hostObj.getView().emit('client-join', {
             client: data.client
@@ -26,22 +26,16 @@ lobby.defineHost(function(hostRule) {
         });
     });
 
-    hostRule.on('message', function(data) {
+    hostRule.onMessage('set-name', function(from, data) {
         var hostObj = this;
+        hostObj.data.playerName[from] = data;
 
-        switch(data.type) {
-            case 'set-name':
-                hostObj.data.playerName[data.from] = data.message;
-
-                if (hostObj.getView().getName() === 'lobby') {
-                    hostObj.getView().emit('set-name', {
-                        client: data.from,
-                        name: data.message
-                    });
-                }
-
-                break;
-            }
+        if (hostObj.getView().getName() === 'lobby') {
+            hostObj.getView().emit('set-name', {
+                client: from,
+                name: data
+            });
+        }
     });
 });
 

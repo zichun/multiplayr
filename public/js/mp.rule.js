@@ -7,6 +7,8 @@ function MPPlayerRule() {
     var self = this;
 
     self.eventBindings = {};
+    self.onMessageBindings = {};
+
     PlayerEvents.forEach(function(evt) {
         self.eventBindings[evt] = [];
     });
@@ -40,22 +42,15 @@ MPPlayerRule.prototype.off =
         }
     };
 
-MPPlayerRule.prototype.emit =
-    function MPPlayerRuleEmit(evt, data, selfObj) {
+
+MPPlayerRule.prototype.onMessage =
+    function MPPlayerRuleOnMessage(type, cb) {
         var self = this;
-
-        if (PlayerEvents.indexOf(evt) === -1) {
-            throw(new Error("Invalid event: " + evt));
-        } else {
-            selfObj = selfObj || self;
-
-            self.eventBindings[evt].forEach(function(cb) {
-                cb.call(selfObj, data);
-            });
+        if (typeof self.onMessageBindings[type] === 'undefined') {
+            self.onMessageBindings[type] = [];
         }
+        self.onMessageBindings[type].push(cb);
     };
-
-
 
 function MPRule() {
     var self = this;

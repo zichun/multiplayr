@@ -1,7 +1,9 @@
 var MPPlayer = (function(){
 
-// todo: better constructor with options etc.
 
+var MPPlayerEvents = ['client-leave', 'client-join', 'message', 'load'];
+
+// todo: better constructor with options etc.
 function MPPlayer(gameEngine, playerRule, gameRule) {
     var self = this;
 
@@ -13,6 +15,7 @@ function MPPlayer(gameEngine, playerRule, gameRule) {
     self.gameRule = gameRule;
     self.view = null;
     self.data = {};
+    self.onMessageBindings = {};
 
     return self;
 }
@@ -20,7 +23,7 @@ function MPPlayer(gameEngine, playerRule, gameRule) {
 MPPlayer.prototype.init =
     function MPPlayerInit() {
         var self = this;
-        self.playerRule.emit('load', {}, self);
+        self.emit('load', {});
     };
 
 MPPlayer.prototype.setView =
@@ -35,9 +38,6 @@ MPPlayer.prototype.getView =
         var self = this;
         return self.view;
     };
-
-    return MPPlayer;
-})();
 
 MPPlayer.prototype.sendToHost =
     function MPPlayerSendToHost(type, message, cb) {
@@ -54,3 +54,30 @@ MPPlayer.prototype.send =
 
         self.gameEngine.send(player, type, message);
     };
+
+setupEventSystem(MPPlayer, MPPlayerEvents);
+
+
+// todo: temp. this should be sugar-ized
+MPPlayer.prototype.onMessage =
+    function MPPlayerOnMessage(type, cb) {
+        var self = this;
+        if (typeof self.onMessageBindings[type] === 'undefined') {
+            self.onMessageBindings[type] = [];
+        }
+        self.onMessageBindings[type].push(cb);
+    };
+
+MPPlayer.prototype.emitMessage =
+    function MPPlayerEmitMessage(type, from, message) {
+        var self = this;
+        if (typeof self.onMessageBindings[type] !== 'undefined') {
+            self.onMessageBindings[type].forEach(function(cb) {
+                cb.call(self, from, message);
+            });
+        }
+    };
+
+    return MPPlayer;
+})();
+

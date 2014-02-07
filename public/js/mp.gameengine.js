@@ -81,6 +81,53 @@ function MPGameEngine(ruleObj, container, io, uri) {
     return self;
 }
 
+function initialize(playerRule, playerObj) {
+    var self = this;
+
+    // todo: use a proper getter
+    for (var evt in playerRule.eventBindings) {
+        playerRule.eventBindings[evt].forEach(function(cb) {
+            playerObj.on(evt, cb);
+        });
+    }
+
+    for (evt in playerRule.onMessageBindings) {
+        playerRule.onMessageBindings[evt].forEach(function(cb) {
+            playerObj.onMessage(evt, cb);
+        });
+    }
+
+    self.comm.on('message', function(data) {
+        var from = data.from;
+        var message = data.message;
+
+        playerObj.emit('message', {
+            from: from,
+            type: message.type,
+            message: message.message
+        }, self.playerObj);
+    });
+
+    self.comm.on('join-room', function(data) {
+        playerObj.emit('client-join', {
+            // todo: unify API naming to be more consistent
+            client: data.message
+        }, self.playerObj);
+    });
+
+    self.comm.on('leave-room', function() {
+        playerObj.emit('client-leave', {
+            // todo: unify API naming to be more consistent
+            client: data.message
+        }, self.playerObj);
+    });
+
+    playerObj.on('message', function(data) {
+        playerObj.emitMessage(data.type, data.from, data.message, self.playerObj);
+    });
+
+}
+
 MPGameEngine.prototype.host =
     function MPGameEngineHost(cb) {
         var self = this;
@@ -94,34 +141,12 @@ MPGameEngine.prototype.host =
             }
 
             self.roomId = data.roomId;
-
-            self.comm.on('message', function(data) {
-                var from = data.from;
-                var message = data.message;
-
-                self.ruleObj.hostRule.emit('message', {
-                    from: from,
-                    type: message.type,
-                    message: message.message
-                }, self.playerObj);
-            });
-
-            self.comm.on('join-room', function(data) {
-                self.ruleObj.hostRule.emit('client-join', {
-                    // todo: unify API naming to be more consistent
-                    client: data.message
-                }, self.playerObj);
-            });
-
-            self.comm.on('leave-room', function() {
-                self.ruleObj.hostRule.emit('client-leave', {
-                    // todo: unify API naming to be more consistent
-                    client: data.message
-                }, self.playerObj);
-            });
-
             self.playerObj = new MPPlayer(self, self.ruleObj.hostRule, self.ruleObj);
+
+            initialize.call(self, self.ruleObj.hostRule, self.playerObj);
+
             self.playerObj.init();
+
 
             if (isFunction(cb)) {
                 cb(null, self.playerObj);
@@ -158,11 +183,11 @@ MPGameEngine.prototype.join =
                     throw new Error(err);
                 }
             }
-//            self.mesh.on('message', function(data) {
-//                alert(data);
-//            });
 
             self.playerObj = new MPPlayer(self, self.ruleObj.clientRule, self.ruleObj);
+
+            initialize.call(self, self.ruleObj.clientRule, self.playerObj);
+
             self.playerObj.init();
 
             if (isFunction(cb)) {
