@@ -15,6 +15,12 @@ function MPView(name, viewRule, playerObj, container) {
     return self;
 }
 
+MPView.prototype.getChildViews =
+    function MPViewGetChildViews() {
+        var self = this;
+        return self.childViews;
+    };
+
 MPView.prototype.emit =
     function MPViewEmit(evt, data, selfObj) {
         var self = this;
@@ -26,7 +32,9 @@ MPView.prototype.emit =
             cb.call(selfObj, data);
         });
 
-        // todo: bubble childViews downwards
+        self.childViews.forEach(function(viewObj) {
+            viewObj.emit(evt, data);
+        });
     };
 
 MPView.prototype.on =
