@@ -1,0 +1,3 @@
+var lobby = new MPGame();
+    
+lobby
