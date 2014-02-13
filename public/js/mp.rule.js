@@ -75,7 +75,8 @@ MPRule.prototype.addView =
         self.views[viewName] = {
             name: viewName,
             markup: viewMarkup,
-            initFunc: initFunc
+            initFunc: initFunc,
+            type: 'view' // Better for debugging and to separate this from a normal JSON object
         };
     };
 
