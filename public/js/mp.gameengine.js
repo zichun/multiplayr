@@ -40,7 +40,7 @@ function initialize(playerRule, playerObj) {
         }, self.playerObj);
     });
 
-    self.comm.on('leave-room', function() {
+    self.comm.on('leave-room', function(data) {
         playerObj.emit('client-leave', {
             // todo: unify API naming to be more consistent
             client: data.message
@@ -105,6 +105,7 @@ MPGameEngine.prototype.join =
             }
 
             self.playerObj = new MPPlayer(self, self.ruleObj.clientRule, self.ruleObj);
+            self.playerObj.isHost = false;
 
             initialize.call(self, self.ruleObj.clientRule, self.playerObj);
 

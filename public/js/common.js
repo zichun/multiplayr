@@ -3,6 +3,14 @@ function isFunction(functionToCheck) {
     return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
 }
 
+function extendObj(ori, extend) {
+    for (var i in extend) {
+        if (extend.hasOwnProperty(i) && !ori.hasOwnProperty(i)) {
+            ori[i] = extend[i];
+        }
+    }
+}
+
 // Simple JavaScript Templating
 // John Resig - http://ejohn.org/ - MIT Licensed
 (function(){
