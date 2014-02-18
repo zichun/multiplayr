@@ -11,6 +11,17 @@ function extendObj(ori, extend) {
     }
 }
 
+Object.prototype.Inherits = function(Class) {
+    this.prototype = new Class;
+    this.prototype.constructor = this;
+};
+
+Object.prototype.getClass = function() {
+   var funcNameRegex = /function (.{1,})\(/;
+   var results = (funcNameRegex).exec((this).constructor.toString());
+   return (results && results.length > 1) ? results[1] : "";
+};
+
 // Simple JavaScript Templating
 // John Resig - http://ejohn.org/ - MIT Licensed
 (function(){
