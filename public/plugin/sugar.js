@@ -29,11 +29,47 @@ function Sugar(_opt) {
             playerRuleObj.onMessage = function(type, cb) {
                 playerRuleObj.on('message', function(data) {
                     var playerObj = this;
-                    if (data.type === type) {
-                        cb.call(playerObj, data.from, data.message);
+
+                    if (typeof data === 'object' && data.type === type) {
+                        var message = data.message.data;
+                        var uniqid = data.message.uniqid;
+                        var from = data.from;
+
+                        var cbFn = function(d) {
+                            if (playerObj.isHost) {
+                                playerObj.sendMessage(data.from, 'typedmessage-ack', {
+                                    uniqid: uniqid,
+                                    data: d
+                                });
+                            } else {
+                                playerObj.sendMessage('typedmessage-ack', {
+                                    uniqid: uniqid,
+                                    data: d
+                                });
+                            }
+                        };
+
+                        cb.call(
+                            playerObj,
+                            from,
+                            message,
+                            cbFn
+                        );
                     }
+
                 });
             };
+
+            playerRuleObj.onMessage('typedmessage-ack', function(from, message) {
+                var playerObj = this;
+                var uniqid = message.uniqid;
+                var data = message.data;
+
+                if (typeof playerObj.typedMessage === 'object' && typeof playerObj.typedMessage[uniqid] !== 'undefined') {
+                    playerObj.typedMessage[uniqid].call(playerObj, data);
+                    delete(playerObj.typedMessage[uniqid]);
+                }
+            });
         }
 
         self.defineHost(function (hostRule) {
@@ -41,11 +77,19 @@ function Sugar(_opt) {
 
             hostRule.methods.sendMessage = function(clientId, type, message, cb) {
                 var hostObj = this;
+                var uniqid = Math.random() + '' + Math.random();
+                if (typeof hostObj.typedMessage === 'undefined') {
+                    hostObj.typedMessage = {};
+                }
+                if (cb) hostObj.typedMessage[uniqid] = cb;
                 hostObj.send(clientId,
                              {
                                  type: type,
-                                 message: message
-                             }, cb);
+                                 message: {
+                                     data: message,
+                                     uniqid: uniqid
+                                 }
+                             });
             };
 
             hostRule.methods.clientSetView = function(client, view, data, cb) {
@@ -63,16 +107,26 @@ function Sugar(_opt) {
             // Client can only send message to host
             clientRule.methods.sendMessage = function(type, message, cb) {
                 var clientObj = this;
+                var uniqid = Math.random() + '' + Math.random();
+
+                if (typeof clientObj.typedMessage === 'undefined') {
+                    clientObj.typedMessage = {};
+                }
+                if (cb) clientObj.typedMessage[uniqid] = cb;
 
                 clientObj.sendToHost({
                     type: type,
-                    message: message
-                }, cb);
+                    message: {
+                        data: message,
+                        uniqid: uniqid
+                    }
+                });
             };
 
-            clientRule.onMessage('client-set-view', function(from, message) {
+            clientRule.onMessage('client-set-view', function(from, message, fn) {
                 var playerObj = this;
                 playerObj.setView(message.view, message.data);
+                fn(message.view);
             });
         });
     };
