@@ -3,6 +3,10 @@ function isFunction(functionToCheck) {
     return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
 }
 
+function isArray(obj) {
+    return Object.prototype.toString.call(obj) === '[object Array]';
+}
+
 function extendObj(ori, extend) {
     for (var i in extend) {
         if (extend.hasOwnProperty(i) && !ori.hasOwnProperty(i)) {

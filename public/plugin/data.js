@@ -19,10 +19,10 @@ implementing the toJSON method (see serialize)
 function DataChannel(_opt) {
     _opt = _opt || {};
 
-    _opt = extendObj(_opt,
-                     {
-                         notifyOnSet: false
-                     });
+    extendObj(_opt,
+              {
+                  notifyOnSet: false
+              });
 
     return function() {
         var self = this;
@@ -32,12 +32,12 @@ function DataChannel(_opt) {
             hostObj._data[player] = hostObj._data[player] || {};
         }
 
-
+        // todo: proper GC when client leave. GC to be set as a _opt
         self.defineHost(function(hostRule) {
             hostRule.onMessage('datachannel-getdata', function(from, message, fn) {
                 var hostObj = this;
 
-                setUpData(hostObj);
+                setUpData(hostObj, from);
                 fn(dataChannelSerialize(hostObj._data[from][message]));
             });
 
@@ -54,7 +54,7 @@ function DataChannel(_opt) {
 
             hostRule.methods.setData = function(player, dataName, data) {
                 var hostObj = this;
-                setUpData(hostObj);
+                setUpData(hostObj, player);
                 hostObj._data[player][dataName] = data;
 
                 if (_opt.notifyOnset) {
@@ -127,6 +127,15 @@ DataChannelCollection.prototype.push =
     function DataChannelCollectionPush(obj) {
         var self = this;
         self._collection.push(obj);
+    };
+
+DataChannelCollection.prototype.pop =
+    function DataChannelCollectionPop() {
+        var self = this;
+        if (self._collection.length === 0) {
+            return null;
+        }
+        return self._collection.splice(self._collection.length-1, 1)[0];
     };
 
 DataChannelCollection.prototype.toJSON =

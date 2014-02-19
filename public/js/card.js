@@ -84,6 +84,13 @@ Hand.prototype.shuffle =
         return self;
     };
 
+Hand.prototype.draw =
+    function HandDraw() {
+        // pop
+        var self = this;
+        return self.pop();
+    };
+
 Hand.prototype.sortBySuit =
     function HandSortBySuit() {
         // todo: implement

@@ -13,7 +13,8 @@ function MPPlayer(gameEngine, playerRule, gameRule) {
     self.playerRule = playerRule;
     self.gameRule = gameRule;
     self.view = null;
-    self.data = {};
+    self.data = {}; // todo:deprecate
+
     self.onMessageBindings = {};
 
     return self;

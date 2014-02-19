@@ -1,83 +1,80 @@
 var lobby = new MPRule();
 
-//MPRule.addPlugin()
 
 lobby.addPlugin(Sugar());
 lobby.addPlugin(DataChannel());
+lobby.addPlugin(Player());
 
 lobby.defineHost(function(hostRule) {
 
     hostRule.on('load', function(data) {
         var hostObj = this;
-
-        hostObj.data.playerName = {};
         hostObj.setView('lobby', {});
     });
 
     hostRule.on('client-join', function(data) {
         var hostObj = this;
-        hostObj.data.playerName[data.client] = data.client;
+
 
         hostObj.getView().emit('client-join', {
             client: data.client
         });
 
-        hostObj.clientSetView(data.client, 'lobby-client', {name: data.client}, function(data) {
-        });
+        hostObj.player(data.client)
+                .data('name', data.client)
+                .setView('lobby-client', {name: data.client});
     });
 
     hostRule.on('client-leave', function(data) {
         var hostObj = this;
+
         hostObj.getView().emit('client-leave', {
-            client:data.client
+            client: data.client
         });
     });
 
-    hostRule.onMessage('set-name', function(from, data, fn) {
+    hostRule.onMessage('set-name', function(from, name, fn) {
         var hostObj = this;
-        hostObj.data.playerName[from] = data;
+
+        hostObj.player(from).data('name', name);
 
         if (hostObj.getView().getName() === 'lobby') {
             hostObj.getView().emit('set-name', {
                 client: from,
-                name: data
+                name: name
             });
         }
     });
 
-
-    hostRule.methods.playerCount = function() {
-        var hostObj = this;
-        var cnt = 0;
-        hostObj.playerForEach(function() {
-            ++cnt;
-        });
-        return cnt;
-    };
-
-    hostRule.methods.playerForEach = function(fn) {
-        var hostObj = this;
-        for (var i in hostObj.data.playerName) {
-            if (hostObj.data.playerName.hasOwnProperty(i)) {
-                fn.call(hostObj.data.playerName, i);
-            }
-        }
-    };
-
-
     function clearAndDistribute() {
         var hostObj = this;
+
         hostObj.data.cards = new Hand();
         hostObj.data.cards.resetDeck().shuffle();
 
         hostObj.playerForEach(function(playerId) {
             var hand = new Hand();
-            hostObj.setData(playerId, 'banker', false);
-            hostObj.setData(playerId, 'hand', hand);
+
+            hostObj.player(playerId)
+                    .data('banker', false)
+                    .data('hand', hand);
 
             hand.addCard(hostObj.data.cards.draw());
             hand.addCard(hostObj.data.cards.draw());
         });
+    }
+
+    function startGame() {
+        // for now, assume client 0 is the banker
+        var hostObj = this;
+        hostObj.player(0).data('banker', true);
+
+        hostObj.data.turn = 1;
+        setTurn.call(hostObj);
+    }
+    function setTurn() {
+        var hostObj = this;
+        hostObj.player(hostObj.data.turn).sendMessage('turn', true);
     }
 
     hostRule.methods.startGame = function() {
