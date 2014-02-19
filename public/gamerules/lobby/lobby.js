@@ -3,6 +3,7 @@ var lobby = new MPRule();
 //MPRule.addPlugin()
 
 lobby.addPlugin(Sugar());
+lobby.addPlugin(DataChannel());
 
 lobby.defineHost(function(hostRule) {
 
@@ -21,17 +22,18 @@ lobby.defineHost(function(hostRule) {
             client: data.client
         });
 
-        hostObj.clientSetView(data.client, 'lobby-client', {name: data.client}, function() {
+        hostObj.clientSetView(data.client, 'lobby-client', {name: data.client}, function(data) {
         });
     });
 
     hostRule.on('client-leave', function(data) {
+        var hostObj = this;
         hostObj.getView().emit('client-leave', {
             client:data.client
         });
     });
 
-    hostRule.onMessage('set-name', function(from, data) {
+    hostRule.onMessage('set-name', function(from, data, fn) {
         var hostObj = this;
         hostObj.data.playerName[from] = data;
 
@@ -42,8 +44,42 @@ lobby.defineHost(function(hostRule) {
             });
         }
     });
-});
 
+
+    hostRule.methods.playerCount = function() {
+        var hostObj = this;
+        var cnt = 0;
+        hostObj.playerForEach(function() {
+            ++cnt;
+        });
+        return cnt;
+    };
+
+    hostRule.methods.playerForEach = function(fn) {
+        var hostObj = this;
+        for (var i in hostObj.data.playerName) {
+            if (hostObj.data.playerName.hasOwnProperty(i)) {
+                fn.call(hostObj.data.playerName, i);
+            }
+        }
+    };
+
+    hostRule.methods.startGame = function() {
+        var hostObj = this;
+        if (hostObj.playerCount() < 2) {
+            alert('we need more than 2 players to start the game');
+        } else {
+            hostObj.data.cards = new Hand();
+            hostObj.data.cards.resetDeck().shuffle();
+
+            hostObj.playerForEach(function(playerId) {
+                hostObj.setData(playerId, 'banker', false);
+                hostObj.setData(playerId, 'hand', new Hand());
+            });
+        }
+    };
+
+});
 
 lobby.defineClient(function(client) {
     client.on('load', function() {
@@ -61,10 +97,18 @@ lobby.addView('testSubView',
     }
 );
 
+lobby.addView('hand',
+    'adsf',
+    function(view) {
+    });
+
 lobby.addView('lobby',
-    'Connected Clients: <ul id="lobby"></ul><%=testSubView%>',
+    'Connected Clients: <ul id="lobby"></ul> <button id="startgame">Start Game</button><%=testSubView%>',
     function(view) {
         view.on('load', function() {
+            $("#startgame").click(function() {
+                view.getPlayerObj().startGame();
+            });
         });
 
         view.on('client-join', function(data) {
@@ -97,7 +141,6 @@ lobby.addView('lobby-client',
             $(this).find(".name").bind('keyup', function() {
                 view.getPlayerObj().sendMessage('set-name', this.value);
             });
-
         });
     });
 

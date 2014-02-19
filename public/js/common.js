@@ -3,6 +3,25 @@ function isFunction(functionToCheck) {
     return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
 }
 
+function extendObj(ori, extend) {
+    for (var i in extend) {
+        if (extend.hasOwnProperty(i) && !ori.hasOwnProperty(i)) {
+            ori[i] = extend[i];
+        }
+    }
+}
+
+Object.prototype.Inherits = function(Class) {
+    this.prototype = new Class;
+    this.prototype.constructor = this;
+};
+
+Object.prototype.getClass = function() {
+   var funcNameRegex = /function (.{1,})\(/;
+   var results = (funcNameRegex).exec((this).constructor.toString());
+   return (results && results.length > 1) ? results[1] : "";
+};
+
 // Simple JavaScript Templating
 // John Resig - http://ejohn.org/ - MIT Licensed
 (function(){
@@ -22,8 +41,8 @@ function isFunction(functionToCheck) {
         // Convert the template into pure JavaScript
         str
           .replace(/[\r\t\n]/g, " ")
-          .split("<%").join("\t")
-          .replace(/((^|%>)[^\t]*)'/g, "$1\r")
+          //.split("<%").join("\t")
+          //.replace(/((^|%>)[^\t]*)'/g, "$1\r")
           .replace(/\t=(.*?)%>/g, "',$1,'")
           .split("\t").join("');")
           .split("%>").join("p.push('")

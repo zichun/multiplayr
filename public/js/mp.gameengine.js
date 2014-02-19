@@ -17,9 +17,11 @@ function initialize(playerRule, playerObj) {
 
     // todo: use a proper getter
     for (var evt in playerRule.eventBindings) {
-        playerRule.eventBindings[evt].forEach(function(cb) {
-            playerObj.on(evt, cb);
-        });
+        if (playerRule.eventBindings.hasOwnProperty(evt)) {
+            playerRule.eventBindings[evt].forEach(function(cb) {
+                playerObj.on(evt, cb);
+            });
+        }
     }
 
     self.comm.on('message', function(data) {
@@ -40,7 +42,7 @@ function initialize(playerRule, playerObj) {
         }, self.playerObj);
     });
 
-    self.comm.on('leave-room', function() {
+    self.comm.on('leave-room', function(data) {
         playerObj.emit('client-leave', {
             // todo: unify API naming to be more consistent
             client: data.message
@@ -48,7 +50,9 @@ function initialize(playerRule, playerObj) {
     });
 
     for (var method in playerRule.methods) {
-        playerObj[method] = playerRule.methods[method];
+        if (playerRule.methods.hasOwnProperty(method)) {
+            playerObj[method] = playerRule.methods[method];
+        }
     }
 }
 
@@ -105,6 +109,7 @@ MPGameEngine.prototype.join =
             }
 
             self.playerObj = new MPPlayer(self, self.ruleObj.clientRule, self.ruleObj);
+            self.playerObj.isHost = false;
 
             initialize.call(self, self.ruleObj.clientRule, self.playerObj);
 
