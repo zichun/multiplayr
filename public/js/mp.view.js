@@ -1,5 +1,12 @@
 var MPView = (function() {
 
+
+var UUID = 0;
+
+function generateUUID() {
+    return "MPSubView-" + UUID++;
+};
+
 function MPView(name, viewRule, playerObj, container) {
     var self = this;
 
@@ -9,12 +16,18 @@ function MPView(name, viewRule, playerObj, container) {
     self.eventBindings = {};
     // todo: MPView should be independent from container. container given through render
     self.container = container;
+    self.childViews = {};
+    for (var i in viewRule.childViews) {
+        var childViewRule = viewRule.childViews[i];
+        self.childViews[i] = new MPView(childViewRule.name, childViewRule, playerObj, container);
+    }
 
-    self.childViews = [];
+    viewRule.initFunc.call(viewRule, self);
 
     return self;
 }
 
+// getChildViews returns a JSON object containing the views
 MPView.prototype.getChildViews =
     function MPViewGetChildViews() {
         var self = this;
@@ -32,9 +45,9 @@ MPView.prototype.emit =
             cb.call(selfObj, data);
         });
 
-        self.childViews.forEach(function(viewObj) {
-            viewObj.emit(evt, data);
-        });
+        for (var i in self.childViews) {
+            self.childViews[i].emit(evt, data);
+        }
     };
 
 MPView.prototype.on =
@@ -68,10 +81,26 @@ MPView.prototype.render =
         // todo: consider having a ViewRule and a ViewObj ala Player.
         // player object should not be bound at rule level
 
-        $(self.container).html(
-            js_tmpl(self.viewRule.markup, data));
+
+        $(self.container).html(self.generateHTML(data, playerObj));
 
         self.emit('load', {}, $(self.container));
+    };
+
+MPView.prototype.generateHTML =
+    function MPViewGenerateHTML(data, playerObj) {
+
+        var self = this;
+
+        var markupData = {};
+        for (var i in data) {
+            markupData[i] = data[i];
+        }
+        for (var i in self.childViews) {
+            markupData[i] = self.childViews[i].generateHTML({}, {});
+        }
+
+        return js_tmpl(self.viewRule.markup, markupData);
     };
 
 MPView.prototype.getName =

@@ -66,17 +66,27 @@ MPRule.prototype.defineClient =
     };
 
 MPRule.prototype.addView =
-    function MPRuleAddView(viewName, viewMarkup, initFunc) {
+    function MPRuleAddView(viewName, viewMarkup, initFunc, childViews) {
         var self = this;
         if (typeof self.views[viewName] !== 'undefined') {
             throw(new Error("View:" + viewName + " alredy exists!"));
+        }
+
+        childViewsMap = {};
+
+        if (childViews) {
+            for (var i = 0; i < childViews.length; i++) {
+                var view = self.views[childViews[i]];
+                childViewsMap[view.name] = view;
+            }            
         }
 
         self.views[viewName] = {
             name: viewName,
             markup: viewMarkup,
             initFunc: initFunc,
-            type: 'view' // Better for debugging and to separate this from a normal JSON object
+            childViews: childViewsMap,
+            type: 'viewRule' // Better for debugging and to separate this from a normal JSON object
         };
     };
 

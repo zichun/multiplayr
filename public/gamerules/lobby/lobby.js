@@ -52,9 +52,17 @@ lobby.defineClient(function(client) {
     });
 });
 
+lobby.addView('testSubView', 
+    '<div id="yolo">YOLO</div>',
+    function (view) {
+        view.on('load', function () {
+            console.log('YOLO');
+        });
+    }
+);
 
 lobby.addView('lobby',
-    'Connected Clients: <ul id="lobby"></ul>',
+    'Connected Clients: <ul id="lobby"></ul><%=testSubView%>',
     function(view) {
         view.on('load', function() {
         });
@@ -78,7 +86,8 @@ lobby.addView('lobby',
                 }
             });
         });
-    }
+    },
+    ['testSubView']
 );
 
 lobby.addView('lobby-client',
