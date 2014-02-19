@@ -49,6 +49,8 @@ Object.prototype.getClass = function() {
           .split("\r").join("\\'")
       + "');}return p.join('');");
 
+    console.log(fn);
+
     // Provide some basic currying to the user
     return data ? fn( data ) : fn;
   };
