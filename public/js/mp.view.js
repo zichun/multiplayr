@@ -18,8 +18,10 @@ function MPView(name, viewRule, playerObj, container) {
     self.container = container;
     self.childViews = {};
     for (var i in viewRule.childViews) {
-        var childViewRule = viewRule.childViews[i];
-        self.childViews[i] = new MPView(childViewRule.name, childViewRule, playerObj, container);
+        if (viewRule.childViews.hasOwnProperty(i)) {
+            var childViewRule = viewRule.childViews[i];
+            self.childViews[i] = new MPView(childViewRule.name, childViewRule, playerObj, container);    
+        }
     }
 
     viewRule.initFunc.call(viewRule, self);
@@ -46,7 +48,9 @@ MPView.prototype.emit =
         });
 
         for (var i in self.childViews) {
-            self.childViews[i].emit(evt, data);
+            if (self.childViews.hasOwnProperty(i)) {
+                self.childViews[i].emit(evt, data);
+            }
         }
     };
 
@@ -97,7 +101,9 @@ MPView.prototype.generateHTML =
             markupData[i] = data[i];
         }
         for (var i in self.childViews) {
-            markupData[i] = self.childViews[i].generateHTML({}, {});
+            if (self.childViews.hasOwnProperty(i)) {
+                markupData[i] = self.childViews[i].generateHTML({}, {});
+            }
         }
 
         return js_tmpl(self.viewRule.markup, markupData);

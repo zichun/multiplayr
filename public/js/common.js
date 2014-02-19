@@ -41,8 +41,8 @@ Object.prototype.getClass = function() {
         // Convert the template into pure JavaScript
         str
           .replace(/[\r\t\n]/g, " ")
-          //.split("<%").join("\t")
-          //.replace(/((^|%>)[^\t]*)'/g, "$1\r")
+          .split("<%").join("\t")
+          .replace(/((^|%>)[^\t]*)'/g, "$1\r")
           .replace(/\t=(.*?)%>/g, "',$1,'")
           .split("\t").join("');")
           .split("%>").join("p.push('")

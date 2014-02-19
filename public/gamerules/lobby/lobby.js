@@ -3,7 +3,7 @@ var lobby = new MPRule();
 //MPRule.addPlugin()
 
 lobby.addPlugin(Sugar());
-lobby.addPlugin(DataChannel());
+//lobby.addPlugin(DataChannel());
 
 lobby.defineHost(function(hostRule) {
 
