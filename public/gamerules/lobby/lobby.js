@@ -64,18 +64,28 @@ lobby.defineHost(function(hostRule) {
         }
     };
 
+
+    function clearAndDistribute() {
+        var hostObj = this;
+        hostObj.data.cards = new Hand();
+        hostObj.data.cards.resetDeck().shuffle();
+
+        hostObj.playerForEach(function(playerId) {
+            var hand = new Hand();
+            hostObj.setData(playerId, 'banker', false);
+            hostObj.setData(playerId, 'hand', hand);
+
+            hand.addCard(hostObj.data.cards.draw());
+            hand.addCard(hostObj.data.cards.draw());
+        });
+    }
+
     hostRule.methods.startGame = function() {
         var hostObj = this;
         if (hostObj.playerCount() < 2) {
             alert('we need more than 2 players to start the game');
         } else {
-            hostObj.data.cards = new Hand();
-            hostObj.data.cards.resetDeck().shuffle();
-
-            hostObj.playerForEach(function(playerId) {
-                hostObj.setData(playerId, 'banker', false);
-                hostObj.setData(playerId, 'hand', new Hand());
-            });
+            clearAndDistribute.call(hostObj);
         }
     };
 
