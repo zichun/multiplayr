@@ -109,7 +109,8 @@ lobby.defineHost(function(hostRule) {
 
             hostObj.player(playerId)
                     .data('banker', false)
-                    .data('turn', false)
+                    .data('turn', false)  // whether it's the player's turn
+                    .data('stand', false) // whether the player has stand (completed his round)
                     .data('hand', hand);
 
             hand.addCard(hostObj.data.cards.draw());
@@ -121,7 +122,7 @@ lobby.defineHost(function(hostRule) {
         // for now, assume client 0 is the banker
         var hostObj = this;
         hostObj.player(0).data('banker', true);
-        hostObj.player().setView('hand');
+        hostObj.player().setView('hand'); // todo: wait till view is set before calling setTurn. depends on proper async on player plugin
 
         hostObj.data.turn = 1;
         setTurn.call(hostObj);
@@ -129,9 +130,11 @@ lobby.defineHost(function(hostRule) {
 
     function setTurn() {
         var hostObj = this;
-        hostObj.player(hostObj.data.turn)
-                .data('turn', true)
-                .emitView('turn', true);
+        var player = hostObj.player(hostObj.data.turn);
+        if (player.data('stand') === false) {
+            player.data('turn', true)
+                    .emitView('turn', true);
+        }
     }
 
     hostRule.onMessage('hit', function(playerId, data, fn) {
@@ -142,11 +145,36 @@ lobby.defineHost(function(hostRule) {
             // ignore request
         } else {
             var hand = player.data('hand');
-            var card = hostObj.data.cards.draw();
-            hand.addCard(card);
-            fn(card.toJSON());
+            if (hand.canHit()) {
+                var card = hostObj.data.cards.draw();
+                hand.addCard(card);
+                fn(card.toJSON());
+            } else {
+                fn(false);
+            }
         }
     });
+
+    hostRule.onMessage('stand', function(playerId, data, fn) {
+        var hostObj = this;
+        var player = hostObj.player(playerId);
+
+        if (player.data('turn') === false) {
+            // ignore request
+        } else {
+            var hand = player.data('hand');
+            if (hand.canStand()) {
+                player.data('turn', false).data('stand', true);
+                hostObj.data.turn = (hostObj.data.turn + 1) % hostObj.playerCount();
+                setTurn.call(hostObj);
+                fn(true);
+            } else {
+                fn(false);
+            }
+        }
+
+    });
+
     hostRule.methods.startGame = function() {
         var hostObj = this;
         if (hostObj.playerCount() < 2) {
@@ -194,10 +222,14 @@ lobby.addView('hand',
             if (hand.canStand()) {
                 $('<button>Stand</button>').click(stand).appendTo($control);
             }
-            $con.find('.total').html(v);
+            $con.find('.total').html(typeof v === 'number' ? v : v[0] + ', ' + v[1]);
         }
 
         function stand() {
+            var $con = $(view.getContainer());
+            view.getPlayer().sendMessage('stand', {}, function() {
+                $con.find('.control').empty();
+            });
         }
 
         function hit() {

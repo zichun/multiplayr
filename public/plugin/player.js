@@ -102,7 +102,9 @@ function Player(_opt) {
                 var hostObj = this;
                 var players = [];
 
-                num = num || [0, hostObj.playerCount() - 1];
+                if (typeof num === 'undefined') {
+                    num = [0, hostObj.playerCount() - 1];
+                }
 
                 if (typeof num === 'string') {
                     var ind = hostObj._player.players.indexOf(num);
