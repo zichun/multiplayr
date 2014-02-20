@@ -92,6 +92,14 @@ function Sugar(_opt) {
                              });
             };
 
+            hostRule.methods.clientEmitView = function(client, type, data, cb) {
+                var hostObj = this;
+                hostObj.sendMessage(client, 'client-emit-view', {
+                    type: type,
+                    data: data
+                }, cb);
+            };
+
             hostRule.methods.clientSetView = function(client, view, data, cb) {
                 var hostObj = this;
                 hostObj.sendMessage(client, 'client-set-view', {
@@ -123,6 +131,11 @@ function Sugar(_opt) {
                 });
             };
 
+            clientRule.onMessage('client-emit-view', function(from, message, fn) {
+                var playerObj = this;
+                playerObj.getView().emit(message.type, message.data);
+                fn(message.type);
+            });
             clientRule.onMessage('client-set-view', function(from, message, fn) {
                 var playerObj = this;
                 playerObj.setView(message.view, message.data);

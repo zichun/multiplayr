@@ -17,6 +17,15 @@ function Player(_opt) {
             return tr.length === 1 ? tr[0] : tr;
         };
 
+        self.emitView = function(type, data, cb) {
+            var self = this;
+            // todo: proper async and callback
+            players.forEach(function(playerId) {
+                hostObj.clientEmitView(playerId, type, data);
+            });
+            return self;
+        };
+
         self.setView = function(view, data, cb){
             var self = this;
             // todo: proper async and callback
@@ -55,7 +64,7 @@ function Player(_opt) {
                 players.forEach(function(playerId) {
                     tr.push(hostObj.getDataSync(playerId, dataName));
                 });
-                return tr;
+                return tr.length === 1 ? tr[0] : tr;
             } else {
                 // setter
                 players.forEach(function(playerId) {
@@ -124,10 +133,8 @@ function Player(_opt) {
 
             hostRule.methods.playerForEach = function(fn) {
                 var hostObj = this;
-                for (var i in hostObj._player.playerName) {
-                    if (hostObj._player.playerName.hasOwnProperty(i)) {
-                        fn.call(hostObj._player.playerName, i);
-                    }
+                for (var i=0;i<hostObj._player.players.length;++i) {
+                    fn.call(hostObj, hostObj._player.players[i], i);
                 }
             };
 

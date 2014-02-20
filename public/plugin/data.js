@@ -138,6 +138,29 @@ DataChannelCollection.prototype.pop =
         return self._collection.splice(self._collection.length-1, 1)[0];
     };
 
+DataChannelCollection.prototype.peek =
+    function DataChannelCollectionPeek() {
+        var self = this;
+        if (self._collection.length === 0) {
+            return null;
+        }
+        return self._collection[self._collection.length-1];
+    };
+
+DataChannelCollection.prototype.size =
+    function DataChannelCollectionSize() {
+        var self = this;
+        return self._collection.length;
+    };
+
+DataChannelCollection.prototype.forEach =
+    function DataChannelCollectionForEach(fn) {
+        var self = this;
+        self._collection.forEach(function(item) {
+            fn.call(self, item);
+        });
+    };
+
 DataChannelCollection.prototype.toJSON =
     function DataChannelCollectionToJSON() {
         var tr= [], self = this;

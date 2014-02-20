@@ -55,10 +55,16 @@ MPView.prototype.off =
         }
     };
 
-MPView.prototype.getPlayerObj =
-    function MPViewGetPlayerObj() {
+MPView.prototype.getPlayer =
+    function MPViewGetPlayer() {
         var self = this;
         return self.playerObj;
+    };
+
+MPView.prototype.getContainer =
+    function MPViewGetContainer() {
+        var self = this;
+        return self.container;
     };
 
 MPView.prototype.render =

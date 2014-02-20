@@ -25,6 +25,16 @@ function Card(suit, value) {
 
 Card.Inherits(DataChannelObject);
 
+Card.prototype.getSuit =
+    function CardGetSuit() {
+        return this.suit;
+    };
+
+Card.prototype.getValue =
+    function CardGetValue() {
+        return this.value;
+    };
+
 Card.prototype.toJSON = function() {
     var self = this;
     return {
@@ -80,7 +90,7 @@ Hand.prototype.resetDeck =
 Hand.prototype.shuffle =
     function HandShuffle() {
         var self = this;
-        // todo: implement
+        shuffleArray(self._collection);
         return self;
     };
 
@@ -102,7 +112,7 @@ Hand.prototype.sortByValue =
     };
 
 Hand.fromJSON = function(json) {
-    var tr = new Hand();
+    var tr = new this();
     for (var i=0;i<json.length;++i) {
         tr.addCard(dataChannelUnserialize(json[i]));
     }

@@ -1,7 +1,57 @@
 var lobby = new MPRule();
 
-// todo: remove blackjack related stuff
-// todo: pluginify lobby
+
+function BJHand() {
+    var self = this;
+    Hand.call(self);
+    return self;
+}
+
+BJHand.Inherits(Hand);
+
+BJHand.prototype.getValue = function() {
+    var self = this;
+    var tr = 0, ace = 0;
+    self.forEach(function(card) {
+        var v = card.getValue();
+        if (v === 1) {
+            ace++;
+        } else if (v >= 10) {
+            tr += 10;
+        } else {
+            tr += v;
+        }
+    });
+
+    if (ace) {
+        if (self.size() === 2) {
+            return tr + 11;
+        } else if(self.size() === 3) {
+            if (tr + 10 > 21) {
+                return tr + 1;
+            } else {
+                return [tr + 1, tr + 10];
+            }
+        } else {
+            return tr + 1;
+        }
+    } else {
+        return tr;
+    }
+};
+BJHand.prototype.canHit = function() {
+    var val = this.getValue();
+    return ((typeof val === 'number' ? val : val[0]) < 21 && this.size() < 5);
+
+};
+BJHand.prototype.canStand = function() {
+    var val = this.getValue();
+    return ((typeof val === 'number' ? val : val[1]) >= 16);
+};
+
+BJHand.fromJSON = function(json) {
+    return Hand.fromJSON.apply(this, arguments);
+};
 
 lobby.addPlugin(Sugar());
 lobby.addPlugin(DataChannel());
@@ -51,11 +101,11 @@ lobby.defineHost(function(hostRule) {
     function clearAndDistribute() {
         var hostObj = this;
 
-        hostObj.data.cards = new Hand();
+        hostObj.data.cards = new BJHand();
         hostObj.data.cards.resetDeck().shuffle();
 
         hostObj.playerForEach(function(playerId) {
-            var hand = new Hand();
+            var hand = new BJHand();
 
             hostObj.player(playerId)
                     .data('banker', false)
@@ -76,6 +126,7 @@ lobby.defineHost(function(hostRule) {
         hostObj.data.turn = 1;
         setTurn.call(hostObj);
     }
+
     function setTurn() {
         var hostObj = this;
         hostObj.player(hostObj.data.turn)
@@ -116,7 +167,7 @@ lobby.defineClient(function(client) {
 });
 
 lobby.addView('hand',
-    '<div class="status">Waiting</div>' +
+    '<div class="status">Total: <span class="total"></span></div>' +
     '<div class="hand"></div>' +
     '<div class="control"></div>',
     function(view) {
@@ -130,10 +181,30 @@ lobby.addView('hand',
             $con.find('.hand').append('<div class="card">' + card.getValue() + suitToText(card.getSuit()) + '</div>');
         }
 
+        function updateMoves(hand) {
+            var v = hand.getValue();
+            var $con = $(view.getContainer());
+            var $control = $con.find('.control');
+
+            $control.empty();
+
+            if (hand.canHit()) {
+                $('<button>Hit</button>').click(hit).appendTo($control);
+            }
+            if (hand.canStand()) {
+                $('<button>Stand</button>').click(stand).appendTo($control);
+            }
+            $con.find('.total').html(v);
+        }
+
+        function stand() {
+        }
+
         function hit() {
             view.getPlayer().sendMessage('hit', {}, function() {
                 view.getPlayer().getData('hand', function(hand) {
                     addCard(hand.peek());
+                    updateMoves(hand);
                 });
             });
         }
@@ -141,15 +212,15 @@ lobby.addView('hand',
         view.on('load', function() {
             var $con = $(this);
             view.getPlayer().getData('hand', function(hand) {
+                view.getPlayer().hand = hand;
                 hand.forEach(addCard);
             });
         });
 
         view.on('turn', function() {
-            var $con = $(this);
-            $con.find('.status').html('Your turn!');
-
-            $('<button>Hit</button>').click(hit).appendTo($con.find('.control'));
+            view.getPlayer().getData('hand', function(hand) {
+                updateMoves(hand);
+            });
         });
     });
 
