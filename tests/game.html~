@@ -1,0 +1,79 @@
+<html>
+<head>
+	<title>Test</title>
+</head>
+<body>
+	Test cases<br />
+	----------<br />
+	<br />
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="/js/jquery.js"></script>
+        <script src="/js/common.js"></script>
+	<script src="/js/mp.transport.js"></script>
+        <script src="/js/mp.protocol.js"></script>
+        <script src="/js/mp.rule.js"></script>
+        <script src="/js/mp.player.js"></script>
+        <script src="/js/mp.view.js"></script>
+        <script src="/js/mp.gameengine.js"></script>
+
+
+        <script src="/plugin/sugar.js"></script>
+        <script src="/plugin/data.js"></script>
+        <script src="/plugin/player.js"></script>
+        <script src="/js/card.js"></script>
+
+
+        <script src="/gamerules/blackjack/blackjack.js"></script>
+
+        Host:
+        <div id="host-container" style="margin-bottom: 10px; border:1px solid black; height: 300px;">
+        </div>
+
+        Client 0:
+        <div id="client0-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
+        </div>
+
+        Client 1:
+        <div id="client1-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
+        </div>
+
+        Client 2:
+        <div id="client2-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
+        </div>
+
+	<script>
+
+	function assert(exp) {
+		if (!exp) {
+			throw new Error();
+		}
+	}
+
+	function test1() {
+            var hostEngine = new MPGameEngine(lobby, document.getElementById('host-container'), io, 'http://localhost:8080');
+            var clientEngines = [];
+            hostEngine.host(function(err, data) {
+                var roomId = hostEngine.roomId;
+
+/*                clientEngine = new MPGameEngine(lobby, document.getElementById('client-container'), io, 'http://localhost:8080');
+                clientEngine.join(roomId);*/
+
+                  [0,1,2].forEach(function(i) {
+                      var name = "client"+i+"-container";
+                      var container = document.getElementById(name);
+                      var $button = $('<button>Connect</button>').click(function() {
+                          clientEngines[i] = new MPGameEngine(lobby, container, io, 'http://localhost:8080');
+                          clientEngines[i].join(roomId);
+                      });
+
+                      $(container).append($button);
+                  });
+            });
+	}
+
+	test1();
+	</script>
+
+
+</body>
+</html>
