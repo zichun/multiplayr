@@ -5,12 +5,13 @@ var io = require('socket.io').listen(server);
 
 
 app.configure(function(){
+    app.set('port', process.env.PORT || 3000);
     app.set("view options", { layout: false, pretty: true });
     app.use(express.favicon());
     app.use(express.static(__dirname + '/public'));
 });
 
-server.listen(8080);
+server.listen(app.get('port'));
 
 
 app.get('/', function (req, res) {
