@@ -3,7 +3,6 @@ var app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
 
-
 app.configure(function(){
     app.set('port', process.env.PORT || 3000);
     app.set("view options", { layout: false, pretty: true });
@@ -12,7 +11,6 @@ app.configure(function(){
 });
 
 server.listen(app.get('port'));
-
 
 app.get('/', function (req, res) {
     res.sendfile(__dirname + '/index.html');

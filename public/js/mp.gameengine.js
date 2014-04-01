@@ -133,6 +133,29 @@ MPGameEngine.prototype.getView =
         return self.viewObjs[view];
     };
 
+MPGameEngine.loadScript =
+     function(script, cb) {
+       function extractDir(url) {
+         var x = url.split('/');
+         return x.slice(1, x.length - 1).join('/') + '/';
+       }
+       function loadScript(script) {
+         var el = document.createElement('script');
+         el.src = script;
+         if (isFunction(cb)) {
+           el.onload = cb;
+         }
+         document.body.appendChild(el);
+       }
+       var _dir = extractDir(
+         document.getElementsByTagName('script').getAttribute('src'));
+       if (script[0] === '/') {
+         loadScript(script);
+       } else {
+         loadScript(_dir + script);
+       }
+    };
+
     return MPGameEngine;
 
 })();
