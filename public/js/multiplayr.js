@@ -2,7 +2,7 @@ var Multiplayr = (function() {
     var Multiplayr = {
         createRule: function(rule) { throw new Error("Not implemented"); },
         host: Host,
-        join: function() {},
+        join: Join,
 
         createDataType: CreateDataType,
         PrimitiveType: CreateDataType(_primitiveType)
@@ -47,6 +47,8 @@ var Multiplayr = (function() {
                 isHost: true
             });
 
+            var dxc = new MPDataExchange(comm, gameObj);
+
             setUpMethods(gameObj, rule.methods);
 
             if (isFunction(cb)) {
@@ -76,6 +78,8 @@ var Multiplayr = (function() {
                 isHost: false
             });
 
+            var dxc = new MPDataExchange(comm, gameObj);
+
             setUpMethods(gameObj, rule.methods);
 
             if (isFunction(cb)) {
@@ -97,4 +101,4 @@ var Multiplayr = (function() {
     }
 
     return Multiplayr;
-});
+})();

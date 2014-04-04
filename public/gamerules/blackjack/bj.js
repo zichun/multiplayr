@@ -1,4 +1,4 @@
-var BJRule = Multiplayr.createRule(
+var BJRule = //Multiplayr.createRule(
     {
         methods: {
             hit: {
@@ -50,8 +50,10 @@ var BJRule = Multiplayr.createRule(
         },
 
         playerData: {
-            hand: {
+            temp: {
+                value: 3
             }
         }
 
-    });
+    }
+//);
