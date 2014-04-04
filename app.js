@@ -13,16 +13,13 @@ app.configure(function(){
 server.listen(app.get('port'));
 
 app.get('/', function (req, res) {
-    res.sendfile(__dirname + '/index.html');
+    res.sendfile(__dirname + '/tests/v2.html');
 });
 
 app.get('/test.html', function (req, res) {
 	res.sendfile(__dirname + '/tests/test.html');
 });
 
-app.get('/game.html', function (req, res) {
-	res.sendfile(__dirname + '/tests/game.html');
-});
 
 var transport = require('./inc/transport');
 transport.init(io);

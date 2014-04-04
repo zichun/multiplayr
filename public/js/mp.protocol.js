@@ -97,9 +97,9 @@ var MPProtocol =
             };
         self.send =
             function MPProtocolSend(clientId, data, cb) {
-                if (!isHost) {
-                    throw new Error("Only host can send messages");
-                }
+                // if (!isHost) {
+                //     throw new Error("Only host can send messages");
+                // }
                 meshObj.send(clientId, {
                     type: 'message',
                     message: data

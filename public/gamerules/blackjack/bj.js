@@ -1,19 +1,7 @@
 var BJRule = Multiplayr.createRule(
     {
-        clientStates: {
-            lobby: function(client, player) {
-
-            },
-            play: function(client, players) {
-
-            },
-            wait: {
-            }
-        },
-
         methods: {
             hit: {
-                states: ['play'],
                 callee: function(player, gameObject, cb) {
                     gameObject.getData('turn', function(val) {
                         if (val === player) {
@@ -35,36 +23,35 @@ var BJRule = Multiplayr.createRule(
             },
 
             stand: {
-                states: ['play'],
                 exec: function(player, gameObj, cb) {
                     gameObject.getData('turn', function() {
 
                     })
+                }
+
             }
-
-
         },
 
         globalData: {
             turn: {
-                type: Multiplayr.PrimitiveType.Int,
-                onchange: function(value, gameObj) {
+                onchange: function(data, gameObj) {
                 },
-                initial: 1
+                value: 1,
+                const: false
             },
             state: {
-                type: Multiplayr.PrimitiveType.String,
-                onchange: function(value, gameObj) {
-
+                type: Multiplayr.PrimitiveType,
+                onchange: function(data, gameObj) {
+                    gameObj.renderView(data);
                 },
-                initial: 1
-            },
-            score: 0,
-            handOfPlayers: []
+                initial: 1,
+                const: false
+            }
         },
 
         playerData: {
+            hand: {
+            }
         }
 
-    }
-);
+    });
