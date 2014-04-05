@@ -23,13 +23,19 @@ var MPDataExchange = (function() {
             if (clientId === null) {
                 clientId = comm.getHost();
             }
+            var mcb = function(err, data) {
+                if (err) {
+                    return cb(err, data);
+                }
+                if (
+            };
             sendTypedMessage(clientId,
                             'set-data',
                             {
                                 variable: variable,
                                 value: value
                             },
-                            cb);
+                            mcb);
         };
 
         self._typedMessages = {};
@@ -58,6 +64,22 @@ var MPDataExchange = (function() {
             });
         }
 
+        function createProxySpecs(data) {
+            var tr = {};
+            for (var x in data) {
+                if (isFunction(data[x])) {
+                    tr[x] = {
+                        proxy: true
+                    };
+                } else {
+                    // todo: deep proxying
+                    tr[x] = {
+                        proxy: false,
+                        value: data[x]
+                    };
+                }
+            }
+        }
 
         /**
          * Set-up events
@@ -73,11 +95,19 @@ var MPDataExchange = (function() {
                 {
                     var variable = message.variable;
                     gameObj.getLocalData(variable, function(err, data) {
-                        // todo: create proxy
                         // todo: handle err
+
+                        var proxy = false;
+                        if (data instanceof MPDataExchangable) {
+                            proxy = true;
+                            data = createProxySpecs(data);
+                        }
+
+                        // todo: make err / data part of ack protocol
                         sendAckMessage(from, uniqid, {
                             err: err,
-                            data: data
+                            data: data,
+                            proxy: proxy
                         });
                     });
                 }
