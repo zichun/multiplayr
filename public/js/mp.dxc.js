@@ -118,3 +118,27 @@ var MPDataExchange = (function() {
 
     return MPDataExchange;
 })();
+
+
+function MPDataExchangable() {
+}
+
+function Stack() {
+    var self = this;
+    self.data = [];
+    return self;
+}
+
+Stack.Inherits(MPDataExchangable);
+
+Stack.prototype.push = function(x) {
+    this.data.push(x);
+};
+
+Stack.prototype.pop = function(cb) {
+    cb((this.data.splice(0, this.data.length - 1))[0]);
+};
+
+Stack.prototype.length = function(cb) {
+    cb(this.data.length);
+};

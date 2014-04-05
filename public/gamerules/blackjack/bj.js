@@ -39,6 +39,9 @@ var BJRule = //Multiplayr.createRule(
                 value: 1,
                 const: false
             },
+            stack: {
+                value: {a: 1, b: 2}
+            },
             state: {
                 type: Multiplayr.PrimitiveType,
                 onchange: function(data, gameObj) {
