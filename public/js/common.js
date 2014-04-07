@@ -20,6 +20,11 @@ function extendObj(ori, extend) {
     }
 }
 
+function gen_uniqid(pre) {
+    return pre + "-" + Math.random() + "-" + Math.random();
+}
+
+
 Object.prototype.Inherits = function(Class) {
     this.prototype = new Class;
     this.prototype.constructor = this;

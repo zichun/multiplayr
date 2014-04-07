@@ -101,6 +101,10 @@ var MPGameObject = (function() {
             return self;
         };
 
+    /**
+     * Sends a request to get data from host. If it's the host calling this API,
+     * we'll get it from localstore directly
+     */
     MPGameObject.prototype.getData =
         function MPGameObjectGetData(variable, cb) {
             var self = this;
@@ -113,6 +117,10 @@ var MPGameObject = (function() {
             return self;
         };
 
+    /**
+     * Sends a request to set data on host. If it's the host calling this API,
+     * we'll get it from localstore directly
+     */
     MPGameObject.prototype.setData =
         function MPGameObjectSetData(variable, value, cb) {
             var self = this;

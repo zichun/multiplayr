@@ -40,7 +40,7 @@ var BJRule = //Multiplayr.createRule(
                 const: false
             },
             stack: {
-                value: {a: 1, b: 2}
+                value: new Stack()
             },
             state: {
                 type: Multiplayr.PrimitiveType,
