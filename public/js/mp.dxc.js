@@ -11,31 +11,36 @@ var MPDataExchange = (function() {
             if (clientId === null) {
                 clientId = comm.getHost();
             }
+            var mcb = function(err, data) {
+                if (err) {
+                    return cb(err, data);
+                }
+
+                if (data.proxy === true) {
+                    cb(err, new MPDataProxy(data.data));
+                } else {
+                    cb(err, data.data);
+                }
+            };
             sendTypedMessage(clientId,
                              'get-data',
                              {
                                  variable: variable
                              },
-                             cb);
+                             mcb);
         };
 
         self.setData = function(clientId, variable, value, cb) {
             if (clientId === null) {
                 clientId = comm.getHost();
             }
-            var mcb = function(err, data) {
-                if (err) {
-                    return cb(err, data);
-                }
-                if (
-            };
             sendTypedMessage(clientId,
                             'set-data',
                             {
                                 variable: variable,
                                 value: value
                             },
-                            mcb);
+                            cb);
         };
 
         self._typedMessages = {};
@@ -56,15 +61,17 @@ var MPDataExchange = (function() {
                 uniqid: uniqid
             });
         }
-        function sendAckMessage(to, uniqid, message) {
+
+        function sendAckMessage(to, uniqid, err, message) {
             comm.send(to, {
                 type: 'typed-message-ack',
+                err: err,
                 message: message,
                 uniqid: uniqid
             });
         }
 
-        function createProxySpecs(data) {
+        function createProxySpecs(data, owner) {
             var tr = {};
             for (var x in data) {
                 if (isFunction(data[x])) {
@@ -79,6 +86,10 @@ var MPDataExchange = (function() {
                     };
                 }
             }
+            return {
+                owner: owner,
+                data: tr
+            };
         }
 
         /**
@@ -100,12 +111,11 @@ var MPDataExchange = (function() {
                         var proxy = false;
                         if (data instanceof MPDataExchangable) {
                             proxy = true;
-                            data = createProxySpecs(data);
+                            data = createProxySpecs(data, gameObj.clientId);
                         }
 
                         // todo: make err / data part of ack protocol
-                        sendAckMessage(from, uniqid, {
-                            err: err,
+                        sendAckMessage(from, uniqid, err, {
                             data: data,
                             proxy: proxy
                         });
@@ -118,10 +128,7 @@ var MPDataExchange = (function() {
                     var variable = message.variable;
                     var value = message.value;
                     gameObj.setLocalData(variable, value, function(err, data) {
-                        sendAckMessage(from, uniqid, {
-                            err: err,
-                            data: data
-                        });
+                        sendAckMessage(from, uniqid, err, data);
                     });
                 }
                 break;
@@ -143,12 +150,31 @@ var MPDataExchange = (function() {
         });
 
         return self;
-    }
+    };
 
 
     return MPDataExchange;
 })();
 
+
+var MPDataProxy = (function() {
+    function MPDataProxy(proxySpec) {
+        var self = this;
+
+        self.owner = proxySpec.owner;
+        self.initialize(proxySpec.data);
+
+        return self;
+    }
+
+    MPDataProxy.prototype.initialize =
+        function MPDataProxyInitialize(proxySpec) {
+            var self = this;
+            return self;
+        };
+
+    return MPDataProxy;
+})();
 
 function MPDataExchangable() {
 }
