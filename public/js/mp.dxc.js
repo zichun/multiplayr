@@ -1,5 +1,6 @@
 /**
  * Multiplayr is designed to be data-driven, and hence we only allow data exchange in this intermediate protocol layer
+ * Data will only be stored in the host
  */
 var MPDataExchange = (function() {
     function MPDataExchange(comm, gameObj) {
@@ -22,9 +23,10 @@ var MPDataExchange = (function() {
                     cb(err, data.data);
                 }
             };
-            sendTypedMessage(clientId,
+            sendTypedMessage(comm.getHost(),
                              'get-data',
                              {
+                                 clientId: clientId,
                                  variable: variable
                              },
                              mcb);
@@ -34,13 +36,14 @@ var MPDataExchange = (function() {
             if (clientId === null) {
                 clientId = comm.getHost();
             }
-            sendTypedMessage(clientId,
-                            'set-data',
-                            {
-                                variable: variable,
-                                value: value
-                            },
-                            cb);
+            sendTypedMessage(comm.getHost(),
+                             'set-data',
+                             {
+                                 clientId: clientId,
+                                 variable: variable,
+                                 value: value
+                             },
+                             cb);
         };
 
         self.invokeProxyMethod = function(clientId, uniqid, method, arguments, cb) {
@@ -133,7 +136,14 @@ var MPDataExchange = (function() {
                 case 'get-data': // data request
                 {
                     var variable = message.variable;
-                    gameObj.getLocalData(variable, function(err, data) {
+                    var clientId = message.clientId;
+
+                    if (gameObj.clientId !== comm.getHost()) {
+                        ack(new Error("Only host should store data"), null);
+                        break;
+                    }
+
+                    var getDataCb = function(err, data) {
                         // todo: handle err
 
                         var proxy = false;
@@ -143,7 +153,13 @@ var MPDataExchange = (function() {
                         }
 
                         ack(err, {data: data, proxy: proxy});
-                    });
+                    };
+
+                    if (clientId === comm.getHost()) {
+                        gameObj.getLocalData(variable, getDataCb);
+                    } else {
+                        gameObj.getlayerData(clientId, variable, getDataCb);
+                    }
                 }
                 break;
 
@@ -151,7 +167,18 @@ var MPDataExchange = (function() {
                 {
                     var variable = message.variable;
                     var value = message.value;
-                    gameObj.setLocalData(variable, value, ack);
+                    var clientId = message.clientId;
+
+                    if (gameObj.clientId !== comm.getHost()) {
+                        ack(new Error("Only host should store data"), null);
+                        break;
+                    }
+
+                    if (clientId === comm.getHost()) {
+                        gameObj.setLocalData(variable, value, ack);
+                    } else {
+                        gameObj.setlayerData(clientId, variable, value, ack);
+                    }
                 }
                 break;
 
@@ -189,12 +216,12 @@ var MPDataExchange = (function() {
             }
         });
 
-        // comm.on('join-room', function(data) {
-        //     gameObj.newClient(data.message);
-        // });
-        // comm.on('leave-room', function(data) {
-        //     gameObj.deleteClient(data.message);
-        // });
+        comm.on('join-room', function(data) {
+            gameObj.newClient(data.message);
+        });
+        comm.on('leave-room', function(data) {
+            gameObj.deleteClient(data.message);
+        });
 
         return self;
     };

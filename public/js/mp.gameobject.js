@@ -14,12 +14,18 @@ var MPGameObject = (function() {
             return opt.isHost;
         };
 
-        self._dataPortal = SetUpData(data);
+        if (opt.playerData) {
+            self.playerData = opt.playerData;
+        }
+        self.clients = {};
 
+        if (data) {
+            self._dataStore = CreateStore(data);
+        }
         return self;
     }
 
-    function SetUpData(dataObj) {
+    function CreateStore(dataObj) {
         var _store = {};
 
         for (var variable in dataObj) {
@@ -63,9 +69,17 @@ var MPGameObject = (function() {
         function MPGameObjectGetPlayerData(playerId, variable, cb) {
             var self = this;
             if (self.isHost() === false) {
-                throw(new Error("Only host has access to player data"));
+                self.dxc.getData(playerId, variable, cb);
+            } else {
+                if (typeof self.clients[playerId] === 'undefined'){
+                    cb(new Error("Client [" + playerId + "] does not exists"), null);
+                } else if (self.clients[playerId].active === false) {
+                    // todo: think about disconnection implication
+                    cb(new Error("Client [" + playerId + "] has disconnected"), null);
+                } else {
+                    cb(null, self.clients[playerId].dataStore(_secret, variable).get());
+                }
             }
-            self.dxc.getData(playerId, variable, cb);
             return self;
         };
 
@@ -73,9 +87,17 @@ var MPGameObject = (function() {
         function MPGameObjectSetPlayerData(playerId, variable, value, cb) {
             var self = this;
             if (self.isHost() === false) {
-                throw(new Error("Only host has access to player data"));
+                self.dxc.setData(playerId, variable, value, cb);
+            } else {
+                if (typeof self.clients[playerId] === 'undefined'){
+                    cb(new Error("Client [" + playerId + "] does not exists"), null);
+                } else if (self.clients[playerId].active === false) {
+                    // todo: think about disconnection implication
+                    cb(new Error("Client [" + playerId + "] has disconnected"), null);
+                } else {
+                    cb(null, self.clients[playerId].dataStore(_secret, variable).set(value));
+                }
             }
-            self.dxc.getData(playerId, variable, value, cb);
             return self;
         };
 
@@ -83,7 +105,7 @@ var MPGameObject = (function() {
         function MPGameObjectSetLocalData(variable, value, cb) {
             var self = this;
             try {
-                cb(null, self._dataPortal(_secret, variable).set(value));
+                cb(null, self._dataStore(_secret, variable).set(value));
             } catch(e) {
                 cb(e, false);
             }
@@ -94,7 +116,7 @@ var MPGameObject = (function() {
         function MPGameObjectGetLocalData(variable, cb) {
             var self = this;
             try {
-                cb(null, self._dataPortal(_secret, variable).get());
+                cb(null, self._dataStore(_secret, variable).get());
             } catch(e) {
                 cb(e, false);
             }
@@ -133,6 +155,26 @@ var MPGameObject = (function() {
             return self;
         };
 
+    MPGameObject.prototype.newClient =
+        function MPGameObjectNewClient(clientId) {
+            if (self.isHost()) {
+                self.clients[clientId] = {
+                    active: true,
+                    dataStore: CreateStore(self.playerData)
+                };
+            } else {
+                // in this implementation of gameobject we'll force non-host to talk to host only
+            }
+        };
+
+    MPGameObject.prototype.deleteClient =
+        function MPGameObjectDeleteClient(clientId) {
+            if (self.isHost()) {
+                self.clients[clientId].active = false;
+            } else {
+                // in this implementation of gameobject we'll force non-host to talk to host only
+            }
+        };
 
     return MPGameObject;
 })();

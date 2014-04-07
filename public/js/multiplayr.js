@@ -3,7 +3,6 @@ var Multiplayr = (function() {
         createRule: function(rule) { throw new Error("Not implemented"); },
         host: Host,
         join: Join,
-
         createDataType: CreateDataType,
         PrimitiveType: CreateDataType(_primitiveType)
     };
@@ -41,6 +40,7 @@ var Multiplayr = (function() {
 
             var gameObj = new MPGameObject({
                 data: rule.globalData,
+                playerData: rule.playerData,
                 roomId: data.roomId,
                 clientId: data.clientId,
                 container: container,
@@ -71,7 +71,6 @@ var Multiplayr = (function() {
             }
 
             var gameObj = new MPGameObject({
-                data: rule.playerData,
                 roomId: roomId,
                 clientId: data.clientId,
                 container: container,
