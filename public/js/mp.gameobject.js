@@ -18,12 +18,15 @@ var MPGameObject = (function() {
         if (opt.playerData) {
             self.playerData = opt.playerData;
         }
+
         self.clients = [];
         self._clientsData = {};
+        self._dataStore = CreateStore(data, self);
 
-        if (data) {
-            self._dataStore = CreateStore(data, self);
+        if (self.isHost()) {
+            self.dataChange();
         }
+
         return self;
     }
 
@@ -95,13 +98,21 @@ var MPGameObject = (function() {
             if (self.isHost() === false) {
                 self.dxc.setData(playerId, variable, value, cb);
             } else {
+                var mcb = function(err, res) {
+                    if (isFunction(cb)) {
+                        cb(err, res);
+                    } else if (err) {
+                        throw(err);
+                    }
+                };
+
                 if (typeof self._clientsData[playerId] === 'undefined'){
-                    cb(new Error("Client [" + playerId + "] does not exists"), null);
+                    mcb(new Error("Client [" + playerId + "] does not exists"), null);
                 } else if (self._clientsData[playerId].active === false) {
                     // todo: think about disconnection implication
-                    cb(new Error("Client [" + playerId + "] has disconnected"), null);
+                    mcb(new Error("Client [" + playerId + "] has disconnected"), null);
                 } else {
-                    cb(null, self._clientsData[playerId].dataStore(_secret, variable).set(value));
+                    mcb(null, self._clientsData[playerId].dataStore(_secret, variable).set(value));
                 }
             }
             return self;
@@ -110,13 +121,20 @@ var MPGameObject = (function() {
     MPGameObject.prototype.setLocalData =
         function MPGameObjectSetLocalData(variable, value, cb) {
             var self = this;
-            if (isFunction(cb)) {
+                var mcb = function(err, res) {
+                    if (isFunction(cb)) {
+                        cb(err, res);
+                    } else if (err) {
+                        throw(err);
+                    }
+                };
+
                 try {
-                    cb(null, self._dataStore(_secret, variable).set(value));
+                    mcb(null, self._dataStore(_secret, variable).set(value));
                 } catch(e) {
-                    cb(e, false);
+                    mcb(e, false);
                 }
-            }
+
             return self;
         };
 
@@ -247,6 +265,11 @@ var MPGameObject = (function() {
             var cnter = self.clients.length;
             var accumulatedResults = {};
 
+            if (cnter === 0) {
+                cb(null, accumulatedResults);
+                return self;
+            }
+
             self.clients.forEach(function(client) {
                 self.getPlayerData(client, variable, function(err, res) {
                     accumulatedResults[client] = {
@@ -260,6 +283,8 @@ var MPGameObject = (function() {
                     }
                 });
             });
+
+            return self;
         };
 
 

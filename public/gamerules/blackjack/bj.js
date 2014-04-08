@@ -6,35 +6,30 @@ var BJRule = //Multiplayr.createRule(
                 if (gameObj.clients.length < 2) {
                     alert("We need at least 2 players to play this game");
                 } else {
-                    gameObj.setData('started', true, function() {});
-                    gameObj.setData('turn', 0, function() {});
+                    // todo: surpress datachange (being able to stage multiple setData)
+                    gameObj.setData('started', true);
+                    gameObj.setData('turn', 0);
                     for (var i=0;i<gameObj.clients.length;++i) {
-                        // todo: surpress datachange
-                        // todo: foreach
+                        // todo: clients foreach
                         gameObj.setPlayerData(gameObj.clients[i], 'rollValue', 0, function() {});
                     }
                 }
             },
             roll: function() {
-                with(this) {
-                    var roll = Math.floor(1000 * Math.random() + 1);
-                    //todo: make cb optional
-                    setPlayerData(clientId, 'rollValue', roll, function() {});
-                    nextTurn();
-                }
+                var roll = Math.floor(1000 * Math.random() + 1);
+                this.setPlayerData(this.clientId, 'rollValue', roll, function() {});
+                this.nextTurn();
             },
             nextTurn: function() {
-                with(this) {
-                    QgetData('turn')
-                        .then(function(turn) {
-                            return setData('turn', turn+1, function() {});
-                        });
-                }
+                var self = this;
+                self.QgetData('turn')
+                    .then(function(turn) {
+                        return self.setData('turn', turn+1, function() {});
+                    });
             }
         },
 
         onDataChange: function(gameObj) {
-            var tmp = {};
             with(gameObj) {
 
                 QgetData('started')
@@ -57,13 +52,13 @@ var BJRule = //Multiplayr.createRule(
                             return;
                         }
 
-                        for (var i=0;i<clients.length;++i) {
+                        clients.forEach(function(client, i) {
                             if (i !== turn) {
-                                setView(clients[i], 'WaitingPage', {name: names[clients[turn]].data});
+                                setView(client, 'WaitingPage', {name: names[clients[turn]].data});
                             } else {
-                                setView(clients[i], 'RollPage', {});
+                                setView(client, 'RollPage', {});
                             }
-                        }
+                        });
 
                         setView(clientId, 'StatusPage', {name: names[clients[turn]].data, names: names, rolls:rolls});
                     }).fail(function(err) {
@@ -73,14 +68,15 @@ var BJRule = //Multiplayr.createRule(
 
                 function showSummary(turn, names, rolls) {
                     var largest = 0;
-                    for (var i=0;i<clients.length;++i) {
-                        if (rolls[clients[i]].data > rolls[clients[largest]].data) {
+
+                    clients.forEach(function(client, i) {
+                        if (rolls[client].data > rolls[clients[largest]].data) {
                             largest = i;
                         }
-                    }
-                    for (var i=0;i<clients.length;++i) {
-                        setView(clients[i], 'WinPage', {name: names[clients[largest]].data});
-                    }
+                    });
+                    clients.forEach(function(client, i) {
+                        setView(client, 'WinPage', {name: names[clients[largest]].data});
+                    });
                     setView(clientId, 'StatusPage', {name: false, names: names, rolls:rolls});
                 }
 
@@ -88,16 +84,10 @@ var BJRule = //Multiplayr.createRule(
                 function showLobby() {
                     QgetPlayersData('name')
                         .then(function(names) {
-
-                            var tr = [];
-                            for (var cid in names) {
-                                if (names.hasOwnProperty(cid)) {
-                                    setView(cid, 'SetName', {name: names[cid].data});
-                                    tr.push(names[cid].data);
-                                }
-                            }
-
-                            setView(clientId, 'Lobby', {names: tr});
+                            clients.forEach(function(client) {
+                                setView(client, 'SetName', {name: names[client].data});
+                            });
+                            setView(clientId, 'Lobby', {names: names});
                         });
                 }
             }
@@ -135,13 +125,20 @@ var BJRule = //Multiplayr.createRule(
 var Lobby = React.createClass({
     displayName: 'Lobby',
     render: function() {
-        function createHello(name) {
-            return HelloMessage({name: name});
+        function createHello(names) {
+            var tr = [];
+            for (var clientId in names) {
+                if (names.hasOwnProperty(clientId)) {
+                    tr.push( HelloMessage({name: names[clientId].data}) );
+                }
+            }
+            return tr;
         }
+
         return React.DOM.div(
             null,
             React.DOM.h3(null, "Lobby"),
-            React.DOM.ul(null, this.props.names.map(createHello)),
+            React.DOM.ul(null, createHello(this.props.names)),
             React.DOM.button({onClick: this.props.MPGameObject.startGame}, 'Start game')
         );
     }
