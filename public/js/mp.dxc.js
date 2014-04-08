@@ -46,6 +46,16 @@ var MPDataExchange = (function() {
                              cb);
         };
 
+        self.setView = function(clientId, displayName, props, cb) {
+            sendTypedMessage(clientId,
+                             'set-view',
+                             {
+                                 displayName: displayName,
+                                 props: props
+                             },
+                             cb);
+        };
+
         self.invokeProxyMethod = function(clientId, uniqid, method, arguments, cb) {
             var self = this;
             var mcb = function(err, res) {
@@ -158,7 +168,7 @@ var MPDataExchange = (function() {
                     if (clientId === comm.getHost()) {
                         gameObj.getLocalData(variable, getDataCb);
                     } else {
-                        gameObj.getlayerData(clientId, variable, getDataCb);
+                        gameObj.getPlayerData(clientId, variable, getDataCb);
                     }
                 }
                 break;
@@ -177,7 +187,7 @@ var MPDataExchange = (function() {
                     if (clientId === comm.getHost()) {
                         gameObj.setLocalData(variable, value, ack);
                     } else {
-                        gameObj.setlayerData(clientId, variable, value, ack);
+                        gameObj.setPlayerData(clientId, variable, value, ack);
                     }
                 }
                 break;
@@ -211,6 +221,24 @@ var MPDataExchange = (function() {
                     arguments[arguments.length] = ack;
                     originalObj[method].apply(originalObj, arguments);
 
+                    if (originalObj[method]._mutate === true) {
+                        gameObj.dataChange();
+                    }
+                }
+                break;
+
+                case 'set-view':
+                {
+                    var displayName = message.displayName;
+                    var props = message.props;
+                    var err = null;
+                    try {
+                        gameObj._renderReactView(displayName, props);
+                    } catch(e) {
+                        err = e;
+                    } finally {
+                        ack(err, displayName);
+                    }
                 }
                 break;
             }
@@ -260,10 +288,12 @@ var MPDataExchange = (function() {
                 }
 
                 for (var method in proxySpecData) {
-                    if (proxySpecData[method].proxy === true) {
-                        self[method] = createProxyFunction(method);
-                    } else {
-                        self[method] = proxySpecData[method].value;
+                    if (proxySpecData.hasOwnProperty(method)) {
+                        if (proxySpecData[method].proxy === true) {
+                            self[method] = createProxyFunction(method);
+                        } else {
+                            self[method] = proxySpecData[method].value;
+                        }
                     }
                 }
 
@@ -310,10 +340,12 @@ Stack.prototype.push = function(x, cb) {
     this.data.push(x);
     cb(null, this.data.length);
 };
+Stack.prototype.push._mutate = true;
 
 Stack.prototype.pop = function(cb) {
-    cb(null, (this.data.splice(0, this.data.length - 1))[0]);
+    cb(null, (this.data.splice(this.data.length - 1, 1))[0]);
 };
+Stack.prototype.pop._mutate = true;
 
 Stack.prototype.length = function(cb) {
     cb(null, this.data.length);

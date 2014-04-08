@@ -10,6 +10,7 @@
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="/js/jquery.js"></script>
     <script src="/js/common.js"></script>
+    <script type="text/javascript" src="/js/react/react.js"></script>
 
     <script src="/js/mp.transport.js"></script>
     <script src="/js/mp.protocol.js"></script>
@@ -60,7 +61,7 @@
       var name = "client"+i+"-container";
       var container = document.getElementById(name);
       var $button = $('<button>Connect</button>').click(function() {
-          Multiplayr.join(roomId, BJRule, document.getElementById('host-container'), io, 'http://localhost:3000', function(err, data) {
+          Multiplayr.join(roomId, BJRule, document.getElementById('client'+i+'-container'), io, 'http://localhost:3000', function(err, data) {
       clientObj[i] = data;
           });
       });

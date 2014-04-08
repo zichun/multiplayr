@@ -1187,7 +1187,8 @@ var DOMPropertyInjection = {
       );
     }
 
-    for (var propName in Properties) {
+      for (var propName in Properties) {
+          if (!Properties.hasOwnProperty(propName)) continue;
       ("production" !== "development" ? invariant(
         !DOMProperty.isStandardName[propName],
         'injectDOMPropertyConfig(...): You\'re trying to inject DOM property ' +
@@ -2638,7 +2639,8 @@ function recomputePluginOrdering() {
     // Wait until an `EventPluginOrder` is injected.
     return;
   }
-  for (var pluginName in namesToPlugins) {
+    for (var pluginName in namesToPlugins) {
+        if (!namesToPlugins.hasOwnProperty(pluginName)) continue;
     var PluginModule = namesToPlugins[pluginName];
     var pluginIndex = EventPluginOrder.indexOf(pluginName);
     ("production" !== "development" ? invariant(
@@ -2658,7 +2660,8 @@ function recomputePluginOrdering() {
     ) : invariant(PluginModule.extractEvents));
     EventPluginRegistry.plugins[pluginIndex] = PluginModule;
     var publishedEvents = PluginModule.eventTypes;
-    for (var eventName in publishedEvents) {
+        for (var eventName in publishedEvents) {
+            if (!publishedEvents.hasOwnProperty(eventName)) continue;
       ("production" !== "development" ? invariant(
         publishEventForPlugin(
           publishedEvents[eventName],

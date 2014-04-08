@@ -7,6 +7,7 @@ var MPGameObject = (function() {
 
         self.roomId = opt.roomId;
         self.clientId = opt.clientId;
+        self.onDataChange = opt.onDataChange;
         self.container = opt.container || document.body;
         self.dxc = null;
 
@@ -20,16 +21,22 @@ var MPGameObject = (function() {
         self.clients = {};
 
         if (data) {
-            self._dataStore = CreateStore(data);
+            self._dataStore = CreateStore(data, self);
         }
         return self;
     }
 
-    function CreateStore(dataObj) {
+    function CreateStore(dataObj, gameObj) {
         var _store = {};
 
         for (var variable in dataObj) {
-            _store[variable] = dataObj[variable].value;
+            if (dataObj.hasOwnProperty(variable)) {
+                if (typeof dataObj[variable].value !== 'undefined') {
+                    _store[variable] = dataObj[variable].value;
+                } else if (typeof dataObj[variable].type !== 'undefined') {
+                    _store[variable] = new dataObj[variable].type(dataObj[variable].init);
+                }
+            }
         }
 
         /**
@@ -49,21 +56,19 @@ var MPGameObject = (function() {
                     return _store[variable];
                 },
                 set: function(newValue) {
-                    // todo: call onchange event
-                    // todo: check const-ness
+
+                    if (dataObj[variable].const === true) {
+                        throw(new Error("Variable ["+variable+"] is constant"));
+                    }
+
                     _store[variable] = newValue;
+
+                    gameObj.dataChange();
                     return newValue;
                 }
             };
         };
     }
-
-    MPGameObject.prototype.setView =
-        function MPGameObjectSetView(reactClass, props) {
-            var self = this;
-            React.renderComponent(reactClass(props), self.container);
-            return self;
-        };
 
     MPGameObject.prototype.getPlayerData =
         function MPGameObjectGetPlayerData(playerId, variable, cb) {
@@ -104,10 +109,12 @@ var MPGameObject = (function() {
     MPGameObject.prototype.setLocalData =
         function MPGameObjectSetLocalData(variable, value, cb) {
             var self = this;
-            try {
-                cb(null, self._dataStore(_secret, variable).set(value));
-            } catch(e) {
-                cb(e, false);
+            if (isFunction(cb)) {
+                try {
+                    cb(null, self._dataStore(_secret, variable).set(value));
+                } catch(e) {
+                    cb(e, false);
+                }
             }
             return self;
         };
@@ -115,10 +122,12 @@ var MPGameObject = (function() {
     MPGameObject.prototype.getLocalData =
         function MPGameObjectGetLocalData(variable, cb) {
             var self = this;
-            try {
-                cb(null, self._dataStore(_secret, variable).get());
-            } catch(e) {
-                cb(e, false);
+            if (isFunction(cb)) {
+                try {
+                    cb(null, self._dataStore(_secret, variable).get());
+                } catch(e) {
+                    cb(e, false);
+                }
             }
             return self;
         };
@@ -157,23 +166,68 @@ var MPGameObject = (function() {
 
     MPGameObject.prototype.newClient =
         function MPGameObjectNewClient(clientId) {
+            var self = this;
             if (self.isHost()) {
                 self.clients[clientId] = {
                     active: true,
-                    dataStore: CreateStore(self.playerData)
+                    dataStore: CreateStore(self.playerData, self)
                 };
+                self.dataChange();
             } else {
                 // in this implementation of gameobject we'll force non-host to talk to host only
             }
+            return self;
         };
 
     MPGameObject.prototype.deleteClient =
         function MPGameObjectDeleteClient(clientId) {
+            var self = this;
             if (self.isHost()) {
                 self.clients[clientId].active = false;
+                self.dataChange();
             } else {
                 // in this implementation of gameobject we'll force non-host to talk to host only
             }
+            return self;
+        };
+
+    MPGameObject.prototype.dataChange =
+        function MPGameObjectDataChange() {
+            var self = this;
+            if (self.isHost()) {
+                self.onDataChange.call(self, self);
+            } else {
+                // todo: forward datachange request to host
+                throw(new Error("Unimplemented"));
+            }
+            return self;
+        };
+
+    MPGameObject.prototype.setView =
+        function MPGameObjectSetView(clientId, displayName, props, cb) {
+            var self = this;
+
+            if (self.isHost() === false) {
+                throw(new Error("Only host can set views"));
+            }
+
+            if (clientId === null || clientId === self.clientId) {
+                self._renderReactView(displayName, props);
+            } else {
+                self.dxc.setView(clientId, displayName, props, cb);
+            }
+
+            return self;
+        };
+
+    MPGameObject.prototype._renderReactView =
+        function(reactDisplayName, props) {
+            var self = this;
+            var react = React.getClassByDisplayName(reactDisplayName);
+            props = props || {};
+            props._MP_gameObj = self;
+            React.renderComponent(react(props), self.container);
+            return self;
         };
 
     return MPGameObject;

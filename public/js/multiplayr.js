@@ -41,6 +41,7 @@ var Multiplayr = (function() {
             var gameObj = new MPGameObject({
                 data: rule.globalData,
                 playerData: rule.playerData,
+                onDataChange: rule.onDataChange,
                 roomId: data.roomId,
                 clientId: data.clientId,
                 container: container,
@@ -100,4 +101,28 @@ var Multiplayr = (function() {
     }
 
     return Multiplayr;
+})();
+
+
+
+(function() {
+    /**
+     * Wrapper around React.createClass to memoize all created react classes
+     */
+    var orig = React.createClass;
+    var _memo = {};
+    React.createClass = function(spec) {
+        var tr = orig.call(React, spec);
+
+        // memoize by displayName
+        if (spec.displayName) {
+            _memo[spec.displayName] = tr;
+        }
+        return tr;
+    };
+
+    React.getClassByDisplayName = function(displayName) {
+        return _memo[displayName];
+    };
+
 })();
