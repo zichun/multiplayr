@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html>
   <head>
-	<title>Test</title>
+    <title>Test</title>
   </head>
   <body>
-	Test cases<br />
-	----------<br />
-	<br />
-	<script src="/socket.io/socket.io.js"></script>
-	<script src="/js/jquery.js"></script>
+    Test cases<br />
+    ----------<br />
+    <br />
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/jquery.js"></script>
     <script src="/js/common.js"></script>
     <script type="text/javascript" src="/js/react/react.js"></script>
+    <script src="/js/q.js"></script>
 
     <script src="/js/mp.transport.js"></script>
     <script src="/js/mp.protocol.js"></script>
@@ -38,18 +39,18 @@
     <div id="client2-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
     </div>
 
-	<script>
+    <script>
 
-	  function assert(exp) {
-	  if (!exp) {
-	  throw new Error();
-	  }
-	  }
+      function assert(exp) {
+      if (!exp) {
+      throw new Error();
+      }
+      }
       var clientObj = [];
       var hostObj = null;
 
-	  function test1() {
-//      var hostEngine = new MPGameEngine(lobby, document.getElementById('host-container'), io, 'http://localhost:8080');
+      function test1() {
+      //      var hostEngine = new MPGameEngine(lobby, document.getElementById('host-container'), io, 'http://localhost:8080');
 
 
       Multiplayr.host(BJRule, document.getElementById('host-container'), io, 'http://localhost:3000', function(err, data) {
@@ -61,19 +62,19 @@
       var name = "client"+i+"-container";
       var container = document.getElementById(name);
       var $button = $('<button>Connect</button>').click(function() {
-          Multiplayr.join(roomId, BJRule, document.getElementById('client'+i+'-container'), io, 'http://localhost:3000', function(err, data) {
+      Multiplayr.join(roomId, BJRule, document.getElementById('client'+i+'-container'), io, 'http://localhost:3000', function(err, data) {
       clientObj[i] = data;
-          });
+      });
       });
 
       $(container).append($button);
       });
       
       });
-	  }
+      }
 
-	  test1();
-	</script>
+      test1();
+    </script>
 
 
   </body>

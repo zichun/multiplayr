@@ -59,7 +59,6 @@ var BJRule = //Multiplayr.createRule(
                     }
                 }
 
-//                gameObj._renderReactView('Lobby', {});
                 gameObj.setView(gameObj.clientId, 'Lobby', {names: tr});
             }
         },
@@ -102,6 +101,7 @@ var Lobby = React.createClass({
         );
     }
 });
+
 var HelloMessage = React.createClass({
     displayName: 'HelloMessage',
     render: function() {
