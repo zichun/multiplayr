@@ -89,14 +89,13 @@ var Multiplayr = (function() {
     }
 
     function setUpMethods(gameObj, methods) {
-        function methodWrapper(checker, exec) {
+        function methodWrapper(exec) {
             return function() {
-                // todo: check checker
                 exec.apply(gameObj, arguments);
             };
         }
         for (var method in methods) {
-            gameObj[method] = methodWrapper(methods[method].callee, methods[method].exec);
+            gameObj[method] = methodWrapper(methods[method]);
         }
     }
 

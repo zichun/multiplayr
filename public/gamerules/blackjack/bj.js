@@ -1,32 +1,12 @@
 var BJRule = //Multiplayr.createRule(
     {
         methods: {
-            hit: {
-                callee: function(player, gameObject, cb) {
-                    gameObject.getData('turn', function(val) {
-                        if (val === player) {
-                            cb(true);
-                        } else {
-                            cb(false);
-                        }
-                    });
-                },
-                exec: function(player, gameObj, cb) {
-                    gameObject.getData('deck', function(deck) {
-                        gameObject.getPlayer(player).getData('hand', function(hand) {
-                            deck.popCard(function(err, card){
-                                hand.push(card);
-                            });
-                        });
-                    });
-                }
-            },
-
-            stand: {
-                exec: function(player, gameObj, cb) {
-                    gameObject.getData('turn', function() {
-
-                    })
+            startGame: function() {
+                var gameObj = this;
+                if (gameObj.clients.length < 2) {
+                    alert("We need at least 2 players to play this game");
+                } else {
+                    gameObj.setData('started', true);
                 }
             }
         },
@@ -34,47 +14,48 @@ var BJRule = //Multiplayr.createRule(
         onDataChange: function(gameObj) {
             var tmp = {};
 
-            for (var clientId in gameObj.clients) {
-                if (!gameObj.clients.hasOwnProperty(clientId)) continue;
-                tmp[clientId] = false;
-                (function(clientId) {
-                    if (gameObj.clients.hasOwnProperty(clientId)) {
-                        gameObj.getPlayerData(clientId, 'name', function(err, name) {
-                            gameObj.setView(clientId, 'SetName', {name: name});
-                            tmp[clientId] = name;
-                            tryRender();
-                        });
+            gameObj
+                .QgetData('started')
+                .then(function(started) {
+                    if (started) {
+                        showGame();
+                    } else {
+                        showLobby();
                     }
-                })(clientId);
+                });
+
+            function showGame() {
+                gameObj
+                .getData('turn')
+                .then(function(turn) {
+                    
+                });
             }
-            tryRender();
 
-            function tryRender() {
-                var tr = [];
-                for (var cid in tmp) {
-                    if (tmp.hasOwnProperty(cid) && tmp[cid] === false) {
-                        return;
-                    } else if (tmp.hasOwnProperty(cid)) {
-                        tr.push(tmp[cid]);
-                    }
-                }
+            function showLobby() {
+                gameObj
+                    .QgetPlayersData('name')
+                    .then(function(names) {
 
-                gameObj.setView(gameObj.clientId, 'Lobby', {names: tr});
+                        var tr = [];
+                        for (var clientId in names) {
+                            if (names.hasOwnProperty(clientId)) {
+                                gameObj.setView(clientId, 'SetName', {name: names[clientId].data});
+                                tr.push(names[clientId].data);
+                            }
+                        }
+                        gameObj.setView(gameObj.clientId, 'Lobby', {names: tr});
+                    });
             }
         },
 
         globalData: {
-            turn: {
-                value: 1,
+            started: {
+                value: false,
                 const: false
             },
-            stack: {
-                type: Stack,
-                const: true
-            },
-            state: {
-                type: Multiplayr.PrimitiveType,
-                initial: 1,
+            turn: {
+                value: 0,
                 const: false
             }
         },
@@ -84,7 +65,6 @@ var BJRule = //Multiplayr.createRule(
                 value: 'player'
             }
         }
-
     }
 
 
@@ -97,7 +77,8 @@ var Lobby = React.createClass({
         return React.DOM.div(
             null,
             React.DOM.h3(null, "Lobby"),
-            React.DOM.ul(null, this.props.names.map(createHello))
+            React.DOM.ul(null, this.props.names.map(createHello)),
+            React.DOM.button({onClick: this.props.MPGameObject.startGame}, 'Start game')
         );
     }
 });
@@ -109,10 +90,15 @@ var HelloMessage = React.createClass({
     }
 });
 
+var WaitingPage = React.createClass({
+    displayName: 'WaitingPage',
+    render: function() {
+    }
+});
 var SetName = React.createClass({
     displayName: 'SetName',
     onChange: function(e) {
-        var gameObj = this.props._MP_gameObj;
+        var gameObj = this.props.MPGameObject;
         gameObj.setPlayerData(gameObj.clientId, 'name', e.target.value);
         return true;
     },
@@ -125,7 +111,7 @@ var SetName = React.createClass({
                         onSubmit:this.handleSubmit
                     },
                     React.DOM.div(null, 'Name: '),
-                    React.DOM.input( {onChange:this.onChange, value:this.props.name} )
+                    React.DOM.input( {onChange:this.onChange} )
                 )
             )
         );

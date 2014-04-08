@@ -18,7 +18,8 @@ var MPGameObject = (function() {
         if (opt.playerData) {
             self.playerData = opt.playerData;
         }
-        self.clients = {};
+        self.clients = [];
+        self._clientsData = {};
 
         if (data) {
             self._dataStore = CreateStore(data, self);
@@ -76,13 +77,13 @@ var MPGameObject = (function() {
             if (self.isHost() === false) {
                 self.dxc.getData(playerId, variable, cb);
             } else {
-                if (typeof self.clients[playerId] === 'undefined'){
+                if (typeof self._clientsData[playerId] === 'undefined'){
                     cb(new Error("Client [" + playerId + "] does not exists"), null);
-                } else if (self.clients[playerId].active === false) {
+                } else if (self._clientsData[playerId].active === false) {
                     // todo: think about disconnection implication
                     cb(new Error("Client [" + playerId + "] has disconnected"), null);
                 } else {
-                    cb(null, self.clients[playerId].dataStore(_secret, variable).get());
+                    cb(null, self._clientsData[playerId].dataStore(_secret, variable).get());
                 }
             }
             return self;
@@ -94,13 +95,13 @@ var MPGameObject = (function() {
             if (self.isHost() === false) {
                 self.dxc.setData(playerId, variable, value, cb);
             } else {
-                if (typeof self.clients[playerId] === 'undefined'){
+                if (typeof self._clientsData[playerId] === 'undefined'){
                     cb(new Error("Client [" + playerId + "] does not exists"), null);
-                } else if (self.clients[playerId].active === false) {
+                } else if (self._clientsData[playerId].active === false) {
                     // todo: think about disconnection implication
                     cb(new Error("Client [" + playerId + "] has disconnected"), null);
                 } else {
-                    cb(null, self.clients[playerId].dataStore(_secret, variable).set(value));
+                    cb(null, self._clientsData[playerId].dataStore(_secret, variable).set(value));
                 }
             }
             return self;
@@ -168,7 +169,8 @@ var MPGameObject = (function() {
         function MPGameObjectNewClient(clientId) {
             var self = this;
             if (self.isHost()) {
-                self.clients[clientId] = {
+                self.clients.push(clientId);
+                self._clientsData[clientId] = {
                     active: true,
                     dataStore: CreateStore(self.playerData, self)
                 };
@@ -183,7 +185,8 @@ var MPGameObject = (function() {
         function MPGameObjectDeleteClient(clientId) {
             var self = this;
             if (self.isHost()) {
-                self.clients[clientId].active = false;
+                self.clients.splice(self.clients.indexOf(clientId), 1);
+                self._clientsData[clientId].active = false;
                 self.dataChange();
             } else {
                 // in this implementation of gameobject we'll force non-host to talk to host only
@@ -225,10 +228,66 @@ var MPGameObject = (function() {
             var self = this;
             var react = React.getClassByDisplayName(reactDisplayName);
             props = props || {};
-            props._MP_gameObj = self;
+            props.MPGameObject = self;
             React.renderComponent(react(props), self.container);
             return self;
         };
+
+
+    /**
+     * Sugars for gameobject
+     */
+    MPGameObject.prototype.getPlayersData =
+        function MPGameObjectGetPlayersData(variable, cb) {
+            var self = this;
+            if (!self.isHost()) {
+                throw(new Error("Invalid call: only host can accumulate all players data"));
+            }
+
+            var cnter = self.clients.length;
+            var accumulatedResults = {};
+
+            self.clients.forEach(function(client) {
+                self.getPlayerData(client, variable, function(err, res) {
+                    accumulatedResults[client] = {
+                        err: err,
+                        data: res
+                    };
+
+                    cnter--;
+                    if (cnter === 0) {
+                        cb(null, accumulatedResults);
+                    }
+                });
+            });
+        };
+
+
+    // Make function promises
+    var _toQ = ['getData', 'setData', 'getPlayerData', 'setPlayerData', 'getPlayersData'];
+    _toQ.forEach(function(method) {
+        MPGameObject.prototype['Q' + method] = function() {
+            var self = this;
+            var deferred = Q.defer();
+            var args = [];
+
+            for (var i=0;i<arguments.length;++i) {
+                args.push(arguments[i]);
+            }
+            args.push(function(err, res) {
+                if (err) {
+                    deferred.reject(new Error(err));
+                } else {
+                    deferred.resolve(res);
+                }
+            });
+
+            self[method].apply(this, args);
+
+            return deferred.promise;
+        };
+    });
+
 
     return MPGameObject;
 })();
