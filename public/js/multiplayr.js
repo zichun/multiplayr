@@ -1,6 +1,6 @@
 var Multiplayr = (function() {
     var Multiplayr = {
-        createRule: function(rule) { throw new Error("Not implemented"); },
+        extendRule: ExtendRule,
         host: Host,
         join: Join,
         createDataType: CreateDataType,
@@ -97,6 +97,35 @@ var Multiplayr = (function() {
         for (var method in methods) {
             gameObj[method] = methodWrapper(methods[method]);
         }
+    }
+
+    // Extends given baseRule with another rule. Note that this method mutates the given baseRule
+    // returns the mutated baseRule
+    function ExtendRule(baseRule, extendedRule, namespace) {
+        // if we are given a namespace, variables  will be prefixed with [namespace].variableName
+        var prefix = namespace ? namespace + '.' : '';
+
+        function extendObj(baseObj, extendedObj, prefix) {
+            for (var key in extendedObj) {
+                var prefixedKey = prefix + key;
+                if (extendedObj.hasOwnProperty(key)) {
+                    if (baseObj.hasOwnProperty(prefixedKey)) {
+                        throw("Conflicting key: " + prefixedKey);
+                    }
+                    baseObj[prefixedKey] = extendedObj[key];
+                }
+            }
+        }
+
+        ['methods', 'globalData', 'playerData'].forEach(function(key) {
+            try {
+                extendObj(baseRule[key], extendedRule[key], prefix);
+            } catch(e) {
+                throw(new Error("ExtendRule['+key+'] - " + e));
+            }
+        });
+
+        return baseRule;
     }
 
     return Multiplayr;

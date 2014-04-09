@@ -1,3 +1,20 @@
+var Lobby = {};
+
+Lobby.globalData = {
+    started: {
+        value: false,
+        const: false
+    }
+};
+
+Lobby.playerData = {
+    // Players' names
+    name: {
+        value: 'player',
+        const: false
+    }
+};
+
 var BJRule = //Multiplayr.createRule(
     {
         methods: {
@@ -119,7 +136,7 @@ var BJRule = //Multiplayr.createRule(
             }
         }
 
-    }
+    };
 
 
 var Lobby = React.createClass({
@@ -171,8 +188,8 @@ var StatusPage = React.createClass({
             }
         }
         return React.DOM.div(null,
-            turn.call(this),
-            RollsResults({names: this.props.names, rolls: this.props.rolls, MPGameObject: this.props.MPGameObject}));
+                             turn.call(this),
+                             RollsResults({names: this.props.names, rolls: this.props.rolls, MPGameObject: this.props.MPGameObject}));
     }
 });
 
