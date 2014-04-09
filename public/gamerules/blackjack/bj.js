@@ -138,110 +138,110 @@ var BJRule = //Multiplayr.createRule(
 
     };
 
+BJRule.views = {
+    Lobby: React.createClass({
+        displayName: 'Lobby',
+        render: function() {
+            function createHello(names) {
+                var tr = [];
+                for (var clientId in names) {
+                    if (names.hasOwnProperty(clientId)) {
+                        tr.push( BJRule.views.HelloMessage({name: names[clientId].data}) );
+                    }
+                }
+                return tr;
+            }
 
-var Lobby = React.createClass({
-    displayName: 'Lobby',
-    render: function() {
-        function createHello(names) {
-            var tr = [];
-            for (var clientId in names) {
-                if (names.hasOwnProperty(clientId)) {
-                    tr.push( HelloMessage({name: names[clientId].data}) );
+            return React.DOM.div(
+                null,
+                React.DOM.h3(null, "Lobby"),
+                React.DOM.ul(null, createHello(this.props.names)),
+                React.DOM.button({onClick: this.props.MPGameObject.startGame}, 'Start game')
+            );
+        }
+    }),
+    RollsResults: React.createClass({
+        displayName: 'RollsResults',
+        render: function() {
+            var rolls = this.props.rolls;
+            var names = this.props.names;
+            var res = [];
+            for (var cid in rolls) {
+                if (rolls.hasOwnProperty(cid)) {
+                    res.push( React.DOM.li(null, names[cid].data, ': ', rolls[cid].data));
                 }
             }
-            return tr;
+            return React.DOM.ul(null,
+                                res);
         }
+    }),
+    StatusPage: React.createClass({
+        displayName: 'StatusPage',
+        render: function() {
 
-        return React.DOM.div(
-            null,
-            React.DOM.h3(null, "Lobby"),
-            React.DOM.ul(null, createHello(this.props.names)),
-            React.DOM.button({onClick: this.props.MPGameObject.startGame}, 'Start game')
-        );
-    }
-});
-
-var RollsResults = React.createClass({
-    displayName: 'RollsResults',
-    render: function() {
-        var rolls = this.props.rolls;
-        var names = this.props.names;
-        var res = [];
-        for (var cid in rolls) {
-            if (rolls.hasOwnProperty(cid)) {
-                res.push( React.DOM.li(null, names[cid].data, ': ', rolls[cid].data));
+            function turn() {
+                if (this.props.name) {
+                    return React.DOM.div("It's ", this.props.name, "'s turn now");
+                } else {
+                    return React.DOM.button({onClick: this.props.MPGameObject.startGame}, 'Start new game');
+                }
             }
+            return React.DOM.div(null,
+                                 turn.call(this),
+                                 BJRule.views.RollsResults({names: this.props.names, rolls: this.props.rolls, MPGameObject: this.props.MPGameObject}));
         }
-        return React.DOM.ul(null,
-                            res);
-    }
-});
-var StatusPage = React.createClass({
-    displayName: 'StatusPage',
-    render: function() {
+    }),
 
-        function turn() {
-            if (this.props.name) {
-                return React.DOM.div("It's ", this.props.name, "'s turn now");
-            } else {
-                return React.DOM.button({onClick: this.props.MPGameObject.startGame}, 'Start new game');
-            }
+    WinPage: React.createClass({
+        displayName: 'WinPage',
+        render: function() {
+            return React.DOM.div(null, "The winner is " + this.props.name);
         }
-        return React.DOM.div(null,
-                             turn.call(this),
-                             RollsResults({names: this.props.names, rolls: this.props.rolls, MPGameObject: this.props.MPGameObject}));
-    }
-});
+    }),
 
-var WinPage = React.createClass({
-    displayName: 'WinPage',
-    render: function() {
-        return React.DOM.div(null, "The winner is " + this.props.name);
-    }
-});
+    HelloMessage: React.createClass({
+        displayName: 'HelloMessage',
+        render: function() {
+            return React.DOM.div(null, "Hello ", this.props.name);
+        }
+    }),
 
-var HelloMessage = React.createClass({
-    displayName: 'HelloMessage',
-    render: function() {
-        return React.DOM.div(null, "Hello ", this.props.name);
-    }
-});
+    RollPage: React.createClass({
+        displayName: 'RollPage',
+        render: function() {
+            return React.DOM.button({onClick: this.props.MPGameObject.roll}, "Roll! - I'm feeling lucky");
+        }
+    }),
 
-var RollPage = React.createClass({
-    displayName: 'RollPage',
-    render: function() {
-        return React.DOM.button({onClick: this.props.MPGameObject.roll}, "Roll! - I'm feeling lucky");
-    }
-});
-
-var WaitingPage = React.createClass({
-    displayName: 'WaitingPage',
-    render: function() {
-        return React.DOM.div(
-            null,
-            React.DOM.div(null, 'Waiting for ', this.props.name, ' to roll')
-        );
-    }
-});
-var SetName = React.createClass({
-    displayName: 'SetName',
-    onChange: function(e) {
-        var gameObj = this.props.MPGameObject;
-        gameObj.setPlayerData(gameObj.clientId, 'name', e.target.value);
-        return true;
-    },
-    render: function() {
-        return (
-            React.DOM.div(
+    WaitingPage: React.createClass({
+        displayName: 'WaitingPage',
+        render: function() {
+            return React.DOM.div(
                 null,
-                React.DOM.form(
-                    {
-                        onSubmit:this.handleSubmit
-                    },
-                    React.DOM.div(null, 'Name: '),
-                    React.DOM.input( {onChange:this.onChange} )
+                React.DOM.div(null, 'Waiting for ', this.props.name, ' to roll')
+            );
+        }
+    }),
+    SetName: React.createClass({
+        displayName: 'SetName',
+        onChange: function(e) {
+            var gameObj = this.props.MPGameObject;
+            gameObj.setPlayerData(gameObj.clientId, 'name', e.target.value);
+            return true;
+        },
+        render: function() {
+            return (
+                React.DOM.div(
+                    null,
+                    React.DOM.form(
+                        {
+                            onSubmit:this.handleSubmit
+                        },
+                        React.DOM.div(null, 'Name: '),
+                        React.DOM.input( {onChange:this.onChange} )
+                    )
                 )
-            )
-        );
-    }
-});
+            );
+        }
+    })
+};

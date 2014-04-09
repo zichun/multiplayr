@@ -2,19 +2,13 @@ var express = require('express');
 var app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
-var everyauth = require('everyauth');
-
-require('./auth/index.js').init(everyauth);
 
 app.configure(function(){
     app.set('port', process.env.PORT || 3000);
     app.set("view options", { layout: false, pretty: true });
     app.use(express.favicon());
     app.use(express.static(__dirname + '/public'));
-    app.use(everyauth.middleware(app));
 });
-
-everyauth.helpExpress(app);
 
 server.listen(app.get('port'));
 

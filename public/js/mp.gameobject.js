@@ -10,6 +10,7 @@ var MPGameObject = (function() {
         self.onDataChange = opt.onDataChange;
         self.container = opt.container || document.body;
         self.dxc = null;
+        self._views = opt.views;
 
         self.isHost = function() {
             return opt.isHost;
@@ -224,6 +225,12 @@ var MPGameObject = (function() {
             return self;
         };
 
+    MPGameObject.prototype.getView =
+        function MPGameObjectGetView(displayName) {
+            var self = this;
+            return self._views[displayName];
+        };
+
     MPGameObject.prototype.setView =
         function MPGameObjectSetView(clientId, displayName, props, cb) {
             var self = this;
@@ -244,10 +251,10 @@ var MPGameObject = (function() {
     MPGameObject.prototype._renderReactView =
         function(reactDisplayName, props) {
             var self = this;
-            var react = React.getClassByDisplayName(reactDisplayName);
+            var reactClass = self.getView(reactDisplayName);
             props = props || {};
             props.MPGameObject = self;
-            React.renderComponent(react(props), self.container);
+            React.renderComponent(reactClass(props), self.container);
             return self;
         };
 

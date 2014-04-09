@@ -42,6 +42,7 @@ var Multiplayr = (function() {
                 data: rule.globalData,
                 playerData: rule.playerData,
                 onDataChange: rule.onDataChange,
+                views: rule.views,
                 roomId: data.roomId,
                 clientId: data.clientId,
                 container: container,
@@ -75,6 +76,7 @@ var Multiplayr = (function() {
                 roomId: roomId,
                 clientId: data.clientId,
                 container: container,
+                views: rule.views,
                 isHost: false
             });
 
@@ -117,7 +119,7 @@ var Multiplayr = (function() {
             }
         }
 
-        ['methods', 'globalData', 'playerData'].forEach(function(key) {
+        ['methods', 'globalData', 'playerData', 'views'].forEach(function(key) {
             try {
                 extendObj(baseRule[key], extendedRule[key], prefix);
             } catch(e) {
@@ -129,28 +131,4 @@ var Multiplayr = (function() {
     }
 
     return Multiplayr;
-})();
-
-
-
-(function() {
-    /**
-     * Wrapper around React.createClass to memoize all created react classes
-     */
-    var orig = React.createClass;
-    var _memo = {};
-    React.createClass = function(spec) {
-        var tr = orig.call(React, spec);
-
-        // memoize by displayName
-        if (spec.displayName) {
-            _memo[spec.displayName] = tr;
-        }
-        return tr;
-    };
-
-    React.getClassByDisplayName = function(displayName) {
-        return _memo[displayName];
-    };
-
 })();
