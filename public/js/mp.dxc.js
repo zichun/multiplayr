@@ -3,10 +3,8 @@
  * Data will only be stored in the host
  */
 var MPDataExchange = (function() {
-    function MPDataExchange(comm, gameObj) {
+    function MPDataExchange(comm, gameObj, namespace) {
         var self = this;
-
-        gameObj.__setDxc(this);
 
         self.getData = function(clientId, variable, cb) {
             if (clientId === null) {
@@ -26,6 +24,7 @@ var MPDataExchange = (function() {
             sendTypedMessage(comm.getHost(),
                              'get-data',
                              {
+                                 namespace: namespace,
                                  clientId: clientId,
                                  variable: variable
                              },
@@ -134,6 +133,11 @@ var MPDataExchange = (function() {
          * Set-up events
          */
         comm.on('message', function(obj) {
+            var incomingNamespace = obj.namespace;
+            if (incomingNamespace !== namespace) {
+                // wrong namespace. ignore
+                return;
+            }
             var from = obj.from;
             var type = obj.message.type;
             var message = obj.message.message;

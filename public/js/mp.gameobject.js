@@ -1,15 +1,20 @@
 var MPGameObject = (function() {
     var _secret = {};
 
-    function MPGameObject(rule, roomId, clientId, isHost, container, parent) {
+    /**
+     * Todo: document params
+     */
+    function MPGameObject(rule, comm, roomId, clientId, isHost, container, namespace, parent) {
         var self = this;
+
+        namespace = namespace || '';
 
         self.roomId = roomId;
         self.clientId = clientId;
         self.onDataChange = rule.onDataChange;
         self.container = container || document.body;
         self._views = rule.views;
-        self.dxc = null;
+        self.dxc = new MPDataExchange(comm, self, namespace);
 
         self.isHost = function() {
             return isHost;
@@ -30,19 +35,9 @@ var MPGameObject = (function() {
                 if (typeof plugin !== 'string' || plugin.match(/^[a-zA-Z]/)) {
                     throw(new Error("Invalid plugin name: namespace must be purely alpha"));
                 }
-                self.__plugins[plugin] = new MPGameObject(rule.plugins[plugin], roomId, clientId, isHost, container, self);
+                self.__plugins[plugin] = new MPGameObject(rule.plugins[plugin], comm, roomId, clientId, isHost, container, namespace + '_' + plugin, self);
             }
         }
-
-        self.__setDxc = function(dxc, namespace) {
-            // todo: should instantiate one dxc object per gameobject instance
-            self.dxc = dxc;
-            for (var plugin in self.__plugins) {
-                if (self.__plugins.hasOwnProperty(plugin)) {
-                    self.__plugins(plugin).__setDxc(dxc, namespace + '_' + dxc);
-                }
-            }
-        };
 
         return self;
     }
