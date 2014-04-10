@@ -1,32 +1,48 @@
 var MPGameObject = (function() {
     var _secret = {};
 
-    function MPGameObject(opt) {
+    function MPGameObject(rule, roomId, clientId, isHost, container, parent) {
         var self = this;
-        var data = opt.data;
 
-        self.roomId = opt.roomId;
-        self.clientId = opt.clientId;
-        self.onDataChange = opt.onDataChange;
-        self.container = opt.container || document.body;
+        self.roomId = roomId;
+        self.clientId = clientId;
+        self.onDataChange = rule.onDataChange;
+        self.container = container || document.body;
+        self._views = rule.views;
         self.dxc = null;
-        self._views = opt.views;
 
         self.isHost = function() {
-            return opt.isHost;
+            return isHost;
         };
 
-        if (opt.playerData) {
-            self.playerData = opt.playerData;
-        }
+        if (isHost) {
+            self._dataStore = CreateStore(rule.globalData, self);
 
-        self.clients = [];
-        self._clientsData = {};
-        self._dataStore = CreateStore(data, self);
-
-        if (self.isHost()) {
+            self.clients = [];
+            self._clientsData = {};
             self.dataChange();
+            self.playerData = rule.playerData;
         }
+
+        self.__plugins = {};
+        for (var plugin in rule.plugins) {
+            if (rule.plugins.hasOwnProperty(plugin)) {
+                if (typeof plugin !== 'string' || plugin.match(/^[a-zA-Z]/)) {
+                    throw(new Error("Invalid plugin name: namespace must be purely alpha"));
+                }
+                self.__plugins[plugin] = new MPGameObject(rule.plugins[plugin], roomId, clientId, isHost, container, self);
+            }
+        }
+
+        self.__setDxc = function(dxc, namespace) {
+            // todo: should instantiate one dxc object per gameobject instance
+            self.dxc = dxc;
+            for (var plugin in self.__plugins) {
+                if (self.__plugins.hasOwnProperty(plugin)) {
+                    self.__plugins(plugin).__setDxc(dxc, namespace + '_' + dxc);
+                }
+            }
+        };
 
         return self;
     }
@@ -119,8 +135,11 @@ var MPGameObject = (function() {
             return self;
         };
 
-    MPGameObject.prototype.setLocalData =
-        function MPGameObjectSetLocalData(variable, value, cb) {
+    MPGameObject.prototype.__setLocalData =
+        function MPGameObjectSetLocalData(_password, variable, value, cb) {
+            if (_password !== _secret) {
+                throw(new Error("Access denied"));
+            }
             var self = this;
                 var mcb = function(err, res) {
                     if (isFunction(cb)) {
@@ -139,8 +158,11 @@ var MPGameObject = (function() {
             return self;
         };
 
-    MPGameObject.prototype.getLocalData =
-        function MPGameObjectGetLocalData(variable, cb) {
+    MPGameObject.prototype.__getLocalData =
+        function MPGameObjectGetLocalData(_password, variable, cb) {
+            if (_password !== _secret) {
+                throw(new Error("Access denied"));
+            }
             var self = this;
             if (isFunction(cb)) {
                 try {
@@ -161,7 +183,7 @@ var MPGameObject = (function() {
             var self = this;
             if (self.isHost()) {
                 // Current scope is host, and so data belongs to self
-                self.getLocalData(variable, cb);
+                self.__getLocalData(_secret, variable, cb);
             } else {
                 self.dxc.getData(null, variable, cb);
             }
@@ -177,7 +199,7 @@ var MPGameObject = (function() {
             var self = this;
             if (self.isHost()) {
                 // Current scope is host, and so data belongs to self
-                self.setLocalData(variable, value, cb);
+                self.__setLocalData(_secret, variable, value, cb);
             } else {
                 self.dxc.setData(null, variable, value, cb);
             }
@@ -217,6 +239,14 @@ var MPGameObject = (function() {
         function MPGameObjectDataChange() {
             var self = this;
             if (self.isHost()) {
+                var cb = {
+                    setView: function() {
+                    },
+                    setProps: function() {
+                    },
+                    commit: function() {
+                    }
+                };
                 self.onDataChange.call(self, self);
             } else {
                 // todo: forward datachange request to host
@@ -319,7 +349,6 @@ var MPGameObject = (function() {
             return deferred.promise;
         };
     });
-
 
     return MPGameObject;
 })();

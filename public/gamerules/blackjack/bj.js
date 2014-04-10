@@ -15,6 +15,58 @@ Lobby.playerData = {
     }
 };
 
+Lobby.views = {
+    Lobby: React.createClass({
+        displayName: 'Lobby',
+        render: function() {
+            function createHello(names) {
+                var tr = [];
+                for (var clientId in names) {
+                    if (names.hasOwnProperty(clientId)) {
+                        tr.push( Lobby.views.HelloMessage({name: names[clientId].data}) );
+                    }
+                }
+                return tr;
+            }
+
+            return React.DOM.div(
+                null,
+                React.DOM.h3(null, "Lobby"),
+                React.DOM.ul(null, createHello(this.props.names)),
+                React.DOM.button({onClick: this.props.MPGameObject.startGame}, 'Start game')
+            );
+        }
+    }),
+    HelloMessage: React.createClass({
+        displayName: 'HelloMessage',
+        render: function() {
+            return React.DOM.div(null, "Hello ", this.props.name);
+        }
+    }),
+    SetName: React.createClass({
+        displayName: 'SetName',
+        onChange: function(e) {
+            var gameObj = this.props.MPGameObject;
+            gameObj.setPlayerData(gameObj.clientId, 'name', e.target.value);
+            return true;
+        },
+        render: function() {
+            return (
+                React.DOM.div(
+                    null,
+                    React.DOM.form(
+                        {
+                            onSubmit:this.handleSubmit
+                        },
+                        React.DOM.div(null, 'Name: '),
+                        React.DOM.input( {onChange:this.onChange} )
+                    )
+                )
+            );
+        }
+    })
+};
+
 var BJRule = //Multiplayr.createRule(
     {
         methods: {
@@ -46,7 +98,8 @@ var BJRule = //Multiplayr.createRule(
             }
         },
 
-        onDataChange: function(gameObj) {
+        onDataChange: function() {
+            var gameObj = this;
             with(gameObj) {
 
                 QgetData('started')
@@ -111,10 +164,6 @@ var BJRule = //Multiplayr.createRule(
         },
 
         globalData: {
-            started: {
-                value: false,
-                const: false
-            },
             turn: {
                 value: 0,
                 const: false
@@ -122,10 +171,6 @@ var BJRule = //Multiplayr.createRule(
         },
 
         playerData: {
-            name: {
-                value: 'player',
-                const: false
-            },
             draw: {
                 value: 0,
                 const: false
@@ -139,27 +184,6 @@ var BJRule = //Multiplayr.createRule(
     };
 
 BJRule.views = {
-    Lobby: React.createClass({
-        displayName: 'Lobby',
-        render: function() {
-            function createHello(names) {
-                var tr = [];
-                for (var clientId in names) {
-                    if (names.hasOwnProperty(clientId)) {
-                        tr.push( BJRule.views.HelloMessage({name: names[clientId].data}) );
-                    }
-                }
-                return tr;
-            }
-
-            return React.DOM.div(
-                null,
-                React.DOM.h3(null, "Lobby"),
-                React.DOM.ul(null, createHello(this.props.names)),
-                React.DOM.button({onClick: this.props.MPGameObject.startGame}, 'Start game')
-            );
-        }
-    }),
     RollsResults: React.createClass({
         displayName: 'RollsResults',
         render: function() {
@@ -199,12 +223,6 @@ BJRule.views = {
         }
     }),
 
-    HelloMessage: React.createClass({
-        displayName: 'HelloMessage',
-        render: function() {
-            return React.DOM.div(null, "Hello ", this.props.name);
-        }
-    }),
 
     RollPage: React.createClass({
         displayName: 'RollPage',
@@ -221,27 +239,7 @@ BJRule.views = {
                 React.DOM.div(null, 'Waiting for ', this.props.name, ' to roll')
             );
         }
-    }),
-    SetName: React.createClass({
-        displayName: 'SetName',
-        onChange: function(e) {
-            var gameObj = this.props.MPGameObject;
-            gameObj.setPlayerData(gameObj.clientId, 'name', e.target.value);
-            return true;
-        },
-        render: function() {
-            return (
-                React.DOM.div(
-                    null,
-                    React.DOM.form(
-                        {
-                            onSubmit:this.handleSubmit
-                        },
-                        React.DOM.div(null, 'Name: '),
-                        React.DOM.input( {onChange:this.onChange} )
-                    )
-                )
-            );
-        }
     })
 };
+
+Multiplayr.extendRule(BJRule, Lobby);

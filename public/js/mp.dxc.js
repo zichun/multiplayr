@@ -6,7 +6,7 @@ var MPDataExchange = (function() {
     function MPDataExchange(comm, gameObj) {
         var self = this;
 
-        gameObj.dxc = this;
+        gameObj.__setDxc(this);
 
         self.getData = function(clientId, variable, cb) {
             if (clientId === null) {
@@ -166,7 +166,7 @@ var MPDataExchange = (function() {
                     };
 
                     if (clientId === comm.getHost()) {
-                        gameObj.getLocalData(variable, getDataCb);
+                        gameObj.getData(variable, getDataCb);
                     } else {
                         gameObj.getPlayerData(clientId, variable, getDataCb);
                     }
@@ -185,7 +185,7 @@ var MPDataExchange = (function() {
                     }
 
                     if (clientId === comm.getHost()) {
-                        gameObj.setLocalData(variable, value, ack);
+                        gameObj.setData(variable, value, ack);
                     } else {
                         gameObj.setPlayerData(clientId, variable, value, ack);
                     }

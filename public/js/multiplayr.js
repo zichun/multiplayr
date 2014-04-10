@@ -38,16 +38,11 @@ var Multiplayr = (function() {
                 }
             }
 
-            var gameObj = new MPGameObject({
-                data: rule.globalData,
-                playerData: rule.playerData,
-                onDataChange: rule.onDataChange,
-                views: rule.views,
-                roomId: data.roomId,
-                clientId: data.clientId,
-                container: container,
-                isHost: true
-            });
+            var gameObj = new MPGameObject(rule,
+                                           data.roomId,
+                                           data.clientId,
+                                           true,
+                                           container);
 
             var dxc = new MPDataExchange(comm, gameObj);
 
@@ -72,14 +67,12 @@ var Multiplayr = (function() {
                 }
             }
 
-            var gameObj = new MPGameObject({
-                roomId: roomId,
-                clientId: data.clientId,
-                container: container,
-                views: rule.views,
-                isHost: false
-            });
 
+            var gameObj = new MPGameObject(rule,
+                                           roomId,
+                                           data.clientId,
+                                           false,
+                                           container);
             var dxc = new MPDataExchange(comm, gameObj);
 
             setUpMethods(gameObj, rule.methods);
@@ -102,18 +95,19 @@ var Multiplayr = (function() {
     }
 
     // Extends given baseRule with another rule. Note that this method mutates the given baseRule
-    // returns the mutated baseRule
+    // returns the extended baseRule
     function ExtendRule(baseRule, extendedRule, namespace) {
         // if we are given a namespace, variables  will be prefixed with [namespace].variableName
         var prefix = namespace ? namespace + '.' : '';
 
-        function extendObj(baseObj, extendedObj, prefix) {
+        function checkConflict(baseObj, extendedObj, prefix) {
             for (var key in extendedObj) {
                 var prefixedKey = prefix + key;
                 if (extendedObj.hasOwnProperty(key)) {
                     if (baseObj.hasOwnProperty(prefixedKey)) {
                         throw("Conflicting key: " + prefixedKey);
                     }
+                    // temp
                     baseObj[prefixedKey] = extendedObj[key];
                 }
             }
@@ -121,11 +115,14 @@ var Multiplayr = (function() {
 
         ['methods', 'globalData', 'playerData', 'views'].forEach(function(key) {
             try {
-                extendObj(baseRule[key], extendedRule[key], prefix);
+                checkConflict(baseRule[key], extendedRule[key], prefix);
             } catch(e) {
                 throw(new Error("ExtendRule['+key+'] - " + e));
             }
         });
+
+        baseRule.plugins = baseRule.plugins || [];
+        baseRule.plugins.push(extendedRule);
 
         return baseRule;
     }
