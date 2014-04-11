@@ -39,12 +39,11 @@ var Multiplayr = (function() {
             }
 
             var gameObj = new MPGameObject(rule,
+                                           comm,
                                            data.roomId,
                                            data.clientId,
                                            true,
                                            container);
-
-            var dxc = new MPDataExchange(comm, gameObj);
 
             setUpMethods(gameObj, rule.methods);
 
@@ -69,11 +68,11 @@ var Multiplayr = (function() {
 
 
             var gameObj = new MPGameObject(rule,
+                                           comm,
                                            roomId,
                                            data.clientId,
                                            false,
                                            container);
-            var dxc = new MPDataExchange(comm, gameObj);
 
             setUpMethods(gameObj, rule.methods);
 

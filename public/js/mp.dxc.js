@@ -21,10 +21,10 @@ var MPDataExchange = (function() {
                     cb(err, data.data);
                 }
             };
+
             sendTypedMessage(comm.getHost(),
                              'get-data',
                              {
-                                 namespace: namespace,
                                  clientId: clientId,
                                  variable: variable
                              },
@@ -85,7 +85,8 @@ var MPDataExchange = (function() {
             comm.send(to, {
                 type: type,
                 message: message,
-                uniqid: uniqid
+                uniqid: uniqid,
+                namespace: namespace
             });
         }
 
@@ -96,7 +97,8 @@ var MPDataExchange = (function() {
                     err: err,
                     data: message
                 },
-                uniqid: uniqid
+                uniqid: uniqid,
+                namespace: namespace
             });
         }
 
@@ -133,7 +135,7 @@ var MPDataExchange = (function() {
          * Set-up events
          */
         comm.on('message', function(obj) {
-            var incomingNamespace = obj.namespace;
+            var incomingNamespace = obj.message.namespace;
             if (incomingNamespace !== namespace) {
                 // wrong namespace. ignore
                 return;
@@ -236,13 +238,8 @@ var MPDataExchange = (function() {
                     var displayName = message.displayName;
                     var props = message.props;
                     var err = null;
-                    try {
-                        gameObj._renderReactView(displayName, props);
-                    } catch(e) {
-                        err = e;
-                    } finally {
-                        ack(err, displayName);
-                    }
+
+                    gameObj.__setView(gameObj.clientId, displayName, props, ack);
                 }
                 break;
             }

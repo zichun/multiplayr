@@ -15,17 +15,45 @@ Lobby.playerData = {
     }
 };
 
+Lobby.onDataChange = function(cb) {
+    with(this) {
+        QgetPlayersData('name')
+            .then(function(names) {
+
+                var orderedNames = [];
+                for (var i=0;i<clients.length;++i) {
+                    orderedNames.push(names[clients[i]]);
+                }
+
+                clients.forEach(function(client, ind) {
+                    setViewProps(client, 'name', names[client]);
+                    setViewProps(client, 'playerNum', ind);
+                    setViewProps(client, 'playerCount', clients.length);
+                    setViewProps(client, 'names', orderedNames);
+                });
+
+                setViewProps(clientId, 'names', orderedNames);
+                setViewProps(clientId, 'playerCount', clients.length);
+
+                cb(true);
+            }).fail(console.error);
+    };
+};
+
 Lobby.views = {
     Lobby: React.createClass({
         displayName: 'Lobby',
+        startGame: function() {
+            var gameObj = this.props.MPGameObject;
+            gameObj.__parent.startGame();
+        },
         render: function() {
             function createHello(names) {
                 var tr = [];
-                for (var clientId in names) {
-                    if (names.hasOwnProperty(clientId)) {
-                        tr.push( Lobby.views.HelloMessage({name: names[clientId].data}) );
-                    }
+                for (var i=0;i<names.length;++i) {
+                    tr.push( Lobby.views.HelloMessage({name: names[i]}) );
                 }
+
                 return tr;
             }
 
@@ -33,7 +61,7 @@ Lobby.views = {
                 null,
                 React.DOM.h3(null, "Lobby"),
                 React.DOM.ul(null, createHello(this.props.names)),
-                React.DOM.button({onClick: this.props.MPGameObject.startGame}, 'Start game')
+                React.DOM.button({onClick: this.startGame}, 'Start game')
             );
         }
     }),
@@ -76,7 +104,7 @@ var BJRule = //Multiplayr.createRule(
                     alert("We need at least 2 players to play this game");
                 } else {
                     // todo: surpress datachange (being able to stage multiple setData)
-                    gameObj.setData('started', true);
+                    gameObj.setData('lobby_started', true);
                     gameObj.setData('turn', 0);
                     for (var i=0;i<gameObj.clients.length;++i) {
                         // todo: clients foreach
@@ -93,72 +121,81 @@ var BJRule = //Multiplayr.createRule(
                 var self = this;
                 self.QgetData('turn')
                     .then(function(turn) {
-                        return self.setData('turn', turn+1, function() {});
-                    });
+                        return self.setData('turn', turn+1);
+                    }).fail(console.error);
             }
         },
 
-        onDataChange: function() {
+        onDataChange: function(cb) {
             var gameObj = this;
             with(gameObj) {
 
-                QgetData('started')
+                QgetData('lobby_started')
                     .then(function(started) {
                         if (started) {
-                            showGame();
+                            showGame(cb);
                         } else {
-                            showLobby();
+                            showLobby(cb);
                         }
-                    });
+                    })
+                    .fail(console.error);
 
-                function showGame() {
+                function showGame(cb) {
                     Q.all([
                         QgetData('turn'),
-                        QgetPlayersData('name'),
                         QgetPlayersData('rollValue')
-                    ]).spread(function(turn, names, rolls) {
+                    ]).spread(function(turn, rollsD) {
+                        var rolls = [];
+                        for (var i=0;i<clients.length;++i) {
+                            rolls.push(rollsD[clients[i]]);
+                        }
+
+                        setViewProps(clientId, 'turn', turn);
+                        setViewProps(clientId, 'rolls', rolls);
+
                         if (turn >= clients.length) {
-                            showSummary(turn, names, rolls);
+                            showSummary(turn, rolls, cb);
                             return;
                         }
 
                         clients.forEach(function(client, i) {
                             if (i !== turn) {
-                                setView(client, 'WaitingPage', {name: names[clients[turn]].data});
+                                setViewProps(client, 'turn', turn);
+                                setView(client, 'WaitingPage');
                             } else {
                                 setView(client, 'RollPage', {});
                             }
                         });
 
-                        setView(clientId, 'StatusPage', {name: names[clients[turn]].data, names: names, rolls:rolls});
-                    }).fail(function(err) {
-                        alert(err);
-                    });
+                        setView(clientId, 'StatusPage');
+
+                        cb(true);
+                    }).fail(console.error);
                 }
 
-                function showSummary(turn, names, rolls) {
+                function showSummary(turn, rolls, cb) {
                     var largest = 0;
 
-                    clients.forEach(function(client, i) {
-                        if (rolls[client].data > rolls[clients[largest]].data) {
+                    rolls.forEach(function(roll, i) {
+                        if (roll > rolls[largest]) {
                             largest = i;
                         }
                     });
                     clients.forEach(function(client, i) {
-                        setView(client, 'WinPage', {name: names[clients[largest]].data});
+                        setViewProps(client, 'winner', largest);
+                        setView(client, 'WinPage');
                     });
-                    setView(clientId, 'StatusPage', {name: false, names: names, rolls:rolls});
+                    setView(clientId, 'StatusPage');
+                    cb(true);
                 }
 
+                function showLobby(cb) {
+                    setView(clientId, 'lobby_Lobby');
+                    clients.forEach(function(client) {
+                        setView(client, 'lobby_SetName');
+                    });
 
-                function showLobby() {
-                    QgetPlayersData('name')
-                        .then(function(names) {
-                            clients.forEach(function(client) {
-                                setView(client, 'SetName', {name: names[client].data});
-                            });
-                            setView(clientId, 'Lobby', {names: names});
-                        });
+                    cb(true);
                 }
             }
         },
@@ -183,43 +220,49 @@ var BJRule = //Multiplayr.createRule(
 
     };
 
+BJRule.plugins = {
+    "lobby": Lobby
+};
 BJRule.views = {
     RollsResults: React.createClass({
         displayName: 'RollsResults',
         render: function() {
             var rolls = this.props.rolls;
-            var names = this.props.names;
+            var names = this.props.lobby.names;
             var res = [];
-            for (var cid in rolls) {
-                if (rolls.hasOwnProperty(cid)) {
-                    res.push( React.DOM.li(null, names[cid].data, ': ', rolls[cid].data));
-                }
+
+            for (var i=0;i<rolls.length;++i) {
+                res.push(React.DOM.li(null, names[i], ': ', rolls[i]));
             }
-            return React.DOM.ul(null,
-                                res);
+
+            return React.DOM.ul(null, res);
         }
     }),
     StatusPage: React.createClass({
         displayName: 'StatusPage',
         render: function() {
+            var t = this.props.turn;
+            var names = this.props.lobby.names;
 
             function turn() {
-                if (this.props.name) {
-                    return React.DOM.div("It's ", this.props.name, "'s turn now");
+                if (t < this.props.lobby.playerCount) {
+                    return React.DOM.div("It's ", names[t], "'s turn now");
                 } else {
                     return React.DOM.button({onClick: this.props.MPGameObject.startGame}, 'Start new game');
                 }
             }
             return React.DOM.div(null,
                                  turn.call(this),
-                                 BJRule.views.RollsResults({names: this.props.names, rolls: this.props.rolls, MPGameObject: this.props.MPGameObject}));
+                                 BJRule.views.RollsResults(this.props));
         }
     }),
 
     WinPage: React.createClass({
         displayName: 'WinPage',
         render: function() {
-            return React.DOM.div(null, "The winner is " + this.props.name);
+            var winner = this.props.winner;
+            var names = this.props.lobby.names;
+            return React.DOM.div(null, "The winner is " + names[winner]);
         }
     }),
 
@@ -234,12 +277,13 @@ BJRule.views = {
     WaitingPage: React.createClass({
         displayName: 'WaitingPage',
         render: function() {
+            var t = this.props.turn;
+            var names = this.props.lobby.names;
+
             return React.DOM.div(
                 null,
-                React.DOM.div(null, 'Waiting for ', this.props.name, ' to roll')
+                React.DOM.div(null, 'Waiting for ', names[t], ' to roll')
             );
         }
     })
 };
-
-Multiplayr.extendRule(BJRule, Lobby);
