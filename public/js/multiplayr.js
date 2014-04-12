@@ -4,8 +4,81 @@ var Multiplayr = (function() {
         host: Host,
         join: Join,
         createDataType: CreateDataType,
-        PrimitiveType: CreateDataType(_primitiveType)
+        PrimitiveType: CreateDataType(_primitiveType),
+
+        setGamerulesPath: SetGamerulesPath,
+        getGamerulesPath: GetGamerulesPath,
+        loadRule: LoadRule
     };
+
+    var _gamerulesPath = '';
+
+    /**
+     * Modular gamerules functions
+     */
+    function SetGamerulesPath(path) {
+        _gamerulesPath = path;
+    }
+    function GetGamerulesPath() {
+        return _gamerulesPath;
+    }
+    function LoadRule(rule, cb) {
+        function src(rule) {
+            return _gamerulesPath + rule + '/' + rule + '.js';
+        }
+        if (typeof rule === 'string') {
+            loadJs(src(rule), cb);
+        } else if (isArray(rule)) {
+            // load them sequentially
+            var cnt = rule.length;
+
+            function loadNum(ruleInd) {
+                loadJs(src(rule[ruleInd]), function() {
+                    if (ruleInd + 1 === cnt && isFunction(cb)) {
+                        cb();
+                    } else if (ruleInd + 1 < cnt) {
+                        loadNum(ruleInd + 1);
+                    }
+                });
+            }
+            loadNum(0);
+
+        }
+    }
+    function LoadRuleCss(ruleName, css, cb) {
+        function src(cssName) {
+            return _gamerulesPath + ruleName + '/' + cssName;
+        }
+        if (typeof css === 'string') {
+            loadJs(src(css), cb);
+        } else if (isArray(css)) {
+            var cnt = css.length;
+            for (var i=0;i<css.length;++i) {
+                loadCss(src(css[i]), function() {
+                    --cnt;
+                    if (cnt === 0 && isFunction(cb)) {
+                        cb();
+                    }
+                });
+            }
+        }
+    }
+
+
+    function loadJs(src, cb) {
+        var scr = document.createElement('script');
+        scr.setAttribute('src', src);
+        scr.onload = cb;
+        document.body.appendChild(scr);
+    }
+    function loadCss(src, cb) {
+        var lnk = document.createElement('link');
+        lnk.setAttribute('rel', 'stylesheet');
+        lnk.setAttribute('type', 'text/css');
+        lnk.setAttribute('href', src);
+        lnk.onload = cb;
+        document.body.appendChild(lnk);
+    }
 
     /**
      * Multiplayr class creation function
@@ -25,6 +98,15 @@ var Multiplayr = (function() {
         }
     };
 
+    function LoadRuleCssDeep(rule) {
+        LoadRuleCss(rule.name, rule.css);
+        for (var plugin in rule.plugins) {
+            if (rule.plugins.hasOwnProperty(plugin)) {
+                LoadRuleCssDeep(rule.plugins[plugin]);
+            }
+        }
+    }
+
     function Host(rule, container, io, uri, cb) {
         var comm = new MPProtocol(io, uri);
 
@@ -37,6 +119,8 @@ var Multiplayr = (function() {
                     throw new Error(err);
                 }
             }
+
+            LoadRuleCssDeep(rule);
 
             var gameObj = new MPGameObject(rule,
                                            comm,
@@ -66,6 +150,7 @@ var Multiplayr = (function() {
                 }
             }
 
+            LoadRuleCssDeep(rule);
 
             var gameObj = new MPGameObject(rule,
                                            comm,

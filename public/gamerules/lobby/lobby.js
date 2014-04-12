@@ -1,196 +1,99 @@
-var lobby = new MPRule();
+var Lobby = {};
 
-// todo: remove blackjack related stuff
-// todo: pluginify lobby
+Lobby.name = 'lobby';
+Lobby.css = ['lobby.css'];
 
-lobby.addPlugin(Sugar());
-lobby.addPlugin(DataChannel());
-lobby.addPlugin(Player());
-
-lobby.defineHost(function(hostRule) {
-
-    hostRule.on('load', function(data) {
-        var hostObj = this;
-        hostObj.setView('lobby', {});
-    });
-
-    hostRule.on('client-join', function(data) {
-        var hostObj = this;
-
-
-        hostObj.getView().emit('client-join', {
-            client: data.client
-        });
-
-        hostObj.player(data.client)
-                .data('name', data.client)
-                .setView('lobby-client', {name: data.client});
-    });
-
-    hostRule.on('client-leave', function(data) {
-        var hostObj = this;
-
-        hostObj.getView().emit('client-leave', {
-            client: data.client
-        });
-    });
-
-    hostRule.onMessage('set-name', function(from, name, fn) {
-        var hostObj = this;
-
-        hostObj.player(from).data('name', name);
-
-        if (hostObj.getView().getName() === 'lobby') {
-            hostObj.getView().emit('set-name', {
-                client: from,
-                name: name
-            });
-        }
-    });
-
-    function clearAndDistribute() {
-        var hostObj = this;
-
-        hostObj.data.cards = new Hand();
-        hostObj.data.cards.resetDeck().shuffle();
-
-        hostObj.playerForEach(function(playerId) {
-            var hand = new Hand();
-
-            hostObj.player(playerId)
-                    .data('banker', false)
-                    .data('turn', false)
-                    .data('hand', hand);
-
-            hand.addCard(hostObj.data.cards.draw());
-            hand.addCard(hostObj.data.cards.draw());
-        });
+Lobby.globalData = {
+    started: {
+        value: false,
+        const: false
     }
+};
 
-    function startGame() {
-        // for now, assume client 0 is the banker
-        var hostObj = this;
-        hostObj.player(0).data('banker', true);
-        hostObj.player().setView('hand');
-
-        hostObj.data.turn = 1;
-        setTurn.call(hostObj);
+Lobby.playerData = {
+    // Players' names
+    name: {
+        value: 'player',
+        const: false
     }
-    function setTurn() {
-        var hostObj = this;
-        hostObj.player(hostObj.data.turn)
-                .data('turn', true)
-                .emitView('turn', true);
-    }
+};
 
-    hostRule.onMessage('hit', function(playerId, data, fn) {
-        var hostObj = this;
-        var player = hostObj.player(playerId);
+Lobby.onDataChange = function(cb) {
+    with(this) {
+        QgetPlayersData('name')
+            .then(function(names) {
 
-        if (player.data('turn') === false) {
-            // ignore request
-        } else {
-            var hand = player.data('hand');
-            var card = hostObj.data.cards.draw();
-            hand.addCard(card);
-            fn(card.toJSON());
-        }
-    });
-    hostRule.methods.startGame = function() {
-        var hostObj = this;
-        if (hostObj.playerCount() < 2) {
-            alert('we need more than 2 players to start the game');
-        } else {
-            clearAndDistribute.call(hostObj);
-            startGame.call(hostObj);
-        }
-    };
+                var orderedNames = [];
+                for (var i=0;i<clients.length;++i) {
+                    orderedNames.push(names[clients[i]]);
+                }
 
-});
-
-lobby.defineClient(function(client) {
-    client.on('load', function() {
-        var clientObj = this;
-//        clientObj.setView('lobby-client', {name: ''});
-    });
-});
-
-lobby.addView('hand',
-    '<div class="status">Waiting</div>' +
-    '<div class="hand"></div>' +
-    '<div class="control"></div>',
-    function(view) {
-        function suitToText(s) {
-            var _s = ['\u2662', '\u2663', '\u2661', '\u2660'];
-            return _s[s];
-        }
-
-        function addCard(card) {
-            var $con = $(view.getContainer());
-            $con.find('.hand').append('<div class="card">' + card.getValue() + suitToText(card.getSuit()) + '</div>');
-        }
-
-        function hit() {
-            view.getPlayer().sendMessage('hit', {}, function() {
-                view.getPlayer().getData('hand', function(hand) {
-                    addCard(hand.peek());
+                clients.forEach(function(client, ind) {
+                    setViewProps(client, 'name', names[client]);
+                    setViewProps(client, 'playerNum', ind);
+                    setViewProps(client, 'playerCount', clients.length);
+                    setViewProps(client, 'names', orderedNames);
                 });
-            });
+
+                setViewProps(clientId, 'names', orderedNames);
+                setViewProps(clientId, 'playerCount', clients.length);
+
+                cb(true);
+            }).fail(console.error);
+    };
+};
+
+Lobby.views = {
+    Lobby: React.createClass({
+        displayName: 'Lobby',
+        startGame: function() {
+            var gameObj = this.props.MPGameObject;
+            gameObj.__parent.startGame();
+        },
+        render: function() {
+            function createHello(names) {
+                var tr = [];
+                for (var i=0;i<names.length;++i) {
+                    tr.push( Lobby.views.HelloMessage({name: names[i]}) );
+                }
+
+                return tr;
+            }
+
+            return React.DOM.div(
+                null,
+                React.DOM.h3(null, "Lobby"),
+                React.DOM.ul(null, createHello(this.props.names)),
+                React.DOM.button({onClick: this.startGame}, 'Start game')
+            );
         }
-
-        view.on('load', function() {
-            var $con = $(this);
-            view.getPlayer().getData('hand', function(hand) {
-                hand.forEach(addCard);
-            });
-        });
-
-        view.on('turn', function() {
-            var $con = $(this);
-            $con.find('.status').html('Your turn!');
-
-            $('<button>Hit</button>').click(hit).appendTo($con.find('.control'));
-        });
-    });
-
-lobby.addView('lobby',
-    'Connected Clients: <ul id="lobby"></ul> <button id="startgame">Start Game</button>',
-    function(view) {
-        view.on('load', function() {
-            $("#startgame").click(function() {
-                view.getPlayer().startGame();
-            });
-        });
-
-        view.on('client-join', function(data) {
-            $("#lobby").append('<li player="'+data.client+'">' + data.client +'</li>');
-        });
-
-        view.on('client-leave', function(data) {
-            $('#lobby li').each(function() {
-                if ($(this).attr('player') === data.client) {
-                    $(this).remove();
-                }
-            });
-        });
-
-        view.on('set-name', function(data) {
-            $('#lobby li').each(function() {
-                if ($(this).attr('player') === data.client) {
-                    $(this).html(data.name);
-                }
-            });
-        });
-    }
-);
-
-lobby.addView('lobby-client',
-    'Welcome. Name: <input type="text" class="name" value="<%=name%>" /><br /><button class="disconnect">Disconnect</button>',
-    function(view) {
-        view.on('load', function(playerObj) {
-            $(this).find(".name").bind('keyup', function() {
-                view.getPlayer().sendMessage('set-name', this.value);
-            });
-        });
-    });
-
+    }),
+    HelloMessage: React.createClass({
+        displayName: 'HelloMessage',
+        render: function() {
+            return React.DOM.div(null, "Hello ", this.props.name);
+        }
+    }),
+    SetName: React.createClass({
+        displayName: 'SetName',
+        onChange: function(e) {
+            var gameObj = this.props.MPGameObject;
+            gameObj.setPlayerData(gameObj.clientId, 'name', e.target.value);
+            return true;
+        },
+        render: function() {
+            return (
+                React.DOM.div(
+                    null,
+                    React.DOM.form(
+                        {
+                            onSubmit:this.handleSubmit
+                        },
+                        React.DOM.div(null, 'Name: '),
+                        React.DOM.input( {onChange:this.onChange} )
+                    )
+                )
+            );
+        }
+    })
+};

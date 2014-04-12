@@ -20,8 +20,8 @@
     <script src="/js/multiplayr.js"></script>
 
 
-    <!--script src="/js/card.js"></script-->
-    <script src="/gamerules/blackjack/bj.js"></script>
+    <script>
+    </script>
 
     Host:
     <div id="host-container" style="margin-bottom: 10px; border:1px solid black; height: 300px;">
@@ -40,12 +40,9 @@
     </div>
 
     <script>
+      Multiplayr.setGamerulesPath('/gamerules/');
+      Multiplayr.loadRule(['lobby', 'bigger'], test1);
 
-      function assert(exp) {
-      if (!exp) {
-      throw new Error();
-      }
-      }
       var clientObj = [];
       var hostObj = null;
 
@@ -53,7 +50,7 @@
       //      var hostEngine = new MPGameEngine(lobby, document.getElementById('host-container'), io, 'http://localhost:8080');
 
 
-      Multiplayr.host(BJRule, document.getElementById('host-container'), io, 'http://localhost:3000', function(err, data) {
+      Multiplayr.host(BiggerRule, document.getElementById('host-container'), io, 'http://localhost:3000', function(err, data) {
 
       hostObj = data;
       var roomId = data.roomId;
@@ -62,7 +59,7 @@
       var name = "client"+i+"-container";
       var container = document.getElementById(name);
       var $button = $('<button>Connect</button>').click(function() {
-      Multiplayr.join(roomId, BJRule, document.getElementById('client'+i+'-container'), io, 'http://localhost:3000', function(err, data) {
+      Multiplayr.join(roomId, BiggerRule, document.getElementById('client'+i+'-container'), io, 'http://localhost:3000', function(err, data) {
       clientObj[i] = data;
       });
       });
@@ -73,7 +70,7 @@
       });
       }
 
-      test1();
+
     </script>
 
 
