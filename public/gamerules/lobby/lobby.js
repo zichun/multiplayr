@@ -18,6 +18,13 @@ Lobby.playerData = {
     }
 };
 
+Lobby.methods = {
+    setName: function(playerId, name) {
+        var gameObj = this;
+        gameObj.setPlayerData(playerId, 'name', name);
+    }
+}
+
 Lobby.onDataChange = function(cb) {
     with(this) {
         QgetPlayersData('name')
@@ -47,7 +54,7 @@ Lobby.views = {
     Lobby: React.createClass({
         displayName: 'Lobby',
         startGame: function() {
-            var gameObj = this.props.MPGameObject;
+            var gameObj = this.props.Methods;
             gameObj.__parent.startGame();
         },
         render: function() {
@@ -77,8 +84,8 @@ Lobby.views = {
     SetName: React.createClass({
         displayName: 'SetName',
         onChange: function(e) {
-            var gameObj = this.props.MPGameObject;
-            gameObj.setPlayerData(gameObj.clientId, 'name', e.target.value);
+            var method = this.props.Methods;
+            method.setName(e.target.value);
             return true;
         },
         render: function() {

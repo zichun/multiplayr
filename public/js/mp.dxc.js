@@ -6,6 +6,17 @@ var MPDataExchange = (function() {
     function MPDataExchange(comm, gameObj, namespace) {
         var self = this;
 
+        self.execMethod = function(clientId, method, arguments) {
+            var hostId = comm.getHost();
+            sendTypedMessage(hostId,
+                             'exec-method',
+                             {
+                                 clientId: clientId,
+                                 method: method,
+                                 arguments: Array.prototype.slice.call(arguments, [])
+                             });
+        };
+
         self.getData = function(clientId, variable, cb) {
             if (clientId === null) {
                 clientId = comm.getHost();
@@ -149,6 +160,20 @@ var MPDataExchange = (function() {
             };
 
             switch(type) {
+                case 'exec-method':
+                {
+                    var clientId = message.clientId;
+                    var method = message.method;
+                    var arguments = message.arguments;
+
+                    if (gameObj.clientId !== comm.getHost()) {
+                        throw(new Error("Only host should be invoking methods"));
+                    }
+
+                    gameObj.__execMethod(clientId, method, arguments);
+
+                    break;
+                }
                 case 'get-data': // data request
                 {
                     var variable = message.variable;

@@ -129,8 +129,6 @@ var Multiplayr = (function() {
                                            true,
                                            container);
 
-            setUpMethods(gameObj, rule.methods);
-
             if (isFunction(cb)) {
                 cb(null, gameObj);
             }
@@ -158,8 +156,6 @@ var Multiplayr = (function() {
                                            data.clientId,
                                            false,
                                            container);
-
-            setUpMethods(gameObj, rule.methods);
 
             if (isFunction(cb)) {
                 cb(null, gameObj);

@@ -27,6 +27,9 @@ var MPGameObject = (function() {
         self.__namespace = namespace;
         self.__parent = parent;
 
+        self.__methods = rule.methods;
+        self.Methods = SetUpMethods(rule.methods, isHost, self);
+
         self.isHost = function() {
             return isHost;
         };
@@ -61,6 +64,11 @@ var MPGameObject = (function() {
                     rule.plugins[plugin], comm, roomId, clientId, isHost, container, prefix + plugin, self, _secret
                 );
             }
+        }
+
+
+        if (self.__parent) {
+            self.Methods.__parent = self.__parent.Methods;
         }
 
         if (isHost && !parent) {
@@ -520,11 +528,28 @@ var MPGameObject = (function() {
             var reactClass = self.__getView(reactDisplayName);
 
             props = props || {};
-            props.MPGameObject = self;
+
+            props.Methods = self.Methods;
+
             cb(null,
                React.renderComponent(reactClass(props), self.__container));
 
             return self;
+        };
+
+    MPGameObject.prototype.__execMethod =
+        function MPGameObjectExecMethod(callee, method, arguments) {
+            var self = this;
+            if (!self.isHost()) {
+                throw(new Error("Invalid call: only host can invoke methods"));
+            }
+
+            if (typeof self.__methods[method] === 'undefined') {
+                throw(new Error("Invalid argument: method ["+method+"] is not defined"));
+            }
+
+            var args = [callee].concat(arguments);
+            return self.__methods[method].apply(self, args);
         };
 
 
@@ -598,6 +623,40 @@ var MPGameObject = (function() {
             return deferred.promise;
         };
     });
+
+
+    /**
+     * Helper Functions
+     */
+    function SetUpMethods(methods, isHost, gameObj) {
+        var obj = {};
+
+        function hostMethodWrapper(method) {
+            return function() {
+                gameObj.__execMethod(gameObj.clientId, method, arguments);
+            };
+        }
+
+        function clientMethodWrapper(method) {
+            return function() {
+                gameObj.__dxc.execMethod(gameObj.clientId, method, arguments);
+            };
+        }
+
+        for (var method in methods) {
+            if (!methods.hasOwnProperty(method)) {
+                continue;
+            }
+
+            if (isHost) {
+                obj[method] = hostMethodWrapper(method);
+            } else {
+                obj[method] = clientMethodWrapper(method);
+            }
+        }
+
+        return obj;
+    }
 
     return MPGameObject;
 })();

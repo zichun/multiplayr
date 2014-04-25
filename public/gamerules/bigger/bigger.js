@@ -15,10 +15,10 @@ BiggerRule.methods = {
             }
         }
     },
-    roll: function() {
+    roll: function(clientId) {
         var roll = Math.floor(1000 * Math.random() + 1);
-        this.setPlayerData(this.clientId, 'rollValue', roll, function() {});
-        this.nextTurn();
+        this.setPlayerData(clientId, 'rollValue', roll, function() {});
+        this.Methods.nextTurn();
     },
     nextTurn: function() {
         var self = this;
@@ -139,6 +139,9 @@ BiggerRule.views = {
     }),
     StatusPage: React.createClass({
         displayName: 'StatusPage',
+        startGame: function() {
+            this.props.Methods.startGame();
+        },
         render: function() {
             var t = this.props.turn;
             var names = this.props.lobby.names;
@@ -147,7 +150,7 @@ BiggerRule.views = {
                 if (t < this.props.lobby.playerCount) {
                     return React.DOM.div("It's ", names[t], "'s turn now");
                 } else {
-                    return React.DOM.button({onClick: this.props.MPGameObject.startGame}, 'Start new game');
+                    return React.DOM.button({onClick: this.startGame}, 'Start new game');
                 }
             }
             return React.DOM.div(null,
@@ -168,8 +171,11 @@ BiggerRule.views = {
 
     RollPage: React.createClass({
         displayName: 'RollPage',
+        roll: function() {
+            this.props.Methods.roll();
+        },
         render: function() {
-            return React.DOM.button({onClick: this.props.MPGameObject.roll}, "Roll! - I'm feeling lucky");
+            return React.DOM.button({onClick: this.roll}, "Roll! - I'm feeling lucky");
         }
     }),
 
