@@ -25,28 +25,26 @@ Lobby.methods = {
     }
 }
 
-Lobby.onDataChange = function(cb) {
+Lobby.onDataChange = function() {
     with(this) {
-        QgetPlayersData('name')
-            .then(function(names) {
+        var names = getPlayersData('name');
+        var orderedNames = [];
 
-                var orderedNames = [];
-                for (var i=0;i<clients.length;++i) {
-                    orderedNames.push(names[clients[i]]);
-                }
+        playersForEach(function(client) {
+            orderedNames.push(names[client]);
+        });
 
-                clients.forEach(function(client, ind) {
-                    setViewProps(client, 'name', names[client]);
-                    setViewProps(client, 'playerNum', ind);
-                    setViewProps(client, 'playerCount', clients.length);
-                    setViewProps(client, 'names', orderedNames);
-                });
+        playersForEach(function(client, ind) {
+            setViewProps(client, 'name', names[client]);
+            setViewProps(client, 'playerNum', ind);
+            setViewProps(client, 'playerCount', playersCount);
+            setViewProps(client, 'names', orderedNames);
+        });
 
-                setViewProps(clientId, 'names', orderedNames);
-                setViewProps(clientId, 'playerCount', clients.length);
+        setViewProps(clientId, 'names', orderedNames);
+        setViewProps(clientId, 'playerCount', playersCount);
 
-                cb(true);
-            }).fail(console.error);
+        return true;
     };
 };
 
@@ -54,7 +52,7 @@ Lobby.views = {
     Lobby: React.createClass({
         displayName: 'Lobby',
         startGame: function() {
-            var gameObj = this.props.Methods;
+            var gameObj = this.props.MP;
             gameObj.__parent.startGame();
         },
         render: function() {
@@ -66,7 +64,6 @@ Lobby.views = {
 
                 return tr;
             }
-            alert('wtf');
             return React.DOM.div(
                 null,
                 React.DOM.h3(null, "Lobby"),
@@ -84,8 +81,7 @@ Lobby.views = {
     SetName: React.createClass({
         displayName: 'SetName',
         onChange: function(e) {
-            var method = this.props.Methods;
-            method.setName(e.target.value);
+            this.props.MP.setName(e.target.value);
             return true;
         },
         render: function() {

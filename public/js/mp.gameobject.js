@@ -28,7 +28,7 @@ var MPGameObject = (function() {
         self.__parent = parent;
 
         self.__methods = rule.methods;
-        self.Methods = SetUpMethods(rule.methods, isHost, self);
+        self.MP = SetUpMethods(rule.methods, isHost, self);
 
         self.isHost = function() {
             return isHost;
@@ -70,7 +70,7 @@ var MPGameObject = (function() {
 
 
         if (self.__parent) {
-            self.Methods.__parent = self.__parent.Methods;
+            self.MP.__parent = self.__parent.MP;
         }
 
         if (isHost && !parent) {
@@ -98,192 +98,6 @@ var MPGameObject = (function() {
             }
         };
 
-    function CreateStore(dataObj, gameObj) {
-        var _store = {};
-
-        for (var variable in dataObj) {
-            if (dataObj.hasOwnProperty(variable)) {
-                if (typeof dataObj[variable].value !== 'undefined') {
-                    _store[variable] = dataObj[variable].value;
-                } else if (typeof dataObj[variable].type !== 'undefined') {
-                    _store[variable] = new dataObj[variable].type(dataObj[variable].init);
-                }
-            }
-        }
-
-        /**
-         * Exposes local variable store as synchronous operations
-         */
-        return function(challenge, variable) {
-            if (challenge !== _secret) {
-                throw(new Error("Access violation: this is a private method"));
-            }
-
-            if (typeof _store[variable] === 'undefined') {
-                throw(new Error("Variable " + variable + " is not declared"));
-            }
-
-            return {
-                get: function() {
-                    return _store[variable];
-                },
-                set: function(newValue) {
-
-                    if (dataObj[variable].const === true) {
-                        throw(new Error("Variable ["+variable+"] is constant"));
-                    }
-
-                    _store[variable] = newValue;
-
-                    gameObj.dataChange();
-                    return newValue;
-                }
-            };
-        };
-    }
-
-    /* Extract out */
-    function getFirstNamespace(variable) {
-        var s = variable.split('_');
-        if (s.length === 0) {
-            return [false, variable];
-        } else {
-            var namespace = s[0];
-            return [namespace, s.slice(1, s.length).join("_")];
-        }
-    }
-    function safeCb(cb) {
-        if (isFunction(cb)) {
-            return cb;
-        } else {
-            return function(err, doc) {
-                if (err) {
-                    throw(err);
-                } else {
-                    return doc;
-                }
-                return null;
-            };
-        }
-    }
-
-    /**
-     * Sends a request to get data from host. If it's the host calling this API,
-     * we'll get it from localstore directly
-     */
-    MPGameObject.prototype.getData =
-        function MPGameObjectGetData(variable, cb) {
-            var self = this;
-            var mcb = safeCb(cb);
-
-            if (self.isHost()) {
-                // Current scope is host, and so data belongs to self
-
-                if (self.__hasLocalData(_secret, variable)) {
-                    self.__getLocalData(_secret, variable, mcb);
-                } else {
-                    var splits = getFirstNamespace(variable);
-                    var namespace = splits[0];
-
-                    if (namespace === false || typeof self.__plugins[namespace] === 'undefined') {
-                        mcb(new Error("Variable ["+variable+"] does not exists"));
-                    } else {
-                        self.__plugins[namespace].getData(splits[1], mcb);
-                    }
-                }
-            } else {
-                self.__dxc.getData(null, variable, mcb);
-            }
-            return self;
-        };
-
-    /**
-     * Sends a request to set data on host. If it's the host calling this API,
-     * we'll get it from localstore directly
-     */
-    MPGameObject.prototype.setData =
-        function MPGameObjectSetData(variable, value, cb) {
-            var self = this;
-            var mcb = safeCb(cb);
-            if (self.isHost()) {
-                // Current scope is host, and so data belongs to self
-                if (self.__hasLocalData(_secret, variable)) {
-                    self.__setLocalData(_secret, variable, value, mcb);
-                } else {
-                    var splits = getFirstNamespace(variable);
-                    var namespace = splits[0];
-
-                    if (namespace === false || typeof self.__plugins[namespace] === 'undefined') {
-                        mcb(new Error("Variable ["+variable+"] does not exists"));
-                    } else {
-                        self.__plugins[namespace].setData(splits[1], value, mcb);
-                    }
-                }
-            } else {
-                self.__dxc.setData(null, variable, value, mcb);
-            }
-            return self;
-        };
-
-    MPGameObject.prototype.getPlayerData =
-        function MPGameObjectGetPlayerData(playerId, variable, cb) {
-            var self = this;
-            var mcb = safeCb(cb);
-            if (self.isHost() === false) {
-                self.__dxc.getData(playerId, variable, mcb);
-            } else {
-                if (typeof self.__clientsData[playerId] === 'undefined'){
-                    mcb(new Error("Client [" + playerId + "] does not exists"), null);
-                } else if (self.__clientsData[playerId].active === false) {
-                    // todo: think about disconnection implication
-                    mcb(new Error("Client [" + playerId + "] has disconnected"), null);
-                } else {
-                    if (self.__hasPlayerData(_secret, playerId, variable)) {
-                        mcb(null, self.__clientsData[playerId].dataStore(_secret, variable).get());
-                    } else {
-                        var splits = getFirstNamespace(variable);
-                        var namespace = splits[0];
-
-                        if (namespace === false || typeof self.__plugins[namespace] === 'undefined') {
-                            mcb(new Error("Variable ["+variable+"] does not exists"));
-                        } else {
-                            self.__plugins[namespace].getPlayerData(playerId, splits[1], mcb);
-                        }
-                    }
-                }
-            }
-            return self;
-        };
-
-    MPGameObject.prototype.setPlayerData =
-        function MPGameObjectSetPlayerData(playerId, variable, value, cb) {
-            var self = this;
-            var mcb = safeCb(cb);
-            if (self.isHost() === false) {
-                self.__dxc.setData(playerId, variable, value, mcb);
-            } else {
-                if (typeof self.__clientsData[playerId] === 'undefined'){
-                    mcb(new Error("Client [" + playerId + "] does not exists"), null);
-                } else if (self.__clientsData[playerId].active === false) {
-                    // todo: think about disconnection implication
-                    mcb(new Error("Client [" + playerId + "] has disconnected"), null);
-                } else {
-                    if (self.__hasPlayerData(_secret, playerId, variable)) {
-                        mcb(null, self.__clientsData[playerId].dataStore(_secret, variable).set(value));
-                    } else {
-                        var splits = getFirstNamespace(variable);
-                        var namespace = splits[0];
-
-                        if (namespace === false || typeof self.__plugins[namespace] === 'undefined') {
-                            mcb(new Error("Variable ["+variable+"] does not exists"));
-                        } else {
-                            self.__plugins[namespace].setPlayerData(playerId, splits[1], value, mcb);
-                        }
-                    }
-                }
-            }
-            return self;
-        };
 
     MPGameObject.prototype.__hasLocalData =
         function MPGameObjectHasLocalData(_password, variable) {
@@ -318,22 +132,7 @@ var MPGameObject = (function() {
             if (_password !== _secret) {
                 throw(new Error("Access denied"));
             }
-            var self = this;
-                var mcb = function(err, res) {
-                    if (isFunction(cb)) {
-                        cb(err, res);
-                    } else if (err) {
-                        throw(err);
-                    }
-                };
-
-                try {
-                    mcb(null, self._dataStore(_secret, variable).set(value));
-                } catch(e) {
-                    mcb(e, false);
-                }
-
-            return self;
+            return this._dataStore(_secret, variable).set(value);
         };
 
     MPGameObject.prototype.__getLocalData =
@@ -341,63 +140,49 @@ var MPGameObject = (function() {
             if (_password !== _secret) {
                 throw(new Error("Access denied"));
             }
-            var self = this;
-            if (isFunction(cb)) {
-                try {
-                    cb(null, self._dataStore(_secret, variable).get());
-                } catch(e) {
-                    cb(e, false);
-                }
-            }
-            return self;
+            return this._dataStore(_secret, variable).get();
         };
 
-    MPGameObject.prototype.setView =
-        function MPGameObjectSetView(clientId, view) {
-            var self = this;
-            if (self.isHost()) {
-                self.__props[clientId].view = view;
-            } else {
-                throw(new Error("Only host can call setViewProps"));
-            }
-            return self;
-        };
-
-    MPGameObject.prototype.setViewProps =
-        function MPGameObjectSetViewProps(clientId, key, value) {
-            // todo: maybe expose this API only for ondatachange, to enforce data drivenness
-            var self = this;
-            if (self.isHost()) {
-                self.__props[clientId].props[key] = value;
-            } else {
-                // todo: rethink whether we only want to restrict host to deal with data changes, by design
-                throw(new Error("Only host can call setViewProps"));
-            }
-            return self;
-        };
-
-    MPGameObject.prototype.deleteViewProps =
-        function MPGameObjectDeleteViewProps(clientId, key) {
-            delete self.__props[clientId].props[key];
-        };
 
     MPGameObject.prototype.newClient =
         function MPGameObjectNewClient(clientId) {
             var self = this;
             if (self.isHost()) {
-                self.clients.push(clientId);
-                self.__clientsData[clientId] = {
-                    active: true,
-                    dataStore: CreateStore(self.playerData, self)
-                };
-                self.__props[clientId] = {
-                    view: '',
-                    props: {}
-                };
-                self.dataChange(true);
+                if (!self.__parent) {
+                    self.addNewClient(clientId);
+                    self.dataChange(true);
+                }
             } else {
                 // in this implementation of gameobject we'll force non-host to talk to host only
             }
+            return self;
+        };
+
+    MPGameObject.prototype.addNewClient =
+        function MPGameObjectAddNewClient(clientId) {
+            var self = this;
+            if (!self.isHost()) {
+                throw(new Error("Only host can call addNewClient"));
+            }
+
+            for (var plugin in self.__plugins) {
+                if (self.__plugins.hasOwnProperty(plugin)) {
+                    self.__plugins[plugin].addNewClient(clientId);
+                }
+            }
+
+            self.clients.push(clientId);
+            self.__clientsData[clientId] = {
+                active: true,
+                dataStore: CreateStore(self.playerData, self)
+            };
+            self.__props[clientId] = {
+                view: '',
+                props: {}
+            };
+
+            self.dataChange();
+
             return self;
         };
 
@@ -414,32 +199,59 @@ var MPGameObject = (function() {
             return self;
         };
 
-    // This method will be called every tick interval
+    MPGameObject.prototype.processTick =
+        function MPGameObjectProcessTick() {
+            var self = this;
+            var changed = false;
+
+            if (self.isHost()) {
+                for (var plugin in self.__plugins) {
+                    if (self.__plugins.hasOwnProperty(plugin)) {
+                        changed |= self.__plugins[plugin].processTick();
+                    }
+                }
+
+                if ((changed || self.__hasDelta) &&
+                    isFunction(self.__onDataChange))
+                {
+                    self.__hasDelta = false;
+                    var render = self.__onDataChange.call(self.MP);
+
+                    if (self.__parent) {
+                        for (var client in self.__props) {
+                            if (!self.__props.hasOwnProperty(client)) {
+                                continue;
+                            }
+                            self.__parent.setViewProps(client, self.__namespace, self.__props[client].props);
+                        }
+                    }
+
+                    if (render && !self.__parent) {
+                        self.__renderViews(_secret);
+                    }
+
+                    changed = true;
+                }
+            } else {
+                // todo: proper convention for error
+                // or better still, don't expose this to client in the first place
+            }
+
+            return changed;
+        };
+
     MPGameObject.prototype.tick =
         function MPGameObjectTick() {
             var self = this;
+            var changed = false;
+
             if (self.isHost()) {
-                // todo: some mechanism to enumerate every thing in order (from leaf)
-                if (self.__hasDelta && isFunction(self.__onDataChange)) {
-                    self.__hasDelta = false;
-                    self.__onDataChange.call(self, function(toRender) {
-                        if (self.__parent) {
-                            for (var client in self.__props) {
-                                if (!self.__props.hasOwnProperty(client)) {
-                                    continue;
-                                }
-                                self.__parent.setViewProps(client, self.__namespace, self.__props[client].props);
-                            }
-                        }
-                        if (toRender) {
-                            if (!self.__parent) {
-                                self.__renderViews(_secret);
-                            }
-                        }
-                    });
+                if (self.__parent) {
+                    return self.__parent.tick();
+                } else {
+                    return self.processTick();
                 }
             }
-            return self;
         };
 
     MPGameObject.prototype.dataChange =
@@ -501,7 +313,6 @@ var MPGameObject = (function() {
             props = props || {};
 
             if (self.isHost() === false && clientId !== self.clientId) {
-                // todo: clients should be able to setview too. or maybe not
                 mcb(new Error("Only host can set views"), displayName);
             }
 
@@ -544,7 +355,7 @@ var MPGameObject = (function() {
 
             props = props || {};
 
-            props.Methods = self.Methods;
+            props.MP = self.MP;
 
             cb(null,
                React.renderComponent(reactClass(props), self.__container));
@@ -564,11 +375,185 @@ var MPGameObject = (function() {
             }
 
             var args = [callee].concat(arguments);
-            var tr = self.__methods[method].apply(self, args);
+            var tr = self.__methods[method].apply(self.MP, args);
             self.tick();
             return tr;
         };
 
+    /**
+     * Methods that will be exposed to game rules
+     */
+    MPGameObject.prototype.getData =
+        function MPGameObjectGetData(variable, cb) {
+            var self = this;
+
+            if (self.isHost()) {
+                // Current scope is host, and so data belongs to self
+
+                if (self.__hasLocalData(_secret, variable)) {
+                    return self.__getLocalData(_secret, variable);
+                } else {
+                    var splits = getFirstNamespace(variable);
+                    var namespace = splits[0];
+
+                    if (namespace === false || typeof self.__plugins[namespace] === 'undefined') {
+                        throw(new Error("Variable ["+variable+"] does not exists"));
+                    } else {
+                        return self.__plugins[namespace].getData(splits[1]);
+                    }
+                }
+            } else {
+                throw(new Error("Only host can get data"));
+            }
+            return self;
+        };
+
+    MPGameObject.prototype.setData =
+        function MPGameObjectSetData(variable, value, cb) {
+            var self = this;
+
+            if (self.isHost()) {
+                // Current scope is host, and so data belongs to self
+                if (self.__hasLocalData(_secret, variable)) {
+                    return self.__setLocalData(_secret, variable, value);
+                } else {
+                    var splits = getFirstNamespace(variable);
+                    var namespace = splits[0];
+
+                    if (namespace === false || typeof self.__plugins[namespace] === 'undefined') {
+                        throw(new Error("Variable ["+variable+"] does not exists"));
+                    } else {
+                        self.__plugins[namespace].setData(splits[1], value);
+                    }
+                }
+            } else {
+                throw(new Error("Only host can set data"));
+            }
+
+            return self;
+        };
+
+    MPGameObject.prototype.getPlayerData =
+        function MPGameObjectGetPlayerData(playerId, variable, cb) {
+            var self = this;
+
+            if (self.isHost() === false) {
+                throw(new Error("Only host can get player data"));
+            } else {
+                if (typeof self.__clientsData[playerId] === 'undefined'){
+                    throw(new Error("Client [" + playerId + "] does not exists"));
+                } else if (self.__clientsData[playerId].active === false) {
+                    // todo: think about disconnection implication
+                    throw(new Error("Client [" + playerId + "] has disconnected"));
+                } else {
+                    if (self.__hasPlayerData(_secret, playerId, variable)) {
+                        return self.__clientsData[playerId].dataStore(_secret, variable).get();
+                    } else {
+                        var splits = getFirstNamespace(variable);
+                        var namespace = splits[0];
+
+                        if (namespace === false || typeof self.__plugins[namespace] === 'undefined') {
+                            throw(new Error("Variable ["+variable+"] does not exists"));
+                        } else {
+                            return self.__plugins[namespace].getPlayerData(playerId, splits[1]);
+                        }
+                    }
+                }
+            }
+            return self;
+        };
+
+    MPGameObject.prototype.setPlayerData =
+        function MPGameObjectSetPlayerData(playerId, variable, value, cb) {
+            var self = this;
+
+            if (self.isHost() === false) {
+                throw(new Error("Only host can set player data"));
+            } else {
+                if (typeof self.__clientsData[playerId] === 'undefined'){
+                    throw(new Error("Client [" + playerId + "] does not exists"));
+                } else if (self.__clientsData[playerId].active === false) {
+                    // todo: think about disconnection implication
+                    throw(new Error("Client [" + playerId + "] has disconnected"));
+                } else {
+                    if (self.__hasPlayerData(_secret, playerId, variable)) {
+                        return self.__clientsData[playerId].dataStore(_secret, variable).set(value);
+                    } else {
+                        var splits = getFirstNamespace(variable);
+                        var namespace = splits[0];
+
+                        if (namespace === false || typeof self.__plugins[namespace] === 'undefined') {
+                            throw(new Error("Variable ["+variable+"] does not exists"));
+                        } else {
+                            self.__plugins[namespace].setPlayerData(playerId, splits[1], value);
+                        }
+                    }
+                }
+            }
+            return self;
+        };
+
+    MPGameObject.prototype.setView =
+        function MPGameObjectSetView(clientId, view) {
+            var self = this;
+            if (self.isHost()) {
+                self.__props[clientId].view = view;
+            } else {
+                throw(new Error("Only host can call setViewProps"));
+            }
+            return self;
+        };
+
+    MPGameObject.prototype.setViewProps =
+        function MPGameObjectSetViewProps(clientId, key, value) {
+            // todo: maybe expose this API only for ondatachange, to enforce data drivenness
+            var self = this;
+            if (self.isHost()) {
+                self.__props[clientId].props[key] = value;
+            } else {
+                // todo: rethink whether we only want to restrict host to deal with data changes, by design
+                throw(new Error("Only host can call setViewProps"));
+            }
+            return self;
+        };
+
+    MPGameObject.prototype.deleteViewProps =
+        function MPGameObjectDeleteViewProps(clientId, key) {
+            var self = this;
+            delete self.__props[clientId].props[key];
+            return self;
+        };
+
+    MPGameObject.prototype.playersForEach =
+        function MPGameObjectPlayersForEach(fn) {
+            var self = this;
+            if (!self.isHost()) {
+                throw(new Error("Only host can call playersForEach"));
+            }
+
+            if (self.__parent) {
+                self.__parent.playersForEach(fn);
+            } else {
+                self.clients.forEach(fn);
+            }
+
+            return self;
+        }
+
+    MPGameObject.prototype.playersCount =
+        function MPGameObjectPlayersCount() {
+            var self = this;
+            if (!self.isHost()) {
+                throw(new Error("Only host can call playersCount"));
+            }
+
+            if (self.__parent) {
+                return self.__parent.playersCount();
+            } else {
+                return self.clients.length;
+            }
+
+        };
 
     /**
      * Sugars for gameobject
@@ -576,48 +561,24 @@ var MPGameObject = (function() {
     MPGameObject.prototype.getPlayersData =
         function MPGameObjectGetPlayersData(variable, cb) {
             var self = this;
+
             if (!self.isHost()) {
                 throw(new Error("Invalid call: only host can accumulate all players data"));
             }
-            var mcb = (function() {
-                var called = false;
-
-                return function(err, res) {
-                    if (called === true) return;
-                    called = true;
-                    cb(err, res);
-                };
-            })();
 
             var cnter = self.clients.length;
             var accumulatedResults = {};
 
-            if (cnter === 0) {
-                mcb(null, accumulatedResults);
-                return self;
-            }
-
             self.clients.forEach(function(client) {
-                self.getPlayerData(client, variable, function(err, res) {
-                    accumulatedResults[client] = res;
-
-                    if (err) {
-                        mcb(err, variable);
-                    }
-
-                    cnter--;
-                    if (cnter === 0) {
-                        mcb(null, accumulatedResults);
-                    }
-                });
+                accumulatedResults[client] = self.getPlayerData(client, variable);
             });
 
-            return self;
+            return accumulatedResults;
         };
 
 
-    // Make function promises
-    var _toQ = ['getData', 'setData', 'getPlayerData', 'setPlayerData', 'getPlayersData', '__setView'];
+    // Make promises function for async functions
+    var _toQ = ['__setView'];
     _toQ.forEach(function(method) {
         MPGameObject.prototype['Q' + method] = function() {
             var self = this;
@@ -650,13 +611,18 @@ var MPGameObject = (function() {
 
         function hostMethodWrapper(method) {
             return function() {
-                gameObj.__execMethod(gameObj.clientId, method, arguments);
+                return gameObj.__execMethod(gameObj.clientId, method, arguments);
             };
+        }
+        function hostExposedMethodWrapper(method) {
+            return function() {
+                return gameObj[method].apply(gameObj, arguments);
+            }
         }
 
         function clientMethodWrapper(method) {
             return function() {
-                gameObj.__dxc.execMethod(gameObj.clientId, method, arguments);
+                return gameObj.__dxc.execMethod(gameObj.clientId, method, arguments);
             };
         }
 
@@ -672,7 +638,95 @@ var MPGameObject = (function() {
             }
         }
 
+        if (isHost) {
+            // Expose methods
+            var _exposed = ['getData', 'setData',
+                            'getPlayerData', 'setPlayerData', 'getPlayersData',
+                            'setView', 'setViewProps', 'deleteViewProps',
+                            'playersForEach', 'playersCount'];
+            _exposed.forEach(function(method) {
+                obj[method] = hostExposedMethodWrapper(method);
+            });
+
+            obj.clientId = gameObj.clientId;
+        }
+
         return obj;
+    }
+
+    function CreateStore(dataObj, gameObj) {
+        var _store = {};
+
+        for (var variable in dataObj) {
+            if (dataObj.hasOwnProperty(variable)) {
+                if (typeof dataObj[variable].value !== 'undefined') {
+                    _store[variable] = dataObj[variable].value;
+                } else if (typeof dataObj[variable].type !== 'undefined') {
+                    _store[variable] = new dataObj[variable].type(dataObj[variable].init);
+                }
+            }
+        }
+
+        /**
+         * Exposes local variable store as synchronous operations
+         */
+        return function(challenge, variable) {
+            if (challenge !== _secret) {
+                throw(new Error("Access violation: this is a private method"));
+            }
+
+            if (typeof _store[variable] === 'undefined') {
+                throw(new Error("Variable " + variable + " is not declared"));
+            }
+
+            return {
+                get: function() {
+                    return _store[variable];
+                },
+                set: function(newValue) {
+
+                    if (dataObj[variable].const === true) {
+                        throw(new Error("Variable ["+variable+"] is constant"));
+                    }
+
+                    _store[variable] = newValue;
+
+                    gameObj.dataChange();
+                    return newValue;
+                }
+            };
+        };
+    }
+
+    /**
+     * Extract out the first namespace
+     * e.g "Lobby"_Apple_Car -> "Lobby"
+     */
+    function getFirstNamespace(variable) {
+        var s = variable.split('_');
+        if (s.length === 0) {
+            return [false, variable];
+        } else {
+            var namespace = s[0];
+            return [namespace, s.slice(1, s.length).join("_")];
+        }
+    }
+
+    /**
+     * Callback function wrapper
+     */
+    function safeCb(cb) {
+        if (isFunction(cb)) {
+            return cb;
+        } else {
+            return function(err, res) {
+                if (err) {
+                    throw(err);
+                } else {
+                    return res;
+                }
+            };
+        }
     }
 
     return MPGameObject;

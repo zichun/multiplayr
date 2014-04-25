@@ -3,29 +3,27 @@ var BiggerRule = {};
 BiggerRule.methods = {
     startGame: function() {
         var gameObj = this;
-        if (gameObj.clients.length < 2) {
+        if (gameObj.playersCount() < 2) {
             alert("We need at least 2 players to play this game");
         } else {
-            // todo: surpress datachange (being able to stage multiple setData)
-            gameObj.setData('lobby_started', true);
-            gameObj.setData('turn', 0);
-            for (var i=0;i<gameObj.clients.length;++i) {
-                // todo: clients foreach
-                gameObj.setPlayerData(gameObj.clients[i], 'rollValue', 0, function() {});
-            }
+            gameObj.setData('lobby_started', true)
+                   .setData('turn', 0);
+
+            gameObj.playersForEach(function(client) {
+                gameObj.setPlayerData(client, 'rollValue', 0);
+            });
+
         }
     },
     roll: function(clientId) {
         var roll = Math.floor(1000 * Math.random() + 1);
-        this.setPlayerData(clientId, 'rollValue', roll, function() {});
-        this.Methods.nextTurn();
+        this.setPlayerData(clientId, 'rollValue', roll);
+        this.nextTurn();
     },
     nextTurn: function() {
         var self = this;
-        self.QgetData('turn')
-            .then(function(turn) {
-                return self.setData('turn', turn+1);
-            }).fail(console.error);
+        var turn = self.getData('turn')
+        self.setData('turn', turn+1);
     }
 };
 
@@ -47,51 +45,47 @@ BiggerRule.playerData = {
     }
 }
 
-BiggerRule.onDataChange = function(cb) {
+BiggerRule.onDataChange = function() {
     var gameObj = this;
     with(gameObj) {
 
-        QgetData('lobby_started')
-            .then(function(started) {
-                if (started) {
-                    showGame(cb);
+        var started = getData('lobby_started')
+
+        if (started) {
+            return showGame();
+        } else {
+            return showLobby();
+        }
+
+
+        function showGame() {
+            var turn = getData('turn');
+            var rollsD = getData('rollsD');
+
+            var rolls = [];
+            playersForEach(function(client) {
+                rolls.push(rollsD[client]);
+            });
+
+            setViewProps(clientId, 'turn', turn);
+            setViewProps(clientId, 'rolls', rolls);
+
+            if (turn >= playersCount()) {
+                return showSummary(turn, rolls, cb);
+            }
+
+            playersForEach(function(client, i) {
+                if (i !== turn) {
+                    setViewProps(client, 'turn', turn);
+                    setView(client, 'WaitingPage');
                 } else {
-                    showLobby(cb);
+                    setView(client, 'RollPage', {});
                 }
-            })
-            .fail(console.error);
+            });
 
-        function showGame(cb) {
-            Q.all([
-                QgetData('turn'),
-                QgetPlayersData('rollValue')
-            ]).spread(function(turn, rollsD) {
-                var rolls = [];
-                for (var i=0;i<clients.length;++i) {
-                    rolls.push(rollsD[clients[i]]);
-                }
+            setView(clientId, 'StatusPage');
 
-                setViewProps(clientId, 'turn', turn);
-                setViewProps(clientId, 'rolls', rolls);
-
-                if (turn >= clients.length) {
-                    showSummary(turn, rolls, cb);
-                    return;
-                }
-
-                clients.forEach(function(client, i) {
-                    if (i !== turn) {
-                        setViewProps(client, 'turn', turn);
-                        setView(client, 'WaitingPage');
-                    } else {
-                        setView(client, 'RollPage', {});
-                    }
-                });
-
-                setView(clientId, 'StatusPage');
-
-                cb(true);
-            }).fail(console.error);
+            return true;
         }
 
         function showSummary(turn, rolls, cb) {
@@ -102,21 +96,22 @@ BiggerRule.onDataChange = function(cb) {
                     largest = i;
                 }
             });
-            clients.forEach(function(client, i) {
+            playersForEach(function(client, i) {
                 setViewProps(client, 'winner', largest);
                 setView(client, 'WinPage');
             });
             setView(clientId, 'StatusPage');
-            cb(true);
+
+            return true;
         }
 
         function showLobby(cb) {
             setView(clientId, 'lobby_Lobby');
-            clients.forEach(function(client) {
+            playersForEach(function(client) {
                 setView(client, 'lobby_SetName');
             });
 
-            cb(true);
+            return true;
         }
     }
 };
@@ -140,7 +135,7 @@ BiggerRule.views = {
     StatusPage: React.createClass({
         displayName: 'StatusPage',
         startGame: function() {
-            this.props.Methods.startGame();
+            this.props.MP.startGame();
         },
         render: function() {
             var t = this.props.turn;
@@ -172,7 +167,7 @@ BiggerRule.views = {
     RollPage: React.createClass({
         displayName: 'RollPage',
         roll: function() {
-            this.props.Methods.roll();
+            this.props.MP.roll();
         },
         render: function() {
             return React.DOM.button({onClick: this.roll}, "Roll! - I'm feeling lucky");

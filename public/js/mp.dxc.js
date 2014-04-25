@@ -4,6 +4,7 @@
  */
 
 // todo: deprecate proxiable objects
+// todo: depreacte data channel
 var MPDataExchange = (function() {
     function MPDataExchange(comm, gameObj, namespace) {
         var self = this;
