@@ -60,7 +60,7 @@ BiggerRule.onDataChange = function() {
 
         function showGame() {
             var turn = getData('turn');
-            var rollsD = getData('rollsD');
+            var rollsD = getPlayersData('rollValue');
 
             var rolls = [];
             playersForEach(function(client) {
@@ -71,7 +71,7 @@ BiggerRule.onDataChange = function() {
             setViewProps(clientId, 'rolls', rolls);
 
             if (turn >= playersCount()) {
-                return showSummary(turn, rolls, cb);
+                return showSummary(turn, rolls);
             }
 
             playersForEach(function(client, i) {
