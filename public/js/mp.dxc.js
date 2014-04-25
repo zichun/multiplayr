@@ -2,6 +2,8 @@
  * Multiplayr is designed to be data-driven, and hence we only allow data exchange in this intermediate protocol layer
  * Data will only be stored in the host
  */
+
+// todo: deprecate proxiable objects
 var MPDataExchange = (function() {
     function MPDataExchange(comm, gameObj, namespace) {
         var self = this;

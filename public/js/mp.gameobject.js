@@ -34,6 +34,8 @@ var MPGameObject = (function() {
             return isHost;
         };
 
+        self.__hasDelta = false;
+
         if (isHost) {
             self._dataStore = CreateStore(rule.globalData, self);
 
@@ -92,7 +94,7 @@ var MPGameObject = (function() {
             }
 
             if (found === false) {
-                self.dataChange();
+                self.dataChange(true);
             }
         };
 
@@ -392,8 +394,7 @@ var MPGameObject = (function() {
                     view: '',
                     props: {}
                 };
-                // todo: only dataChange for leafs
-                self.dataChange();
+                self.dataChange(true);
             } else {
                 // in this implementation of gameobject we'll force non-host to talk to host only
             }
@@ -406,19 +407,21 @@ var MPGameObject = (function() {
             if (self.isHost()) {
                 self.clients.splice(self.clients.indexOf(clientId), 1);
                 self.__clientsData[clientId].active = false;
-                // todo: only dataChange for leafs
-                self.dataChange();
+                self.dataChange(true);
             } else {
                 // in this implementation of gameobject we'll force non-host to talk to host only
             }
             return self;
         };
 
-    MPGameObject.prototype.dataChange =
-        function MPGameObjectDataChange() {
+    // This method will be called every tick interval
+    MPGameObject.prototype.tick =
+        function MPGameObjectTick() {
             var self = this;
             if (self.isHost()) {
-                if (isFunction(self.__onDataChange)) {
+                // todo: some mechanism to enumerate every thing in order (from leaf)
+                if (self.__hasDelta && isFunction(self.__onDataChange)) {
+                    self.__hasDelta = false;
                     self.__onDataChange.call(self, function(toRender) {
                         if (self.__parent) {
                             for (var client in self.__props) {
@@ -429,20 +432,32 @@ var MPGameObject = (function() {
                             }
                         }
                         if (toRender) {
-                            if (self.__parent) {
-                                // propagate datachange upwards
-                                self.__parent.dataChange();
-                            } else {
+                            if (!self.__parent) {
                                 self.__renderViews(_secret);
                             }
                         }
                     });
-                } else if (self.__parent) {
+                }
+            }
+            return self;
+        };
+
+    MPGameObject.prototype.dataChange =
+        function MPGameObjectDataChange(forceTick) {
+            var self = this;
+            if (self.isHost()) {
+
+                self.__hasDelta = true;
+                if (self.__parent) {
                     self.__parent.dataChange();
                 }
+
+                if (forceTick) {
+                    self.tick();
+                }
+
             } else {
-                // todo: forward datachange request to host
-                throw(new Error("Unimplemented"));
+                throw(new Error("Invalid call"));
             }
             return self;
         };
@@ -549,7 +564,9 @@ var MPGameObject = (function() {
             }
 
             var args = [callee].concat(arguments);
-            return self.__methods[method].apply(self, args);
+            var tr = self.__methods[method].apply(self, args);
+            self.tick();
+            return tr;
         };
 
 

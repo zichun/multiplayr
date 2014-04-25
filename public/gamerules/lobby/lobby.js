@@ -66,7 +66,7 @@ Lobby.views = {
 
                 return tr;
             }
-
+            alert('wtf');
             return React.DOM.div(
                 null,
                 React.DOM.h3(null, "Lobby"),
