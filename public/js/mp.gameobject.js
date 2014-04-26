@@ -289,7 +289,7 @@ var MPGameObject = (function() {
             for (var client in self.__props) {
                 if (self.__props.hasOwnProperty(client)) {
                     if (self.__props[client].props['__view'] !== '') {
-                        promises.push(self.Q__setView(client, self.__props[client].props['__view'], self.__props[client].props));
+                        promises.push(self.Q__setView(client, self.__props[client].props['__view'], self.__props[client].props, self.__container));
                     }
                 }
             }
@@ -307,7 +307,7 @@ var MPGameObject = (function() {
         };
 
     MPGameObject.prototype.__setView =
-        function MPGameObjectSetView(clientId, displayName, props, cb) {
+        function MPGameObjectSetView(clientId, displayName, props, container, cb) {
             var self = this;
             var mcb = safeCb(cb);
             props = props || {};
@@ -322,8 +322,13 @@ var MPGameObject = (function() {
                     if (typeof self.__views[displayName] !== 'undefined') {
                         // we have this view
                         var view = self.__runReactView(_secret, displayName, props);
-                        mcb(null,
-                            React.renderComponent(view, self.__container));
+                        if (container) {
+                            mcb(null,
+                                React.renderComponent(view, container));
+                        } else {
+                            // todo: hackish. abstract out as a sync op
+                            return view;
+                        }
                     } else {
                         // we'll forward it to a plugin
                         var splits = getFirstNamespace(displayName);
@@ -331,7 +336,7 @@ var MPGameObject = (function() {
                         if (namespace === false || typeof self.__plugins[namespace] === 'undefined') {
                             throw(new Error("No such views: " + displayName));
                         } else {
-                            self.__plugins[namespace].__setView(clientId, splits[1], props[namespace], mcb);
+                            return self.__plugins[namespace].__setView(clientId, splits[1], props[namespace], container, mcb);
                         }
                     }
                 } catch(e) {
@@ -523,9 +528,11 @@ var MPGameObject = (function() {
             if (typeof self.__plugins[subView] !== 'undefined') {
                 var it = self.__plugins[subView];
 
-                var view = it.__runReactView(_secret,
-                                             it.__props[self.clientId].props['__view'],
-                                             it.__props[self.clientId].props);
+                var view = it.__setView(it.clientId,
+                                        it.__props[self.clientId].props['__view'],
+                                        it.__props[self.clientId].props,
+                                        false);
+                    throw(new Error);
 
                 return view;
             } else {

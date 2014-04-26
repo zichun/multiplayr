@@ -267,7 +267,7 @@ var MPDataExchange = (function() {
                     var props = message.props;
                     var err = null;
 
-                    gameObj.__setView(gameObj.clientId, displayName, props, ack);
+                    gameObj.__setView(gameObj.clientId, displayName, props, gameObj.__container, ack);
                 }
                 break;
             }
