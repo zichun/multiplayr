@@ -17,7 +17,6 @@ Shell.views = {
     GenericGameShell: React.createClass({
         displayName: 'GenericGameShell',
         render: function() {
-            alert(this.props.MP.getSubView('bigger'));
             return this.props.MP.getSubView('bigger');
         }
     })

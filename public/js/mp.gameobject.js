@@ -222,7 +222,7 @@ var MPGameObject = (function() {
                             if (!self.__props.hasOwnProperty(client)) {
                                 continue;
                             }
-                            self.__parent.setViewProps(client, self.__namespace, self.__props[client].props);
+                            self.__parent.setViewProps(client, getLastNamespace(self.__namespace), self.__props[client].props);
                         }
                     }
 
@@ -532,8 +532,6 @@ var MPGameObject = (function() {
                                         it.__props[self.clientId].props['__view'],
                                         it.__props[self.clientId].props,
                                         false);
-                    throw(new Error);
-
                 return view;
             } else {
                 var splits = getFirstNamespace(subView);
@@ -750,6 +748,15 @@ var MPGameObject = (function() {
         } else {
             var namespace = s[0];
             return [namespace, s.slice(1, s.length).join("_")];
+        }
+    }
+
+    function getLastNamespace(variable) {
+        var s = variable.split('_');
+        if (s.length === 0) {
+            return false;
+        } else {
+            return s[s.length - 1];
         }
     }
 
