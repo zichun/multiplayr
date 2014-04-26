@@ -132,6 +132,7 @@ BiggerRule.views = {
             return React.DOM.ul(null, res);
         }
     }),
+
     StatusPage: React.createClass({
         displayName: 'StatusPage',
         startGame: function() {
@@ -162,7 +163,6 @@ BiggerRule.views = {
             return React.DOM.div(null, "The winner is " + names[winner]);
         }
     }),
-
 
     RollPage: React.createClass({
         displayName: 'RollPage',

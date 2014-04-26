@@ -44,7 +44,7 @@ Lobby.onDataChange = function() {
         setViewProps(clientId, 'names', orderedNames);
         setViewProps(clientId, 'playerCount', playersCount);
 
-        return true;
+        return false;
     };
 };
 

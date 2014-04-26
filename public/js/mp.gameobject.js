@@ -288,8 +288,8 @@ var MPGameObject = (function() {
             var promises = [];
             for (var client in self.__props) {
                 if (self.__props.hasOwnProperty(client)) {
-                    if (self.__props[client].view !== '') {
-                        promises.push(self.Q__setView(client, self.__props[client].view, self.__props[client].props));
+                    if (self.__props[client].props['__view'] !== '') {
+                        promises.push(self.Q__setView(client, self.__props[client].props['__view'], self.__props[client].props));
                     }
                 }
             }
@@ -380,9 +380,9 @@ var MPGameObject = (function() {
             return tr;
         };
 
-    /**
-     * Methods that will be exposed to game rules
-     */
+    ///
+    /// Methods that will be exposed to game rules
+    ///
     MPGameObject.prototype.getData =
         function MPGameObjectGetData(variable, cb) {
             var self = this;
@@ -497,7 +497,7 @@ var MPGameObject = (function() {
         function MPGameObjectSetView(clientId, view) {
             var self = this;
             if (self.isHost()) {
-                self.__props[clientId].view = view;
+                self.setViewProps(clientId, "__view", view);
             } else {
                 throw(new Error("Only host can call setViewProps"));
             }
@@ -555,9 +555,10 @@ var MPGameObject = (function() {
 
         };
 
-    /**
-     * Sugars for gameobject
-     */
+    ///
+    /// Sugars for gameObject (probably will be exposed)
+    ///
+
     MPGameObject.prototype.getPlayersData =
         function MPGameObjectGetPlayersData(variable, cb) {
             var self = this;
@@ -603,8 +604,13 @@ var MPGameObject = (function() {
     });
 
 
+    ///
+    /// Helper Methods
+    ///
+
     /**
-     * Helper Functions
+     * Sets up the object that will be passed to the rule (views and methods)
+     *  so that the rule can augment gamestates. Exposes methods such as getData, setData etc.
      */
     function SetUpMethods(methods, isHost, gameObj) {
         var obj = {};
@@ -648,8 +654,10 @@ var MPGameObject = (function() {
                 obj[method] = hostExposedMethodWrapper(method);
             });
 
-            obj.clientId = gameObj.clientId;
         }
+
+        obj.clientId = gameObj.clientId;
+        obj.roomId = gameObj.roomId;
 
         return obj;
     }
