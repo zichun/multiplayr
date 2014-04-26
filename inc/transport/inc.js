@@ -14,7 +14,7 @@ function uniqid(prefix, more_entropy) {
 
     var retId;
     var formatSeed = function (seed, reqWidth) {
-        seed = parseInt(seed, 10).toString(16); // to hex str
+        seed = parseInt(seed, 10).toString(26); // to hex str
         if (reqWidth < seed.length) { // so long we split
             return seed.slice(seed.length - reqWidth);
         }
@@ -35,8 +35,8 @@ function uniqid(prefix, more_entropy) {
     this.php_js.uniqidSeed++;
 
     retId = prefix; // start with prefix, add current milliseconds hex string
-    retId += formatSeed(parseInt(new Date().getTime() / 1000, 10), 8);
-    retId += formatSeed(this.php_js.uniqidSeed, 5); // add seed hex string
+    retId += formatSeed(parseInt(new Date().getTime(), 11), 3);
+    retId += formatSeed(this.php_js.uniqidSeed, 3); // add seed hex string
     if (more_entropy) {
         // for more entropy we add a float lower to 10
         retId += (Math.random() * 10).toFixed(8).toString();

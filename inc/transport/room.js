@@ -117,7 +117,7 @@ Rooms.prototype.create =
         var uniqid = false, clientId = false;
 
         do {
-            uniqid = func.uniqid('mp-room-');
+            uniqid = func.uniqid();
         } while(self.rooms[uniqid]);
 
         clientId = func.uniqid('mp-client-', true);
