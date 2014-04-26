@@ -42,10 +42,7 @@ var MPGameObject = (function() {
             self.clients = [];
             self.__clientsData = {};
             self.__props = {};
-            self.__props[clientId] = {
-                view: '',
-                props: {}
-            };
+            self.__props[clientId] = {};
 
             self.playerData = rule.playerData;
         }
@@ -176,6 +173,7 @@ var MPGameObject = (function() {
                 active: true,
                 dataStore: CreateStore(self.playerData, self)
             };
+
             self.__props[clientId] = {
                 view: '',
                 props: {}
@@ -222,7 +220,7 @@ var MPGameObject = (function() {
                             if (!self.__props.hasOwnProperty(client)) {
                                 continue;
                             }
-                            self.__parent.setViewProps(client, getLastNamespace(self.__namespace), self.__props[client].props);
+                            self.__parent.setViewProps(client, getLastNamespace(self.__namespace), self.__props[client]);
                         }
                     }
 
@@ -288,8 +286,8 @@ var MPGameObject = (function() {
             var promises = [];
             for (var client in self.__props) {
                 if (self.__props.hasOwnProperty(client)) {
-                    if (self.__props[client].props['__view'] !== '') {
-                        promises.push(self.Q__setView(client, self.__props[client].props['__view'], self.__props[client].props, self.__container));
+                    if (self.__props[client]['__view'] !== '') {
+                        promises.push(self.Q__setView(client, self.__props[client]['__view'], self.__props[client], self.__container));
                     }
                 }
             }
@@ -311,6 +309,12 @@ var MPGameObject = (function() {
             var self = this;
             var mcb = safeCb(cb);
             props = props || {};
+
+            if (container && !self.isHost()) {
+                if (typeof self.__props === 'undefined') self.__props = {};
+                if (typeof self.__props[clientId] === 'undefined') self.__props[clientId] = {};
+                self.__props[clientId] = props;
+            }
 
             if (self.isHost() === false && clientId !== self.clientId) {
                 mcb(new Error("Only host can set views"), displayName);
@@ -513,7 +517,7 @@ var MPGameObject = (function() {
             // todo: maybe expose this API only for ondatachange, to enforce data drivenness
             var self = this;
             if (self.isHost()) {
-                self.__props[clientId].props[key] = value;
+                self.__props[clientId][key] = value;
             } else {
                 // todo: rethink whether we only want to restrict host to deal with data changes, by design
                 throw(new Error("Only host can call setViewProps"));
@@ -522,16 +526,23 @@ var MPGameObject = (function() {
         };
 
     MPGameObject.prototype.getSubView =
-        function MPGameObjectGetSubView(subView) {
+        function MPGameObjectGetSubView(subView, props) {
             var self = this;
+
+            props = props || (self.__props && self.__props[self.clientId]);
 
             if (typeof self.__plugins[subView] !== 'undefined') {
                 var it = self.__plugins[subView];
+                var view;
 
-                var view = it.__setView(it.clientId,
-                                        it.__props[self.clientId].props['__view'],
-                                        it.__props[self.clientId].props,
+                if (typeof props[subView]['__view'] !== 'undefined') {
+                    view = it.__setView(it.clientId,
+                                        props[subView]['__view'],
+                                        props[subView],
                                         false);
+                } else {
+                    view = false;
+                }
                 return view;
             } else {
                 var splits = getFirstNamespace(subView);
@@ -540,7 +551,7 @@ var MPGameObject = (function() {
                 if (namespace === false || typeof self.__plugins[namespace] === 'undefined') {
                     throw(new Error("Variable ["+variable+"] does not exists"));
                 } else {
-                    return self.__plugins[namespace].getSubView(splits[1]);
+                    return self.__plugins[namespace].getSubView(splits[1], props[namespace]);
                 }
             }
         };
@@ -548,7 +559,7 @@ var MPGameObject = (function() {
     MPGameObject.prototype.deleteViewProps =
         function MPGameObjectDeleteViewProps(clientId, key) {
             var self = this;
-            delete self.__props[clientId].props[key];
+            delete self.__props[clientId][key];
             return self;
         };
 

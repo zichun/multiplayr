@@ -59,7 +59,7 @@
       var name = "client"+i+"-container";
       var container = document.getElementById(name);
       var $button = $('<button>Connect</button>').click(function() {
-      Multiplayr.join(roomId, BiggerRule, document.getElementById('client'+i+'-container'), io, 'http://localhost:3000', function(err, data) {
+      Multiplayr.join(roomId, Shell, document.getElementById('client'+i+'-container'), io, 'http://localhost:3000', function(err, data) {
       clientObj[i] = data;
       });
       });
