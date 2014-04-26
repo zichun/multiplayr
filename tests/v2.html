@@ -41,7 +41,7 @@
 
     <script>
       Multiplayr.setGamerulesPath('/gamerules/');
-      Multiplayr.loadRule(['lobby', 'bigger'], test1);
+      Multiplayr.loadRule(['lobby', 'bigger', 'gameshell'], test1);
 
       var clientObj = [];
       var hostObj = null;
@@ -50,7 +50,7 @@
       //      var hostEngine = new MPGameEngine(lobby, document.getElementById('host-container'), io, 'http://localhost:8080');
 
 
-      Multiplayr.host(BiggerRule, document.getElementById('host-container'), io, 'http://localhost:3000', function(err, data) {
+      Multiplayr.host(Shell, document.getElementById('host-container'), io, 'http://localhost:3000', function(err, data) {
 
       hostObj = data;
       var roomId = data.roomId;

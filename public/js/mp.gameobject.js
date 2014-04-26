@@ -321,7 +321,9 @@ var MPGameObject = (function() {
                 try {
                     if (typeof self.__views[displayName] !== 'undefined') {
                         // we have this view
-                        self.__renderReactView(_secret, displayName, props, mcb);
+                        var view = self.__runReactView(_secret, displayName, props);
+                        mcb(null,
+                            React.renderComponent(view, self.__container));
                     } else {
                         // we'll forward it to a plugin
                         var splits = getFirstNamespace(displayName);
@@ -343,8 +345,8 @@ var MPGameObject = (function() {
             return self;
         };
 
-    MPGameObject.prototype.__renderReactView =
-        function(_password, reactDisplayName, props, cb) {
+    MPGameObject.prototype.__runReactView =
+        function(_password, reactDisplayName, props) {
             var self = this;
 
             if (_password !== _secret) {
@@ -357,10 +359,7 @@ var MPGameObject = (function() {
 
             props.MP = self.MP;
 
-            cb(null,
-               React.renderComponent(reactClass(props), self.__container));
-
-            return self;
+            return reactClass(props);
         };
 
     MPGameObject.prototype.__execMethod =
@@ -517,6 +516,30 @@ var MPGameObject = (function() {
             return self;
         };
 
+    MPGameObject.prototype.getSubView =
+        function MPGameObjectGetSubView(subView) {
+            var self = this;
+
+            if (typeof self.__plugins[subView] !== 'undefined') {
+                var it = self.__plugins[subView];
+
+                var view = it.__runReactView(_secret,
+                                             it.__props[self.clientId].props['__view'],
+                                             it.__props[self.clientId].props);
+
+                return view;
+            } else {
+                var splits = getFirstNamespace(subView);
+                var namespace = splits[0];
+
+                if (namespace === false || typeof self.__plugins[namespace] === 'undefined') {
+                    throw(new Error("Variable ["+variable+"] does not exists"));
+                } else {
+                    return self.__plugins[namespace].getSubView(splits[1]);
+                }
+            }
+        };
+
     MPGameObject.prototype.deleteViewProps =
         function MPGameObjectDeleteViewProps(clientId, key) {
             var self = this;
@@ -644,7 +667,10 @@ var MPGameObject = (function() {
             }
         }
 
+        obj['getSubView'] = hostExposedMethodWrapper('getSubView');
+
         if (isHost) {
+            // todo: views shouldn't be given methods below, even on host
             // Expose methods
             var _exposed = ['getData', 'setData',
                             'getPlayerData', 'setPlayerData', 'getPlayersData',
