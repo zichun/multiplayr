@@ -108,9 +108,10 @@ BiggerRule.onDataChange = function() {
         }
 
         function showLobby(cb) {
-            setView(clientId, 'lobby_Lobby');
+            var mp = this;
+            mp.setView(clientId, 'lobby_Lobby');
             playersForEach(function(client) {
-                setView(client, 'lobby_SetName');
+                mp.setView(client, 'lobby_SetName');
             });
 
             return true;

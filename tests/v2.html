@@ -38,7 +38,7 @@
     <script language="javascript">
       Multiplayr.setGamerulesPath('/gamerules/');
 
-      var commHost = new MPProtocol(io, 'http://localhost:3000', document.getElementById('host-container'));
+      var commHost = new MPProtocol(io, location.protocol + '//' + location.host, document.getElementById('host-container'));
       commHost.create('rockscissorspaper', test1);
 
       var clienntObj = [];
@@ -52,7 +52,7 @@
       var container = document.getElementById(name);
 
       var $button = $('<button>Connect</button>').click(function() {
-        var comm = new MPProtocol(io, 'http://localhost:3000', container);
+        var comm = new MPProtocol(io, location.protocol + '//' + location.host, container);
         comm.join(roomId);
       });
 
