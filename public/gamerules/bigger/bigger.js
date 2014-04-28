@@ -1,5 +1,7 @@
 var BiggerRule = {};
 
+BiggerRule.name = "bigger";
+
 BiggerRule.methods = {
     startGame: function() {
         var gameObj = this;
@@ -144,7 +146,7 @@ BiggerRule.views = {
 
             function turn() {
                 if (t < this.props.lobby.playerCount) {
-                    return React.DOM.div("It's ", names[t], "'s turn now");
+                    return React.DOM.div(null, "It's ", names[t], "'s turn now");
                 } else {
                     return React.DOM.button({onClick: this.startGame}, 'Start new game');
                 }

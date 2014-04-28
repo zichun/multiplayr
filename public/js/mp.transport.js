@@ -3,7 +3,7 @@ var Mesh =
 (function() {
     // todo: (low priority) proper encapsulation of private data like self.peers, self.socket etc.
 
-    var Events = ['join-room', 'leave-room', 'message', 'room-broadcast', 'error'];
+    var Events = ['join-room', 'leave-room', 'message', 'room-broadcast', 'error', 'room-rule'];
 
     function Mesh(io, uri) {
         var self = this;
@@ -31,6 +31,10 @@ var Mesh =
             }
         });
 
+        socket.on('room-rule', function(data) {
+            self.emit('room-rule', data.message);
+        });
+
         self.on('join-room', function(data) {
             self.peers.push(data.message);
         });
@@ -50,13 +54,13 @@ var Mesh =
     }
 
     Mesh.prototype.create =
-        function MeshCreate(cb) {
+        function MeshCreate(rule, cb) {
             var self = this;
             if (self.roomId !== null) {
                 throw(new Error("Client already belong to a Mesh"));
             }
 
-            self.socket.emit('create-room', {}, function(data) {
+            self.socket.emit('create-room', {rule: rule}, function(data) {
                 if (data.type === 'error') {
                     if (isFunction(cb)) cb(data.message, data);
                     return self.emit('error', data);

@@ -1,3 +1,4 @@
+// todo: add host disconnection logic
 var MPGameObject = (function() {
     var _secret = {};
     var NAMESPACE_DELIMITER = '_';
@@ -768,23 +769,6 @@ var MPGameObject = (function() {
             return false;
         } else {
             return s[s.length - 1];
-        }
-    }
-
-    /**
-     * Callback function wrapper
-     */
-    function safeCb(cb) {
-        if (isFunction(cb)) {
-            return cb;
-        } else {
-            return function(err, res) {
-                if (err) {
-                    throw(err);
-                } else {
-                    return res;
-                }
-            };
         }
     }
 

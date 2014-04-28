@@ -1,0 +1,26 @@
+#choices {
+}
+
+#choices .choice {
+    display: inline-block;
+    float: left;
+    margin: 4px;
+    padding: 3px 8px 3px 8px;
+    text-align: center;
+    border: 1px solid #555;
+    cursor: pointer;
+}
+
+#choices.unselected .choice {
+    cursor: pointer;
+}
+#choices.unselected .choice:hover {
+    background: #dfd;
+}
+#choices .choice.selected {
+    background: #dfd;
+}
+
+.clearer {
+    clear: both;
+}

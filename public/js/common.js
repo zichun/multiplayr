@@ -3,6 +3,24 @@ function isFunction(functionToCheck) {
     return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
 }
 
+/**
+ * Callback function wrapper
+ */
+function safeCb(cb) {
+    if (isFunction(cb)) {
+        return cb;
+    } else {
+        return function(err, res) {
+            if (err) {
+                throw(err);
+            } else {
+                return res;
+            }
+        };
+    }
+}
+
+
 function isArray(obj) {
     return Object.prototype.toString.call(obj) === '[object Array]';
 }

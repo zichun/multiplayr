@@ -37,12 +37,12 @@ Lobby.onDataChange = function() {
         playersForEach(function(client, ind) {
             setViewProps(client, 'name', names[client]);
             setViewProps(client, 'playerNum', ind);
-            setViewProps(client, 'playerCount', playersCount);
+            setViewProps(client, 'playerCount', playersCount());
             setViewProps(client, 'names', orderedNames);
         });
 
         setViewProps(clientId, 'names', orderedNames);
-        setViewProps(clientId, 'playerCount', playersCount);
+        setViewProps(clientId, 'playerCount', playersCount());
 
         return false;
     };

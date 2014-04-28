@@ -4,14 +4,13 @@
     <title>Test</title>
   </head>
   <body>
-    Test cases<br />
-    ----------<br />
-    <br />
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/jquery.js"></script>
     <script src="/js/common.js"></script>
     <script type="text/javascript" src="/js/react/react.js"></script>
     <script src="/js/q.js"></script>
+
+    <script src="rules"></script>
 
     <script src="/js/mp.transport.js"></script>
     <script src="/js/mp.protocol.js"></script>
@@ -19,9 +18,6 @@
     <script src="/js/mp.dxc.js"></script>
     <script src="/js/multiplayr.js"></script>
 
-
-    <script>
-    </script>
 
     Host:
     <div id="host-container" style="margin-bottom: 10px; border:1px solid black; height: 300px;">
@@ -39,35 +35,31 @@
     <div id="client2-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
     </div>
 
-    <script>
+    <script language="javascript">
       Multiplayr.setGamerulesPath('/gamerules/');
-      Multiplayr.loadRule(['lobby', 'bigger', 'gameshell'], test1);
 
-      var clientObj = [];
-      var hostObj = null;
+      var commHost = new MPProtocol(io, 'http://localhost:3000', document.getElementById('host-container'));
+      commHost.create('rockscissorspaper', test1);
+
+      var clienntObj = [];
 
       function test1() {
-      //      var hostEngine = new MPGameEngine(lobby, document.getElementById('host-container'), io, 'http://localhost:8080');
 
-
-      Multiplayr.host(Shell, document.getElementById('host-container'), io, 'http://localhost:3000', function(err, data) {
-
-      hostObj = data;
-      var roomId = data.roomId;
+      var roomId = commHost.getRoomId();
 
       [0,1,2].forEach(function(i) {
       var name = "client"+i+"-container";
       var container = document.getElementById(name);
+
       var $button = $('<button>Connect</button>').click(function() {
-      Multiplayr.join(roomId, Shell, document.getElementById('client'+i+'-container'), io, 'http://localhost:3000', function(err, data) {
-      clientObj[i] = data;
-      });
+        var comm = new MPProtocol(io, 'http://localhost:3000', container);
+        comm.join(roomId);
       });
 
       $(container).append($button);
       });
-      
-      });
+
+
       }
 
 

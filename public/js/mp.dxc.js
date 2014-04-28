@@ -273,11 +273,11 @@ var MPDataExchange = (function() {
             }
         });
 
-        comm.on('join-room', function(data) {
-            gameObj.newClient(data.message);
+        comm.on('join-game', function(data) {
+            gameObj.newClient(data);
         });
         comm.on('leave-room', function(data) {
-            gameObj.deleteClient(data.message);
+            gameObj.deleteClient(data);
         });
 
         return self;

@@ -6,20 +6,21 @@ var func = require('./inc.js');
 // Room Class
 // @arg roomId  Unique Identifier of room
 //
-function Room(roomId) {
+function Room(roomId, rule) {
     this.id = roomId;
     this.clients = [];
     this.clientSockets = {};
+    this.rule = rule;
 }
 
 Room.prototype.sendMessage =
     function RoomSendMessage(to, type, message, cb) {
         var self = this;
         if (!self.hasClient(to)) {
-            return cb('Invalid receipient', false);
+            return cb && cb('Invalid receipient', false);
         } else {
             this.clientSockets[to].emit(type, message);
-            cb(null, true);
+            return cb && cb(null, true);
             // todo: proper callback bound to emit
         }
     };
@@ -54,9 +55,17 @@ Room.prototype.addClient =
     function RoomAddClient(clientId, socket) {
         var self = this;
 
-        self.broadcast('join-room', clientId, function() {});
         self.clients.push(clientId);
         self.clientSockets[clientId] = socket;
+
+        self.broadcast('join-room', clientId, function() {
+            self.sendMessage(clientId,
+                             'room-rule',
+                             {
+                                 from: null,
+                                 message: self.rule
+                             });
+        });
         return true;
     };
 
@@ -112,7 +121,7 @@ function Rooms() {
 }
 
 Rooms.prototype.create =
-    function RoomsCreateRoom(socket) {
+    function RoomsCreateRoom(socket, rule) {
         var self = this;
         var uniqid = false, clientId = false;
 
@@ -122,7 +131,7 @@ Rooms.prototype.create =
 
         clientId = func.uniqid('mp-client-', true);
 
-        self.rooms[uniqid] = new Room(uniqid);
+        self.rooms[uniqid] = new Room(uniqid, rule);
         self.rooms[uniqid].addClient(clientId, socket);
 
         self.clientsRoomMap[clientId] = uniqid;

@@ -1,0 +1,12 @@
+#shell-header {
+    background: #151515;
+    color: white;
+    text-align: right;
+}
+#shell-room {
+    display: inline-block;
+    background: #555;
+    padding: 3px 5px 3px 5px;
+    color: white;
+    font-size: 24px;
+}

@@ -69,7 +69,7 @@ var Multiplayr = (function() {
         var scr = document.createElement('script');
         scr.setAttribute('src', src);
         scr.onload = cb;
-        document.body.appendChild(scr);
+        document.head.appendChild(scr);
     }
     function loadCss(src, cb) {
         var lnk = document.createElement('link');
@@ -77,7 +77,7 @@ var Multiplayr = (function() {
         lnk.setAttribute('type', 'text/css');
         lnk.setAttribute('href', src);
         lnk.onload = cb;
-        document.body.appendChild(lnk);
+        document.head.appendChild(lnk);
     }
 
     /**
@@ -107,60 +107,28 @@ var Multiplayr = (function() {
         }
     }
 
-    function Host(rule, container, io, uri, cb) {
-        var comm = new MPProtocol(io, uri);
+    function Host(rule, comm, container) {
 
-        // Create a new room
-        comm.create(function(err, data) {
-            if (err) {
-                if (isFunction(cb)) {
-                    cb(err, false);
-                } else {
-                    throw new Error(err);
-                }
-            }
+        LoadRuleCssDeep(rule);
 
-            LoadRuleCssDeep(rule);
+        var gameObj = new MPGameObject(rule,
+                                       comm,
+                                       comm.getRoomId(),
+                                       comm.getClientId(),
+                                       true,
+                                       container);
 
-            var gameObj = new MPGameObject(rule,
-                                           comm,
-                                           data.roomId,
-                                           data.clientId,
-                                           true,
-                                           container);
-
-            if (isFunction(cb)) {
-                cb(null, gameObj);
-            }
-        });
     }
 
-    function Join(roomId, rule, container, io, uri, cb) {
-        var comm = new MPProtocol(io, uri);
+    function Join(rule, comm, container) {
+        LoadRuleCssDeep(rule);
 
-        // Join a room
-        comm.join(roomId, function(err, data) {
-            if (err) {
-                if (isFunction(cb)) {
-                    cb(err, false);
-                } else {
-                    throw new Error(err);
-                }
-            }
-
-            LoadRuleCssDeep(rule);
-
-            var gameObj = new MPGameObject(rule,
-                                           comm,
-                                           roomId,
-                                           data.clientId,
-                                           false,
-                                           container);
-
-            if (isFunction(cb)) {
-                cb(null, gameObj);
-            }
-        });
+        var gameObj = new MPGameObject(rule,
+                                       comm,
+                                       comm.getRoomId(),
+                                       comm.getClientId(),
+                                       false,
+                                       container);
     }
 
     function setUpMethods(gameObj, methods) {

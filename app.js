@@ -12,15 +12,29 @@ app.configure(function(){
 
 server.listen(app.get('port'));
 
-app.get('/', function (req, res) {
+
+/**
+ * Routes
+ */
+
+// Temp for local testing
+
+app.get('/v2test', function (req, res) {
     res.sendfile(__dirname + '/tests/v2.html');
 });
 
-app.get('/test.html', function (req, res) {
-	res.sendfile(__dirname + '/tests/test.html');
+
+app.get('/rules', function (req, res) {
+	res.sendfile(__dirname + '/inc/rules.js');
 });
 
+app.get('/host', function(req, res) {
+    res.sendfile(__dirname + '/public/static/host.html');
+});
 
+app.get('/join', function(req, res) {
+    res.sendfile(__dirname + '/public/static/join.html');
+});
 
 var transport = require('./inc/transport');
 transport.init(io);

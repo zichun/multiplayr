@@ -1,4 +1,5 @@
 var Rooms = require('./room.js');
+var rules = require('../rules.js');
 
 var rooms = new Rooms();
 
@@ -14,7 +15,15 @@ function init(io) {
                 });
             }
 
-            var room = rooms.create(socket);
+            if (typeof data.rule === 'undefined' || typeof rules[data.rule] === 'undefined') {
+                return fn({
+                    type: 'error',
+                    message: 'No such rule ' + data.rule
+                });
+            }
+
+            // todo: rules should ideally be abstracted from room
+            var room = rooms.create(socket, data.rule);
             roomId = room.roomId;
             clientId = room.clientId;
 

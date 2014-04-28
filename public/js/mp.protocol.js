@@ -2,29 +2,29 @@
 
 var MPProtocol =
 (function() {
-    var Events = ['join-room', 'leave-room', 'message', 'error'];
+    var Events = ['join-room', 'leave-room', 'message', 'error', 'join-game'];
 
-    function MPProtocol(io, uri) {
+    function MPProtocol(io, uri, container) {
         var self = this;
 
         var meshObj = new Mesh(io, uri);
         var roomId = false, clientId = false;
         var isHost = false;
         var host = null;
+        var rule = false;
 
         meshObj.on('join-room', function(data) {
-            if (isHost === true) {
+            if (isHost === true && roomId) {
                 meshObj.send(data.message, {
                     type: 'host',
                     message: host
                 });
             }
-
-            self.emit('join-room', data);
+            self.emit('join-room', clientId);
         });
 
         meshObj.on('leave-room', function(data) {
-            self.emit('leave-room', data);
+            self.emit('leave-room', data.message);
         });
 
         meshObj.on('message', function(data) {
@@ -36,43 +36,84 @@ var MPProtocol =
                     from: data.from,
                     message: data.message.message
                 });
+            } else if (data.message.type === 'join-game') {
+                self.emit('join-game', data.message.message);
             }
         });
 
-        self.create =
-            function MPProtocolCreate(cb) {
-                meshObj.create(function(err, data) {
-                    if (err) {
-                        if (isFunction(cb)) {
-                            cb(err, false);
-                        } else {
-                            throw err;
+        meshObj.on('room-rule', function(data) {
+            self.rule = data;
+
+            var ruleDef = _MPRules[self.rule];
+            if (typeof ruleDef === 'undefined') {
+                throw(new Error("Rule " + self.rule + " does not exist!"));
+            }
+
+            function attempt() {
+                if (!roomId) {
+                    return setTimeout(attempt, 100);
+                }
+
+                if (isHost) {
+                    Multiplayr.loadRule(ruleDef.rules, function() {
+                        var rule = ruleDef.onLoad();
+                        Multiplayr.host(rule, self, container);
+                    });
+                } else {
+                    Multiplayr.loadRule(ruleDef.rules, function() {
+                        var rule = ruleDef.onLoad();
+                        Multiplayr.join(rule, self, container);
+
+                        // we emit a join game to host only after initializing the game on client
+                        function attempt() {
+                            if (!host) {
+                                return setTimeout(attempt, 500);
+                            }
+
+                            meshObj.send(host, {
+                                type: 'join-game',
+                                message: clientId
+                            });
                         }
+
+                        attempt();
+                    });
+                }
+
+                return 0;
+            }
+            attempt();
+        });
+
+        self.create =
+            function MPProtocolCreate(rule, cb) {
+                isHost = true;
+                meshObj.create(rule, function(err, data) {
+                    // todo: check rule
+                    var mcb = safeCb(cb);
+                    if (err) {
+                        return mcb(err, false);
                     }
 
                     roomId = data.roomId;
                     clientId = data.clientId;
-                    isHost = true;
                     host = clientId;
-                    cb.call(self, null, data);
+                    mcb.call(self, null, data);
                 });
             };
 
         self.join =
             function MPProtocolJoin(rid, cb) {
+                isHost = false;
                 meshObj.join(rid, function(err, data) {
+                    var mcb = safeCb(cb);
                     if (err) {
-                        if (isFunction(cb)) {
-                            cb(err, false);
-                        } else {
-                            throw err;
-                        }
+                        return mcb(err, false);
                     }
 
                     roomId = rid;
                     clientId = data.clientId;
-                    isHost = false;
-                    cb.call(self, null, data);
+                    mcb.call(self, null, data);
                 });
             };
 
