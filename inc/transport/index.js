@@ -17,6 +17,7 @@ function init(io) {
             var room = rooms.create(socket);
             roomId = room.roomId;
             clientId = room.clientId;
+
             fn({
                 roomId: roomId,
                 clientId: clientId
