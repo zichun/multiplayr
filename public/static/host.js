@@ -20,7 +20,7 @@ $(function() {
     function JoinGame(ruleName) {
         return function() {
             $("#rules").empty();
-            var commHost = new MPProtocol(io, 'http://localhost:3000', document.body);
+            var commHost = new MPProtocol(io, location.protocol + '//' + location.host, document.body);
             commHost.create(ruleName);
         };
     }
