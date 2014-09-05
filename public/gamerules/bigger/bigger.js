@@ -51,15 +51,6 @@ BiggerRule.onDataChange = function() {
     var gameObj = this;
     with(gameObj) {
 
-        var started = getData('lobby_started')
-
-        if (started) {
-            return showGame();
-        } else {
-            return showLobby();
-        }
-
-
         function showGame() {
             var turn = getData('turn');
             var rollsD = getPlayersData('rollValue');
@@ -108,7 +99,8 @@ BiggerRule.onDataChange = function() {
         }
 
         function showLobby(cb) {
-            var mp = this;
+            var mp = gameObj;
+
             mp.setView(clientId, 'lobby_Lobby');
             playersForEach(function(client) {
                 mp.setView(client, 'lobby_SetName');
@@ -116,6 +108,15 @@ BiggerRule.onDataChange = function() {
 
             return true;
         }
+
+        var started = getData('lobby_started')
+
+        if (started) {
+            return showGame();
+        } else {
+            return showLobby();
+        }
+
     }
 };
 
