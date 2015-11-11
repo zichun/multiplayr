@@ -1,79 +1,78 @@
 <!DOCTYPE html>
 <html>
-  <head>
-	<title>Test</title>
-  </head>
-  <body>
-	Test cases<br />
-	----------<br />
-	<br />
-	<script src="/socket.io/socket.io.js"></script>
-	<script src="/js/jquery.js"></script>
-    <script src="/js/common.js"></script>
+    <head>
+	    <title>Test</title>
+    </head>
+    <body>
+	    Test cases<br />
+	    ----------<br />
+	    <br />
+	    <script src="/socket.io/socket.io.js"></script>
+	    <script src="/js/jquery.js"></script>
+        <script src="/js/common.js"></script>
 
-    <script src="/js/mp.transport.js"></script>
-    <script src="/js/mp.protocol.js"></script>
-    <script src="/js/mp.gameobject.js"></script>
-    <script src="/js/mp.dxc.js"></script>
-    <script src="/js/multiplayr.js"></script>
+        <script src="/js/mp.transport.js"></script>
+        <script src="/js/mp.protocol.js"></script>
+        <script src="/js/mp.gameobject.js"></script>
+        <script src="/js/mp.dxc.js"></script>
+        <script src="/js/multiplayr.js"></script>
 
+        <!--script src="/js/card.js"></script-->
+        <script src="/gamerules/blackjack/bj.js"></script>
 
-    <!--script src="/js/card.js"></script-->
-    <script src="/gamerules/blackjack/bj.js"></script>
+        Host:
+        <div id="host-container" style="margin-bottom: 10px; border:1px solid black; height: 300px;">
+        </div>
 
-    Host:
-    <div id="host-container" style="margin-bottom: 10px; border:1px solid black; height: 300px;">
-    </div>
+        Client 0:
+        <div id="client0-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
+        </div>
 
-    Client 0:
-    <div id="client0-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
-    </div>
+        Client 1:
+        <div id="client1-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
+        </div>
 
-    Client 1:
-    <div id="client1-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
-    </div>
+        Client 2:
+        <div id="client2-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
+        </div>
 
-    Client 2:
-    <div id="client2-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
-    </div>
+	    <script>
 
-	<script>
+	     function assert(exp) {
+	         if (!exp) {
+	             throw new Error();
+	         }
+	     }
+         var clientObj = [];
+         var hostObj = null;
 
-	  function assert(exp) {
-	  if (!exp) {
-	  throw new Error();
-	  }
-	  }
-      var clientObj = [];
-      var hostObj = null;
-
-	  function test1() {
-//      var hostEngine = new MPGameEngine(lobby, document.getElementById('host-container'), io, 'http://localhost:8080');
-
-
-      Multiplayr.host(BJRule, document.getElementById('host-container'), io, 'http://localhost:3000', function(err, data) {
-
-      hostObj = data;
-      var roomId = data.roomId;
-
-      [0,1,2].forEach(function(i) {
-      var name = "client"+i+"-container";
-      var container = document.getElementById(name);
-      var $button = $('<button>Connect</button>').click(function() {
-          Multiplayr.join(roomId, BJRule, document.getElementById('host-container'), io, 'http://localhost:3000', function(err, data) {
-      clientObj[i] = data;
-          });
-      });
-
-      $(container).append($button);
-      });
-      
-      });
-	  }
-
-	  test1();
-	</script>
+	     function test1() {
+             //      var hostEngine = new MPGameEngine(lobby, document.getElementById('host-container'), io, 'http://localhost:8080');
 
 
-  </body>
+             Multiplayr.host(BJRule, document.getElementById('host-container'), io, 'http://localhost:3000', function(err, data) {
+
+                 hostObj = data;
+                 var roomId = data.roomId;
+
+                 [0,1,2].forEach(function(i) {
+                     var name = "client"+i+"-container";
+                     var container = document.getElementById(name);
+                     var $button = $('<button>Connect</button>').click(function() {
+                         Multiplayr.join(roomId, BJRule, document.getElementById('host-container'), io, 'http://localhost:3000', function(err, data) {
+                             clientObj[i] = data;
+                         });
+                     });
+
+                     $(container).append($button);
+                 });
+
+             });
+	     }
+
+	     test1();
+	    </script>
+
+
+    </body>
 </html>
