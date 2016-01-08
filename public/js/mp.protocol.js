@@ -70,7 +70,7 @@ var MPProtocol =
                                 return setTimeout(attempt, 500);
                             }
 
-                            meshObj.send(host, {
+                            return meshObj.send(host, {
                                 type: 'join-game',
                                 message: clientId
                             });
@@ -99,6 +99,8 @@ var MPProtocol =
                     clientId = data.clientId;
                     host = clientId;
                     mcb.call(self, null, data);
+
+                    return self;
                 });
             };
 
@@ -114,6 +116,8 @@ var MPProtocol =
                     roomId = rid;
                     clientId = data.clientId;
                     mcb.call(self, null, data);
+
+                    return self;
                 });
             };
 
@@ -123,10 +127,13 @@ var MPProtocol =
                     // todo: to differ/buffer message and send when host is resolved
                     throw new Error("Have not resolved host");
                 }
+
                 meshObj.send(host, {
                     type: 'message',
                     message: data
                 }, cb);
+
+                return self;
             };
 
         self.broadcast =
@@ -136,6 +143,7 @@ var MPProtocol =
                 }
                 // todo: implement with proper callback
             };
+
         self.send =
             function MPProtocolSend(clientId, data, cb) {
                 // if (!isHost) {
@@ -145,6 +153,8 @@ var MPProtocol =
                     type: 'message',
                     message: data
                 }, cb);
+
+                return self;
             };
 
         self.getHost =

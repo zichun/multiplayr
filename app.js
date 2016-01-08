@@ -23,7 +23,6 @@ app.get('/v2test', function (req, res) {
     res.sendfile(__dirname + '/tests/v2.html');
 });
 
-
 app.get('/rules', function (req, res) {
 	res.sendfile(__dirname + '/inc/rules.js');
 });

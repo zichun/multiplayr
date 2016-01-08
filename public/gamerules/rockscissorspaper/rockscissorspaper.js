@@ -47,7 +47,6 @@ RockScissorsPaperRule.methods = {
             gameObj.playersForEach(function(client) {
                 gameObj.setPlayerData(client, 'choice', -1);
             });
-
         }
     },
     move: function(clientId, c) {
@@ -111,13 +110,9 @@ RockScissorsPaperRule.playerData = {
     win: { value: 0 },
     lose: { value: 0 },
     draw: { value: 0 },
-    choice: {
-        value: -1
-    },
+    choice: { value: -1 },
     prevChoice: {value: -1},
-    opPrevChoice: {
-        value: -1
-    }
+    opPrevChoice: { value: -1 }
 }
 
 RockScissorsPaperRule.onDataChange = function() {

@@ -19,7 +19,7 @@ function MPView(_opt) {
         React.initializeTouchEvents(_opt.touch);
 
         self.defineHost(function() {
-            
+
         });
     };
 }

@@ -1,4 +1,3 @@
-// todo: use jquery.isFunction or put this into misc library
 var Mesh =
 (function() {
     // todo: (low priority) proper encapsulation of private data like self.peers, self.socket etc.
@@ -72,15 +71,19 @@ var Mesh =
                 if (isFunction(cb)) {
                     cb(null, data);
                 }
+
+                return self;
             });
         };
 
     Mesh.prototype.join =
         function MeshJoin(id, cb) {
             var self = this;
+
             if (self.roomId !== null) {
                 throw(new Error("Client already belong to a Mesh"));
             }
+
             self.socket.emit('join-room', {room: id}, function(data) {
                 if (data.type === 'error') {
                     if (isFunction(cb)) cb(data.message, data);
@@ -101,6 +104,8 @@ var Mesh =
                 if (isFunction(cb)) {
                     cb(null, data);
                 }
+
+                return self;
             });
         };
 
@@ -112,6 +117,8 @@ var Mesh =
                     self.peers.push(peer);
                 }
             });
+
+            return self;
         };
 
     Mesh.prototype.send =
@@ -138,6 +145,8 @@ var Mesh =
                                      cb(null, data);
                                  }
                              });
+
+            return self;
         };
 
     setupEventSystem(Mesh, Events);

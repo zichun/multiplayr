@@ -392,6 +392,7 @@ var MPGameObject = (function() {
     ///
     /// Methods that will be exposed to game rules
     ///
+
     MPGameObject.prototype.getData =
         function MPGameObjectGetData(variable, cb) {
             var self = this;
@@ -479,7 +480,7 @@ var MPGameObject = (function() {
             if (self.isHost() === false) {
                 throw(new Error("Only host can set player data"));
             } else {
-                if (typeof self.__clientsData[playerId] === 'undefined'){
+                if (typeof self.__clientsData[playerId] === 'undefined') {
                     throw(new Error("Client [" + playerId + "] does not exists"));
                 } else if (self.__clientsData[playerId].active === false) {
                     // todo: think about disconnection implication
@@ -501,6 +502,10 @@ var MPGameObject = (function() {
             }
             return self;
         };
+
+    ///
+    /// Views helper function
+    ///
 
     MPGameObject.prototype.setView =
         function MPGameObjectSetView(clientId, view) {
@@ -563,6 +568,10 @@ var MPGameObject = (function() {
             delete self.__props[clientId][key];
             return self;
         };
+
+    ///
+    /// Players helper functions
+    ///
 
     MPGameObject.prototype.playersForEach =
         function MPGameObjectPlayersForEach(fn) {

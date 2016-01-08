@@ -1,4 +1,5 @@
 var Multiplayr = (function() {
+
     var Multiplayr = {
         extendRule: ExtendRule,
         host: Host,
@@ -16,12 +17,15 @@ var Multiplayr = (function() {
     /**
      * Modular gamerules functions
      */
+
     function SetGamerulesPath(path) {
         _gamerulesPath = path;
     }
+
     function GetGamerulesPath() {
         return _gamerulesPath;
     }
+
     function LoadRule(rule, cb) {
         function src(rule) {
             return _gamerulesPath + rule + '/' + rule + '.js';
@@ -45,6 +49,7 @@ var Multiplayr = (function() {
 
         }
     }
+
     function LoadRuleCss(ruleName, css, cb) {
         function src(cssName) {
             return _gamerulesPath + ruleName + '/' + cssName;
@@ -64,13 +69,13 @@ var Multiplayr = (function() {
         }
     }
 
-
     function loadJs(src, cb) {
         var scr = document.createElement('script');
         scr.setAttribute('src', src);
         scr.onload = cb;
         document.head.appendChild(scr);
     }
+
     function loadCss(src, cb) {
         var lnk = document.createElement('link');
         lnk.setAttribute('rel', 'stylesheet');

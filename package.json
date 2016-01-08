@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "description": "A platform to play games",
     "dependencies": {
-        "express": ">=3.4.0",
-        "socket.io": ">=0.9.0"
+        "express": "=3.4.0",
+        "socket.io": "=0.9.0"
     }
 }

@@ -48,6 +48,7 @@ Room.prototype.hasClient =
     function RoomHasClient(clientId) {
         return this.clients.indexOf(clientId) >= 0;
     };
+
 Room.prototype.addClient =
     // Add Client to Room
     // @arg clientId Unique Id of client
