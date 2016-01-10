@@ -294,17 +294,17 @@ TheOddOneRule.views = {
         render: function() {
             var scores = [];
             var votes = this.props.votes;
-            var major = -1;
+            var major = -1, lsofar = 0;
             var submitButton;
             var i;
 
+            if (votes[0] > 0) major = 0;
             for (i = 0; i < this.props.lobby.names.length; ++i) {
-                if (votes[i] > 0) {
-                    if (major === -1 || votes[i] > votes[major]) {
-                        major = i;
-                    } else if (votes[i] === votes[major]) {
-                        major = -1;
-                    }
+                if (votes[i] > votes[lsofar]) {
+                    lsofar = i;
+                    major = i;
+                } else if (votes[i] === votes[lsofar]) {
+                    major = -1;
                 }
             }
 
