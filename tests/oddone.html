@@ -58,6 +58,9 @@
                  var $button = $('<button>Connect</button>').click(function() {
                      var comm = new MPProtocol(io, location.protocol + '//' + location.host, container);
                      comm.join(roomId);
+
+                     this.innerHTML = 'Connecting...';
+                     this.disabled = 'disabled';
                  });
 
                  $(container).append($button);
