@@ -299,7 +299,7 @@ TheOddOneRule.views = {
             var i;
 
             if (votes[0] > 0) major = 0;
-            for (i = 0; i < this.props.lobby.names.length; ++i) {
+            for (i = 1; i < this.props.lobby.names.length; ++i) {
                 if (votes[i] > votes[lsofar]) {
                     lsofar = i;
                     major = i;
