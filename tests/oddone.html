@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test</title>
+    </head>
+    <body>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/jquery.js"></script>
+        <script src="/js/common.js"></script>
+        <script type="text/javascript" src="/js/react/react.js"></script>
+        <script src="/js/q.js"></script>
+
+        <script src="rules"></script>
+
+        <script src="/js/mp.transport.js"></script>
+        <script src="/js/mp.protocol.js"></script>
+        <script src="/js/mp.gameobject.js"></script>
+        <script src="/js/mp.dxc.js"></script>
+        <script src="/js/multiplayr.js"></script>
+
+
+        Host:
+        <div id="host-container" style="margin-bottom: 10px; border:1px solid black; height: 300px;">
+        </div>
+
+        Client 0:
+        <div id="client0-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
+        </div>
+
+        Client 1:
+        <div id="client1-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
+        </div>
+
+        Client 2:
+        <div id="client2-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
+        </div>
+
+        Client 3:
+        <div id="client3-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
+        </div>
+
+        <script language="javascript">
+         Multiplayr.setGamerulesPath('/gamerules/');
+
+         var commHost = new MPProtocol(io, location.protocol + '//' + location.host, document.getElementById('host-container'));
+         commHost.create('theoddone', test1);
+
+         var clienntObj = [];
+
+         function test1() {
+
+             var roomId = commHost.getRoomId();
+
+             [0,1,2,3].forEach(function(i) {
+                 var name = "client"+i+"-container";
+                 var container = document.getElementById(name);
+
+                 var $button = $('<button>Connect</button>').click(function() {
+                     var comm = new MPProtocol(io, location.protocol + '//' + location.host, container);
+                     comm.join(roomId);
+                 });
+
+                 $(container).append($button);
+             });
+
+         }
+        </script>
+
+
+    </body>
+</html>

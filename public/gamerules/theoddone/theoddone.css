@@ -1,0 +1,45 @@
+#choices {
+}
+
+.major {
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+#choices .choice {
+    display: inline-block;
+    float: left;
+    margin: 4px;
+    padding: 3px 8px 3px 8px;
+    text-align: center;
+    border: 1px solid #555;
+    cursor: pointer;
+}
+
+#choices .dead {
+    background: red !important;
+    text-decoration: line-through !important;
+}
+#choices.unselected .choice {
+    cursor: pointer;
+}
+#choices.unselected .choice:hover {
+    background: #dfd;
+}
+#choices .choice.selected {
+    background: #dfd;
+}
+
+.clearer {
+    clear: both;
+}
+
+#scoreTable .odd {
+    background: #ddf;
+}
+#scoreTable .dead {
+    color: red;
+}
+#scoreTable .dead .name {
+    text-decoration: line-through;
+}

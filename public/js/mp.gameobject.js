@@ -382,8 +382,11 @@ var MPGameObject = (function() {
             if (typeof self.__methods[method] === 'undefined') {
                 throw(new Error("Invalid argument: method ["+method+"] is not defined"));
             }
+            var args = [callee];
+            for (var i = 0; i < arguments.length; ++i) {
+                args.push(arguments[i]);
+            }
 
-            var args = [callee].concat(arguments);
             var tr = self.__methods[method].apply(self.MP, args);
             self.tick();
             return tr;
@@ -444,18 +447,22 @@ var MPGameObject = (function() {
         };
 
     MPGameObject.prototype.getPlayerData =
-        function MPGameObjectGetPlayerData(playerId, variable, cb) {
+        function MPGameObjectGetPlayerData(playerId, variable) {
             var self = this;
+            var i = 0;
 
             if (self.isHost() === false) {
                 throw(new Error("Only host can get player data"));
             } else {
+
                 if (typeof self.__clientsData[playerId] === 'undefined'){
                     throw(new Error("Client [" + playerId + "] does not exists"));
                 } else if (self.__clientsData[playerId].active === false) {
                     // todo: think about disconnection implication
                     throw(new Error("Client [" + playerId + "] has disconnected"));
-                } else {
+                }
+
+                function getVariable(variable) {
                     if (self.__hasPlayerData(_secret, playerId, variable)) {
                         return self.__clientsData[playerId].dataStore(_secret, variable).get();
                     } else {
@@ -469,12 +476,22 @@ var MPGameObject = (function() {
                         }
                     }
                 }
+
+                if (isArray(variable)) {
+                    var tr = {};
+                    for (i = 0; i < variable.length; ++i) {
+                        tr[variable[i]] = getVariable(variable[i]);
+                    }
+                    return tr;
+                } else {
+                    return getVariable(variable);
+                }
+
             }
-            return self;
         };
 
     MPGameObject.prototype.setPlayerData =
-        function MPGameObjectSetPlayerData(playerId, variable, value, cb) {
+        function MPGameObjectSetPlayerData(playerId, variable, value) {
             var self = this;
 
             if (self.isHost() === false) {
@@ -609,7 +626,7 @@ var MPGameObject = (function() {
     ///
 
     MPGameObject.prototype.getPlayersData =
-        function MPGameObjectGetPlayersData(variable, cb) {
+        function MPGameObjectGetPlayersData(variable) {
             var self = this;
 
             if (!self.isHost()) {
@@ -619,8 +636,8 @@ var MPGameObject = (function() {
             var cnter = self.clients.length;
             var accumulatedResults = {};
 
-            self.clients.forEach(function(client) {
-                accumulatedResults[client] = self.getPlayerData(client, variable);
+            self.clients.forEach(function(client, i) {
+                accumulatedResults[i] = self.getPlayerData(client, variable);
             });
 
             return accumulatedResults;

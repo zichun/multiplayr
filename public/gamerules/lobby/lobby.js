@@ -30,8 +30,8 @@ Lobby.onDataChange = function() {
         var names = getPlayersData('name');
         var orderedNames = [];
 
-        playersForEach(function(client) {
-            orderedNames.push(names[client]);
+        playersForEach(function(client, i) {
+            orderedNames.push(names[i]);
         });
 
         playersForEach(function(client, ind) {

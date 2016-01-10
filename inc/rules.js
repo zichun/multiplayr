@@ -14,8 +14,16 @@ var _MPRules = {
             Shell.plugins['child'] = RockScissorsPaperRule;
             return Shell;
         }
+    },
+    'theoddone': {
+        description: "Guess the odd one",
+        rules: ['lobby', 'theoddone', 'gameshell'],
+        onLoad: function() {
+            Shell.plugins['child'] = TheOddOneRule;
+            return Shell;
+        }
     }
-};
 
+};
 
 if (typeof module === 'object' && module.exports) module.exports = _MPRules;

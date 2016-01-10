@@ -19,8 +19,12 @@ server.listen(app.get('port'));
 
 // Temp for local testing
 
-app.get('/v2test', function (req, res) {
+app.get('/rockscissorspaper', function (req, res) {
     res.sendfile(__dirname + '/tests/v2.html');
+});
+
+app.get('/theoddone', function (req, res) {
+    res.sendfile(__dirname + '/tests/oddone.html');
 });
 
 app.get('/rules', function (req, res) {

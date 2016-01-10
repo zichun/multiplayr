@@ -1,3 +1,4 @@
+
 var RockScissorsPaperRule = {};
 
 RockScissorsPaperRule.name = "rockscissorspaper";
@@ -165,7 +166,7 @@ RockScissorsPaperRule.onDataChange = function() {
 
             ['win','lose','draw'].forEach(function(v) {
                 var value = mp.getPlayersData(v);
-                mp.setViewProps(mp.clientId, v, flatten(value));
+                mp.setViewProps(mp.clientId, v, value);
             });
             mp.setView(mp.clientId, 'hostScoreTable');
         } else {
