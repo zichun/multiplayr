@@ -24,6 +24,7 @@ var MPDataExchange = (function() {
             if (clientId === null) {
                 clientId = comm.getHost();
             }
+
             var mcb = function(err, data) {
                 if (err) {
                     return cb(err, data);
@@ -276,8 +277,11 @@ var MPDataExchange = (function() {
         comm.on('join-game', function(data) {
             gameObj.newClient(data);
         });
-        comm.on('leave-room', function(data) {
+        comm.on('leave-game', function(data) {
             gameObj.deleteClient(data);
+        });
+        comm.on('rejoin-game', function(data) {
+            gameObj.rejoinClient(data);
         });
 
         return self;

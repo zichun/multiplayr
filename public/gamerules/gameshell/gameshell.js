@@ -31,7 +31,8 @@ Shell.views = {
 
             return React.DOM.div(null,
                                  header,
-                                 content);
+                                 React.DOM.div({id: 'shell-container'},
+                                               content));
         }
     }),
 

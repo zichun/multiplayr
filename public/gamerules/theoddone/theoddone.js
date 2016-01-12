@@ -13,8 +13,8 @@ TheOddOneRule.cards = [
     ['Laptop', 'Notebook'],
     ['Adult','Child'],
     ['Butter','Jam'],
-    ['Break','mend'],
-    ['Clean','dirty'],
+    ['Break','Mend'],
+    ['Clean','Dirty'],
     ['Cops','robbers'],
     ['Cup','saucer'],
     ['Dance','sing'],
@@ -27,52 +27,58 @@ TheOddOneRule.cards = [
     ['Fish','chips'],
     ['Float','sink'],
     ['Food','drink'],
-    ['Freeze','thaw'],
+    ['Freeze','Cold'],
+    ['Freeze','Ice'],
+    ['Cold','Ice'],
+    ['Flame','Candle'],
+    ['Flame','Hot'],
+    ['Singer','Actor'],
+    ['Magician','Comedian'],
     ['Fresh','stale'],
-    ['God','goddess'],
-    ['Grow','shrink'],
-    ['Horse','cart'],
-    ['Rapper','Death Metal'],
-    ['In','out'],
-    ['Jelly','ice-cream'],
+    ['Power','Wisdom'],
+    ['Grow','Big'],
+    ['Horse','Cart'],
+    ['Rap Music','Death Metal'],
+    ['Jelly','Ice-cream'],
     ['King','President'],
     ['Knife','Sword'],
     ['Laugh','Comedy'],
-    ['Letters','numbers'],
+    ['Letters','Numbers'],
     ['Moon','stars'],
     ['Noise','silence'],
     ['Open','close'],
     ['Paint','Brush'],
     ['Paper','pen'],
     ['Peaches','cream'],
-    ['Pen','ink'],
-    ['Play','work'],
-    ['Read','write'],
+    ['Pen','Ink'],
+    ['Business','Work'],
+    ['Magazine','Newspaper'],
     ['Rich','Spendthrift'],
     ['Poor','Thrifty'],
     ['Human Rights','Justice'],
     ['Snow','Ice'],
     ['Assets','Bank account'],
-    ['Sponge','custard'],
+    ['Spongecake','Custard'],
     ['Strawberries','Ice-cream'],
-    ['Suck','blow'],
-    ['Sun','moon'],
-    ['Supply','demand'],
-    ['Tall','short'],
-    ['Tea','biscuits'],
-    ['Tea','coffee'],
-    ['Tea','sympathy'],
-    ['Thunder','lightning'],
+    ['Wind','Blow'],
+    ['Moon','Star'],
+    ['Furry','Warm and Fuzzy'],
+    ['Cookie','Biscuit'],
+    ['Tea','Coffee'],
+    ['Coffeebean','Cocoa'],
+    ['Thunder','Lightning'],
     ['Together','apart'],
     ['Tongue','groove'],
     ['Toothpaste','toothbrush'],
     ['War','Riot'],
-    ['Under','over'],
+    ['Fan','Aircon'],
+    ['Under','Over'],
     ['Up','down'],
     ['Walk','run'],
     ['Wet','Slippery'],
-    ['Wine','cheese'],
-    ['Witch','wizard'],
+    ['Wine','Cheese'],
+    ['Witchcraft','Magic'],
+    ['Magician','Clown'],
     ['Musical', 'Movie'],
     ['Comedy', 'Cartoon']
 ];
@@ -94,7 +100,7 @@ TheOddOneRule.methods = {
             alert("We need at least 3 players to play this game");
         } else {
             mp.setData('lobby_started', true)
-                   .setData('state', 'play');
+              .setData('state', 'play');
 
             mp.newGame();
         }
@@ -168,6 +174,13 @@ TheOddOneRule.methods = {
             mp.setPlayerData(oddOne, 'score', mp.getPlayerData(oddOne, 'score') + score);
         }
 
+        var otherScore = mp.playersCount() - 2 - score;
+        mp.playersForEach(function(pid, i) {
+            var isOdd = mp.getPlayerData(pid, 'isOdd');
+            if (!isOdd) {
+                mp.setPlayerData(pid, 'score', mp.getPlayerData(pid, 'score') + otherScore);
+            }
+        });
     },
     getDead: function() {
         var mp = this;
@@ -294,7 +307,7 @@ TheOddOneRule.views = {
     voting: React.createClass({
         displayName: 'voting',
         render: function() {
-            return React.DOM.div(null,
+            return React.DOM.div({id: 'theoddone-voting'},
                                  TheOddOneRule.views.word(this.props),
                                  TheOddOneRule.views.choices(this.props)
                                 );
@@ -303,7 +316,7 @@ TheOddOneRule.views = {
     word: React.createClass({
         render: function() {
             var word = this.props.word;
-            return React.DOM.div({id: 'word'}, word);
+            return React.DOM.div({id: 'theoddone-word'}, word);
         }
     }),
     choices: React.createClass({
@@ -380,11 +393,11 @@ TheOddOneRule.views = {
             if (major === -1) {
                 submitButton = null;
             } else {
-                submitButton = React.DOM.button({onClick: this.commitVote }, 'Commit!');
+                submitButton = React.DOM.button({id: 'theoddone-vote-submit', onClick: this.commitVote }, 'Commit!');
             }
 
             return React.DOM.div(null,
-                                 React.DOM.ol(null, scores),
+                                 React.DOM.ol({id: 'theoddone-votetable'}, scores),
                                  submitButton
                                 );
         },
@@ -433,7 +446,7 @@ TheOddOneRule.views = {
                 }));
             }
 
-            return React.DOM.table({id: 'scoreTable'},
+            return React.DOM.table({id: 'theoddone-summary-table', cellSpacing: '1px'},
                                    TheOddOneRule.views.scoreHeader(),
                                    scores);
         }

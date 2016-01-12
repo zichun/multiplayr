@@ -2,7 +2,7 @@
 
 var MPProtocol =
 (function() {
-    var Events = ['join-room', 'leave-room', 'message', 'error', 'join-game'];
+    var Events = ['join-room', 'leave-game', 'message', 'error', 'join-game', 'rejoin-game'];
 
     function MPProtocol(io, uri, container) {
         var self = this;
@@ -24,7 +24,7 @@ var MPProtocol =
         });
 
         meshObj.on('leave-room', function(data) {
-            self.emit('leave-room', data.message);
+            self.emit('leave-game', data.message);
         });
 
         meshObj.on('message', function(data) {
@@ -39,6 +39,10 @@ var MPProtocol =
             } else if (data.message.type === 'join-game') {
                 self.emit('join-game', data.message.message);
             }
+        });
+
+        meshObj.on('rejoin-room', function(data) {
+            self.emit('rejoin-game', data.message);
         });
 
         meshObj.on('room-rule', function(data) {

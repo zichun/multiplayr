@@ -58,16 +58,21 @@ Lobby.views = {
         render: function() {
             function createHello(names) {
                 var tr = [];
+
                 for (var i=0;i<names.length;++i) {
                     tr.push( Lobby.views.HelloMessage({name: names[i]}) );
+                }
+
+                if (names.length === 0) {
+                    tr.push( React.DOM.div({className: 'waiting'},
+                                           'Waiting for players to join'));
                 }
 
                 return tr;
             }
             return React.DOM.div(
                 null,
-                React.DOM.h3(null, "Lobby"),
-                React.DOM.ul(null, createHello(this.props.names)),
+                React.DOM.div({id: 'lobby-playerlist'}, createHello(this.props.names)),
                 React.DOM.button({onClick: this.startGame}, 'Start game')
             );
         }
@@ -75,7 +80,10 @@ Lobby.views = {
     HelloMessage: React.createClass({
         displayName: 'HelloMessage',
         render: function() {
-            return React.DOM.div(null, "Hello ", this.props.name);
+            return React.DOM.div(null,
+                                 "Hello",
+                                 React.DOM.span({className: 'lobby-name'},
+                                                this.props.name));
         }
     }),
     SetName: React.createClass({
@@ -86,9 +94,9 @@ Lobby.views = {
         },
         render: function() {
             return React.DOM.div(
-                null,
-                React.DOM.div(null, 'Name: '),
-                React.DOM.input( {onChange: this.onChange} )
+                {id: 'setname-container'},
+                React.DOM.div({id: 'setname-header'}, 'Name'),
+                React.DOM.input( {id: 'setname-input', onChange: this.onChange} )
             );
         }
     })

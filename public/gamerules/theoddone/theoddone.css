@@ -6,14 +6,34 @@
     font-size: 1.2em;
 }
 
+html,body { height: 100%; }
+
+#theoddone-voting {
+    text-align: center;
+    height: 100%;
+    background: #151515;
+    color: white;
+}
+#theoddone-word {
+    color: #555;
+    font-size: 2em;
+    padding-top: 32px;
+}
+
 #choices .choice {
     display: inline-block;
-    float: left;
-    margin: 4px;
-    padding: 3px 8px 3px 8px;
+    margin: 8px;
+    padding: 6px 16px 6px 16px;
+    font-size: 1.1em;
     text-align: center;
     border: 1px solid #555;
     cursor: pointer;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 #choices .dead {
@@ -24,22 +44,52 @@
     cursor: pointer;
 }
 #choices.unselected .choice:hover {
-    background: #dfd;
+    background: #558;
 }
 #choices .choice.selected {
-    background: #dfd;
+    background: #558;
 }
 
 .clearer {
     clear: both;
 }
 
-#scoreTable .odd {
-    background: #ddf;
+#theoddone-votetable {
+    list-style-type: none;
+    padding: 0;
+    margin: 8px 0 8px 0;
 }
-#scoreTable .dead {
+
+#theoddone-votetable li {
+    padding: 0;
+    margin: 2px 0 1px 4px;
+}
+
+#theoddone-vote-submit {
+    margin-top: 24px;
+}
+
+#theoddone-summary-table {
+    background: #888;
+    margin: 0 0 12px 0;
+}
+
+#theoddone-summary-table td, #theoddone-summary-table th {
+    margin: 0px;
+    padding: 8px;
+    background: white;
+}
+#theoddone-summary-table tr {
+    padding: 0;
+    margin: 0;
+}
+
+#theoddone-summary-table tr.odd td {
+    background: #ddf !important;
+}
+#theoddone-summary-table .dead {
     color: red;
 }
-#scoreTable .dead .name {
+#theoddone-summary-table .dead .name {
     text-decoration: line-through;
 }

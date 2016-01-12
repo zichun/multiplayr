@@ -2,7 +2,7 @@ var Mesh =
 (function() {
     // todo: (low priority) proper encapsulation of private data like self.peers, self.socket etc.
 
-    var Events = ['join-room', 'leave-room', 'message', 'room-broadcast', 'error', 'room-rule'];
+    var Events = ['join-room', 'leave-room', 'message', 'room-broadcast', 'error', 'room-rule', 'rejoin-room'];
 
     function Mesh(io, uri) {
         var self = this;
@@ -16,12 +16,36 @@ var Mesh =
         self.roomId = null;
         self.clientId = null;
 
+        socket.on('reconnect', function(data) {
+            if (self.clientId === null || self.roomId === null) {
+                throw(new Error('Reconnection without clientId'));
+            }
+
+            socket.emit('rejoin-room',
+                        {
+                            room: self.roomId,
+                            clientId: self.clientId
+                        },
+                        function(data) {
+
+                            if (data.type === 'error') {
+                                if (isFunction(cb)) cb(data.message, data);
+                                return self.emit('error', data);
+                            }
+
+                            self.refreshClients();
+                        });
+        });
+
         socket.on('client-sendmessage', function(data) {
             self.emit('message', data);
         });
 
         socket.on('room-broadcast', function(data) {
             switch(data.type) {
+            case 'rejoin-room':
+                self.emit('rejoin-room', data);
+                break;
             case 'join-room':
                 self.emit('join-room', data);
                 break;
@@ -39,7 +63,6 @@ var Mesh =
         });
 
         self.on('join-room', function(data) {
-            console.log(data);
             self.peers.push(data.message);
         });
 
@@ -81,6 +104,19 @@ var Mesh =
             });
         };
 
+    Mesh.prototype.refreshClients =
+        function MeshRefreshClients() {
+            var self = this;
+            // Get connected peers
+            self.socket.emit('room-clients', {}, function(data) {
+                if (data.type === 'error') {
+                    return self.emit('error', data);
+                } else {
+                    self.updatePeers(data);
+                }
+            });
+        };
+
     Mesh.prototype.join =
         function MeshJoin(id, cb) {
             var self = this;
@@ -97,14 +133,8 @@ var Mesh =
 
                 self.roomId = data.roomId;
                 self.clientId = data.clientId;
-                // Get connected peers
-                self.socket.emit('room-clients', {}, function(data) {
-                    if (data.type === 'error') {
-                        return self.emit('error', data);
-                    } else {
-                        self.updatePeers(data);
-                    }
-                });
+
+                self.refreshClients();
 
                 if (isFunction(cb)) {
                     cb(null, data);

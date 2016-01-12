@@ -147,7 +147,6 @@ var MPGameObject = (function() {
             var self = this;
             if (self.isHost()) {
                 if (!self.__parent) {
-                    alert(clientId);
                     self.addNewClient(clientId);
                     self.dataChange(true);
                 }
@@ -186,16 +185,26 @@ var MPGameObject = (function() {
             return self;
         };
 
+    MPGameObject.prototype.rejoinClient =
+        function MPGameObjectRejoinClient(clientId) {
+            var self = this;
+            if (self.isHost()) {
+                self.__clientsData[clientId].active = true;
+                self.dataChange(true);
+            }
+            return self;
+        };
+
     MPGameObject.prototype.deleteClient =
         function MPGameObjectDeleteClient(clientId) {
             var self = this;
-            if (self.isHost()) {
-                self.clients.splice(self.clients.indexOf(clientId), 1);
-                self.__clientsData[clientId].active = false;
-                self.dataChange(true);
-            } else {
-                // in this implementation of gameobject we'll force non-host to talk to host only
+            if (!self.isHost()) {
+                throw(new Error("Only host can call addNewClient"));
             }
+
+            //                self.clients.splice(self.clients.indexOf(clientId), 1);
+            self.__clientsData[clientId].active = false;
+            self.dataChange(true);
             return self;
         };
 

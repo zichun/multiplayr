@@ -33,6 +33,36 @@ function init(io) {
             });
         });
 
+        socket.on('rejoin-room', function(data, fn) {
+            if (typeof data.room !== 'string' ||
+                typeof data.clientId !== 'string') {
+                return fn({
+                    type: 'error',
+                    message: 'Invalid request'
+                });
+            } else if (roomId !== false || clientId !== false) {
+                return fn({
+                    type: 'error',
+                    message: 'Client already belong to an existing mesh'
+                });
+            }
+
+            if (rooms.hasRoom(data.room)) {
+                roomId = data.room;
+                clientId = data.clientId;
+                rooms.reconnectClient(data.room, socket, clientId);
+                fn({
+                    roomId: roomId,
+                    clientId: clientId
+                });
+            } else {
+                return fn({
+                    type: 'error',
+                    message: 'Room ' + data.room + ' does not exists'
+                });
+            }
+        });
+
         socket.on('join-room', function(data, fn) {
             if (typeof data.room !== 'string') {
                 return fn({

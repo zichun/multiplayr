@@ -53,19 +53,23 @@ Room.prototype.addClient =
     // Add Client to Room
     // @arg clientId Unique Id of client
     // @arg socket The socket.io object of the new client
-    function RoomAddClient(clientId, socket) {
+    function RoomAddClient(clientId, socket, isReconnect) {
         var self = this;
 
         self.clients.push(clientId);
         self.clientSockets[clientId] = socket;
 
-        self.broadcast('join-room', clientId, function() {
-            self.sendMessage(clientId,
-                             'room-rule',
-                             {
-                                 from: null,
-                                 message: self.rule
-                             });
+        var broadcastMessage = isReconnect ? 'rejoin-room' : 'join-room';
+
+        self.broadcast(broadcastMessage, clientId, function() {
+            if (isReconnect === false) {
+                self.sendMessage(clientId,
+                                 'room-rule',
+                                 {
+                                     from: null,
+                                     message: self.rule
+                                 });
+            }
         });
         return true;
     };
@@ -133,7 +137,7 @@ Rooms.prototype.create =
         clientId = func.uniqid('mp-client-', true);
 
         self.rooms[uniqid] = new Room(uniqid, rule);
-        self.rooms[uniqid].addClient(clientId, socket);
+        self.rooms[uniqid].addClient(clientId, socket, false);
 
         self.clientsRoomMap[clientId] = uniqid;
 
@@ -214,6 +218,18 @@ Rooms.prototype.getClients =
         }
     };
 
+Rooms.prototype.reconnectClient =
+    function RoomsReconnectClient(room, socket, clientId) {
+        var self = this;
+        if (self.hasRoom(room)) {
+            self.rooms[room].addClient(clientId, socket, true);
+            self.clientsRoomMap[clientId] = room;
+            return clientId;
+        } else {
+            throw(new Error('Room does not exists'));
+        }
+    };
+
 Rooms.prototype.addClient =
     function RoomsAddClient(room, socket) {
         var self = this;
@@ -221,7 +237,7 @@ Rooms.prototype.addClient =
 
         if (self.hasRoom(room)) {
             clientId = func.uniqid('mp-client-', true);
-            self.rooms[room].addClient(clientId, socket);
+            self.rooms[room].addClient(clientId, socket, false);
             self.clientsRoomMap[clientId] = room;
             return clientId;
         } else {
