@@ -1,8 +1,6 @@
 $(function() {
     for (var rule in _MPRules) {
         if (!_MPRules.hasOwnProperty(rule)) continue;
-
-
         $('#rules').append(makeRule(rule, _MPRules[rule]));
     }
 
@@ -24,6 +22,5 @@ $(function() {
             commHost.create(ruleName);
         };
     }
-
 
 });

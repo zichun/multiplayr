@@ -147,6 +147,7 @@ var MPGameObject = (function() {
             var self = this;
             if (self.isHost()) {
                 if (!self.__parent) {
+                    alert(clientId);
                     self.addNewClient(clientId);
                     self.dataChange(true);
                 }
@@ -669,7 +670,6 @@ var MPGameObject = (function() {
         };
     });
 
-
     ///
     /// Helper Methods
     ///
@@ -713,7 +713,8 @@ var MPGameObject = (function() {
         obj['getSubView'] = hostExposedMethodWrapper('getSubView');
 
         if (isHost) {
-            // todo: views shouldn't be given methods below, even on host
+            // todo: views shouldn't be given methods below, even on host.
+            //       instead views should call a method defined in the rule instead.
             // Expose methods
             var _exposed = ['getData', 'setData',
                             'getPlayerData', 'setPlayerData', 'getPlayersData',

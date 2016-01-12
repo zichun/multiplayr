@@ -56,7 +56,7 @@ function init(io) {
             } else {
                 return fn({
                     type: 'error',
-                    message: 'Room ' + data.room + 'does not exists'
+                    message: 'Room ' + data.room + ' does not exists'
                 });
             }
         });

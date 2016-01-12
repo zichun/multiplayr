@@ -85,17 +85,10 @@ Lobby.views = {
             return true;
         },
         render: function() {
-            return (
-                React.DOM.div(
-                    null,
-                    React.DOM.form(
-                        {
-                            onSubmit:this.handleSubmit
-                        },
-                        React.DOM.div(null, 'Name: '),
-                        React.DOM.input( {onChange:this.onChange} )
-                    )
-                )
+            return React.DOM.div(
+                null,
+                React.DOM.div(null, 'Name: '),
+                React.DOM.input( {onChange: this.onChange} )
             );
         }
     })

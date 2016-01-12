@@ -6,7 +6,11 @@ var Mesh =
 
     function Mesh(io, uri) {
         var self = this;
-        var socket = self.socket = io.connect(uri, {'force new connection': true});
+        var socket = self.socket = io.connect(uri,
+                                              { 'reconnect': true,
+                                                'reconnection delay': 500,
+                                                'force new connection': true
+                                              });
 
         self.peers = [];
         self.roomId = null;
@@ -35,6 +39,7 @@ var Mesh =
         });
 
         self.on('join-room', function(data) {
+            console.log(data);
             self.peers.push(data.message);
         });
 
