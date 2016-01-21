@@ -1,3 +1,4 @@
+
 var Multiplayr = (function() {
 
     var Multiplayr = {
@@ -55,7 +56,7 @@ var Multiplayr = (function() {
             return _gamerulesPath + ruleName + '/' + cssName;
         }
         if (typeof css === 'string') {
-            loadJs(src(css), cb);
+            loadCss(src(css), cb);
         } else if (isArray(css)) {
             var cnt = css.length;
             for (var i=0;i<css.length;++i) {
@@ -78,11 +79,24 @@ var Multiplayr = (function() {
 
     function loadCss(src, cb) {
         var lnk = document.createElement('link');
-        lnk.setAttribute('rel', 'stylesheet');
+        var stylesheet = 'stylesheet';
+        var isLess = false;
+
+        if (src.endsWith('.less')) {
+            stylesheet = 'stylesheet/less';
+            isLess = true;
+        }
+
+        lnk.setAttribute('rel', stylesheet);
         lnk.setAttribute('type', 'text/css');
         lnk.setAttribute('href', src);
         lnk.onload = cb;
         document.head.appendChild(lnk);
+
+        if (isLess && less) {
+            less.sheets.push(lnk);
+            less.refresh(true);
+        }
     }
 
     /**

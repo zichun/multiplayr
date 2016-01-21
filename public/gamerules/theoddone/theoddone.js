@@ -2,7 +2,7 @@
 var TheOddOneRule = {};
 
 TheOddOneRule.name = "TheOddOne";
-TheOddOneRule.css = ['theoddone.css'];
+TheOddOneRule.css = ['theoddone.less'];
 
 TheOddOneRule.cards = [
     ['Chicken', 'KFC'],
@@ -304,69 +304,11 @@ TheOddOneRule.onDataChange = function() {
 };
 
 TheOddOneRule.views = {
-    voting: React.createClass({
-        displayName: 'voting',
-        render: function() {
-            return React.DOM.div({id: 'theoddone-voting'},
-                                 TheOddOneRule.views.word(this.props),
-                                 TheOddOneRule.views.choices(this.props)
-                                );
-        }
-    }),
-    word: React.createClass({
-        render: function() {
-            var word = this.props.word;
-            return React.DOM.div({id: 'theoddone-word'}, word);
-        }
-    }),
-    choices: React.createClass({
-        render: function() {
-            var reactChoices = [];
-            var vote = this.props.vote;
-            var dead = this.props.dead;
 
-            for (var i=0;i<this.props.lobby.names.length;++i) {
-                var player = this.props.lobby.names[i];
+    //
+    // Host Rules
+    //
 
-                if (vote === i) {
-                    reactChoices.push(React.DOM.div({className: "choice selected"},
-                                                    player));
-                } else {
-                    var oc = null;
-
-                    var mp = this.props.MP;
-
-                    if (dead[i] === false) {
-                        oc = (function(i) {
-                            return function() {
-                                mp.vote(i);
-                            };
-                        })(i);
-                    }
-
-                    var deadClass = dead[i] ? ' dead' : '';
-
-                    reactChoices.push(React.DOM.div({className: "choice" + deadClass, onClick: oc},
-                                                    player));
-                }
-            }
-
-            var cn = vote === -1 ? 'unselected' : 'selected';
-
-            reactChoices.push(React.DOM.div({className: "clearer"}));
-            return React.DOM.div({id: 'choices', className: cn}, reactChoices);
-        }
-    }),
-    scoreHeader: React.createClass({
-        render: function() {
-            return React.DOM.tr(
-                null,
-                React.DOM.th(null, 'Player'),
-                React.DOM.th(null, 'Win'),
-                React.DOM.th(null, 'Draw'),
-                React.DOM.th(null, 'Lose'));
-        }
-    }),
     hostVoteTable: React.createClass({
         render: function() {
             var scores = [];
@@ -451,6 +393,16 @@ TheOddOneRule.views = {
                                    scores);
         }
     }),
+    scoreHeader: React.createClass({
+        render: function() {
+            return React.DOM.tr(
+                null,
+                React.DOM.th(null, 'Player'),
+                React.DOM.th(null, 'Win'),
+                React.DOM.th(null, 'Draw'),
+                React.DOM.th(null, 'Lose'));
+        }
+    }),
     scoreRow: React.createClass({
         render: function() {
             var cn = [];
@@ -460,6 +412,63 @@ TheOddOneRule.views = {
                                 React.DOM.td({className: 'name'}, this.props.name),
                                 React.DOM.td(null, this.props.word),
                                 React.DOM.td(null, this.props.score));
+        }
+    }),
+
+    //
+    // Client Views
+    //
+
+    voting: React.createClass({
+        displayName: 'voting',
+        render: function() {
+            return React.DOM.div({id: 'theoddone-voting'},
+                                 TheOddOneRule.views.word(this.props),
+                                 TheOddOneRule.views.choices(this.props)
+                                );
+        }
+    }),
+    word: React.createClass({
+        render: function() {
+            var word = this.props.word;
+            return React.DOM.div({id: 'theoddone-word'}, word);
+        }
+    }),
+    choices: React.createClass({
+        render: function() {
+            var reactChoices = [];
+            var vote = this.props.vote;
+            var dead = this.props.dead;
+
+            for (var i=0;i<this.props.lobby.names.length;++i) {
+                var player = this.props.lobby.names[i];
+
+                if (vote === i) {
+                    reactChoices.push(React.DOM.div({className: "choice selected"},
+                                                    player));
+                } else {
+                    var mp = this.props.MP;
+                    var oc = null;
+
+                    if (dead[i] === false) {
+                        oc = (function(i) {
+                            return function() {
+                                mp.vote(i);
+                            };
+                        })(i);
+                    }
+
+                    var deadClass = dead[i] ? ' dead' : '';
+
+                    reactChoices.push(React.DOM.div({className: "choice" + deadClass, onClick: oc},
+                                                    player));
+                }
+            }
+
+            var cn = vote === -1 ? 'unselected' : 'selected';
+
+            reactChoices.push(React.DOM.div({className: "clearer"}));
+            return React.DOM.div({id: 'choices', className: cn}, reactChoices);
         }
     })
 };

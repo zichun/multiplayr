@@ -28,7 +28,6 @@ Shell.views = {
                               this.props.MP.roomId));
 
             var content = Shell.views.Proxy(this.props);
-
             return React.DOM.div(null,
                                  header,
                                  React.DOM.div({id: 'shell-container'},

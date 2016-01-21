@@ -20,7 +20,6 @@ function safeCb(cb) {
     }
 }
 
-
 function isArray(obj) {
     return Object.prototype.toString.call(obj) === '[object Array]';
 }
@@ -42,6 +41,9 @@ function gen_uniqid(pre) {
     return pre + "-" + Math.random() + "-" + Math.random();
 }
 
+String.prototype.endsWith = function(suffix) {
+    return this.indexOf(suffix, this.length - suffix.length) !== -1;
+};
 
 Object.prototype.Inherits = function(Class) {
     this.prototype = new Class;
