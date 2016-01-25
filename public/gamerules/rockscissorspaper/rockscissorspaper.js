@@ -1,4 +1,3 @@
-
 var RockScissorsPaperRule = {};
 
 RockScissorsPaperRule.name = "rockscissorspaper";
@@ -57,14 +56,20 @@ RockScissorsPaperRule.methods = {
             mp.setPlayerData(clientId, 'choice', c);
 
             var _choices = mp.getPlayersData('choice');
-            var done = true, p1 = null, p2 = null;
-            mp.playersForEach(function(pid) {
-                if (_choices[pid] === -1) {
+            var done = true, p1 = null, p2 = null, pp1, pp2;
+            mp.playersForEach(function(pid, i) {
+                if (_choices[i] === -1) {
                     done = false;
                 }
 
-                if (!p1) p1 = pid;
-                else p2 = pid;
+                if (!p1) {
+                    p1 = pid;
+                    pp1 = i;
+                }
+                else {
+                    p2 = pid;
+                    pp2 = i;
+                }
             });
 
             if (!done) return;
@@ -76,11 +81,11 @@ RockScissorsPaperRule.methods = {
                 var value = mp.getPlayerData(pid, variable);
                 mp.setPlayerData(pid, variable, value + 1);
             }
-            if (_choices[p1] === _choices[p2]) {
+            if (_choices[pp1] === _choices[pp2]) {
                 // draw
                 inc(p1, 'draw');
                 inc(p2, 'draw');
-            } else if (wm[_choices[p1]][_choices[p2]]) {
+            } else if (wm[_choices[pp1]][_choices[pp2]]) {
                 inc(p1, 'win');
                 inc(p2, 'lose');
             } else {
@@ -149,7 +154,7 @@ RockScissorsPaperRule.onDataChange = function() {
     function gameLogic() {
         if (state === 'play') {
             // some player has not made his move
-            mp.playersForEach(function(client) {
+            mp.playersForEach(function(client, i) {
 
                 // todo: option for variable to auto map to props
                 mp.setViewProps(client, 'opPrevChoice', mp.getPlayerData(client, 'opPrevChoice'));
@@ -160,7 +165,7 @@ RockScissorsPaperRule.onDataChange = function() {
                 mp.setViewProps(client, 'lose', mp.getPlayerData(client, 'lose'));
                 mp.setViewProps(client, 'draw', mp.getPlayerData(client, 'draw'));
 
-                mp.setViewProps(client, 'choice', _choices[client]);
+                mp.setViewProps(client, 'choice', _choices[i]);
                 mp.setView(client, 'chooseMove');
             });
 
@@ -188,6 +193,7 @@ RockScissorsPaperRule.views = {
     }),
     choices: React.createClass({
         render: function() {
+            console.log(this.props);
             var choice = this.props.choice;
             var choices = RockScissorsPaperRule.choiceEnum;
 

@@ -595,8 +595,6 @@ var MPGameObject = (function() {
         function MPGameObjectGetPluginSetView(subView, props) {
             var self = this;
 
-            return this.getPluginView
-
             props = props || (self.__props && self.__props[self.clientId]);
 
             if (typeof self.__plugins[subView] !== 'undefined') {
