@@ -558,9 +558,44 @@ var MPGameObject = (function() {
             return self;
         };
 
-    MPGameObject.prototype.getSubView =
-        function MPGameObjectGetSubView(subView, props) {
+    MPGameObject.prototype.getPluginView =
+        function MPGameObjectGetPluginView(subView, viewName, extendProps, props) {
             var self = this;
+
+            props = props || (self.__props && self.__props[self.clientId]);
+
+            if (typeof self.__plugins[subView] !== 'undefined') {
+                var it = self.__plugins[subView];
+                var extendedProps = props[subView];
+
+                extendObj(extendedProps, extendProps, true);
+
+                var view = it.__setView(it.clientId,
+                                        viewName,
+                                        extendedProps,
+                                        false);
+                return view;
+
+            } else {
+                var splits = getFirstNamespace(subView);
+                var namespace = splits[0];
+
+                if (namespace === false || typeof self.__plugins[namespace] === 'undefined') {
+                    throw(new Error("Variable ["+variable+"] does not exists"));
+                } else {
+                    return self.__plugins[namespace].getPluginView(splits[1],
+                                                                   viewName,
+                                                                   extendProps,
+                                                                   props[namespace]);
+                }
+            }
+        };
+
+    MPGameObject.prototype.getPluginSetView =
+        function MPGameObjectGetPluginSetView(subView, props) {
+            var self = this;
+
+            return this.getPluginView
 
             props = props || (self.__props && self.__props[self.clientId]);
 
@@ -584,7 +619,7 @@ var MPGameObject = (function() {
                 if (namespace === false || typeof self.__plugins[namespace] === 'undefined') {
                     throw(new Error("Variable ["+variable+"] does not exists"));
                 } else {
-                    return self.__plugins[namespace].getSubView(splits[1], props[namespace]);
+                    return self.__plugins[namespace].getPluginSetView(splits[1], props[namespace]);
                 }
             }
         };
@@ -719,7 +754,8 @@ var MPGameObject = (function() {
             }
         }
 
-        obj['getSubView'] = hostExposedMethodWrapper('getSubView');
+        obj['getPluginView'] = hostExposedMethodWrapper('getPluginView');
+        obj['getPluginSetView'] = hostExposedMethodWrapper('getPluginSetView');
 
         if (isHost) {
             // todo: views shouldn't be given methods below, even on host.

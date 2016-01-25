@@ -29,10 +29,12 @@ function shuffleArray(o){ //v1.0
     return o;
 };
 
-function extendObj(ori, extend) {
+function extendObj(ori, extend, override) {
     for (var i in extend) {
-        if (extend.hasOwnProperty(i) && !ori.hasOwnProperty(i)) {
-            ori[i] = extend[i];
+        if (extend.hasOwnProperty(i)) {
+            if (override || !ori.hasOwnProperty(i)) {
+                ori[i] = extend[i];
+            }
         }
     }
 }

@@ -17,10 +17,11 @@ var _MPRules = {
     },
     'theoddone': {
         description: "Guess the odd one",
-        rules: ['lobby', 'theoddone', 'gameshell'],
+        rules: ['lobby', 'gameshell', 'theoddone'],
         onLoad: function() {
-            Shell.plugins['child'] = TheOddOneRule;
-            return Shell;
+            return TheOddOneRule;
+//            Shell.plugins['child'] = TheOddOneRule;
+//            return Shell;
         }
     }
 

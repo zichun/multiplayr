@@ -18,10 +18,23 @@ Shell.onDataChange = function() {
 };
 
 Shell.views = {
+    HostShellChild: React.createClass({
+        render: function() {
+            var header = React.DOM.div(
+                {id: 'shell-header'},
+                React.DOM.div({id: 'shell-room'},
+                              this.props.MP.roomId));
+
+            return React.DOM.div(null,
+                                 header,
+                                 React.DOM.div({id: 'shell-container'},
+                                               this.props['view']));
+        }
+    }),
+
     HostShell: React.createClass({
         displayName: 'HostShell',
         render: function() {
-
             var header = React.DOM.div(
                 {id: 'shell-header'},
                 React.DOM.div({id: 'shell-room'},
@@ -37,11 +50,10 @@ Shell.views = {
 
     Proxy: React.createClass({
         render: function() {
-            return this.props.MP.getSubView('child');
+            return this.props.MP.getPluginSetView('child');
         }
     })
 };
 
 Shell.plugins = {
-    "child": null
 };

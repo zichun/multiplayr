@@ -256,13 +256,14 @@ TheOddOneRule.onDataChange = function() {
     var state = mp.getData('state');
 
     if (started) {
-        gameLogic();
+        return gameLogic();
     } else {
-        showLobby();
+        return showLobby();
     }
 
     function showLobby(cb) {
-        mp.setView(mp.clientId, 'lobby_Lobby');
+        mp.setView(mp.clientId, 'host-lobby');
+
         mp.playersForEach(function(client) {
             mp.setView(client, 'lobby_SetName');
         });
@@ -289,7 +290,7 @@ TheOddOneRule.onDataChange = function() {
         if (state === 'play') {
 
             mp.setViewProps(mp.clientId, 'votes', mp.getVotes());
-            mp.setView(mp.clientId, 'hostVoteTable');
+            mp.setView(mp.clientId, 'host-voteTable');
 
         } else if (state === 'gameEnd') {
 
@@ -297,10 +298,14 @@ TheOddOneRule.onDataChange = function() {
                             'playerSummary',
                             mp.getPlayersData(['score', 'isDead', 'isOdd', 'card']));
 
-            mp.setView(mp.clientId, 'hostSummary');
+            mp.setView(mp.clientId, 'host-summary');
 
         }
+
+        return true;
     }
+
+    return true;
 };
 
 TheOddOneRule.views = {
@@ -309,8 +314,21 @@ TheOddOneRule.views = {
     // Host Rules
     //
 
-    hostVoteTable: React.createClass({
+    "host-lobby": React.createClass({
         render: function() {
+            var mp = this.props.MP;
+
+            return mp.getPluginView('gameshell',
+                                    'HostShellChild',
+                                    {
+                                        'view': mp.getPluginView('lobby', 'Lobby')
+                                    });
+        }
+    }),
+
+    "host-voteTable": React.createClass({
+        render: function() {
+            var mp = this.props.MP;
             var scores = [];
             var votes = this.props.votes;
             var major = -1, lsofar = 0;
@@ -338,48 +356,47 @@ TheOddOneRule.views = {
                 submitButton = React.DOM.button({id: 'theoddone-vote-submit', onClick: this.commitVote }, 'Commit!');
             }
 
-            return React.DOM.div(null,
-                                 React.DOM.ol({id: 'theoddone-votetable'}, scores),
-                                 submitButton
-                                );
+            return mp.getPluginView('gameshell',
+                                    'HostShellChild',
+                                    {
+                                        'view': React.DOM.div(null,
+                                                              React.DOM.ol({id: 'theoddone-votetable'}, scores),
+                                                              submitButton)
+                                    });
         },
         commitVote: function() {
             var gameObj = this.props.MP;
             gameObj.commitVote();
         }
     }),
-    scoreHeader: React.createClass({
-        render: function() {
-            return React.DOM.tr(
-                null,
-                React.DOM.th(null, 'Player'),
-                React.DOM.th(null, 'Word'),
-                React.DOM.th(null, 'Score')
-            );
-        }
-    }),
-    hostSummary: React.createClass({
+
+    "host-summary": React.createClass({
         render: function() {
             var mp = this.props.MP;
             var button = React.DOM.button({onClick: function() { mp.newGame(); } },
                                           'New Game');
-            return React.DOM.div(null,
-                                 TheOddOneRule.views.hostSummaryTable(this.props),
-                                 button);
+            return mp.getPluginView('gameshell',
+                                    'HostShellChild',
+                                    {
+                                        'view': React.DOM.div(null,
+                                                              TheOddOneRule.views['host-summaryTable'](this.props),
+                                                              button)
+                                    });
         },
         newGame: function() {
             var mp = this.props.MP;
             mp.newGame();
         }
     }),
-    hostSummaryTable: React.createClass({
+
+    "host-summaryTable": React.createClass({
         render: function() {
             var scores = [];
             var currentCard = this.props.currentCard;
 
             for (var i=0;i<this.props.lobby.names.length;++i) {
                 var word = TheOddOneRule.cards[currentCard][this.props.playerSummary[i].card];
-                scores.push(TheOddOneRule.views.scoreRow({
+                scores.push(TheOddOneRule.views['host-summaryTable-scoreRow']({
                     name: this.props.lobby.names[i],
                     word: word,
                     score: this.props.playerSummary[i].score,
@@ -389,21 +406,22 @@ TheOddOneRule.views = {
             }
 
             return React.DOM.table({id: 'theoddone-summary-table', cellSpacing: '1px'},
-                                   TheOddOneRule.views.scoreHeader(),
+                                   TheOddOneRule.views['host-summaryTable-scoreHeader'](),
                                    scores);
         }
     }),
-    scoreHeader: React.createClass({
+
+    "host-summaryTable-scoreHeader": React.createClass({
         render: function() {
             return React.DOM.tr(
                 null,
                 React.DOM.th(null, 'Player'),
-                React.DOM.th(null, 'Win'),
-                React.DOM.th(null, 'Draw'),
-                React.DOM.th(null, 'Lose'));
+                React.DOM.th(null, 'Word'),
+                React.DOM.th(null, 'Score')
+            );
         }
     }),
-    scoreRow: React.createClass({
+    "host-summaryTable-scoreRow": React.createClass({
         render: function() {
             var cn = [];
             if (this.props.isOdd) cn.push('odd');
@@ -474,5 +492,6 @@ TheOddOneRule.views = {
 };
 
 TheOddOneRule.plugins = {
-    "lobby": Lobby
+    "lobby": Lobby,
+    'gameshell': Shell
 };
