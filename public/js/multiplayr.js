@@ -93,7 +93,7 @@ var Multiplayr = (function() {
         lnk.onload = cb;
         document.head.appendChild(lnk);
 
-        if (isLess && less) {
+        if (isLess && typeof less != 'undefined') {
             less.sheets.push(lnk);
             less.refresh(true);
         }
