@@ -35,6 +35,7 @@ Lobby.onDataChange = function() {
         });
 
         playersForEach(function(client, ind) {
+            setViewProps(client, 'clientId', client);
             setViewProps(client, 'name', names[client]);
             setViewProps(client, 'playerNum', ind);
             setViewProps(client, 'playerCount', playersCount());
@@ -98,6 +99,35 @@ Lobby.views = {
                 React.DOM.div({id: 'setname-header'}, 'Name'),
                 React.DOM.input( {id: 'setname-input', onChange: this.onChange} )
             );
+        }
+    }),
+
+    //
+    // Views to allow host to manage players in the room
+    //
+    "host-roommanagement": React.createClass({
+        render: function() {
+            return React.DOM.table(
+                {id: 'lobby-roommanagement'},
+                Lobby.views['host-roommanagement-header'],
+                Lobby.views['host-roommanagement-body']
+            );
+        }
+    }),
+
+    "host-roommanagement-header": React.createClass({
+        render: function() {
+            return React.DOM.tr(
+                null,
+                React.DOM.th(null, 'Client-Id'),
+                React.DOM.th(null, 'Name')
+            );
+        }
+    }),
+
+    "host-roommanagement-body": React.createClass({
+        render: function() {
+            
         }
     })
 };

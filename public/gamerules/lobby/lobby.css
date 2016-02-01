@@ -15,6 +15,7 @@ body {
     width: 80%;
     margin: 8px;
     border: 1px solid #888;
+    font-size: 24px;
 }
 
 .waiting {

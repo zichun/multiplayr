@@ -80,7 +80,130 @@ TheOddOneRule.cards = [
     ['Witchcraft','Magic'],
     ['Magician','Clown'],
     ['Musical', 'Movie'],
-    ['Comedy', 'Cartoon']
+    ['Comedy', 'Cartoon'],
+    ['moonlight', 'twilight'],
+    ['table', 'chair'],
+    ['lamp', 'fire'],
+    ['darkness', 'void'],
+    ['worship', 'celebrate'],
+    ['noisy', 'exuberant'],
+    ['drummer', 'guitarist'],
+    ['kettle', 'pot'],
+    ['watch', 'clock'],
+    ['dumbbell', 'bench press machine'],
+    ['tail', 'butt'],
+    ['hopeful', 'genuine'],
+    ['genuine', 'hopeful'],
+    ['last', 'first'],
+    ['coat', 'sweater'],
+    ['dry', 'heated'],
+    ['stand', 'sit'],
+    ['smooth', 'slippery'],
+    ['electric', 'analog'],
+    ['bag', 'purse'],
+    ['cushion', 'bolster'],
+    ['bedsheet', 'pillowcase'],
+    ['clean', 'dirty'],
+    ['bridge', 'poker'],
+    ['crazy', 'calm'],
+    ['joy', 'sadness'],
+    ['rude', 'clueless'],
+    ['old', 'experienced'],
+    ['towel', 'toilet paper'],
+    ['moisture', 'dew'],
+    ['speed', 'dexterity'],
+    ['reflection', 'refraction'],
+    ['polka dot', 'hearts'],
+    ['guitar', 'violin'],
+    ['quarter', 'dime'],
+    ['chilli', 'wasabi'],
+    ['movement', 'stationary'],
+    ['dull', 'sharp'],
+    ['control', 'treatment'],
+    ['tie', 'bow'],
+    ['will', 'force'],
+    ['twilight', 'dusk'],
+    ['chair', 'bench'],
+    ['fire', 'flame'],
+    ['void', 'blank'],
+    ['celebrate', 'parade'],
+    ['exuberant', 'happy'],
+    ['guitarist', 'violinist'],
+    ['pot', 'pan'],
+    ['clock', 'watch'],
+    ['bench press machine', 'treadmill'],
+    ['butt', 'chair'],
+    ['genuine', 'real'],
+    ['hopeful', 'wishful'],
+    ['first', 'top'],
+    ['sweater', 'jacket'],
+    ['heated', 'warmed'],
+    ['sit', 'stand'],
+    ['slippery', 'smooth'],
+    ['analog', 'digital'],
+    ['purse', 'wallet'],
+    ['bolster', 'pillow'],
+    ['pillowcase', 'blanket'],
+    ['dirty', 'filthy'],
+    ['poker', 'bridge'],
+    ['calm', 'peaceful'],
+    ['sadness', 'despair'],
+    ['clueless', 'lost'],
+    ['experienced', 'professional'],
+    ['toilet paper', 'toilet bowl'],
+    ['dew', 'mist'],
+    ['dexterity', 'ambidextrous'],
+    ['refraction', 'reflection'],
+    ['hearts', 'spades'],
+    ['violin', 'guitar'],
+    ['dime', 'quarter'],
+    ['wasabi', 'mustard'],
+    ['stationary', 'still'],
+    ['sharp', 'pointed'],
+    ['treatment', 'care'],
+    ['bow', 'kneel'],
+    ['force', 'coerce'],
+    ['dusk', 'dirt'],
+    ['bench', 'benchmark'],
+    ['flame', 'fire'],
+    ['blank', 'space'],
+    ['parade', 'celebration'],
+    ['happy', 'joy'],
+    ['violinist', 'yoyo ma'],
+    ['pan', 'pot'],
+    ['watch', 'clock'],
+    ['treadmill', 'kettle bell'],
+    ['chair', 'desk'],
+    ['real', 'fake'],
+    ['wishful', 'hopeful'],
+    ['top', 'first'],
+    ['jacket', 'vest'],
+    ['warmed', 'chilled'],
+    ['stand', 'walk'],
+    ['smooth', 'smoothy'],
+    ['digital', 'manual'],
+    ['wallet', 'bank'],
+    ['pillow', 'pillow case'],
+    ['blanket', 'pillow'],
+    ['filthy', 'wealthy'],
+    ['bridge', 'connection'],
+    ['peaceful', 'quiet'],
+    ['despair', 'desperate'],
+    ['lost', 'found'],
+    ['professional', 'skillful'],
+    ['toilet bowl', 'basin'],
+    ['mist', 'fog'],
+    ['ambidextrous', 'right-handed'],
+    ['reflection', 'water'],
+    ['spades', 'hearts'],
+    ['guitar', 'strings'],
+    ['quarter', 'penny'],
+    ['mustard', 'yellow'],
+    ['still', 'quiet'],
+    ['pointed', 'round'],
+    ['care', 'detergent'],
+    ['kneel', 'crawl'],
+    ['coerce', 'persuade']
 ];
 
 function flatten(mp, value) {
@@ -284,7 +407,7 @@ TheOddOneRule.onDataChange = function() {
             mp.setViewProps(client, 'dead', mp.getDead());
             mp.setViewProps(client, 'word', word);
 
-            mp.setView(client, 'voting');
+            mp.setView(client, 'client-voting');
         });
 
         if (state === 'play') {
@@ -421,6 +544,7 @@ TheOddOneRule.views = {
             );
         }
     }),
+
     "host-summaryTable-scoreRow": React.createClass({
         render: function() {
             var cn = [];
@@ -437,22 +561,24 @@ TheOddOneRule.views = {
     // Client Views
     //
 
-    voting: React.createClass({
+    "client-voting": React.createClass({
         displayName: 'voting',
         render: function() {
             return React.DOM.div({id: 'theoddone-voting'},
-                                 TheOddOneRule.views.word(this.props),
-                                 TheOddOneRule.views.choices(this.props)
+                                 TheOddOneRule.views['client-word'](this.props),
+                                 TheOddOneRule.views['client-voting-choices'](this.props)
                                 );
         }
     }),
-    word: React.createClass({
+
+    "client-word": React.createClass({
         render: function() {
             var word = this.props.word;
             return React.DOM.div({id: 'theoddone-word'}, word);
         }
     }),
-    choices: React.createClass({
+
+    "client-voting-choices": React.createClass({
         render: function() {
             var reactChoices = [];
             var vote = this.props.vote;
@@ -493,5 +619,5 @@ TheOddOneRule.views = {
 
 TheOddOneRule.plugins = {
     "lobby": Lobby,
-    'gameshell': Shell
+    "gameshell": Shell
 };
