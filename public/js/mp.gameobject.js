@@ -159,9 +159,12 @@ var MPGameObject = (function() {
     MPGameObject.prototype.addNewClient =
         function MPGameObjectAddNewClient(clientId) {
             var self = this;
+
             if (!self.isHost()) {
                 throw(new Error("Only host can call addNewClient"));
             }
+
+            console.log("Client[" + clientId + "] connected");
 
             for (var plugin in self.__plugins) {
                 if (self.__plugins.hasOwnProperty(plugin)) {
@@ -189,6 +192,9 @@ var MPGameObject = (function() {
         function MPGameObjectRejoinClient(clientId) {
             var self = this;
             if (self.isHost()) {
+
+                console.log("Client[" + clientId + "] reconnected");
+
                 self.__clientsData[clientId].active = true;
                 self.dataChange(true);
             }
@@ -198,13 +204,15 @@ var MPGameObject = (function() {
     MPGameObject.prototype.deleteClient =
         function MPGameObjectDeleteClient(clientId) {
             var self = this;
-            if (!self.isHost()) {
-                throw(new Error("Only host can call addNewClient"));
-            }
+            if (self.isHost()) {
+
+                console.log("Client[" + clientId + "] disconnected");
 
             //                self.clients.splice(self.clients.indexOf(clientId), 1);
-            self.__clientsData[clientId].active = false;
-            self.dataChange(true);
+                self.__clientsData[clientId].active = false;
+                self.dataChange(true);
+
+            }
             return self;
         };
 
@@ -467,10 +475,10 @@ var MPGameObject = (function() {
 
                 if (typeof self.__clientsData[playerId] === 'undefined'){
                     throw(new Error("Client [" + playerId + "] does not exists"));
-                } else if (self.__clientsData[playerId].active === false) {
+                }/* else if (self.__clientsData[playerId].active === false) {
                     // todo: think about disconnection implication
                     throw(new Error("Client [" + playerId + "] has disconnected"));
-                }
+                }*/
 
                 function getVariable(variable) {
                     if (self.__hasPlayerData(_secret, playerId, variable)) {

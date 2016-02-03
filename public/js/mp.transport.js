@@ -8,7 +8,7 @@ var Mesh =
         var self = this;
         var socket = self.socket = io.connect(uri,
                                               { 'reconnect': true,
-                                                'reconnection delay': 500,
+                                                'reconnection delay': 200,
                                                 'force new connection': true
                                               });
 
