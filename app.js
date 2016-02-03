@@ -3,15 +3,10 @@ var app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
 
-app.configure(function(){
-    app.set('port', process.env.PORT || 3000);
-    app.set("view options", { layout: false, pretty: true });
-    app.use(express.favicon());
-    app.use(express.static(__dirname + '/public'));
-});
-
-server.listen(app.get('port'));
-
+app.set('port', process.env.PORT || 3000);
+app.set("view options", { layout: false, pretty: true });
+app.use(require('less-middleware')('public'));
+app.use(express.static(__dirname + '/public'));
 
 /**
  * Routes
@@ -41,3 +36,7 @@ app.get('/join', function(req, res) {
 
 var transport = require('./inc/transport');
 transport.init(io);
+
+server.listen(app.get('port'), function() {
+    console.log("https server listening on port " + app.get('port'));
+});
