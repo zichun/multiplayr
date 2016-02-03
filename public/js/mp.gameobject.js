@@ -164,7 +164,9 @@ var MPGameObject = (function() {
                 throw(new Error("Only host can call addNewClient"));
             }
 
-            console.log("Client[" + clientId + "] connected");
+            if (!self.__parent) {
+                console.log("Client[" + clientId + "] connected");
+            }
 
             for (var plugin in self.__plugins) {
                 if (self.__plugins.hasOwnProperty(plugin)) {
@@ -193,7 +195,9 @@ var MPGameObject = (function() {
             var self = this;
             if (self.isHost()) {
 
-                console.log("Client[" + clientId + "] reconnected");
+                if (!self.__parent) {
+                    console.log("Client[" + clientId + "] reconnected");
+                }
 
                 self.__clientsData[clientId].active = true;
                 self.dataChange(true);
@@ -206,7 +210,9 @@ var MPGameObject = (function() {
             var self = this;
             if (self.isHost()) {
 
-                console.log("Client[" + clientId + "] disconnected");
+                if (!self.__parent) {
+                    console.log("Client[" + clientId + "] disconnected");
+                }
 
             //                self.clients.splice(self.clients.indexOf(clientId), 1);
                 self.__clientsData[clientId].active = false;
@@ -367,7 +373,9 @@ var MPGameObject = (function() {
                 }
             } else {
                 // Not me. forward request to client
-                self.__dxc.setView(clientId, displayName, props, mcb);
+                if (self.__clientsData[clientId].active) {
+                    self.__dxc.setView(clientId, displayName, props, mcb);
+                }
             }
 
             return self;
