@@ -2,7 +2,7 @@
 var TheOddOneRule = {};
 
 TheOddOneRule.name = "TheOddOne";
-TheOddOneRule.css = ['theoddone.css'];
+TheOddOneRule.css = ['theoddone.less'];
 
 TheOddOneRule.cards = [
     ['Chicken', 'KFC'],
