@@ -15,23 +15,23 @@ app.use(express.static(__dirname + '/public'));
 // Temp for local testing
 
 app.get('/rockscissorspaper', function (req, res) {
-    res.sendfile(__dirname + '/tests/v2.html');
+    res.sendFile(__dirname + '/tests/v2.html');
 });
 
 app.get('/theoddone', function (req, res) {
-    res.sendfile(__dirname + '/tests/oddone.html');
+    res.sendFile(__dirname + '/tests/oddone.html');
 });
 
 app.get('/rules', function (req, res) {
-	res.sendfile(__dirname + '/inc/rules.js');
+	res.sendFile(__dirname + '/inc/rules.js');
 });
 
 app.get('/host', function(req, res) {
-    res.sendfile(__dirname + '/public/static/host.html');
+    res.sendFile(__dirname + '/public/static/host.html');
 });
 
 app.get('/join', function(req, res) {
-    res.sendfile(__dirname + '/public/static/join.html');
+    res.sendFile(__dirname + '/public/static/join.html');
 });
 
 var transport = require('./inc/transport');

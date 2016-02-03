@@ -131,7 +131,7 @@ Rooms.prototype.create =
         var uniqid = false, clientId = false;
 
         do {
-            uniqid = func.uniqid();
+            uniqid = func.randomRoomId();
         } while(self.rooms[uniqid]);
 
         clientId = func.uniqid('mp-client-', true);
