@@ -36,7 +36,7 @@ Lobby.onDataChange = function() {
 
         playersForEach(function(client, ind) {
             setViewProps(client, 'clientId', client);
-            setViewProps(client, 'name', names[client]);
+            setViewProps(client, 'name', names[ind]);
             setViewProps(client, 'playerNum', ind);
             setViewProps(client, 'playerCount', playersCount());
             setViewProps(client, 'names', orderedNames);
@@ -97,7 +97,7 @@ Lobby.views = {
             return React.DOM.div(
                 {id: 'setname-container'},
                 React.DOM.div({id: 'setname-header'}, 'Name'),
-                React.DOM.input( {id: 'setname-input', onChange: this.onChange} )
+                React.DOM.input( {id: 'setname-input', onChange: this.onChange } )
             );
         }
     }),
@@ -119,15 +119,17 @@ Lobby.views = {
         render: function() {
             return React.DOM.tr(
                 null,
+                React.DOM.th(null, '&nbsp;'),
                 React.DOM.th(null, 'Client-Id'),
-                React.DOM.th(null, 'Name')
+                React.DOM.th(null, 'Name'),
+                React.DOM.th(null, '&nbsp;')
             );
         }
     }),
 
     "host-roommanagement-body": React.createClass({
         render: function() {
-            
+
         }
     })
 };

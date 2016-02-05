@@ -37,13 +37,23 @@
              font-size: 1.1em;
              margin: 4px 0 4px 0;
          }
+         #clientId {
+             display: block;
+             width: 60%;
+             padding: 6px 12px 6px 12px;
+             margin: 18px auto;
+             font-size: 1.4em;
+         }
         </style>
     </head>
     <body>
 
         <div id="join">
             <div id="error">&nbsp;</div>
+            Room
             <input type="text" id="roomId" />
+            ClientId
+            <input disabled="disabled" type="text" id="clientId" />
             <button id="join-button">Join Game</button>
         </div>
 

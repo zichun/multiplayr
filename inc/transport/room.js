@@ -2,6 +2,8 @@
 
 var func = require('./inc.js');
 
+var roomInactiveLifespan = 1 * 60 * 1000; // 1 min
+
 //
 // Room Class
 // @arg roomId  Unique Identifier of room
@@ -10,6 +12,7 @@ function Room(roomId, rule) {
     this.id = roomId;
     this.clients = [];
     this.clientSockets = {};
+    this.clientActiveMap = {};
     this.rule = rule;
 }
 
@@ -53,16 +56,48 @@ Room.prototype.addClient =
     // Add Client to Room
     // @arg clientId Unique Id of client
     // @arg socket The socket.io object of the new client
-    function RoomAddClient(clientId, socket, isReconnect) {
+    function RoomAddClient(clientId, socket) {
         var self = this;
+
+        if (self.hasClient(clientId)) {
+            return false;
+        }
 
         self.clients.push(clientId);
         self.clientSockets[clientId] = socket;
+        self.clientActiveMap[clientId] = true;
 
-        var broadcastMessage = isReconnect ? 'rejoin-room' : 'join-room';
+        self.broadcast('join-room', clientId, function() {
+            self.sendMessage(clientId,
+                             'room-rule',
+                             {
+                                 from: null,
+                                 message: self.rule
+                             });
+        });
 
-        self.broadcast(broadcastMessage, clientId, function() {
-            if (isReconnect === false) {
+        return true;
+    };
+
+Room.prototype.reconnectClient =
+    // Reconnect a client back to the room
+    // @arg clientId Unique Id of client
+    // @arg socket The socket.io object of the new client
+    // @arg socketioReonnect If it's due to a socketio reconnection, no need to resend rule
+    function RoomReconnectClient(clientId, socket, socketioReconnect) {
+        var self = this;
+
+        if (self.hasClient(clientId) === false) {
+            return false;
+        }
+
+        self.clientActiveMap[clientId] = true;
+        self.clientSockets[clientId] = socket;
+
+        var broadcastMsg = socketioReconnect ? 'rejoin-room' : 'join-room';
+
+        self.broadcast(broadcastMsg, clientId, function() {
+            if (!socketioReconnect) {
                 self.sendMessage(clientId,
                                  'room-rule',
                                  {
@@ -71,6 +106,24 @@ Room.prototype.addClient =
                                  });
             }
         });
+
+        return true;
+    };
+
+Room.prototype.disconnectClient =
+    // Mark a client as disconnected. When enumerating clients (broadcast / getClient),
+    // this client will be omitted, until the clientId has been reconnected.
+    // @arg clientId Unique Id of client
+    // @return false if client does not exists, and true otherwise.
+    function RoomDisconnectClient(clientId) {
+        var index = this.clients.indexOf(clientId);
+
+        if (index === -1) {
+            return false;
+        }
+
+        this.clientActiveMap[clientId] = false;
+
         return true;
     };
 
@@ -98,9 +151,17 @@ Room.prototype.broadcast =
     // @arg cb Callback function
     function RoomBroadcast(type, message, cb) {
         var self = this;
-        self.clients.forEach(function(node) {
-            self.sendMessage(node, 'room-broadcast', { type: type, message: message }, function() {});
-        });
+
+        for (var clientId in self.clientActiveMap) {
+            if (self.clientActiveMap.hasOwnProperty(clientId) &&
+                self.clientActiveMap[clientId] === true)
+            {
+                self.sendMessage(clientId,
+                                 'room-broadcast',
+                                 { type: type, message: message },
+                                 function() {});
+            }
+        }
 
         // todo: proper callback
         cb(null, true);
@@ -109,9 +170,32 @@ Room.prototype.broadcast =
 Room.prototype.getClients =
     function RoomGetClients() {
         var tr = [];
-        this.clients.forEach(function(client) {
-            tr.push(client);
-        });
+        var self = this;
+
+        for (var clientId in self.clientActiveMap) {
+            if (self.clientActiveMap.hasOwnProperty(clientId) &&
+                self.clientActiveMap[clientId] === true)
+            {
+                tr.push(clientId);
+            }
+        }
+
+        return tr;
+    };
+
+Room.prototype.getAllClients =
+    // Get all clients, including disconnected ones.
+    function RoomGetAllClients() {
+        var tr = [];
+        var self = this;
+
+        for (var clientId in self.clientActiveMap) {
+            if (self.clientActiveMap.hasOwnProperty(clientId))
+            {
+                tr.push(clientId);
+            }
+        }
+
         return tr;
     };
 
@@ -121,6 +205,7 @@ Room.prototype.getClients =
 function Rooms() {
     this.rooms = {};
     this.clientsRoomMap = {};
+    this.roomCleanupTimer = {};
 
     return this;
 }
@@ -168,8 +253,82 @@ Rooms.prototype.getClientRoom =
         return self.clientsRoomMap[clientId];
     };
 
+Rooms.prototype.deleteRoom =
+    function RoomsDeleteRoom(roomId) {
+        var self = this;
+        var clients = self.rooms[roomId].getAllClients();
+
+        console.log('Deleting Room[' + roomId + ']');
+
+        for (var client in clients) {
+            if (clients.hasOwnProperty(client)) {
+                delete self.clientsRoomMap[client];
+            }
+        }
+
+        delete self.rooms[roomId];
+        delete self.roomCleanupTimer[roomId];
+    };
+
+Rooms.prototype.unmarkRoomForCleanup =
+    function RoomsUnmarkRoomForCleanup(roomId) {
+        var self = this;
+
+        if (self.hasRoom(roomId) === false) {
+            throw(new Error("Room " + roomId + " does not exists."));
+        }
+
+        if (self.roomCleanupTimer.hasOwnProperty(roomId)) {
+            clearTimeout(self.roomCleanupTimer[roomId]);
+            delete self.roomCleanupTimer[roomId];
+
+            return true;
+        }
+
+        return false;
+    };
+
+Rooms.prototype.markRoomForCleanup =
+    // Start a timer to mark the room for cleanup.
+    // Whenever a new client joins, reset this timer.
+    function RoomsMarkRoomForCleanup(roomId) {
+        var self = this;
+
+        if (self.hasRoom(roomId) === false) {
+            throw(new Error("Room " + roomId + " does not exists."));
+        }
+
+        return self.roomCleanupTimer[roomId] = setTimeout(function() {
+            self.deleteRoom(roomId);
+        }, roomInactiveLifespan);
+    };
+
+Rooms.prototype.disconnectClient =
+    // Disconnect a given client from the room management
+    // @arg clientId Identifier of client
+    function RoomsDisconnectClient(clientId) {
+        var self = this;
+
+        if (!self.clientsRoomMap[clientId]) {
+            throw(new Error("Client Id does not exist"));
+        }
+
+        var roomId = self.getClientRoom(clientId);
+
+        console.log('Client[' + clientId + '] disconnected from Room[' + roomId + ']');
+
+        self.rooms[roomId].disconnectClient(clientId);
+        self.rooms[roomId].broadcast('leave-room',
+                                     clientId,
+                                     function() {});
+
+        if (self.rooms[roomId].getClients().length === 0) {
+            self.markRoomForCleanup(roomId);
+        }
+    };
+
 Rooms.prototype.removeClient =
-    // Remove a given client from the room management
+    // Remove a given client from the room management. When client count hits 0, garbage collect room.
     // @arg clientId Identifier of client
     function RoomsRemoveClient(clientId) {
         var self = this;
@@ -188,8 +347,7 @@ Rooms.prototype.removeClient =
         if (clientsLeft === false) {
             return false;
         } else if (clientsLeft === 0) {
-            // GC
-            delete self.rooms[roomId];
+            self.deleteRoom(roomId);
         }
     };
 
@@ -219,12 +377,19 @@ Rooms.prototype.getClients =
     };
 
 Rooms.prototype.reconnectClient =
-    function RoomsReconnectClient(room, socket, clientId) {
+    function RoomsReconnectClient(room, socket, clientId, socketioReconnect) {
         var self = this;
-        if (self.hasRoom(room)) {
-            self.rooms[room].addClient(clientId, socket, true);
-            self.clientsRoomMap[clientId] = room;
-            return clientId;
+        if (self.hasRoom(room) && self.clientsRoomMap[clientId] === room) {
+
+            console.log('Client[' + clientId + '] reconnecting to Room[' + room + ']');
+
+            var result = self.rooms[room].reconnectClient(clientId, socket, socketioReconnect);
+
+            if (result) {
+                self.unmarkRoomForCleanup(room);
+            }
+
+            return result;
         } else {
             throw(new Error('Room does not exists'));
         }
@@ -237,8 +402,13 @@ Rooms.prototype.addClient =
 
         if (self.hasRoom(room)) {
             clientId = func.uniqid('mp-client-', true);
-            self.rooms[room].addClient(clientId, socket, false);
+            self.rooms[room].addClient(clientId, socket);
             self.clientsRoomMap[clientId] = room;
+
+            console.log('Client[' + clientId + '] joining Room[' + room + ']');
+
+            self.unmarkRoomForCleanup(room);
+
             return clientId;
         } else {
             throw(new Error('Room does not exists'));

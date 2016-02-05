@@ -33,8 +33,66 @@ function init(io) {
             });
         });
 
+        socket.on('has-room', function(data, fn) {
+            if (typeof data.roomId !== 'string') {
+                return fn({
+                    type: 'error',
+                    message: 'Invalid request'
+                });
+            }
+
+            return fn({
+                roomId: data.roomId,
+                exists: rooms.hasRoom(data.roomId)
+            });
+        });
+
+        function joinRoom(data, fn) {
+            if (rooms.hasRoom(data.roomId)) {
+                roomId = data.roomId;
+
+                if (data.clientId) {
+                    clientId = data.clientId;
+                    rooms.reconnectClient(data.roomId, socket, clientId, false);
+                } else {
+                    clientId = rooms.addClient(data.roomId, socket);
+                }
+                return fn({
+                    roomId: roomId,
+                    clientId: clientId
+                });
+            } else {
+                return fn({
+                    type: 'error',
+                    message: 'Room ' + data.roomId + ' does not exists'
+                });
+            }
+        }
+
+        function rejoinRoom(data, fn) {
+            if (rooms.hasRoom(data.roomId)) {
+
+                roomId = data.roomId;
+                clientId = data.clientId;
+
+                var result = rooms.reconnectClient(roomId, socket, clientId, true);
+
+                return fn({
+                    roomId: roomId,
+                    clientId: clientId,
+                    status: result
+                });
+
+            } else {
+                return fn({
+                    type: 'error',
+                    message: 'Room ' + data.roomId + ' does not exists'
+                });
+            }
+        }
+
         socket.on('rejoin-room', function(data, fn) {
-            if (typeof data.room !== 'string' ||
+            if (typeof data.roomId !== 'string' ||
                 typeof data.clientId !== 'string') {
                 return fn({
                     type: 'error',
@@ -47,24 +105,11 @@ function init(io) {
                 });
             }
 
-            if (rooms.hasRoom(data.room)) {
-                roomId = data.room;
-                clientId = data.clientId;
-                rooms.reconnectClient(data.room, socket, clientId);
-                fn({
-                    roomId: roomId,
-                    clientId: clientId
-                });
-            } else {
-                return fn({
-                    type: 'error',
-                    message: 'Room ' + data.room + ' does not exists'
-                });
-            }
+            rejoinRoom(data, fn);
         });
 
         socket.on('join-room', function(data, fn) {
-            if (typeof data.room !== 'string') {
+            if (typeof data.roomId !== 'string') {
                 return fn({
                     type: 'error',
                     message: 'Invalid request'
@@ -76,19 +121,7 @@ function init(io) {
                 });
             }
 
-            if (rooms.hasRoom(data.room)) {
-                roomId = data.room;
-                clientId = rooms.addClient(data.room, socket);
-                fn({
-                    roomId: roomId,
-                    clientId: clientId
-                });
-            } else {
-                return fn({
-                    type: 'error',
-                    message: 'Room ' + data.room + ' does not exists'
-                });
-            }
+            return joinRoom(data, fn);
         });
 
         socket.on('send-message', function(data, fn) {
@@ -106,14 +139,14 @@ function init(io) {
                         message: err
                     });
                 } else {
-                    fn(doc);
+                    return fn(doc);
                 }
             });
         });
 
         socket.on('disconnect', function() {
             if (clientId !== false) {
-                rooms.removeClient(clientId);
+                rooms.disconnectClient(clientId);
             }
         });
 
@@ -121,8 +154,8 @@ function init(io) {
         socket.on('room-clients', function(data, fn) {
             if (clientId === false) {
                 return fn({
-                        type: 'error',
-                        message: 'Not connected to room yet'
+                    type: 'error',
+                    message: 'Not connected to room yet'
                 });
             } else {
                 return fn(rooms.getClients(roomId));

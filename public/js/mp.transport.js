@@ -23,13 +23,12 @@ var Mesh =
 
             socket.emit('rejoin-room',
                         {
-                            room: self.roomId,
+                            roomId: self.roomId,
                             clientId: self.clientId
                         },
                         function(data) {
 
                             if (data.type === 'error') {
-                                if (isFunction(cb)) cb(data.message, data);
                                 return self.emit('error', data);
                             }
 
@@ -118,30 +117,56 @@ var Mesh =
         };
 
     Mesh.prototype.join =
-        function MeshJoin(id, cb) {
+        function MeshJoin(roomId, clientId, cb) {
             var self = this;
 
-            if (self.roomId !== null) {
+            if (self.roomId !== null || self.clientId !== null) {
                 throw(new Error("Client already belong to a Mesh"));
             }
 
-            self.socket.emit('join-room', {room: id}, function(data) {
-                if (data.type === 'error') {
-                    if (isFunction(cb)) cb(data.message, data);
-                    return self.emit('error', data);
-                }
+            console.log('Joining room[' + roomId + '] as client[' + clientId + ']');
 
-                self.roomId = data.roomId;
-                self.clientId = data.clientId;
+            self.socket.emit('join-room',
+                             {
+                                 roomId: roomId,
+                                 clientId: clientId
+                             },
+                             function(data) {
+                                 if (data.type === 'error') {
+                                     if (isFunction(cb)) cb(data.message, data);
+                                     return self.emit('error', data);
+                                 }
 
-                self.refreshClients();
+                                 self.roomId = data.roomId;
+                                 self.clientId = data.clientId;
 
-                if (isFunction(cb)) {
-                    cb(null, data);
-                }
+                                 self.refreshClients();
 
-                return self;
-            });
+                                 if (isFunction(cb)) {
+                                     cb(null, data);
+                                 }
+
+                                 return self;
+                             });
+        };
+
+    Mesh.prototype.hasRoom =
+        function MeshHasRoom(roomId, cb) {
+            var self = this;
+            self.socket.emit('has-room',
+                             {
+                                 roomId: roomId
+                             },
+                             function(data) {
+                                 if (data.type === 'error') {
+                                     if (isFunction(cb)) cb(data.message, data);
+                                     return self.emit('error', data);
+                                 }
+
+                                 if (isFunction(cb)) {
+                                     return cb(null, data);
+                                 }
+                             });
         };
 
     Mesh.prototype.updatePeers =

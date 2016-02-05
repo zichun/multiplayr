@@ -174,6 +174,15 @@ var MPGameObject = (function() {
                 }
             }
 
+            if (self.clients.indexOf(clientId) !== -1) {
+                if (self.__clientsData[clientId].active === false) {
+                    return self.rejoinClient(clientId);
+                } else {
+                    throw(new Error("Client cannot re-join an active session"));
+                }
+                return self;
+            }
+
             self.clients.push(clientId);
             self.__clientsData[clientId] = {
                 active: true,

@@ -109,17 +109,31 @@ var MPProtocol =
             };
 
         self.join =
-            function MPProtocolJoin(rid, cb) {
+            function MPProtocolJoin(rid, cid, cb) {
                 isHost = false;
-                meshObj.join(rid, function(err, data) {
+                meshObj.join(rid, cid, function(err, data) {
                     var mcb = safeCb(cb);
                     if (err) {
                         return mcb(err, false);
                     }
 
-                    roomId = rid;
+                    roomId = data.roomId;
                     clientId = data.clientId;
                     mcb.call(self, null, data);
+
+                    return self;
+                });
+            };
+
+        self.hasRoom =
+            function MPProtocolHasRoom(rid, cb) {
+                meshObj.hasRoom(rid, function(err, data) {
+                    var mcb = safeCb(cb);
+                    if (err) {
+                        return mcb(err, false);
+                    }
+
+                    mcb.call(self, null, data.exists);
 
                     return self;
                 });
