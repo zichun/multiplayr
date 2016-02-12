@@ -215,9 +215,9 @@ var MPGameObject = (function() {
                     console.log("Client[" + clientId + "] reconnected");
                 }
 
+                self.__clientsData[clientId].active = true;
                 self.setPlayerData(clientId, '__isConnected', true);
 
-                self.__clientsData[clientId].active = true;
                 self.dataChange(true);
             }
             return self;
