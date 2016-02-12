@@ -214,8 +214,8 @@ var MPGameObject = (function() {
             return self;
         };
 
-    MPGameObject.prototype.deleteClient =
-        function MPGameObjectDeleteClient(clientId) {
+    MPGameObject.prototype.disconnectClient =
+        function MPGameObjectDisconnectClient(clientId) {
             var self = this;
             if (self.isHost()) {
 

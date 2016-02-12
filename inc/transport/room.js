@@ -2,7 +2,7 @@
 
 var func = require('./inc.js');
 
-var roomInactiveLifespan = 1 * 60 * 1000; // 1 min
+var roomInactiveLifespan = 60 * 60 * 1000; // 1 hour
 
 //
 // Room Class
@@ -255,14 +255,14 @@ Rooms.prototype.getClientRoom =
 
 Rooms.prototype.deleteRoom =
     function RoomsDeleteRoom(roomId) {
+        console.log('Deleting Room[' + roomId + ']');
+
         var self = this;
         var clients = self.rooms[roomId].getAllClients();
 
-        console.log('Deleting Room[' + roomId + ']');
-
-        for (var client in clients) {
-            if (clients.hasOwnProperty(client)) {
-                delete self.clientsRoomMap[client];
+        for (var i = 0; i < clients.length; ++i) {
+            if (self.clientsRoomMap.hasOwnProperty(clients[i])) {
+                delete self.clientsRoomMap[clients[i]];
             }
         }
 
@@ -298,9 +298,13 @@ Rooms.prototype.markRoomForCleanup =
             throw(new Error("Room " + roomId + " does not exists."));
         }
 
-        return self.roomCleanupTimer[roomId] = setTimeout(function() {
-            self.deleteRoom(roomId);
-        }, roomInactiveLifespan);
+        if (!self.roomCleanupTimer[roomId]) {
+            console.log("Marking " + roomId + " for deletion");
+            self.roomCleanupTimer[roomId] = setTimeout(function() {
+                self.deleteRoom(roomId);
+            }, roomInactiveLifespan);
+        }
+        return self.roomCleanupTimer[roomId];
     };
 
 Rooms.prototype.disconnectClient =

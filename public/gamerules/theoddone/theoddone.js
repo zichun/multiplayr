@@ -444,7 +444,7 @@ TheOddOneRule.views = {
             return mp.getPluginView('gameshell',
                                     'HostShellChild',
                                     {
-                                        'view': mp.getPluginView('lobby', 'Lobby')
+                                        'view': mp.getPluginView('lobby', 'host-roommanagement')
                                     });
         }
     }),

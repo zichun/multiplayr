@@ -29,8 +29,10 @@ Lobby.onDataChange = function() {
     with(this) {
         var names = getPlayersData('name');
         var orderedNames = [];
+        var clientIds = [];
 
         playersForEach(function(client, i) {
+            clientIds.push(client);
             orderedNames.push(names[i]);
         });
 
@@ -42,6 +44,7 @@ Lobby.onDataChange = function() {
             setViewProps(client, 'names', orderedNames);
         });
 
+        setViewProps(clientId, 'clientIds', clientIds);
         setViewProps(clientId, 'names', orderedNames);
         setViewProps(clientId, 'playerCount', playersCount());
 
@@ -89,7 +92,11 @@ Lobby.views = {
     }),
     SetName: React.createClass({
         displayName: 'SetName',
+        getInitialState: function() {
+            return {name: this.props.name};
+        },
         onChange: function(e) {
+            this.state.name = e.target.value;
             this.props.MP.setName(e.target.value);
             return true;
         },
@@ -97,7 +104,7 @@ Lobby.views = {
             return React.DOM.div(
                 {id: 'setname-container'},
                 React.DOM.div({id: 'setname-header'}, 'Name'),
-                React.DOM.input( {id: 'setname-input', onChange: this.onChange } )
+                React.DOM.input( {id: 'setname-input', value: this.state.name, onChange: this.onChange } )
             );
         }
     }),
@@ -107,10 +114,11 @@ Lobby.views = {
     //
     "host-roommanagement": React.createClass({
         render: function() {
+
             return React.DOM.table(
                 {id: 'lobby-roommanagement'},
-                Lobby.views['host-roommanagement-header'],
-                Lobby.views['host-roommanagement-body']
+                Lobby.views['host-roommanagement-header'](),
+                Lobby.views['host-roommanagement-body'](this.props)
             );
         }
     }),
@@ -119,17 +127,39 @@ Lobby.views = {
         render: function() {
             return React.DOM.tr(
                 null,
-                React.DOM.th(null, '&nbsp;'),
+                React.DOM.th(null, ' '),
                 React.DOM.th(null, 'Client-Id'),
                 React.DOM.th(null, 'Name'),
-                React.DOM.th(null, '&nbsp;')
+                React.DOM.th(null, ' ')
             );
         }
     }),
 
     "host-roommanagement-body": React.createClass({
         render: function() {
+            var self = this;
+            var tr = [];
+            for (var i=0; i<this.props.names.length; ++i) {
+                tr.push(Lobby.views['host-roommanagement-body-row']({
+                    clientId: this.props.clientIds[i],
+                    name: this.props.names[i]
+                }));
+            }
+            return React.DOM.tbody(null,
+                                   tr);
+        }
+    }),
 
+    "host-roommanagement-body-row": React.createClass({
+        render: function() {
+            return React.DOM.tr(
+                null,
+                React.DOM.td(null, 'connected'),
+                React.DOM.td(null, this.props.clientId),
+                React.DOM.td(null, this.props.name),
+                React.DOM.td(null, '')
+            );
         }
     })
 };
+

@@ -278,7 +278,7 @@ var MPDataExchange = (function() {
             gameObj.newClient(data);
         });
         comm.on('leave-game', function(data) {
-            gameObj.deleteClient(data);
+            gameObj.disconnectClient(data);
         });
         comm.on('rejoin-game', function(data) {
             gameObj.rejoinClient(data);
