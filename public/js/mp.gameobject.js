@@ -1,3 +1,4 @@
+/*global  */
 // todo: add host disconnection logic
 var MPGameObject = (function() {
     var _secret = {};
@@ -66,6 +67,9 @@ var MPGameObject = (function() {
             }
         }
 
+        //
+        // Set Special variables
+        //
 
         if (self.__parent) {
             self.MP.__parent = self.__parent.MP;
@@ -194,6 +198,9 @@ var MPGameObject = (function() {
                 props: {}
             };
 
+            self.setPlayerData(clientId, '__isConnected', true);
+            self.setPlayerData(clientId, '__clientId', clientId);
+
             self.dataChange();
 
             return self;
@@ -207,6 +214,8 @@ var MPGameObject = (function() {
                 if (!self.__parent) {
                     console.log("Client[" + clientId + "] reconnected");
                 }
+
+                self.setPlayerData(clientId, '__isConnected', true);
 
                 self.__clientsData[clientId].active = true;
                 self.dataChange(true);
@@ -222,6 +231,8 @@ var MPGameObject = (function() {
                 if (!self.__parent) {
                     console.log("Client[" + clientId + "] disconnected");
                 }
+
+                self.setPlayerData(clientId, '__isConnected', false);
 
             //                self.clients.splice(self.clients.indexOf(clientId), 1);
                 self.__clientsData[clientId].active = false;
@@ -813,6 +824,12 @@ var MPGameObject = (function() {
             }
         }
 
+        //
+        // Declare special variables.
+        //
+        _store['__isConnected'] = true;
+        _store['__clientId'] = null;
+
         /**
          * Exposes local variable store as synchronous operations
          */
@@ -831,7 +848,10 @@ var MPGameObject = (function() {
                 },
                 set: function(newValue) {
 
-                    if (dataObj[variable].const === true) {
+                    if (typeof dataObj !== 'undefined' &&
+                        (typeof dataObj[variable] !== 'undefined') &&
+                        dataObj[variable].const === true)
+                    {
                         throw(new Error("Variable ["+variable+"] is constant"));
                     }
 

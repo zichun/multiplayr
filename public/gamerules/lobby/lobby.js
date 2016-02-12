@@ -28,12 +28,15 @@ Lobby.methods = {
 Lobby.onDataChange = function() {
     with(this) {
         var names = getPlayersData('name');
+        var connected = getPlayersData('__isConnected');
         var orderedNames = [];
         var clientIds = [];
+        var playersConnection = [];
 
         playersForEach(function(client, i) {
             clientIds.push(client);
             orderedNames.push(names[i]);
+            playersConnection.push(connected[i]);
         });
 
         playersForEach(function(client, ind) {
@@ -47,6 +50,7 @@ Lobby.onDataChange = function() {
         setViewProps(clientId, 'clientIds', clientIds);
         setViewProps(clientId, 'names', orderedNames);
         setViewProps(clientId, 'playerCount', playersCount());
+        setViewProps(clientId, 'playersConnection', playersConnection);
 
         return false;
     };
@@ -142,7 +146,8 @@ Lobby.views = {
             for (var i=0; i<this.props.names.length; ++i) {
                 tr.push(Lobby.views['host-roommanagement-body-row']({
                     clientId: this.props.clientIds[i],
-                    name: this.props.names[i]
+                    name: this.props.names[i],
+                    isConnected: this.props.playersConnection[i]
                 }));
             }
             return React.DOM.tbody(null,
@@ -154,7 +159,10 @@ Lobby.views = {
         render: function() {
             return React.DOM.tr(
                 null,
-                React.DOM.td(null, 'connected'),
+                React.DOM.td(null,
+                             React.DOM.div({
+                                 className: this.props.isConnected ? 'lobby-connected' : 'lobby-disconnected'
+                             }, '')),
                 React.DOM.td(null, this.props.clientId),
                 React.DOM.td(null, this.props.name),
                 React.DOM.td(null, '')
