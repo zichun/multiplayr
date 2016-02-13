@@ -442,9 +442,11 @@ TheOddOneRule.views = {
             var mp = this.props.MP;
 
             return mp.getPluginView('gameshell',
-                                    'HostShellChild',
+                                    'HostShell-Main',
                                     {
-                                        'view': mp.getPluginView('lobby', 'host-roommanagement')
+                                        'links': ['Clients'],
+                                        'view-home': mp.getPluginView('lobby', 'Lobby'),
+                                        'view-clients': mp.getPluginView('lobby', 'host-roommanagement')
                                     });
         }
     }),
@@ -480,11 +482,13 @@ TheOddOneRule.views = {
             }
 
             return mp.getPluginView('gameshell',
-                                    'HostShellChild',
+                                    'HostShell-Main',
                                     {
-                                        'view': React.DOM.div(null,
-                                                              React.DOM.ol({id: 'theoddone-votetable'}, scores),
-                                                              submitButton)
+                                        'links': ['Clients'],
+                                        'view-clients': mp.getPluginView('lobby', 'host-roommanagement'),
+                                        'view-home': React.DOM.div(null,
+                                                                   React.DOM.ol({id: 'theoddone-votetable'}, scores),
+                                                                   submitButton)
                                     });
         },
         commitVote: function() {
@@ -499,9 +503,11 @@ TheOddOneRule.views = {
             var button = React.DOM.button({onClick: function() { mp.newGame(); } },
                                           'New Game');
             return mp.getPluginView('gameshell',
-                                    'HostShellChild',
+                                    'HostShell-Main',
                                     {
-                                        'view': React.DOM.div(null,
+                                        'links': ['Clients'],
+                                        'view-clients': mp.getPluginView('lobby', 'host-roommanagement'),
+                                        'view-home': React.DOM.div(null,
                                                               TheOddOneRule.views['host-summaryTable'](this.props),
                                                               button)
                                     });

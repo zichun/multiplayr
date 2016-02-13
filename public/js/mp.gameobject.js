@@ -242,6 +242,46 @@ var MPGameObject = (function() {
             return self;
         };
 
+    MPGameObject.prototype.removeClient =
+        function MPGameObjectRemoveClient(clientId) {
+            var self = this;
+
+            if (self.isHost()) {
+                if (!self.__parent) {
+                    self.rootRemoveClient(clientId);
+                    self.dataChange(true);
+                } else {
+                    self.__parent.rootRemoveClient(clientId);
+                    self.dataChange(true);
+                }
+            }
+            return self;
+        };
+
+    MPGameObject.prototype.rootRemoveClient =
+        function MPGameObjectRootRemoveClient(clientId) {
+            var self = this;
+            if (!self.isHost()) {
+                throw(new Error("Only host can call addNewClient"));
+            }
+
+//            if (!self.__parent) {
+                console.log("Client[" + clientId + "] removed");
+//            }
+
+            for (var plugin in self.__plugins) {
+                if (self.__plugins.hasOwnProperty(plugin)) {
+                    self.__plugins[plugin].rootRemoveClient(clientId);
+                }
+            }
+
+
+            self.clients.splice(self.clients.indexOf(clientId), 1);
+            delete self.__clientsData[clientId];
+
+            return self;
+        };
+
     MPGameObject.prototype.processTick =
         function MPGameObjectProcessTick() {
             var self = this;
@@ -393,7 +433,9 @@ var MPGameObject = (function() {
                 }
             } else {
                 // Not me. forward request to client
-                if (self.__clientsData[clientId].active) {
+                if (typeof self.__clientsData[clientId] !== 'undefined' &&
+                    self.__clientsData[clientId].active)
+                {
                     self.__dxc.setView(clientId, displayName, props, mcb);
                 }
             }
@@ -798,7 +840,8 @@ var MPGameObject = (function() {
             var _exposed = ['getData', 'setData',
                             'getPlayerData', 'setPlayerData', 'getPlayersData',
                             'setView', 'setViewProps', 'deleteViewProps',
-                            'playersForEach', 'playersCount'];
+                            'playersForEach', 'playersCount',
+                            'removeClient'];
             _exposed.forEach(function(method) {
                 obj[method] = hostExposedMethodWrapper(method);
             });

@@ -18,17 +18,62 @@ Shell.onDataChange = function() {
 };
 
 Shell.views = {
-    HostShellChild: React.createClass({
+    "HostShell-Main": React.createClass({
         render: function() {
-            var header = React.DOM.div(
-                {id: 'shell-header'},
-                React.DOM.div({id: 'shell-room'},
-                              this.props.MP.roomId));
+            var header = Shell.views["HostShell-Main-Head"](this.props);
+            var body = Shell.views["HostShell-Main-Body"](this.props);
 
-            return React.DOM.div(null,
+            return React.DOM.div({id: "shell-main"},
                                  header,
-                                 React.DOM.div({id: 'shell-container'},
-                                               this.props['view']));
+                                 body);
+        }
+    }),
+
+    "HostShell-Main-Head": React.createClass({
+        render: function() {
+            return React.DOM.div({id: 'shell-header'},
+                                 React.DOM.div({id: 'shell-room'},
+                                               this.props.MP.roomId));
+        }
+    }),
+
+    "HostShell-Main-Body": React.createClass({
+        getInitialState: function() {
+            return {currentView: 'home'};
+        },
+        setView: function(newView) {
+            this.state.currentView = newView;
+            $("#shell-nav-trigger").attr('checked',false);
+            this.forceUpdate();
+        },
+        render: function() {
+            var hamburgerMenus = Shell.views["HostShell-Main-Body-Menu"]({
+                links: this.props.links,
+                setView: this.setView
+            });
+
+            var content = React.DOM.div({ id: "shell-main-content" },
+                                        this.props['view-' + this.state.currentView.toLowerCase()]);
+
+            return React.DOM.div({id: 'shell-body'},
+                                 hamburgerMenus,
+                                 React.DOM.input({ type:"checkbox", id:"shell-nav-trigger", className:"shell-nav-trigger" }),
+                                 React.DOM.label({ htmlFor:"shell-nav-trigger" }),
+                                 content);
+        }
+    }),
+
+    "HostShell-Main-Body-Menu": React.createClass({
+        setView: function(e) {
+            this.props.setView(e.target.innerText);
+        },
+        render: function() {
+            var tr = [React.DOM.li({onClick: this.setView}, 'Home')];
+            for (var i=0;i<this.props['links'].length;++i) {
+                tr.push(React.DOM.li({onClick: this.setView}, this.props['links'][i]));
+            }
+            return React.DOM.ul({ className: 'shell-navigation' },
+                                tr);
         }
     }),
 

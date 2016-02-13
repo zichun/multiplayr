@@ -22,6 +22,12 @@ Lobby.methods = {
     setName: function(playerId, name) {
         var gameObj = this;
         gameObj.setPlayerData(playerId, 'name', name);
+    },
+    disconnectClient: function(senderId, toDisconnectId) {
+        var gameObj = this;
+        if (senderId === gameObj.clientId) {
+            gameObj.removeClient(toDisconnectId);
+        }
     }
 }
 
@@ -145,6 +151,7 @@ Lobby.views = {
             var tr = [];
             for (var i=0; i<this.props.names.length; ++i) {
                 tr.push(Lobby.views['host-roommanagement-body-row']({
+                    MP: this.props.MP,
                     clientId: this.props.clientIds[i],
                     name: this.props.names[i],
                     isConnected: this.props.playersConnection[i]
@@ -156,6 +163,10 @@ Lobby.views = {
     }),
 
     "host-roommanagement-body-row": React.createClass({
+        disconnect: function() {
+            this.props.MP.disconnectClient(this.props.clientId);
+            return true;
+        },
         render: function() {
             return React.DOM.tr(
                 null,
@@ -165,7 +176,11 @@ Lobby.views = {
                              }, '')),
                 React.DOM.td(null, this.props.clientId),
                 React.DOM.td(null, this.props.name),
-                React.DOM.td(null, '')
+                React.DOM.td(null,
+                             React.DOM.button({
+                                 onClick: this.disconnect
+                             }, 'Disconnect'))
+
             );
         }
     })
