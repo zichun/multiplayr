@@ -206,16 +206,6 @@ TheOddOneRule.cards = [
     ['coerce', 'persuade']
 ];
 
-function flatten(mp, value) {
-    var tr = [];
-
-    mp.playersForEach(function(pid, i) {
-        tr[i] = value[pid];
-    });
-
-    return tr;
-}
-
 TheOddOneRule.methods = {
     startGame: function() {
         var mp = this;
