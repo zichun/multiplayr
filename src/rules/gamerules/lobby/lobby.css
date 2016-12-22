@@ -1,0 +1,57 @@
+body {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 13px;
+}
+#setname-container {
+    height: 100%;
+    margin: 24px auto;
+    text-align: center;
+}
+#setname-header {
+    text-align: center;
+}
+#setname-input {
+    padding: 8px;
+    width: 80%;
+    margin: 8px;
+    border: 1px solid #888;
+    font-size: 24px;
+}
+
+.waiting {
+    font-style: italic;
+}
+
+#lobby-playerlist {
+    margin: 0 0 12px 4px;
+}
+
+.lobby-name {
+    margin: 0 0 0 4px;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+button {
+    padding: 4px 12px 4px 12px;
+}
+
+.lobby-connected {
+    background: green;
+    border: 2px solid green;
+    width: 4px;
+    height: 4px;
+    font-size: 0px;
+    line-height: 0px;
+    border-radius: 4px;
+}
+
+.lobby-disconnected {
+    background: red;
+    border: 2px solid red;
+    width: 4px;
+    height: 4px;
+    font-size: 0px;
+    line-height: 0px;
+    border-radius: 4px;
+}
