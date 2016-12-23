@@ -30,11 +30,7 @@ var MPDataExchange = (function() {
                     return cb(err, data);
                 }
 
-                if (data.proxy === true) {
-                    cb(err, new MPDataProxy(data.data, self));
-                } else {
-                    cb(err, data.data);
-                }
+                cb(err, data.data);
             };
 
             sendTypedMessage(comm.getHost(),
@@ -70,24 +66,6 @@ var MPDataExchange = (function() {
                              cb);
         };
 
-        self.invokeProxyMethod = function(clientId, uniqid, method, arguments, cb) {
-            var self = this;
-            var mcb = function(err, res) {
-                // todo: proxify returns
-                cb(err, res);
-            };
-            // todo: proxify arguments
-            sendTypedMessage(clientId,
-                             'invoke-proxy-method',
-                             {
-                                 uniqid: uniqid,
-                                 method: method,
-                                 arguments: arguments
-                             },
-                             mcb);
-            return self;
-        };
-
         self._typedMessages = {};
 
         function sendTypedMessage(to, type, message, cb) {
@@ -115,35 +93,6 @@ var MPDataExchange = (function() {
                 uniqid: uniqid,
                 namespace: namespace
             });
-        }
-
-        function createProxySpecs(data, owner) {
-            var tr = {};
-
-            if (!(data instanceof MPDataExchangable)) {
-                throw(new Error("Only MPDataExchangable objects can be proxied"));
-            } else if (typeof data.__dxc_uniqid === 'undefined') {
-                throw(new Error("Uniqid of data object is not defined. Did you forget to call the superclass constructor?"));
-            }
-
-            for (var x in data) {
-                if (isFunction(data[x])) {
-                    tr[x] = {
-                        proxy: true
-                    };
-                } else {
-                    // todo: deep proxying
-                    tr[x] = {
-                        proxy: false,
-                        value: data[x]
-                    };
-                }
-            }
-            return {
-                uniqid: data.__dxc_uniqid,
-                owner: owner,
-                data: tr
-            };
         }
 
         /**
@@ -191,13 +140,7 @@ var MPDataExchange = (function() {
                     var getDataCb = function(err, data) {
                         // todo: handle err
 
-                        var proxy = false;
-                        if (data instanceof MPDataExchangable) {
-                            proxy = true;
-                            data = createProxySpecs(data, gameObj.clientId);
-                        }
-
-                        ack(err, {data: data, proxy: proxy});
+                        ack(err, {data: data});
                     };
 
                     if (clientId === comm.getHost()) {
@@ -241,27 +184,6 @@ var MPDataExchange = (function() {
                 }
                 break;
 
-                case 'invoke-proxy-method':
-                {
-                    var objUniqid = message.uniqid;
-                    var originalObj = MPDataExchangable.getObjectByUniqid(objUniqid);
-                    var method = message.method;
-                    var arguments = message.arguments;
-
-                    if (typeof originalObj === 'undefined') {
-                        ack(new Error("No such object"), null);
-                        break;
-                    }
-
-                    arguments[arguments.length] = ack;
-                    originalObj[method].apply(originalObj, arguments);
-
-                    if (originalObj[method]._mutate === true) {
-                        gameObj.dataChange();
-                    }
-                }
-                break;
-
                 case 'set-view':
                 {
                     var displayName = message.displayName;
@@ -287,99 +209,5 @@ var MPDataExchange = (function() {
         return self;
     };
 
-    /**
-     * DataProxy class
-     * This is the object that gets instantiated on the caller end, with fake methods replacing
-     * actual object methods which will be used to proxy the call to the object owner
-     */
-    var MPDataProxy = (function() {
-        function MPDataProxy(proxySpec, dxc) {
-            var self = this;
-
-            self.uniqid = proxySpec.uniqid;
-            self.owner = proxySpec.owner;
-            self.initialize(proxySpec.data);
-            self.dxc = dxc;
-
-            return self;
-        }
-
-        MPDataProxy.prototype.initialize =
-            function MPDataProxyInitialize(proxySpecData) {
-                var self = this;
-
-                function createProxyFunction(method) {
-                    return function() {
-                        // assumption is that the last argument is a callback
-                        if (arguments.length === 0) {
-                            throw(new Error("DataProxyObject requires at least one callback function as argument"));
-                        }
-                        var cb = arguments[arguments.length - 1];
-                        var args = Array.prototype.slice.call(arguments, 0, arguments.length - 1);
-                        self.dxc.invokeProxyMethod(self.owner, self.uniqid, method, args, cb);
-                    };
-                }
-
-                for (var method in proxySpecData) {
-                    if (proxySpecData.hasOwnProperty(method)) {
-                        if (proxySpecData[method].proxy === true) {
-                            self[method] = createProxyFunction(method);
-                        } else {
-                            self[method] = proxySpecData[method].value;
-                        }
-                    }
-                }
-
-                return self;
-            };
-
-        return MPDataProxy;
-    })();
-
     return MPDataExchange;
 })();
-
-var MPDataExchangable = (function() {
-    var dxc_table = {};
-
-    function MPDataExchangable() {
-        var self = this;
-
-        self.__dxc_uniqid = gen_uniqid('dxc-obj');
-        dxc_table[self.__dxc_uniqid] = self;
-
-        return self;
-    }
-
-    MPDataExchangable.getObjectByUniqid = function(uniqid) {
-        return dxc_table[uniqid];
-    };
-
-    return MPDataExchangable;
-})();
-
-function Stack() {
-    var self = this;
-    self.data = [];
-
-    MPDataExchangable.call(this);
-
-    return self;
-}
-
-Stack.Inherits(MPDataExchangable);
-
-Stack.prototype.push = function(x, cb) {
-    this.data.push(x);
-    cb(null, this.data.length);
-};
-Stack.prototype.push._mutate = true;
-
-Stack.prototype.pop = function(cb) {
-    cb(null, (this.data.splice(this.data.length - 1, 1))[0]);
-};
-Stack.prototype.pop._mutate = true;
-
-Stack.prototype.length = function(cb) {
-    cb(null, this.data.length);
-};

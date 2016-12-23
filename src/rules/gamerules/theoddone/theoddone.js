@@ -1,7 +1,7 @@
 /*global  */
 var TheOddOneRule = {};
 
-TheOddOneRule.name = "TheOddOne";
+TheOddOneRule.name = 'theoddone';
 TheOddOneRule.css = ['theoddone.css'];
 
 TheOddOneRule.cards = [
