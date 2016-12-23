@@ -1,7 +1,7 @@
 $(function() {
-    for (var rule in _MPRules) {
-        if (!_MPRules.hasOwnProperty(rule)) continue;
-        $('#rules').append(makeRule(rule, _MPRules[rule]));
+    for (var rule in MPRULES) {
+        if (!MPRULES.hasOwnProperty(rule)) continue;
+        $('#rules').append(makeRule(rule, MPRULES[rule]));
     }
 
     function makeRule(name, rule) {

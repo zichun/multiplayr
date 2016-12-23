@@ -129,23 +129,27 @@ export function init(io: any) {
         });
 
         socket.on('send-message', function(data, fn) {
-            if (typeof data.message === 'undefined' || typeof data.to !== 'string') {
+            if (typeof data.message === 'undefined' || typeof data.toClientId !== 'string') {
                 return fn({
                     type: 'error',
                     message: 'Invalid request'
                 });
             }
 
-            rooms.sendMessage(roomId, clientId, data.to, data.message, function(err, doc) {
-                if (err) {
-                    return fn({
-                        type: 'error',
-                        message: err
-                    });
-                } else {
-                    return fn(doc);
-                }
-            });
+            rooms.sendMessage(roomId,
+                              clientId,
+                              data.toClientId,
+                              data.message,
+                              (err, doc) => {
+                                  if (err) {
+                                      return fn({
+                                          type: 'error',
+                                          message: err
+                                      });
+                                  } else {
+                                      return fn(doc);
+                                  }
+                              });
         });
 
         socket.on('disconnect', function() {

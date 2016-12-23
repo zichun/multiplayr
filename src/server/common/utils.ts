@@ -8,7 +8,7 @@
 
 import * as crypto from 'crypto';
 
-export function mathRandomSecure() {
+export function mathRandomSecure(): number {
     const bytes = crypto.randomBytes(32);
     let sum = 0;
 
@@ -19,19 +19,19 @@ export function mathRandomSecure() {
     return sum - Math.floor(sum);
 }
 
-export function randomRoomId() {
-    return '' + Math.floor((mathRandomSecure * 899999 + 100000));
+export function randomRoomId(): string {
+    return Math.floor((mathRandomSecure() * 899999 + 100000)).toString();
 }
 
 export let uniqueId = (
     () => {
 
-        let uniqidSeed = Math.floor(mathRandomSecure * 0x75bcd15);
+        let uniqidSeed: number = Math.floor(mathRandomSecure() * 0x75bcd15);
 
         function uniqueId(
             prefix?: string,
             moreEntropy: boolean = false
-        ) {
+        ): string {
             // +   original by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
             // +    revised by: Kankrelune (http://www.webfaktory.info/)
             // %        note 1: Uses an internal counter (in php_js global) to avoid collision

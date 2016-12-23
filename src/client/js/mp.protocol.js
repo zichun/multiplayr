@@ -16,7 +16,7 @@ var MPProtocol =
         meshObj.on('join-room', function(data) {
             if (isHost === true && roomId) {
                 meshObj.send(data.message, {
-                    type: 'host',
+                    messageType: 'host',
                     message: host
                 });
             }
@@ -29,14 +29,14 @@ var MPProtocol =
 
         meshObj.on('message', function(data) {
             // todo: determine message wrapping nomenclature
-            if (data.message.type === 'host') {
+            if (data.message.messageType === 'host') {
                 host = data.message.message;
-            } else if (data.message.type === 'message') {
+            } else if (data.message.messageType === 'message') {
                 self.emit('message', {
-                    from: data.from,
+                    fromClientId: data.fromClientId,
                     message: data.message.message
                 });
-            } else if (data.message.type === 'join-game') {
+            } else if (data.message.messageType === 'join-game') {
                 self.emit('join-game', data.message.message);
             }
         });
@@ -48,7 +48,7 @@ var MPProtocol =
         meshObj.on('room-rule', function(data) {
             self.rule = data;
 
-            var ruleDef = _MPRules[self.rule];
+            var ruleDef = MPRULES[self.rule];
             if (typeof ruleDef === 'undefined') {
                 throw(new Error("Rule " + self.rule + " does not exist!"));
             }
@@ -75,7 +75,7 @@ var MPProtocol =
                             }
 
                             return meshObj.send(host, {
-                                type: 'join-game',
+                                messageType: 'join-game',
                                 message: clientId
                             });
                         }
@@ -147,7 +147,7 @@ var MPProtocol =
                 }
 
                 meshObj.send(host, {
-                    type: 'message',
+                    messageType: 'message',
                     message: data
                 }, cb);
 
@@ -168,7 +168,7 @@ var MPProtocol =
                 //     throw new Error("Only host can send messages");
                 // }
                 meshObj.send(clientId, {
-                    type: 'message',
+                    messageType: 'message',
                     message: data
                 }, cb);
 

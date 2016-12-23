@@ -28,7 +28,7 @@ var Mesh =
                         },
                         function(data) {
 
-                            if (data.type === 'error') {
+                            if (data.messageType === 'error') {
                                 return self.emit('error', data);
                             }
 
@@ -41,7 +41,7 @@ var Mesh =
         });
 
         socket.on('room-broadcast', function(data) {
-            switch(data.type) {
+            switch(data.messageType) {
             case 'rejoin-room':
                 self.emit('rejoin-room', data);
                 break;
@@ -87,7 +87,7 @@ var Mesh =
             }
 
             self.socket.emit('create-room', {rule: rule}, function(data) {
-                if (data.type === 'error') {
+                if (data.messageType === 'error') {
                     if (isFunction(cb)) cb(data.message, data);
                     return self.emit('error', data);
                 }
@@ -108,7 +108,7 @@ var Mesh =
             var self = this;
             // Get connected peers
             self.socket.emit('room-clients', {}, function(data) {
-                if (data.type === 'error') {
+                if (data.messageType === 'error') {
                     return self.emit('error', data);
                 } else {
                     self.updatePeers(data);
@@ -132,7 +132,7 @@ var Mesh =
                                  clientId: clientId
                              },
                              function(data) {
-                                 if (data.type === 'error') {
+                                 if (data.messageType === 'error') {
                                      if (isFunction(cb)) cb(data.message, data);
                                      return self.emit('error', data);
                                  }
@@ -158,7 +158,7 @@ var Mesh =
                                  roomId: roomId
                              },
                              function(data) {
-                                 if (data.type === 'error') {
+                                 if (data.messageType === 'error') {
                                      if (isFunction(cb)) cb(data.message, data);
                                      return self.emit('error', data);
                                  }
@@ -188,13 +188,16 @@ var Mesh =
                 throw(new Error("Client does not belong to a Mesh. Call create or join"));
             }
 
+            console.log("Message: " + message);
+            console.log("to: " + clientId);
+
             self.socket.emit('send-message',
                              {
                                  message: message,
-                                 to: clientId
+                                 toClientId: clientId
                              },
                              function(data) {
-                                 if (data.type === 'error') {
+                                 if (data.messageType === 'error') {
                                      if (isFunction(cb)) {
                                          cb(data.message, data);
                                      }

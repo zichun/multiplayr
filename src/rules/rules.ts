@@ -3,7 +3,7 @@
  * This should be deprecated and changed to a json config instead.
  */
 
-const rules = {
+const MPRULES = {
     'bigger': {
         description: 'A luck-based game on who rolls the bigger value!',
         rules: ['lobby', 'bigger', 'gameshell'],
@@ -33,5 +33,5 @@ const rules = {
 };
 
 if (typeof module === 'object' && module.exports) {
-    module.exports = rules;
+    module.exports = MPRULES;
 }

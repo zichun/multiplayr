@@ -200,7 +200,7 @@ class Rooms {
         var clientId = '';
 
         if (self.hasRoom(room)) {
-            clientId = UniqueId('mp-client-', true);
+            clientId = uniqueId('mp-client-', true);
             self.rooms[room].addClient(clientId, socket);
             self.clientsRoomMap[clientId] = room;
 

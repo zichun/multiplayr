@@ -98,7 +98,7 @@ var MPDataExchange = (function() {
             }
 
             comm.send(to, {
-                type: type,
+                messageType: type,
                 message: message,
                 uniqid: uniqid,
                 namespace: namespace
@@ -107,7 +107,7 @@ var MPDataExchange = (function() {
 
         function sendAckMessage(to, uniqid, err, message) {
             comm.send(to, {
-                type: 'typed-message-ack',
+                messageType: 'typed-message-ack',
                 message: {
                     err: err,
                     data: message
@@ -155,8 +155,8 @@ var MPDataExchange = (function() {
                 // wrong namespace. ignore
                 return;
             }
-            var from = obj.from;
-            var type = obj.message.type;
+            var from = obj.fromClientId;
+            var type = obj.message.messageType;
             var message = obj.message.message;
             var uniqid = obj.message.uniqid;
             var ack = function(err, res) {

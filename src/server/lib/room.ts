@@ -1,17 +1,23 @@
-// todo: make all function async for future proofing
+/**
+ *
+ * Room.ts
+ *
+ * Implemenetation of Room class.
+ *
+ */
 
-//
-// Room Class
-// @arg roomId  Unique Identifier of room
-//
+import {CallbackType, RoomMessageType} from '../common/types';
+
 export default class Room {
-    id: string;
-    clients: Array<string>;
-    clientSockets: {[key: string]: any};
-    clientActiveMap: {[key: string]: boolean};
-    rule: string;
+    private id: string;
+    private clients: string[];
+    private clientSockets: {[key: string]: any};
+    private clientActiveMap: {[key: string]: boolean};
+    private rule: string;
 
-    constructor(roomId, rule) {
+    constructor(roomId: string,
+                rule: string) {
+
         this.id = roomId;
         this.clients = [];
         this.clientSockets = {};
@@ -19,13 +25,15 @@ export default class Room {
         this.rule = rule;
     }
 
-    sendMessage(to, type, message, cb?) {
-        var self = this;
+    private sendMessage(toClientId: string,
+                       msgType: string,
+                       message: RoomMessageType,
+                       cb?: CallbackType) {
 
-        if (!self.hasClient(to)) {
+        if (!this.hasClient(toClientId)) {
             return cb && cb('Invalid receipient', false);
         } else {
-            this.clientSockets[to].emit(type, message);
+            this.clientSockets[toClientId].emit(msgType, message);
             return cb && cb(null, true);
             // todo: proper callback bound to emit
         }
@@ -33,48 +41,55 @@ export default class Room {
 
     // (async)
     // Send Messages from a client
-    clientSendMessage(from, to, message, cb?) {
-        var self = this;
+    public clientSendMessage(fromClientId: string,
+                             toClientId: string,
+                             message: string,
+                             cb?: CallbackType) {
 
-        if (!self.hasClient(from) || !self.hasClient(to)) {
-            cb && cb('Invalid sender / receipient', false);
+        if (!this.hasClient(fromClientId) || !this.hasClient(toClientId)) {
+            if (cb !== undefined) {
+                cb('Invalid sender / receipient', false);
+            }
         } else {
-            self.sendMessage(to,
+            this.sendMessage(toClientId,
                              'client-sendmessage',
                              {
-                                 from: from,
+                                 fromClientId: fromClientId,
                                  message: message
                              },
                              cb);
         }
     }
 
-    hasClient(clientId) {
+    public hasClient(clientId: string) {
+
         return this.clients.indexOf(clientId) >= 0;
     }
 
     // Add Client to Room
     // @arg clientId Unique Id of client
     // @arg socket The socket.io object of the new client
-    addClient(clientId, socket) {
-        var self = this;
+    public addClient(clientId: string,
+                     socket: any) {
 
-        if (self.hasClient(clientId)) {
+        if (this.hasClient(clientId)) {
             return false;
         }
 
-        self.clients.push(clientId);
-        self.clientSockets[clientId] = socket;
-        self.clientActiveMap[clientId] = true;
+        this.clients.push(clientId);
+        this.clientSockets[clientId] = socket;
+        this.clientActiveMap[clientId] = true;
 
-        self.broadcast('join-room', clientId, function() {
-            self.sendMessage(clientId,
-                             'room-rule',
-                             {
-                                 from: null,
-                                 message: self.rule
-                             });
-        });
+        this.broadcast('join-room',
+                       clientId,
+                       () => {
+                           this.sendMessage(clientId,
+                                            'room-rule',
+                                            {
+                                                fromClientId: null,
+                                                message: this.rule
+                                            });
+                       });
 
         return true;
     }
@@ -83,28 +98,31 @@ export default class Room {
     // @arg clientId Unique Id of client
     // @arg socket The socket.io object of the new client
     // @arg socketioReonnect If it's due to a socketio reconnection, no need to resend rule
-    reconnectClient(clientId, socket, socketioReconnect) {
-        var self = this;
+    public reconnectClient(clientId: string,
+                           socket: any,
+                           socketioReconnect?: boolean) {
 
-        if (self.hasClient(clientId) === false) {
+        if (this.hasClient(clientId) === false) {
             return false;
         }
 
-        self.clientActiveMap[clientId] = true;
-        self.clientSockets[clientId] = socket;
+        this.clientActiveMap[clientId] = true;
+        this.clientSockets[clientId] = socket;
 
-        var broadcastMsg = socketioReconnect ? 'rejoin-room' : 'join-room';
+        const broadcastMsg = socketioReconnect ? 'rejoin-room' : 'join-room';
 
-        self.broadcast(broadcastMsg, clientId, function() {
-            if (!socketioReconnect) {
-                self.sendMessage(clientId,
-                                 'room-rule',
-                                 {
-                                     from: null,
-                                     message: self.rule
-                                 });
-            }
-        });
+        this.broadcast(broadcastMsg,
+                       clientId,
+                       () => {
+                           if (!socketioReconnect) {
+                               this.sendMessage(clientId,
+                                                'room-rule',
+                                                {
+                                                    fromClientId: null,
+                                                    message: this.rule
+                                                });
+                           }
+                       });
 
         return true;
     }
@@ -113,8 +131,9 @@ export default class Room {
     // this client will be omitted, until the clientId has been reconnected.
     // @arg clientId Unique Id of client
     // @return false if client does not exists, and true otherwise.
-    disconnectClient(clientId) {
-        var index = this.clients.indexOf(clientId);
+    public disconnectClient(clientId: string) {
+
+        const index = this.clients.indexOf(clientId);
 
         if (index === -1) {
             return false;
@@ -128,8 +147,8 @@ export default class Room {
     // Remove client from room
     // @arg clientId Unique Id of client
     // @return false if client does not exists, and an integer if it does indicating number of clients left
-    removeClient(clientId) {
-        var index = this.clients.indexOf(clientId);
+    public removeClient(clientId: string) {
+        const index = this.clients.indexOf(clientId);
         if (index === -1) {
             return false;
         }
@@ -142,53 +161,56 @@ export default class Room {
 
     // (async)
     // Broadcast message to room
-    // @arg type Type of message
+    // @arg msgType Type of message
     // @arg message Message to send
     // @arg cb Callback function
-    broadcast(type, message, cb) {
-        var self = this;
+    public broadcast(msgType: string,
+                     message: string,
+                     cb?: CallbackType) {
 
-        for (var clientId in self.clientActiveMap) {
-            if (self.clientActiveMap.hasOwnProperty(clientId) &&
-                self.clientActiveMap[clientId] === true)
-            {
-                self.sendMessage(clientId,
-                                 'room-broadcast',
-                                 { type: type, message: message },
-                                 function() {});
-            }
-        }
+        Object.keys(this.clientActiveMap).forEach(
+            (clientId) => {
+                if (this.clientActiveMap.hasOwnProperty(clientId) &&
+                    this.clientActiveMap[clientId] === true) {
+
+                    this.sendMessage(clientId,
+                                     'room-broadcast',
+                                     {
+                                         messageType: msgType,
+                                         message: message
+                                     });
+                }
+            });
 
         // todo: proper callback
         cb(null, true);
     };
 
-    getClients() {
-        var tr = [];
-        var self = this;
+    public getClients() {
+        const tr = [];
 
-        for (var clientId in self.clientActiveMap) {
-            if (self.clientActiveMap.hasOwnProperty(clientId) &&
-                self.clientActiveMap[clientId] === true)
-            {
-                tr.push(clientId);
-            }
-        }
+        Object.keys(this.clientActiveMap).forEach(
+            (clientId) => {
+                if (this.clientActiveMap.hasOwnProperty(clientId) &&
+                    this.clientActiveMap[clientId] === true) {
+
+                    tr.push(clientId);
+                }
+            });
 
         return tr;
     }
 
     // Get all clients, including disconnected ones.
-    getAllClients() {
-        var tr = [];
-        var self = this;
+    public getAllClients() {
+        const tr = [];
 
-        for (var clientId in self.clientActiveMap) {
-            if (self.clientActiveMap.hasOwnProperty(clientId))
-            {
-                tr.push(clientId);
-            }
-        }
+        Object.keys(this.clientActiveMap).forEach(
+            (clientId) => {
+                if (this.clientActiveMap.hasOwnProperty(clientId)) {
+                    tr.push(clientId);
+                }
+            });
 
         return tr;
     }
