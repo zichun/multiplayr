@@ -4,7 +4,7 @@
 // Room Class
 // @arg roomId  Unique Identifier of room
 //
-class Room {
+export default class Room {
     id: string;
     clients: Array<string>;
     clientSockets: {[key: string]: any};
@@ -194,5 +194,3 @@ class Room {
     }
 
 }
-
-export = Room;

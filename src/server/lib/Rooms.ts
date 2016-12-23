@@ -1,6 +1,6 @@
-import utils = require('../common/utils.js');
-import constants = require('../common/constants.js');
-import Room = require('./room.js');
+import {randomRoomId, uniqueId} from '../common/utils.js';
+import * as constants from '../common/constants.js';
+import Room from './Room.js';
 
 class Rooms {
     rooms: {[key: string]: Room};
@@ -22,10 +22,10 @@ class Rooms {
         var uniqid = '', clientId = '';
 
         do {
-            uniqid = utils.randomRoomId();
+            uniqid = randomRoomId();
         } while(self.rooms[uniqid]);
 
-        clientId = utils.uniqid('mp-client-', true);
+        clientId = uniqueId('mp-client-', true);
 
         self.rooms[uniqid] = new Room(uniqid, rule);
         self.rooms[uniqid].addClient(clientId, socket);
@@ -103,7 +103,7 @@ class Rooms {
             console.log("Marking " + roomId + " for deletion");
             self.roomCleanupTimer[roomId] = setTimeout(function() {
                 self.deleteRoom(roomId);
-            }, constants.RoomInactiveLifeSpan);
+            }, constants.ROOMINACTIVELIFESPAN);
         }
         return self.roomCleanupTimer[roomId];
     }
@@ -200,7 +200,7 @@ class Rooms {
         var clientId = '';
 
         if (self.hasRoom(room)) {
-            clientId = utils.uniqid('mp-client-', true);
+            clientId = UniqueId('mp-client-', true);
             self.rooms[room].addClient(clientId, socket);
             self.clientsRoomMap[clientId] = room;
 

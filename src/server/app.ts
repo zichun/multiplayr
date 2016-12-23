@@ -1,45 +1,46 @@
-///<reference path='../typescript-definitions/typescript-node-definitions/node.d.ts'/>
-///<reference path='../typescript-definitions/typescript-node-definitions/express3.d.ts'/>
+import * as express from 'express';
+import * as http from 'http';
+import * as socketio from 'socket.io';
+import * as lessMiddleware from 'less-middleware';
 
-var express = require('express');
-var app = express();
-var server = require('http').createServer(app);
-var io = require('socket.io').listen(server);
+const app = express();
+const server = http.createServer(app);
+const io = socketio.listen(server);
 
 app.set('port', process.env.PORT || 3000);
-app.set("view options", { layout: false, pretty: true });
-app.use(require('less-middleware')('public'));
+app.set('view options', { layout: false, pretty: true });
+app.use(lessMiddleware('public'));
 app.use(express.static(__dirname + '/public'));
 
 /**
  * Routes
  */
 
-app.get('/rules', function (req, res) {
-	res.sendFile(__dirname + '/rules.js');
+app.get('/rules', (req, res) => {
+    res.sendFile(__dirname + '/rules.js');
 });
 
-app.get('/host', function(req, res) {
+app.get('/host', (req, res) => {
     res.sendFile(__dirname + '/public/static/host.html');
 });
 
-app.get('/join', function(req, res) {
+app.get('/join', (req, res) => {
     res.sendFile(__dirname + '/public/static/join.html');
 });
 
 // Temp for local testing
 
-app.get('/rockscissorspaper', function (req, res) {
+app.get('/rockscissorspaper', (req, res) => {
     res.sendFile(__dirname + '/tests/v2.html');
 });
 
-app.get('/theoddone', function (req, res) {
+app.get('/theoddone', (req, res) => {
     res.sendFile(__dirname + '/tests/oddone.html');
 });
 
-var transport = require('./lib/socket.transport.js');
+import * as transport from './lib/socket.transport.js';
 transport.init(io);
 
-server.listen(app.get('port'), function() {
-    console.log("multiplayr server listening on port " + app.get('port'));
+server.listen(app.get('port'), () => {
+    console.log('multiplayr server listening on port ' + app.get('port'));
 });

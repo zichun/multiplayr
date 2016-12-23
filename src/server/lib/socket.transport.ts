@@ -6,7 +6,7 @@ var rules = require('../rules.js');
 
 var rooms = new Rooms();
 
-function init(io) {
+export function init(io: any) {
     io.sockets.on('connection', function (socket) {
         let roomId: string = null
         let clientId: string = null;
@@ -167,8 +167,3 @@ function init(io) {
         });
     });
 }
-
-
-module.exports = {
-    init: init
-};

@@ -3,6 +3,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-open');
+    grunt.loadNpmTasks('grunt-tslint');
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -12,7 +13,7 @@ module.exports = function (grunt) {
                 configuration: grunt.file.readJSON("tslint.json")
             },
             files: {
-                src: ['src/**/*.ts']
+                src: ['src/**/*.ts', '!src/**/*.d.ts']
             }
         },
         ts: {
@@ -20,7 +21,8 @@ module.exports = function (grunt) {
                 src: ["src/server/app.ts"],
                 outDir: 'out/',
                 options: {
-                    module: 'commonjs'
+                    module: "commonjs",
+                    target: "es6"
                 }
             },
             rules: {
@@ -34,7 +36,8 @@ module.exports = function (grunt) {
                 src: ["src/server/lib/*.ts"],
                 outDir: 'out/lib/',
                 options: {
-                    module: 'commonjs'
+                    module: "commonjs",
+                    target: "es6"
                 }
             }
         },
