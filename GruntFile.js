@@ -6,16 +6,35 @@ module.exports = function (grunt) {
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
+        tslint: {
+            options: {
+                rulesDirectory: 'node_modules/tslint-microsoft-contrib',
+                configuration: grunt.file.readJSON("tslint.json")
+            },
+            files: {
+                src: ['src/**/*.ts']
+            }
+        },
         ts: {
             app: {
                 src: ["src/server/app.ts"],
-                out: 'out/app.js'
+                outDir: 'out/',
+                options: {
+                    module: 'commonjs'
+                }
             },
             rules: {
                 src: ["src/rules/rules.ts"],
-                out: 'out/rules.js',
+                outDir: 'out/',
                 options: {
                     failOnTypeErrors: false
+                }
+            },
+            serverLib: {
+                src: ["src/server/lib/*.ts"],
+                outDir: 'out/lib/',
+                options: {
+                    module: 'commonjs'
                 }
             }
         },
@@ -26,11 +45,6 @@ module.exports = function (grunt) {
                     {expand: true, cwd: 'src/rules/gamerules/', src: ['**'], dest: 'out/public/gamerules/'}
                 ]
             },
-            transportLib: {
-                files: [
-                    {expand: true, cwd: 'src/server/transport/', src: ['**'], dest: 'out/transport/'}
-                ]
-            },
             tests: {
                 files: [
                     {expand: true, cwd: 'tests/', src: ['**'], dest: 'out/tests/'}
@@ -39,9 +53,9 @@ module.exports = function (grunt) {
         },
         watch: {
             files: 'src/**/*.ts',
-            tasks: ['ts', 'copy', 'open']
+            tasks: ['tslint', 'ts', 'copy']
         }
     });
 
-    grunt.registerTask('default', ['ts', 'copy']);
+    grunt.registerTask('default', ['tslint', 'ts', 'copy']);
 }

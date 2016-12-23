@@ -37,7 +37,7 @@ app.get('/theoddone', function (req, res) {
     res.sendFile(__dirname + '/tests/oddone.html');
 });
 
-var transport = require('./transport');
+var transport = require('./lib/socket.transport.js');
 transport.init(io);
 
 server.listen(app.get('port'), function() {
