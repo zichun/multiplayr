@@ -6,9 +6,9 @@
  *
  */
 
-import {CallbackType, RoomMessageType} from '../common/types';
+import {CallbackType, RoomMessageType} from '../common/types.js';
 
-export default class Room {
+export class Room {
     private id: string;
     private clients: string[];
     private clientSockets: {[key: string]: any};
@@ -147,10 +147,14 @@ export default class Room {
     // Remove client from room
     // @arg clientId Unique Id of client
     // @return false if client does not exists, and an integer if it does indicating number of clients left
-    public removeClient(clientId: string) {
+    public removeClient(
+        clientId: string
+    ): number {
+
         const index = this.clients.indexOf(clientId);
+
         if (index === -1) {
-            return false;
+            throw(new Error('Client Id does not exist'));
         }
 
         this.clients.splice(index, 1);
@@ -164,10 +168,11 @@ export default class Room {
     // @arg msgType Type of message
     // @arg message Message to send
     // @arg cb Callback function
-    public broadcast(msgType: string,
-                     message: string,
-                     cb?: CallbackType) {
-
+    public broadcast(
+        msgType: string,
+        message: string,
+        cb?: CallbackType
+    ) {
         Object.keys(this.clientActiveMap).forEach(
             (clientId) => {
                 if (this.clientActiveMap.hasOwnProperty(clientId) &&
@@ -186,7 +191,7 @@ export default class Room {
         cb(null, true);
     };
 
-    public getClients() {
+    public getClients(): string[] {
         const tr = [];
 
         Object.keys(this.clientActiveMap).forEach(
@@ -216,3 +221,5 @@ export default class Room {
     }
 
 }
+
+export default Room;

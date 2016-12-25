@@ -17,19 +17,22 @@ module.exports = function (grunt) {
             }
         },
         ts: {
+            rules: {
+                src: ["src/rules/rules.ts"],
+                outDir: 'out/',
+                options: {
+                    module: "commonjs",
+                    target: "es6",
+                    failOnTypeErrors: false
+                }
+            },
             app: {
                 src: ["src/server/app.ts"],
                 outDir: 'out/',
                 options: {
                     module: "commonjs",
-                    target: "es6"
-                }
-            },
-            rules: {
-                src: ["src/rules/rules.ts"],
-                outDir: 'out/',
-                options: {
-                    failOnTypeErrors: false
+                    target: "es6",
+                    moduleResolution: "node"
                 }
             },
             serverLib: {

@@ -4,10 +4,13 @@
   "description": "A platform to play games",
   "dependencies": {
     "express": "=4.13.4",
+    "less-middleware": "=2.0.1",
     "socket.io": "=1.4.4",
-    "less-middleware": "=2.0.1"
+    "typescript": "^2.2.0-dev.20161223"
   },
   "devDependencies": {
+    "@types/node": "^6.0.53",
+    "@types/socket.io": "^1.4.27",
     "grunt": "^1.0.1",
     "grunt-contrib-copy": "^1.0.0",
     "grunt-contrib-less": "^1.4.0",

@@ -20,10 +20,10 @@
         "comment-format": [false],
         "curly": true,
         "eofline": false,
-        "export-name": true,
+        "export-name": false,
         "forin": true,
         "function-name": true,
-        "import-name": true,
+        "import-name": false,
         "indent": [
             true,
             "spaces"
@@ -34,7 +34,7 @@
         "label-position": true,
         "max-file-line-count": [false],
         "max-func-body-length": [
-            true,
+            false,
             100,
             {
                 "ignore-parameters-to-function-regex": "describe"

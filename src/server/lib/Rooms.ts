@@ -1,11 +1,20 @@
-import {randomRoomId, uniqueId} from '../common/utils.js';
-import * as constants from '../common/constants.js';
-import Room from './Room.js';
+/**
+ *
+ * Room.ts
+ *
+ * Implemenetation of Rooms class.
+ *
+ */
 
-class Rooms {
-    rooms: {[key: string]: Room};
-    clientsRoomMap: {[key: string]: string};
-    roomCleanupTimer: {[key: string]: any};
+import {randomRoomId, uniqueId} from '../common/utils.js';
+import Room from './Room.js';
+import {CallbackType} from '../common/types.js';
+import * as constants from '../common/constants.js';
+
+export class Rooms {
+    private rooms: {[key: string]: Room};
+    private clientsRoomMap: {[key: string]: string};
+    private roomCleanupTimer: {[key: string]: any};
 
     constructor() {
         this.rooms = {};
@@ -13,76 +22,87 @@ class Rooms {
         this.roomCleanupTimer = {};
     }
 
-    create(socket, rule): {
+    public create(
+        socket: any,
+        rule: string
+    ): {
         roomId: string,
         clientId: string
-    }
-    {
-        var self = this;
-        var uniqid = '', clientId = '';
+    } {
+        let uniqid = '';
+        let clientId = '';
 
         do {
             uniqid = randomRoomId();
-        } while(self.rooms[uniqid]);
+        } while (this.rooms[uniqid]);
 
         clientId = uniqueId('mp-client-', true);
 
-        self.rooms[uniqid] = new Room(uniqid, rule);
-        self.rooms[uniqid].addClient(clientId, socket);
+        this.rooms[uniqid] = new Room(uniqid, rule);
+        this.rooms[uniqid].addClient(clientId, socket);
 
-        self.clientsRoomMap[clientId] = uniqid;
+        this.clientsRoomMap[clientId] = uniqid;
 
         return {
-            "roomId": uniqid,
-            "clientId": clientId
+            'roomId': uniqid,
+            'clientId': clientId
         };
     }
 
-    hasRoom(room) {
-        var self = this;
-        for (var rooms in self.rooms) {
-            if (self.rooms.hasOwnProperty(rooms) && rooms === room) {
-                return true;
-            }
-        }
-        return false;
+    public hasRoom(
+        room: string
+    ): boolean {
+        let found = false;
+
+        Object.keys(this.rooms).forEach(
+            (rooms) => {
+                if (rooms === room) {
+                    found = true;
+                }
+            });
+
+        return found;
     }
 
-    getClientRoom(clientId) {
-        var self = this;
-
-        if (!self.clientsRoomMap[clientId]) {
-            throw(new Error("Client Id does not exist"));
+    public getClientRoom(
+        clientId: string
+    ) : string {
+        if (this.clientsRoomMap[clientId] === undefined) {
+            throw(new Error('Client Id does not exist'));
         }
-        return self.clientsRoomMap[clientId];
+
+        return this.clientsRoomMap[clientId];
     }
 
-    deleteRoom(roomId) {
+    public deleteRoom(
+        roomId: string
+    ): void {
         console.log('Deleting Room[' + roomId + ']');
 
-        var self = this;
-        var clients = self.rooms[roomId].getAllClients();
+        const clients = this.rooms[roomId].getAllClients();
 
-        for (var i = 0; i < clients.length; ++i) {
-            if (self.clientsRoomMap.hasOwnProperty(clients[i])) {
-                delete self.clientsRoomMap[clients[i]];
+        for (let i = 0; i < clients.length; i = i + 1) {
+            if (this.clientsRoomMap.hasOwnProperty(clients[i])) {
+                delete this.clientsRoomMap[clients[i]];
             }
         }
 
-        delete self.rooms[roomId];
-        delete self.roomCleanupTimer[roomId];
+        delete this.rooms[roomId];
+        delete this.roomCleanupTimer[roomId];
     }
 
-    unmarkRoomForCleanup(roomId) {
-        var self = this;
+    public unmarkRoomForCleanup(
+        roomId: string
+    ): boolean {
 
-        if (self.hasRoom(roomId) === false) {
-            throw(new Error("Room " + roomId + " does not exists."));
+        if (this.hasRoom(roomId) === false) {
+            throw(new Error('Room ' + roomId + ' does not exists.'));
         }
 
-        if (self.roomCleanupTimer.hasOwnProperty(roomId)) {
-            clearTimeout(self.roomCleanupTimer[roomId]);
-            delete self.roomCleanupTimer[roomId];
+        if (this.roomCleanupTimer.hasOwnProperty(roomId)) {
+
+            clearTimeout(this.roomCleanupTimer[roomId]);
+            delete this.roomCleanupTimer[roomId];
 
             return true;
         }
@@ -92,101 +112,104 @@ class Rooms {
 
     // Start a timer to mark the room for cleanup.
     // Whenever a new client joins, reset this timer.
-    markRoomForCleanup(roomId) {
-        var self = this;
-
-        if (self.hasRoom(roomId) === false) {
-            throw(new Error("Room " + roomId + " does not exists."));
+    public markRoomForCleanup(
+        roomId: string
+    ) {
+        if (this.hasRoom(roomId) === false) {
+            throw(new Error('Room ' + roomId + ' does not exists.'));
         }
 
-        if (!self.roomCleanupTimer[roomId]) {
-            console.log("Marking " + roomId + " for deletion");
-            self.roomCleanupTimer[roomId] = setTimeout(function() {
-                self.deleteRoom(roomId);
+        if (!this.roomCleanupTimer[roomId]) {
+
+            console.log('Marking ' + roomId + ' for deletion');
+
+            this.roomCleanupTimer[roomId] = setTimeout(() => {
+                this.deleteRoom(roomId);
             }, constants.ROOMINACTIVELIFESPAN);
         }
-        return self.roomCleanupTimer[roomId];
+
+        return this.roomCleanupTimer[roomId];
     }
 
     // Disconnect a given client from the room management
     // @arg clientId Identifier of client
-    disconnectClient(clientId) {
-        var self = this;
-
-        if (!self.clientsRoomMap[clientId]) {
-            throw(new Error("Client Id does not exist"));
+    public disconnectClient(
+        clientId: string
+    ): void {
+        if (!this.clientsRoomMap[clientId]) {
+            throw(new Error('Client Id does not exist'));
         }
 
-        var roomId = self.getClientRoom(clientId);
+        const roomId = this.getClientRoom(clientId);
 
         console.log('Client[' + clientId + '] disconnected from Room[' + roomId + ']');
 
-        self.rooms[roomId].disconnectClient(clientId);
-        self.rooms[roomId].broadcast('leave-room',
-                                     clientId,
-                                     function() {});
+        this.rooms[roomId].disconnectClient(clientId);
+        this.rooms[roomId].broadcast('leave-room', clientId);
 
-        if (self.rooms[roomId].getClients().length === 0) {
-            self.markRoomForCleanup(roomId);
+        if (this.rooms[roomId].getClients().length === 0) {
+            this.markRoomForCleanup(roomId);
         }
     }
 
     // Remove a given client from the room management. When client count hits 0, garbage collect room.
     // @arg clientId Identifier of client
-    removeClient(clientId) {
-        var self = this;
-
-        if (!self.clientsRoomMap[clientId]) {
-            throw(new Error("Client Id does not exist"));
+    public removeClient(
+        clientId: string
+    ): void {
+        if (!this.clientsRoomMap[clientId]) {
+            throw(new Error('Client Id does not exist'));
         }
 
-        var roomId = self.getClientRoom(clientId);
-        var clientsLeft = self.rooms[roomId].removeClient(clientId);
+        const roomId = this.getClientRoom(clientId);
+        const clientsLeft = this.rooms[roomId].removeClient(clientId);
 
-        delete self.clientsRoomMap[clientId];
+        delete this.clientsRoomMap[clientId];
 
-        self.rooms[roomId].broadcast('leave-room', clientId, function() {});
+        this.rooms[roomId].broadcast('leave-room', clientId);
 
-        if (clientsLeft === false) {
-            return false;
-        } else if (clientsLeft === 0) {
-            self.deleteRoom(roomId);
+        if (clientsLeft === 0) {
+            this.deleteRoom(roomId);
         }
     }
 
-    getRooms() {
-        var self = this;
-        var tr = [];
+    public getRooms(): string[] {
+        const tr = [];
 
-        for (var rooms in self.rooms) {
-            if (self.rooms.hasOwnProperty(rooms)) {
-                tr.push(rooms);
-            }
-        }
+        Object.keys(this.rooms).forEach(
+            (room) => {
+                tr.push(room);
+            });
 
-        return rooms;
+        return tr;
     }
 
-    getClients(room) {
-        var self = this;
+    public getClients(
+        room: string
+    ): string[] {
 
-        if (self.hasRoom(room)) {
-            return self.rooms[room].getClients();
+        if (this.hasRoom(room)) {
+            return this.rooms[room].getClients();
         } else {
             throw(new Error('Room does not exists'));
         }
     }
 
-    reconnectClient(room, socket, clientId, socketioReconnect) {
-        var self = this;
-        if (self.hasRoom(room) && self.clientsRoomMap[clientId] === room) {
+    public reconnectClient(
+        room: string,
+        socket: any,
+        clientId: string,
+        socketioReconnect: boolean
+    ): boolean {
+
+        if (this.hasRoom(room) && this.clientsRoomMap[clientId] === room) {
 
             console.log('Client[' + clientId + '] reconnecting to Room[' + room + ']');
 
-            var result = self.rooms[room].reconnectClient(clientId, socket, socketioReconnect);
+            const result = this.rooms[room].reconnectClient(clientId, socket, socketioReconnect);
 
             if (result) {
-                self.unmarkRoomForCleanup(room);
+                this.unmarkRoomForCleanup(room);
             }
 
             return result;
@@ -195,18 +218,21 @@ class Rooms {
         }
     }
 
-    addClient(room, socket) {
-        var self = this;
-        var clientId = '';
+    public addClient(
+        room: string,
+        socket: any
+    ): string {
 
-        if (self.hasRoom(room)) {
+        let clientId = '';
+
+        if (this.hasRoom(room)) {
             clientId = uniqueId('mp-client-', true);
-            self.rooms[room].addClient(clientId, socket);
-            self.clientsRoomMap[clientId] = room;
+            this.rooms[room].addClient(clientId, socket);
+            this.clientsRoomMap[clientId] = room;
 
             console.log('Client[' + clientId + '] joining Room[' + room + ']');
 
-            self.unmarkRoomForCleanup(room);
+            this.unmarkRoomForCleanup(room);
 
             return clientId;
         } else {
@@ -214,31 +240,24 @@ class Rooms {
         }
     };
 
-/*Rooms.prototype.broadcast =
-    // (Async)
-    // Broadcast a message to a particular room
-    // @arg room Name of room
-    // @arg message Message to broadcast
-    // @arg cb Callback function
-    function RoomsBroadcast(room, message, cb) {
-        var self = this;
-
-        if (self.hasRoom(room)) {
-            self.rooms[room].broadcast(message, cb);
+    public sendMessage(
+        room: string,
+        fromClientId: string,
+        toClientId: string,
+        message: string,
+        cb?: CallbackType
+    ) {
+        if (this.hasRoom(room)) {
+            this.rooms[room].clientSendMessage(fromClientId,
+                                               toClientId,
+                                               message,
+                                               cb);
         } else {
-            cb('Room does not exists', false);
-        }
-    };*/
-
-    sendMessage(room, from, to, message, cb?) {
-        var self = this;
-
-        if (self.hasRoom(room)) {
-            self.rooms[room].clientSendMessage(from, to, message, cb);
-        } else {
-            cb && cb('Room does not exists', false);
+            if (cb) {
+                cb('Room does not exists', false);
+            }
         }
     };
 }
 
-export = Rooms;
+export default Rooms;

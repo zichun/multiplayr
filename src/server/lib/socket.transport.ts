@@ -1,17 +1,25 @@
-///<reference path='../../typescript-definitions/typescript-node-definitions/node.d.ts'/>
-///<reference path='../../typescript-definitions/typescript-node-definitions/socket.io.d.ts'/>
+/**
+ *
+ * socket.transport.ts
+ *
+ * Uses socket.io to implement the transport layer.
+ *
+ */
 
-import Rooms = require('./rooms.js');
-var rules = require('../rules.js');
+import Rooms from './rooms';
+import MPRULES from '../../rules/rules';
+import {SocketIoCallbackType, JoinRoomType, RoomMessageType} from '../common/types';
 
-var rooms = new Rooms();
+const rooms = new Rooms();
 
 export function init(io: any) {
-    io.sockets.on('connection', function (socket) {
+
+    io.sockets.on('connection', (socket) => {
+
         let roomId: string = null
         let clientId: string = null;
 
-        socket.on('create-room', function (data, fn) {
+        socket.on('create-room', (data, fn) => {
             if (roomId !== null || clientId !== null) {
                 return fn({
                     type: 'error',
@@ -19,7 +27,7 @@ export function init(io: any) {
                 });
             }
 
-            if (typeof data.rule === 'undefined' || typeof rules[data.rule] === 'undefined') {
+            if (data.rule === undefined || MPRULES[data.rule] === undefined) {
                 return fn({
                     type: 'error',
                     message: 'No such rule ' + data.rule
@@ -27,7 +35,7 @@ export function init(io: any) {
             }
 
             // todo: rules should ideally be abstracted from room
-            var room = rooms.create(socket, data.rule);
+            const room = rooms.create(socket, data.rule);
             roomId = room.roomId;
             clientId = room.clientId;
 
@@ -37,7 +45,7 @@ export function init(io: any) {
             });
         });
 
-        socket.on('has-room', function(data, fn) {
+        socket.on('has-room', (data, fn) => {
             if (typeof data.roomId !== 'string') {
                 return fn({
                     type: 'error',
@@ -51,7 +59,10 @@ export function init(io: any) {
             });
         });
 
-        function joinRoom(data, fn) {
+        function joinRoom(
+            data: JoinRoomType,
+            fn: SocketIoCallbackType
+        ) {
             if (rooms.hasRoom(data.roomId)) {
                 roomId = data.roomId;
 
@@ -73,13 +84,16 @@ export function init(io: any) {
             }
         }
 
-        function rejoinRoom(data, fn) {
+        function rejoinRoom(
+            data: JoinRoomType,
+            fn: SocketIoCallbackType
+        ) {
             if (rooms.hasRoom(data.roomId)) {
 
                 roomId = data.roomId;
                 clientId = data.clientId;
 
-                var result = rooms.reconnectClient(roomId, socket, clientId, true);
+                const result = rooms.reconnectClient(roomId, socket, clientId, true);
 
                 return fn({
                     roomId: roomId,
@@ -95,79 +109,91 @@ export function init(io: any) {
             }
         }
 
-        socket.on('rejoin-room', function(data, fn) {
-            if (typeof data.roomId !== 'string' ||
-                typeof data.clientId !== 'string') {
-                return fn({
-                    type: 'error',
-                    message: 'Invalid request'
-                });
-            } else if (roomId !== null || clientId !== null) {
-                return fn({
-                    type: 'error',
-                    message: 'Client already belong to an existing mesh'
-                });
-            }
+        socket.on('rejoin-room',
+                  (data: JoinRoomType,
+                   fn: SocketIoCallbackType) => {
 
-            rejoinRoom(data, fn);
-        });
+                       if (typeof data.roomId !== 'string' ||
+                           typeof data.clientId !== 'string') {
+                           return fn({
+                               type: 'error',
+                               message: 'Invalid request'
+                           });
+                       } else if (roomId !== null || clientId !== null) {
+                           return fn({
+                               type: 'error',
+                               message: 'Client already belong to an existing mesh'
+                           });
+                       }
 
-        socket.on('join-room', function(data, fn) {
-            if (typeof data.roomId !== 'string') {
-                return fn({
-                    type: 'error',
-                    message: 'Invalid request'
-                });
-            } else if (roomId !== null || clientId !== null) {
-                return fn({
-                    type: 'error',
-                    message: 'Client already belong to an existing mesh'
-                });
-            }
+                       rejoinRoom(data, fn);
+                   });
 
-            return joinRoom(data, fn);
-        });
+        socket.on('join-room',
+                  (data: JoinRoomType,
+                   fn: SocketIoCallbackType) => {
 
-        socket.on('send-message', function(data, fn) {
-            if (typeof data.message === 'undefined' || typeof data.toClientId !== 'string') {
-                return fn({
-                    type: 'error',
-                    message: 'Invalid request'
-                });
-            }
+                       if (typeof data.roomId !== 'string') {
+                           return fn({
+                               type: 'error',
+                               message: 'Invalid request'
+                           });
+                       } else if (roomId !== null || clientId !== null) {
+                           return fn({
+                               type: 'error',
+                               message: 'Client already belong to an existing mesh'
+                           });
+                       }
 
-            rooms.sendMessage(roomId,
-                              clientId,
-                              data.toClientId,
-                              data.message,
-                              (err, doc) => {
-                                  if (err) {
-                                      return fn({
-                                          type: 'error',
-                                          message: err
-                                      });
-                                  } else {
-                                      return fn(doc);
-                                  }
-                              });
-        });
+                       return joinRoom(data, fn);
+                   });
 
-        socket.on('disconnect', function() {
+        socket.on('send-message',
+                  (data: RoomMessageType,
+                   fn: SocketIoCallbackType) => {
+
+                       if (data.message === undefined || typeof data.toClientId !== 'string') {
+                           return fn({
+                               type: 'error',
+                               message: 'Invalid request'
+                           });
+                       }
+
+                       rooms.sendMessage(roomId,
+                                         clientId,
+                                         data.toClientId,
+                                         data.message,
+                                         (err, doc) => {
+                                             if (err) {
+                                                 return fn({
+                                                     type: 'error',
+                                                     message: err
+                                                 });
+                                             } else {
+                                                 return fn(doc);
+                                             }
+                                         });
+                   });
+
+        socket.on('disconnect', () => {
             if (clientId !== null) {
                 rooms.disconnectClient(clientId);
             }
         });
 
         // Get connected clients to room
-        socket.on('room-clients', function(data, fn) {
-            if (clientId === null) {
-                return fn({
-                    type: 'error',
-                    message: 'Not connected to room yet'
-                });
-            } else {
-                return fn(rooms.getClients(roomId));
-            }
-        });
+        socket.on('room-clients',
+                  (data: JoinRoomType,
+                   fn: SocketIoCallbackType) => {
+
+                       if (clientId === null) {
+                           return fn({
+                               type: 'error',
+                               message: 'Not connected to room yet'
+                           });
+                       } else {
+                           return fn(rooms.getClients(roomId));
+                       }
+                   });
     });
 }
