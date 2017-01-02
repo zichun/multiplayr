@@ -1,0 +1,107 @@
+#shell-header {
+    background: #151515;
+    color: white;
+    text-align: right;
+    height: 40px;
+}
+#shell-room {
+    display: inline-block;
+    background: #555;
+    padding: 0px 5px 0px 5px;
+    color: white;
+    font-size: 24px;
+    height: 40px;
+    line-height: 40px;
+    bos-sizing: border-box;
+}
+
+#shell-main {
+
+    position: relative;
+    height: 100%;
+    box-sizing: border-box;
+
+    #shell-body {
+        position: relative;
+        height: 100%;
+        margin-top: -40px;
+        padding-top: 40px;
+        box-sizing: border-box;
+    }
+
+    .shell-nav-trigger {
+        position: absolute;
+        clip: rect(0, 0, 0, 0);
+    }
+
+    label[for="shell-nav-trigger"] {
+        position: absolute;
+        left: 15px; top: 55px;
+        z-index: 2;
+
+        height: 30px;
+        width: 30px;
+        cursor: pointer;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' version='1.1' x='0px' y='0px' width='30px' height='30px' viewBox='0 0 30 30' enable-background='new 0 0 30 30' xml:space='preserve'><rect width='30' height='6'/><rect y='24' width='30' height='6'/><rect y='12' width='30' height='6'/></svg>");
+        background-size: contain;
+    }
+
+    .shell-nav-trigger + label {
+        transition: left 0.4s;
+    }
+    #shell-main-content {
+        transition: left 0.3s;
+    }
+
+    .shell-nav-trigger:checked + label {
+        left: 195px;
+    }
+
+    .shell-nav-trigger:checked ~ #shell-main-content {
+        left: 180px;
+    }
+
+    #shell-main-content {
+        position: relative;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1;
+        min-height: 100%;
+
+        padding: 15px 0 0 60px;
+        box-sizing: border-box;
+        background: white;
+    }
+
+    ul.shell-navigation {
+        width: 100%;
+        position: absolute;
+        top: 27px;
+        right: 0;
+        bottom: -13px;
+        left: 0;
+        z-index: 0;
+
+        box-sizing: border-box;
+        list-style: none;
+        background: #151515;
+        color: white;
+
+        li {
+            display: block;
+            width: 180px;
+            padding: 0px;
+            cursor: pointer;
+            margin: 0;
+            line-height: 30px;
+            font-size: 16px;
+            padding: 4px 0 4px 8px;
+        }
+
+        li:hover {
+            background: #353535;
+        }
+    }
+
+}

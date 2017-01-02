@@ -1,0 +1,16 @@
+#rules {
+    padding: 5px;
+}
+#rules .rule {
+    border: 1px solid #d5d5d5;
+    padding: 10px;
+    margin: 8px 0 8px 0;
+}
+#rules .rule .name {
+    font-family: "Garamond", Times, serif;
+    font-size: 1.4em;
+    line-height: 1.4em;
+}
+#rules .rule .host {
+    margin: 8px 0 5px 5px;
+}

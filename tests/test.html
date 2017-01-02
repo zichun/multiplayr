@@ -1,49 +1,78 @@
+<!DOCTYPE html>
 <html>
-<head>
-	<title>Test</title>
-</head>
-<body>
-	Test cases<br />
-	----------<br />
-	<br />
-	Please open the console
-	<script src="/socket.io/socket.io.js"></script>
-	<script src="/js/mp.transport.js"></script>
+    <head>
+	    <title>Test</title>
+    </head>
+    <body>
+	    Test cases<br />
+	    ----------<br />
+	    <br />
+	    <script src="/socket.io/socket.io.js"></script>
+	    <script src="/js/jquery.js"></script>
+        <script src="/js/common.js"></script>
 
-	<script>
-	// This only works because this is the last script tag. All libraries should
-	// 1. load before this
-	// 2. not load on document.onready
+        <script src="/js/mp.transport.js"></script>
+        <script src="/js/mp.protocol.js"></script>
+        <script src="/js/mp.gameobject.js"></script>
+        <script src="/js/mp.dxc.js"></script>
+        <script src="/js/multiplayr.js"></script>
 
-	function assert(exp) {
-		if (!exp) {
-			throw new Error();
-		}
-	}
+        <!--script src="/js/card.js"></script-->
+        <script src="/gamerules/blackjack/bj.js"></script>
 
-	function test1() {
-		m1 = new Mesh(io, 'http://localhost:8080');
-		m2 = new Mesh(io, 'http://localhost:8080');
+        Host:
+        <div id="host-container" style="margin-bottom: 10px; border:1px solid black; height: 300px;">
+        </div>
 
-		m2.on('message', function (data) {
-			assert(data.message === "HELLO");
-		});
+        Client 0:
+        <div id="client0-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
+        </div>
 
-		m1.create(function(err, data) {
-                    if (err) {
-                        throw new Error();
-                    } else {
-			m2.join(data.roomId, function (data) {
-				// TODO: Create an event handler when peers are received
-				setTimeout(function () {
-					assert(m2.peers.indexOf(m1.clientId) !== -1);
-					m1.send(m2.clientId, "HELLO");
-				}, 100);
-			});
-                    }
-                });
-	}
+        Client 1:
+        <div id="client1-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
+        </div>
 
-	test1();
-	</script>
-</body>
+        Client 2:
+        <div id="client2-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
+        </div>
+
+	    <script>
+
+	     function assert(exp) {
+	         if (!exp) {
+	             throw new Error();
+	         }
+	     }
+         var clientObj = [];
+         var hostObj = null;
+
+	     function test1() {
+             //      var hostEngine = new MPGameEngine(lobby, document.getElementById('host-container'), io, 'http://localhost:8080');
+
+
+             Multiplayr.host(BJRule, document.getElementById('host-container'), io, 'http://localhost:3000', function(err, data) {
+
+                 hostObj = data;
+                 var roomId = data.roomId;
+
+                 [0,1,2].forEach(function(i) {
+                     var name = "client"+i+"-container";
+                     var container = document.getElementById(name);
+                     var $button = $('<button>Connect</button>').click(function() {
+                         Multiplayr.join(roomId, BJRule, document.getElementById('host-container'), io, 'http://localhost:3000', function(err, data) {
+                             clientObj[i] = data;
+                         });
+                     });
+
+                     $(container).append($button);
+                 });
+
+             });
+	     }
+
+	     test1();
+	    </script>
+
+
+    </body>
+</html>

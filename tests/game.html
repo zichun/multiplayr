@@ -1,13 +1,13 @@
 <html>
-<head>
-	<title>Test</title>
-</head>
-<body>
-	Test cases<br />
-	----------<br />
-	<br />
-	<script src="/socket.io/socket.io.js"></script>
-	<script src="/js/jquery.js"></script>
+    <head>
+	    <title>Test</title>
+    </head>
+    <body>
+	    Test cases<br />
+	    ----------<br />
+	    <br />
+	    <script src="/socket.io/socket.io.js"></script>
+	    <script src="/js/jquery.js"></script>
         <script src="/js/common.js"></script>
 	    <script src="/js/mp.transport.js"></script>
         <script src="/js/mp.protocol.js"></script>
@@ -40,39 +40,39 @@
         <div id="client2-container" style="margin-bottom: 10px; border: 1px solid black; height: 300px;">
         </div>
 
-	<script>
+	    <script>
 
-	function assert(exp) {
-		if (!exp) {
-			throw new Error();
-		}
-	}
+	     function assert(exp) {
+		     if (!exp) {
+			     throw new Error();
+		     }
+	     }
 
-	function test1() {
-            var hostEngine = new MPGameEngine(lobby, document.getElementById('host-container'), io, 'http://localhost:8080');
-            var clientEngines = [];
-            hostEngine.host(function(err, data) {
-                var roomId = hostEngine.roomId;
+	     function test1() {
+             var hostEngine = new MPGameEngine(lobby, document.getElementById('host-container'), io, 'http://localhost:8080');
+             var clientEngines = [];
+             hostEngine.host(function(err, data) {
+                 var roomId = hostEngine.roomId;
 
-/*                clientEngine = new MPGameEngine(lobby, document.getElementById('client-container'), io, 'http://localhost:8080');
-                clientEngine.join(roomId);*/
+                 /*                clientEngine = new MPGameEngine(lobby, document.getElementById('client-container'), io, 'http://localhost:8080');
+                    clientEngine.join(roomId);*/
 
-                  [0,1,2].forEach(function(i) {
-                      var name = "client"+i+"-container";
-                      var container = document.getElementById(name);
-                      var $button = $('<button>Connect</button>').click(function() {
-                          clientEngines[i] = new MPGameEngine(lobby, container, io, 'http://localhost:8080');
-                          clientEngines[i].join(roomId);
-                      });
+                 [0,1,2].forEach(function(i) {
+                     var name = "client"+i+"-container";
+                     var container = document.getElementById(name);
+                     var $button = $('<button>Connect</button>').click(function() {
+                         clientEngines[i] = new MPGameEngine(lobby, container, io, 'http://localhost:8080');
+                         clientEngines[i].join(roomId);
+                     });
 
-                      $(container).append($button);
-                  });
-            });
-	}
+                     $(container).append($button);
+                 });
+             });
+	     }
 
-	test1();
-	</script>
+	     test1();
+	    </script>
 
 
-</body>
+    </body>
 </html>

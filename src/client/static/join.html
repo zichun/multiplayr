@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <title>Multiplayr: Join</title>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script type="text/javascript" src="/js/react/react.js"></script>
+        <script src="/js/join.bundle.js"></script>
+        <style>
+         #join {
+             padding: 10px;
+             text-align: center;
+         }
+         #roomId {
+             display: block;
+             width: 60%;
+             padding: 6px 12px 6px 12px;
+             margin: 18px auto;
+             font-size: 1.4em;
+         }
+         #join-button {
+             padding: 4px 8px 4px 8px;
+         }
+         #error {
+             color: red;
+             font-size: 1.1em;
+             margin: 4px 0 4px 0;
+         }
+         #clientId {
+             display: block;
+             width: 60%;
+             padding: 6px 12px 6px 12px;
+             margin: 18px auto;
+             font-size: 1.4em;
+         }
+        </style>
+    </head>
+    <body>
+
+        <div id="join">
+            <div id="error">&nbsp;</div>
+            Room
+            <input type="text" id="roomId" />
+            ClientId
+            <input disabled="disabled" type="text" id="clientId" />
+            <button id="join-button">Join Game</button>
+        </div>
+
+        <link rel="stylesheet" href="/css/multiplayr.css" type="text/css" />
+
+    </body>
+</html>
