@@ -6,10 +6,17 @@
  *
  */
 
-import {randomRoomId, uniqueId} from '../common/utils.js';
 import Room from './Room.js';
-import {CallbackType} from '../common/types.js';
-import * as constants from '../common/constants.js';
+import Session from './session';
+
+import * as constants from '../common/constants';
+
+import {randomRoomId,
+        uniqueId} from '../common/utils';
+
+import {returnError} from '../common/messages';
+
+import {CallbackType} from '../common/types';
 
 export class Rooms {
     private rooms: {[key: string]: Room};
@@ -23,30 +30,21 @@ export class Rooms {
     }
 
     public create(
-        socket: any,
-        rule: string
-    ): {
-        roomId: string,
-        clientId: string
-    } {
+        clientId: string,
+        session: Session
+    ): Room {
         let uniqid = '';
-        let clientId = '';
 
         do {
             uniqid = randomRoomId();
         } while (this.rooms[uniqid]);
 
-        clientId = uniqueId('mp-client-', true);
-
-        this.rooms[uniqid] = new Room(uniqid, rule);
-        this.rooms[uniqid].addClient(clientId, socket);
+        this.rooms[uniqid] = new Room(uniqid);
+        this.rooms[uniqid].addClient(clientId, session);
 
         this.clientsRoomMap[clientId] = uniqid;
 
-        return {
-            'roomId': uniqid,
-            'clientId': clientId
-        };
+        return this.rooms[uniqid];
     }
 
     public hasRoom(
@@ -145,7 +143,7 @@ export class Rooms {
         console.log('Client[' + clientId + '] disconnected from Room[' + roomId + ']');
 
         this.rooms[roomId].disconnectClient(clientId);
-        this.rooms[roomId].broadcast('leave-room', clientId);
+//        this.rooms[roomId].broadcast('leave-room', clientId);
 
         if (this.rooms[roomId].getClients().length === 0) {
             this.markRoomForCleanup(roomId);
@@ -166,7 +164,7 @@ export class Rooms {
 
         delete this.clientsRoomMap[clientId];
 
-        this.rooms[roomId].broadcast('leave-room', clientId);
+//        this.rooms[roomId].broadcast('leave-room', clientId);
 
         if (clientsLeft === 0) {
             this.deleteRoom(roomId);
@@ -219,45 +217,43 @@ export class Rooms {
     }
 
     public addClient(
-        room: string,
-        socket: any
-    ): string {
+        roomId: string,
+        session: Session
+    ): Room {
 
         let clientId = '';
 
-        if (this.hasRoom(room)) {
-            clientId = uniqueId('mp-client-', true);
-            this.rooms[room].addClient(clientId, socket);
-            this.clientsRoomMap[clientId] = room;
+        if (this.hasRoom(roomId)) {
+            clientId = session.getClientId();
+            this.rooms[roomId].addClient(clientId, session);
+            this.clientsRoomMap[clientId] = roomId;
 
-            console.log('Client[' + clientId + '] joining Room[' + room + ']');
+            console.log('Client[' + clientId + '] joining Room[' + roomId + ']');
 
-            this.unmarkRoomForCleanup(room);
+            this.unmarkRoomForCleanup(roomId);
 
-            return clientId;
+            return this.rooms[roomId];
         } else {
-            throw(new Error('Room does not exists'));
+            throw(new Error('Room ' + roomId + ' does not exists'));
         }
-    };
+    }
 
-    public sendMessage(
-        room: string,
-        fromClientId: string,
-        toClientId: string,
-        message: string,
-        cb?: CallbackType
-    ) {
-        if (this.hasRoom(room)) {
-            this.rooms[room].clientSendMessage(fromClientId,
-                                               toClientId,
-                                               message,
-                                               cb);
-        } else {
-            if (cb) {
-                cb('Room does not exists', false);
-            }
-        }
-    };
+    // public sendMessage(
+    //     roomId: string,
+    //     fromClientId: string,
+    //     toClientId: string,
+    //     message: string,
+    //     cb?: CallbackType
+    // ) {
+    //     if (this.hasRoom(roomId)) {
+    //         this.rooms[roomId].clientSendMessage(fromClientId,
+    //                                            toClientId,
+    //                                            message,
+    //                                            cb);
+    //     } else {
+    //         return returnError(cb, 'Room ' + roomId + ' does not exist');
+    //     }
+    // };
 }
 
 export default Rooms;

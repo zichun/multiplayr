@@ -6,36 +6,51 @@
  *
  */
 
-import {CallbackType, RoomMessageType} from '../common/types.js';
+import Session from './Session';
+
+import {CallbackType,
+        RoomMessageType,
+        SessionMessageType,
+        PacketType} from '../common/types';
+
+import {returnError,
+        returnSuccess,
+        createRoomPacket} from '../common/messages';
 
 export class Room {
     private id: string;
+    private hostId: string;
     private clients: string[];
-    private clientSockets: {[key: string]: any};
+    private clientSessions: {[key: string]: any};
     private clientActiveMap: {[key: string]: boolean};
-    private rule: string;
 
-    constructor(roomId: string,
-                rule: string) {
+    constructor(roomId: string) {
 
         this.id = roomId;
         this.clients = [];
-        this.clientSockets = {};
+        this.clientSessions = {};
         this.clientActiveMap = {};
-        this.rule = rule;
     }
 
-    private sendMessage(toClientId: string,
-                       msgType: string,
-                       message: RoomMessageType,
-                       cb?: CallbackType) {
+    public getHostId(): string {
+        return this.hostId;
+    }
+
+    public sendMessage(toClientId: string,
+                        messageType: SessionMessageType,
+                        data: PacketType,
+                        cb?: CallbackType) {
+
+        if (!data.session) {
+            data.session = {
+                action: messageType
+            };
+        }
 
         if (!this.hasClient(toClientId)) {
-            return cb && cb('Invalid receipient', false);
+            return returnError(cb, 'Invalid toClientId - clientId ' + toClientId + ' does not belong in the room');
         } else {
-            this.clientSockets[toClientId].emit(msgType, message);
-            return cb && cb(null, true);
-            // todo: proper callback bound to emit
+            return this.clientSessions[toClientId].sendMessage(data, cb);
         }
     }
 
@@ -43,20 +58,15 @@ export class Room {
     // Send Messages from a client
     public clientSendMessage(fromClientId: string,
                              toClientId: string,
-                             message: string,
+                             message: PacketType,
                              cb?: CallbackType) {
 
         if (!this.hasClient(fromClientId) || !this.hasClient(toClientId)) {
-            if (cb !== undefined) {
-                cb('Invalid sender / receipient', false);
-            }
+            return returnError(cb, 'Invalid fromClientId / toClientId');
         } else {
             this.sendMessage(toClientId,
-                             'client-sendmessage',
-                             {
-                                 fromClientId: fromClientId,
-                                 message: message
-                             },
+                             SessionMessageType.SendMessage,
+                             message,
                              cb);
         }
     }
@@ -70,26 +80,22 @@ export class Room {
     // @arg clientId Unique Id of client
     // @arg socket The socket.io object of the new client
     public addClient(clientId: string,
-                     socket: any) {
+                     session: Session) {
 
         if (this.hasClient(clientId)) {
             return false;
         }
 
+        if (this.clients.length === 0) {
+            this.hostId = clientId;
+        }
+
         this.clients.push(clientId);
-        this.clientSockets[clientId] = socket;
+        this.clientSessions[clientId] = session;
         this.clientActiveMap[clientId] = true;
 
-        this.broadcast('join-room',
-                       clientId,
-                       () => {
-                           this.sendMessage(clientId,
-                                            'room-rule',
-                                            {
-                                                fromClientId: null,
-                                                message: this.rule
-                                            });
-                       });
+        this.broadcastClientJoin(RoomMessageType.JoinRoom,
+                                 clientId);
 
         return true;
     }
@@ -107,22 +113,12 @@ export class Room {
         }
 
         this.clientActiveMap[clientId] = true;
-        this.clientSockets[clientId] = socket;
+        this.clientSessions[clientId] = socket;
 
-        const broadcastMsg = socketioReconnect ? 'rejoin-room' : 'join-room';
+        const broadcastType = socketioReconnect ? RoomMessageType.RejoinRoom : RoomMessageType.JoinRoom;
 
-        this.broadcast(broadcastMsg,
-                       clientId,
-                       () => {
-                           if (!socketioReconnect) {
-                               this.sendMessage(clientId,
-                                                'room-rule',
-                                                {
-                                                    fromClientId: null,
-                                                    message: this.rule
-                                                });
-                           }
-                       });
+        this.broadcastClientJoin(broadcastType,
+                                 clientId);
 
         return true;
     }
@@ -158,7 +154,7 @@ export class Room {
         }
 
         this.clients.splice(index, 1);
-        delete this.clientSockets[clientId];
+        delete this.clientSessions[clientId];
 
         return this.clients.length;
     }
@@ -168,27 +164,23 @@ export class Room {
     // @arg msgType Type of message
     // @arg message Message to send
     // @arg cb Callback function
-    public broadcast(
-        msgType: string,
-        message: string,
+    public broadcastClientJoin(
+        roomAction: RoomMessageType,
+        clientId: string,
         cb?: CallbackType
     ) {
         Object.keys(this.clientActiveMap).forEach(
-            (clientId) => {
-                if (this.clientActiveMap.hasOwnProperty(clientId) &&
-                    this.clientActiveMap[clientId] === true) {
+            (toClientId) => {
+                if (this.clientActiveMap[clientId] === true) {
 
-                    this.sendMessage(clientId,
-                                     'room-broadcast',
-                                     {
-                                         messageType: msgType,
-                                         message: message
-                                     });
+                    this.sendMessage(toClientId,
+                                     SessionMessageType.RoomBroadcast,
+                                     createRoomPacket(roomAction,
+                                                      clientId));
                 }
             });
 
-        // todo: proper callback
-        cb(null, true);
+        return returnSuccess(cb, 'Room.broadcast', true);
     };
 
     public getClients(): string[] {
@@ -218,6 +210,10 @@ export class Room {
             });
 
         return tr;
+    }
+
+    public getRoomId() {
+        return this.id;
     }
 
 }

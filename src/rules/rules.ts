@@ -38,7 +38,3 @@ export const MPRULES = {
 };
 
 export default MPRULES;
-
-if (typeof module === 'object' && module.exports) {
-    module.exports = MPRULES;
-}

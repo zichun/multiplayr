@@ -417,8 +417,6 @@ TheOddOneRule.onDataChange = function() {
 
         return true;
     }
-
-    return true;
 };
 
 TheOddOneRule.views = {

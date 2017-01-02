@@ -6,27 +6,14 @@
  *
  */
 
-import * as crypto from 'crypto';
-
-export function mathRandomSecure(): number {
-    const bytes = crypto.randomBytes(32);
-    let sum = 0;
-
-    for (let i = 0; i < bytes.length; i = i + 1) {
-        sum = sum + (bytes[i] / 256);
-    }
-
-    return sum - Math.floor(sum);
-}
-
 export function randomRoomId(): string {
-    return Math.floor((mathRandomSecure() * 899999 + 100000)).toString();
+    return Math.floor((Math.random() * 899999 + 100000)).toString();
 }
 
 export let uniqueId = (
     () => {
 
-        let uniqidSeed: number = Math.floor(mathRandomSecure() * 0x75bcd15);
+        let uniqidSeed: number = Math.floor(Math.random() * 0x75bcd15);
 
         function uniqueId(
             prefix?: string,
@@ -63,7 +50,7 @@ export let uniqueId = (
             retId += formatSeed(uniqidSeed, 3); // add seed hex string
             if (moreEntropy) {
                 // for more entropy we add a float lower to 10
-                retId += (mathRandomSecure() * 10).toFixed(8).toString();
+                retId += (Math.random() * 10).toFixed(8).toString();
             }
 
             return retId;
@@ -71,3 +58,50 @@ export let uniqueId = (
 
         return uniqueId;
     })();
+
+export function shuffleArray(o: any[]) {
+    let j = 0;
+    let x = o[0];
+    let i = 0;
+
+    for (i = o.length; i; i = i - 1) {
+        j = Math.floor(Math.random() * i);
+        x = o[i];
+        o[i] = o[j];
+        o[j] = x;
+    }
+
+    return o;
+}
+
+export function isArray(obj: any) {
+    return Object.prototype.toString.call(obj) === '[object Array]';
+}
+
+export function isFunction(functionToCheck: any) {
+    const getType = {};
+    return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+}
+
+export function extendObj(
+    ori: any,
+    extend: any,
+    override: boolean
+) {
+    forEach(extend, (i) => {
+        if (override || !ori.hasOwnProperty(i)) {
+            ori[i] = extend[i];
+        }
+    });
+}
+
+export function forEach(
+    kvp: any,
+    cb: (key: string, value?: any) => any
+) {
+    if (kvp) {
+        Object.keys(kvp).forEach((key) => {
+            cb(key, kvp[key]);
+        });
+    }
+}

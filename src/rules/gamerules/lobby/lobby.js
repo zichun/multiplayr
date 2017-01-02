@@ -67,7 +67,7 @@ Lobby.views = {
         displayName: 'Lobby',
         startGame: function() {
             var gameObj = this.props.MP;
-            gameObj.__parent.startGame();
+            gameObj.parent.startGame();
         },
         render: function() {
             function createHello(names) {

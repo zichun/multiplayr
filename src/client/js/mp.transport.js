@@ -188,9 +188,6 @@ var Mesh =
                 throw(new Error("Client does not belong to a Mesh. Call create or join"));
             }
 
-            console.log("Message: " + message);
-            console.log("to: " + clientId);
-
             self.socket.emit('send-message',
                              {
                                  message: message,
