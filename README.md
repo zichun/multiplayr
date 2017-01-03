@@ -52,7 +52,7 @@ implementation of Multiplayr, the transport layer is implemented with socket.io 
 
 An example packet from a host gameobj setting a view on a client may look something like
 
-```json
+```
 {
     dxc: {
         action: 2, // Enum value of DataExchangeMessageType.SetView
@@ -69,6 +69,8 @@ An example packet from a host gameobj setting a view on a client may look someth
     }
 }
 ```
+
+![Packet Example](/images/packet_example.png)
 
 Todo
 ----
