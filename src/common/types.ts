@@ -17,7 +17,7 @@ export type CallbackType = (res: ReturnPacketType) => any;
 export type JoinRoomType = {
     roomId: string,
     clientId: string
-}
+};
 
 //
 // Packet Types - Packets are the object that is sent in between
@@ -25,27 +25,32 @@ export type JoinRoomType = {
 // add in metadata via subkeys in the packet.
 //
 
+export type ReconnectPacketType = {
+    roomId: string,
+    clientId: string
+};
+
 export type PacketType = {
     transport?: TransportSubPacketType,
     session?: SessionSubPacketType
     room?: RoomSubPacketType,
     dxc?: DataExchangePacketType
-}
+};
 
 export type TransportSubPacketType = {
-}
+};
 
 export type SessionSubPacketType = {
     action: SessionMessageType,
     roomId?: string,
     toClientId?: string,
     fromClientId?: string
-}
+};
 
 export type RoomSubPacketType = {
     action: RoomMessageType,
     clientId: string
-}
+};
 
 export type DataExchangePacketType = {
     action: DataExchangeMessageType,
@@ -57,13 +62,14 @@ export type DataExchangePacketType = {
         displayName: string,
         props: any
     }
-}
+};
 
 export enum SessionMessageType {
     CreateRoom = 1, // client wants to create a new room.
     JoinRoom,       // client wants to join a room.
     SendMessage,    // client wants to send a message to another client.
-    RoomBroadcast   // a broadcast is being emitted from the server.
+    RoomBroadcast,  // a broadcast is being emitted from the server.
+    RejoinRoom      // client wants to rejoin a room
 }
 
 export enum RoomMessageType {

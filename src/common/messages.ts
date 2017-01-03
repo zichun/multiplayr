@@ -62,18 +62,27 @@ export function forwardReturnMessage(
 
 export function checkReturnMessage(
     data: ReturnPacketType,
-    messageType?: string
+    messageType?: string,
+    cb?: CallbackType
 ) {
+    const ret = (msg) => {
+        if (cb) {
+            return forwardReturnMessage(data, cb);
+        }
+
+        throw(msg);
+    };
+
     if (!data || !data.messageType) {
-        throw('Invalid data returned');
+        return ret('Invalid data returned');
     }
 
     if (!data.success) {
-        throw(data.message);
+        return ret(data.message);
     }
 
     if (messageType && data.messageType !== messageType) {
-        throw('Invalid data message type returned');
+        return ret('Invalid data message type returned');
     }
 }
 

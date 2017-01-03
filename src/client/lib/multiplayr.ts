@@ -10,7 +10,11 @@ import MPRULES from '../../rules/rules';
 
 import {isArray, isFunction} from '../../common/utils';
 
-import {checkReturnMessage} from '../../common/messages';
+import {checkReturnMessage,
+        forwardReturnMessage} from '../../common/messages';
+
+import {CallbackType,
+        ReturnPacketType} from '../../common/types';
 
 declare var MPGameObject;
 
@@ -135,7 +139,8 @@ export class MultiplayR {
     public static Host(
         rule: string,
         transport: SocketTransport,
-        container: any
+        container: any,
+        cb?: CallbackType
     ) {
         const ruleDef = MPRULES[rule];
 
@@ -149,18 +154,55 @@ export class MultiplayR {
         });
     }
 
+    public static ReJoin(
+        roomId: string,
+        clientId: string,
+        transport: SocketTransport,
+        container: any,
+        cb?: CallbackType
+    ) {
+        const gameObj = new GameObject(transport,
+                                       container);
+        gameObj.rejoin(roomId,
+                       clientId,
+                       (res: ReturnPacketType) => {
+                           if (!res.success) {
+                               return forwardReturnMessage(res, cb);
+                           }
+
+                           checkReturnMessage(res, 'rule');
+
+                           const rule = res.message;
+                           const ruleDef = MPRULES[rule];
+
+                           MultiplayR.LoadRule(ruleDef.rules, () => {
+                               const rule = ruleDef.onLoad();
+                               MultiplayR.LoadRuleCssDeep(rule);
+
+                               gameObj.setupRule(rule);
+                           });
+
+                           return forwardReturnMessage(res, cb);
+                       });
+    }
+
     public static Join(
         roomId: string,
         transport: SocketTransport,
-        container: any
+        container: any,
+        cb?: CallbackType
     ) {
 
         const gameObj = new GameObject(transport,
                                        container);
-        gameObj.join(roomId, (res) => {
-            checkReturnMessage(res, 'rule');
-            const rule = res.message;
+        gameObj.join(roomId, (res: ReturnPacketType) => {
+            if (!res.success) {
+                return forwardReturnMessage(res, cb);
+            }
 
+            checkReturnMessage(res, 'rule');
+
+            const rule = res.message;
             const ruleDef = MPRULES[rule];
 
             MultiplayR.LoadRule(ruleDef.rules, () => {
@@ -169,6 +211,8 @@ export class MultiplayR {
 
                 gameObj.setupRule(rule);
             });
+
+            return forwardReturnMessage(res, cb);
         });
     }
 

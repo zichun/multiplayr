@@ -39,6 +39,31 @@ export class SocketTransport {
                            this.onMessage(data, fn);
                        });
 
+        this.initializeTransport(cb);
+
+        this.socket.on('reconnect', (data: any) => {
+            if (this.session && this.session.getRoomId()) {
+                this.reconnectTransport();
+            } else {
+                this.initializeTransport();
+            }
+        });
+    }
+
+    private reconnectTransport() {
+        this.socket.emit('rejoin',
+                         {
+                             roomId: this.session.getRoomId(),
+                             clientId: this.clientId
+                         },
+                         (data) => {
+                             checkReturnMessage(data, 'reconnect');
+                         });
+    }
+
+    private initializeTransport(
+        cb?: CallbackType
+    ) {
         this.socket.emit('initialize',
                          {},
                          (data) => {
@@ -58,6 +83,10 @@ export class SocketTransport {
 
     public getClientId() {
         return this.clientId;
+    }
+
+    public updateClientId() {
+        this.clientId = this.session.getClientId();
     }
 
     public waitForConnection(timeoutInMs: number) {
@@ -89,11 +118,7 @@ export class SocketTransport {
     }
 
     public setSession(session: Session) {
-        if (this.session === undefined) {
-            this.session = session;
-        } else {
-            throw('Session has already been set for this transport object');
-        }
+        this.session = session;
     }
 }
 

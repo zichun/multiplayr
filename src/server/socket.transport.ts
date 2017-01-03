@@ -9,24 +9,25 @@
 import Rooms from './rooms';
 import Session from './session';
 
-import {uniqueId,
-        isFunction} from '../common/utils';
+import {isFunction} from '../common/utils';
 
 import {CallbackType,
         JoinRoomType,
         RoomMessageType,
-        PacketType} from '../common/types';
+        PacketType,
+        ReconnectPacketType} from '../common/types';
 
 import {returnError,
         returnSuccess,
-        createReturnMessage} from '../common/messages';
+        forwardReturnMessage} from '../common/messages';
 
 export class SocketTransport {
     private socket: any;
-    private clientId: string;
     private session: Session = null;
+    private initialized: boolean;
 
     constructor(socket: any) {
+        this.initialized = false;
         this.socket = socket;
         this.initialize();
     }
@@ -34,27 +35,52 @@ export class SocketTransport {
     private initialize() {
 
         this.socket.on('initialize',
-                       (data: PacketType, fn: CallbackType) => {
+                       (data: any, fn: CallbackType) => {
 
-                           if (this.clientId !== undefined) {
+                           if (this.initialized) {
                                return returnError(fn,
-                                                  'transport session has already been initialized (clientId: ' + this.clientId + ')');
+                                                  'transport has already been initialized (clientId: ' + this.session.getClientId() + ')');
                            }
 
-                           // todo: handle reconnection logic
-
-                           this.clientId = uniqueId('mp-client-', true);
                            this.session = new Session(this);
+                           this.initialized = true;
 
-                           console.log('New client connected: ' + this.clientId);
+                           console.log('New client connected: ' + this.session.getClientId());
 
-                           return returnSuccess(fn, 'clientId', this.clientId);
+                           return returnSuccess(fn, 'clientId', this.session.getClientId());
+                       });
+
+        this.socket.on('rejoin',
+                       (data: ReconnectPacketType, fn: CallbackType) => {
+                           // todo: handle reconnection logic
+                           if (this.session || this.initialized) {
+                               return returnError(fn,
+                                                  'transport has already been initialized, cannot rejoin (clientId: ' +
+                                                  this.session.getClientId() + ')');
+                           }
+
+                           if (!data.roomId || !data.clientId) {
+                               return returnError(fn,
+                                                  'invalid reconnection packet (missing data.roomId/clientId)');
+                           }
+
+                           this.initialized = true;
+                           this.session = new Session(this);
+                           this.session.reconnect(data.roomId,
+                                                  data.clientId,
+                                                  (res) => {
+                                                      if (res.success === false) {
+                                                          this.session = null;
+                                                          this.initialized = false;
+                                                      }
+                                                      return forwardReturnMessage(res, fn);
+                                                  });
                        });
 
         this.socket.on('message',
                        (data: PacketType, fn: CallbackType) => {
 
-                           if (this.clientId === undefined) {
+                           if (!this.initialized) {
                                return returnError(fn, 'transport session has not been initialized');
                            }
 
@@ -62,13 +88,18 @@ export class SocketTransport {
                                return returnError(fn, 'invalid data packet (missing transport key)');
                            }
 
-                           // if (data.transport.fromClientId !== this.clientId) {
-
-                           //     return returnError(fn, 'invalid data packet (missing/invalid clientIds)');
-                           // }
-
                            this.session.onMessage(data, fn);
                        });
+
+        this.socket.on('disconnect', () => {
+            if (this.initialized) {
+                console.log('Client disconnected: ' + this.session.getClientId());
+                this.session.onDisconnect();
+
+                this.initialized = false;
+                this.session = null;
+            }
+        });
     }
 
     public sendMessage(
@@ -78,10 +109,6 @@ export class SocketTransport {
         this.socket.emit('message',
                          data,
                          cb);
-    }
-
-    public getClientId() {
-        return this.clientId;
     }
 
     public static NEW_CONNECTION(socket: any) {

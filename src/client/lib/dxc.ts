@@ -47,13 +47,27 @@ export class DataExchange {
         return this.session.createRoom(cb);
     }
 
+    public rejoin(
+        roomId: string,
+        clientId: string,
+        cb?: CallbackType
+    ) {
+        this.session.rejoinRoom(roomId, clientId, (res) => {
+            if (!res.success) {
+                return checkReturnMessage(res, 'hostId', cb);
+            }
+            return this.getRule(cb);
+        });
+    }
+
     public join(
         roomId: string,
         cb?: CallbackType
     ) {
         this.session.joinRoom(roomId, (res) => {
-
-            checkReturnMessage(res, 'hostId');
+            if (!res.success) {
+                return checkReturnMessage(res, 'hostId', cb);
+            }
             return this.getRule(cb);
         });
     }

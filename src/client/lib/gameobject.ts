@@ -113,12 +113,30 @@ class GameObject {
 
             if (!res || !res.success) {
                 this.isHost = false;
+                return checkReturnMessage(res, 'roomId', cb);
             }
-            checkReturnMessage(res, 'roomId');
 
             this.roomId = res.message;
             this.setupRule(rule);
             this.init();
+
+            return forwardReturnMessage(res, cb);
+        });
+    }
+
+    public rejoin(
+        roomId: string,
+        clientId: string,
+        cb?: CallbackType
+    ) {
+        this.dxc.rejoin(roomId, clientId, (res: ReturnPacketType) => {
+            if (!res.success) {
+                return checkReturnMessage(res, 'rule', cb);
+            }
+
+            this.clientId = clientId;
+            this.roomId = roomId;
+            this.isHost = false;
 
             return forwardReturnMessage(res, cb);
         });
@@ -129,7 +147,10 @@ class GameObject {
         cb?: CallbackType
     ) {
         this.dxc.join(roomId, (res: ReturnPacketType) => {
-            checkReturnMessage(res, 'rule');
+            if (!res.success) {
+                return checkReturnMessage(res, 'rule', cb);
+            }
+
             this.roomId = roomId;
             this.isHost = false;
 

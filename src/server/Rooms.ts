@@ -132,10 +132,11 @@ export class Rooms {
     // Disconnect a given client from the room management
     // @arg clientId Identifier of client
     public disconnectClient(
-        clientId: string
+        clientId: string,
+        fn?: CallbackType
     ): void {
         if (!this.clientsRoomMap[clientId]) {
-            throw(new Error('Client Id does not exist'));
+            return returnError(fn, 'ClientId ' + clientId + ' does not exists.');
         }
 
         const roomId = this.getClientRoom(clientId);
@@ -147,27 +148,6 @@ export class Rooms {
 
         if (this.rooms[roomId].getClients().length === 0) {
             this.markRoomForCleanup(roomId);
-        }
-    }
-
-    // Remove a given client from the room management. When client count hits 0, garbage collect room.
-    // @arg clientId Identifier of client
-    public removeClient(
-        clientId: string
-    ): void {
-        if (!this.clientsRoomMap[clientId]) {
-            throw(new Error('Client Id does not exist'));
-        }
-
-        const roomId = this.getClientRoom(clientId);
-        const clientsLeft = this.rooms[roomId].removeClient(clientId);
-
-        delete this.clientsRoomMap[clientId];
-
-//        this.rooms[roomId].broadcast('leave-room', clientId);
-
-        if (clientsLeft === 0) {
-            this.deleteRoom(roomId);
         }
     }
 
@@ -194,31 +174,35 @@ export class Rooms {
     }
 
     public reconnectClient(
-        room: string,
-        socket: any,
+        roomId: string,
+        session: Session,
         clientId: string,
-        socketioReconnect: boolean
-    ): boolean {
+        fn?: CallbackType
+    ): Room {
 
-        if (this.hasRoom(room) && this.clientsRoomMap[clientId] === room) {
+        console.log('Client[' + clientId + '] reconnecting to Room[' + roomId + ']');
 
-            console.log('Client[' + clientId + '] reconnecting to Room[' + room + ']');
+        if (!this.hasRoom(roomId)) {
+            returnError(fn, 'Room ' + roomId + ' does not exists.');
+            return null;
+        } else if (this.clientsRoomMap[clientId] !== roomId) {
+            returnError(fn, 'ClientId ' + clientId + ' did not belong to room ' + roomId);
+            return null;
+        } else {
+            const room = this.rooms[roomId].reconnectClient(clientId, session, fn);
 
-            const result = this.rooms[room].reconnectClient(clientId, socket, socketioReconnect);
-
-            if (result) {
-                this.unmarkRoomForCleanup(room);
+            if (room) {
+                this.unmarkRoomForCleanup(roomId);
             }
 
-            return result;
-        } else {
-            throw(new Error('Room does not exists'));
+            return room;
         }
     }
 
     public addClient(
         roomId: string,
-        session: Session
+        session: Session,
+        fn?: CallbackType
     ): Room {
 
         let clientId = '';
@@ -234,26 +218,10 @@ export class Rooms {
 
             return this.rooms[roomId];
         } else {
-            throw(new Error('Room ' + roomId + ' does not exists'));
+            returnError(fn, 'Room ' + roomId + ' does not exists.');
+            return null;
         }
     }
-
-    // public sendMessage(
-    //     roomId: string,
-    //     fromClientId: string,
-    //     toClientId: string,
-    //     message: string,
-    //     cb?: CallbackType
-    // ) {
-    //     if (this.hasRoom(roomId)) {
-    //         this.rooms[roomId].clientSendMessage(fromClientId,
-    //                                            toClientId,
-    //                                            message,
-    //                                            cb);
-    //     } else {
-    //         return returnError(cb, 'Room ' + roomId + ' does not exist');
-    //     }
-    // };
 }
 
 export default Rooms;

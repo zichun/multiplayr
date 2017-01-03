@@ -50,7 +50,9 @@ export class Room {
         if (!this.hasClient(toClientId)) {
             return returnError(cb, 'Invalid toClientId - clientId ' + toClientId + ' does not belong in the room');
         } else {
-            return this.clientSessions[toClientId].sendMessage(data, cb);
+            if (this.clientSessions[toClientId]) {
+                return this.clientSessions[toClientId].sendMessage(data, cb);
+            }
         }
     }
 
@@ -94,33 +96,36 @@ export class Room {
         this.clientSessions[clientId] = session;
         this.clientActiveMap[clientId] = true;
 
-        this.broadcastClientJoin(RoomMessageType.JoinRoom,
-                                 clientId);
+        this.broadcastRoomActivity(RoomMessageType.JoinRoom,
+                                   clientId);
 
         return true;
     }
 
     // Reconnect a client back to the room
     // @arg clientId Unique Id of client
-    // @arg socket The socket.io object of the new client
-    // @arg socketioReonnect If it's due to a socketio reconnection, no need to resend rule
-    public reconnectClient(clientId: string,
-                           socket: any,
-                           socketioReconnect?: boolean) {
-
+    // @arg session The session object of the new client
+    public reconnectClient(
+        clientId: string,
+        session: Session,
+        fn?: CallbackType
+    ): Room {
         if (this.hasClient(clientId) === false) {
-            return false;
+            returnError(fn, 'Room does not have existing client ' + clientId);
+            return null;
         }
 
         this.clientActiveMap[clientId] = true;
-        this.clientSessions[clientId] = socket;
+        this.clientSessions[clientId] = session;
 
-        const broadcastType = socketioReconnect ? RoomMessageType.RejoinRoom : RoomMessageType.JoinRoom;
+        const broadcastType = RoomMessageType.RejoinRoom;
 
-        this.broadcastClientJoin(broadcastType,
-                                 clientId);
+        this.broadcastRoomActivity(broadcastType,
+                                   clientId);
 
-        return true;
+        returnSuccess(fn, 'reconnect', this.hostId);
+
+        return this;
     }
 
     // Mark a client as disconnected. When enumerating clients (broadcast / getClient),
@@ -136,27 +141,12 @@ export class Room {
         }
 
         this.clientActiveMap[clientId] = false;
+        this.clientSessions[clientId] = null;
+
+        this.broadcastRoomActivity(RoomMessageType.LeaveRoom,
+                                   clientId);
 
         return true;
-    }
-
-    // Remove client from room
-    // @arg clientId Unique Id of client
-    // @return false if client does not exists, and an integer if it does indicating number of clients left
-    public removeClient(
-        clientId: string
-    ): number {
-
-        const index = this.clients.indexOf(clientId);
-
-        if (index === -1) {
-            throw(new Error('Client Id does not exist'));
-        }
-
-        this.clients.splice(index, 1);
-        delete this.clientSessions[clientId];
-
-        return this.clients.length;
     }
 
     // (async)
@@ -164,7 +154,7 @@ export class Room {
     // @arg msgType Type of message
     // @arg message Message to send
     // @arg cb Callback function
-    public broadcastClientJoin(
+    public broadcastRoomActivity(
         roomAction: RoomMessageType,
         clientId: string,
         cb?: CallbackType

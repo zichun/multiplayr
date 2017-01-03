@@ -51,7 +51,9 @@ export class Session {
         packet.session.fromClientId = this.clientId;
 
         this.transport.sendMessage(packet, (data) => {
-            checkReturnMessage(data, 'roomId');
+            if (!data.success) {
+                return checkReturnMessage(data, 'roomId', cb);
+            }
 
             this.roomId = data.message;
             this.hostId = this.clientId;
@@ -72,13 +74,38 @@ export class Session {
         packet.session.roomId = roomId;
         packet.session.fromClientId = this.clientId;
 
-        this.transport.sendMessage(packet, (data) => {
-            checkReturnMessage(data, 'hostId');
+        this.transport.sendMessage(packet, (res) => {
+            if (!res.success) {
+                return checkReturnMessage(res, 'hostId', cb);
+            }
 
-            this.hostId = data.message;
+            this.hostId = res.message;
             this.roomId = roomId;
 
-            return forwardReturnMessage(data, cb);
+            return forwardReturnMessage(res, cb);
+        });
+    }
+
+    public rejoinRoom(
+        roomId: string,
+        clientId: string,
+        cb?: CallbackType
+    ) {
+        const packet = createSessionPacket(SessionMessageType.RejoinRoom);
+        packet.session.roomId = roomId;
+        packet.session.fromClientId = clientId;
+
+        this.transport.sendMessage(packet, (res) => {
+            if (!res.success) {
+                return checkReturnMessage(res, 'hostId', cb);
+            }
+
+            this.hostId = res.message;
+            this.roomId = roomId;
+            this.clientId = clientId;
+            this.transport.updateClientId();
+
+            return forwardReturnMessage(res, cb);
         });
     }
 

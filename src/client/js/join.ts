@@ -55,9 +55,38 @@ function setupJoinButton(
         $joinButton.attr('disabled', 'disabled');
         $joinButton.text('Connecting...');
 
-        MultiplayR.Join(roomId,
-                        transport,
-                        document.getElementById('rules'));
+        if (clientId) {
+            MultiplayR.ReJoin(roomId,
+                              clientId,
+                              transport,
+                              document.body,
+                              (res) => {
+                                  if (!res.success) {
+                                      alert(res.message);
+                                      $joinButton
+                                          .removeAttr('disabled')
+                                          .text('Join Game');
+                                      return;
+                                  }
+
+                                  window.location.hash = 'roomId=' + roomId + '&clientId=' + clientId;
+                              });
+        } else {
+            MultiplayR.Join(roomId,
+                            transport,
+                            document.body,
+                            (res) => {
+                                if (!res.success) {
+                                    alert(res.message);
+                                    $joinButton
+                                        .removeAttr('disabled')
+                                        .text('Join Game');
+                                    return;
+                                }
+
+                                window.location.hash = 'roomId=' + roomId + '&clientId=' + transport.getClientId();
+                            });
+        }
     });
 
 }
