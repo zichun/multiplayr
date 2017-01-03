@@ -1,7 +1,17 @@
 Multiplayr
 ==========
 
-A platform for creating games where your devices (smartphones / tablets) host the game assets.
+Multiplayr is a platform for creating games where your devices (smartphones / tablets) host the game assets. The game rules
+are written in a data-driven, declarative (reactive) fashion.
+
+In each game set up, there will be a host device, and several (or possibly no) client devices. Both the host and clients will
+load the same game rule definition. A game rule defintion comprises 3 components - methods, data and views. Views are what will
+be rendered on the device screens, data defines the state of the game, and methods are used to change the data.
+
+**Only the host has access to read and write data**. The host will determine the state of the game based on the data, and push
+the views down to the clients. Whenever a client needs to change its data, it calls a method, which will be routed back to the
+host and executed on the host device. Whenever there is a data change, the host will reconcile the state and update the views
+accordingly.
 
 Building and running
 --------------------
