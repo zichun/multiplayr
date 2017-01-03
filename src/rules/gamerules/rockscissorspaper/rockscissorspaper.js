@@ -135,7 +135,7 @@ RockScissorsPaperRule.onDataChange = function() {
     }
 
     function showLobby(cb) {
-        mp.setView(mp.clientId, 'lobby_Lobby');
+        mp.setView(mp.clientId, 'host-lobby');
         mp.playersForEach(function(client) {
             mp.setView(client, 'lobby_SetName');
         });
@@ -173,22 +173,44 @@ RockScissorsPaperRule.onDataChange = function() {
                 var value = mp.getPlayersData(v);
                 mp.setViewProps(mp.clientId, v, value);
             });
+
             mp.setView(mp.clientId, 'hostScoreTable');
         } else {
 
         }
     }
+
+    return true;
 };
 
 RockScissorsPaperRule.views = {
+    "host-lobby": React.createClass({
+        render: function() {
+            var mp = this.props.MP;
+
+            return mp.getPluginView('gameshell',
+                                    'HostShell-Main',
+                                    {
+                                        'links': ['Clients'],
+                                        'view-home': mp.getPluginView('lobby', 'Lobby'),
+                                        'view-clients': mp.getPluginView('lobby', 'host-roommanagement')
+                                    });
+        }
+    }),
     chooseMove: React.createClass({
         displayName: 'chooseMove',
         render: function() {
-            return React.DOM.div(null,
-                                 RockScissorsPaperRule.views.choices(this.props),
-                                 RockScissorsPaperRule.views.prevMove(this.props),
-                                 RockScissorsPaperRule.views.clientScoreTable(this.props)
-                                );
+            var mp = this.props.MP;
+
+            return mp.getPluginView('gameshell',
+                                    'HostShell-Main',
+                                    {
+                                        'links': [],
+                                        'view-home': React.DOM.div(null,
+                                                                   RockScissorsPaperRule.views.choices(this.props),
+                                                                   RockScissorsPaperRule.views.prevMove(this.props),
+                                                                   RockScissorsPaperRule.views.clientScoreTable(this.props))
+                                    });
         }
     }),
     choices: React.createClass({
@@ -271,7 +293,9 @@ RockScissorsPaperRule.views = {
     }),
     hostScoreTable: React.createClass({
         render: function() {
+            var mp = this.props.MP;
             var scores = [];
+
             for (var i=0;i<this.props.lobby.names.length;++i) {
                 scores.push(RockScissorsPaperRule.views.score({
                     name: this.props.lobby.names[i],
@@ -280,9 +304,14 @@ RockScissorsPaperRule.views = {
                     lose: this.props.lose[i]
                 }));
             }
-            return React.DOM.table(null,
-                                   RockScissorsPaperRule.views.scoreHeader(),
-                                   scores);
+            return mp.getPluginView('gameshell',
+                                    'HostShell-Main',
+                                    {
+                                        'links': [],
+                                        'view-home': React.DOM.table(null,
+                                                                     RockScissorsPaperRule.views.scoreHeader(),
+                                                                     scores)
+                                    });
 
         }
     }),
@@ -298,5 +327,6 @@ RockScissorsPaperRule.views = {
 };
 
 RockScissorsPaperRule.plugins = {
-    "lobby": Lobby
+    "lobby": Lobby,
+    "gameshell": Shell
 };

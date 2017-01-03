@@ -43,7 +43,7 @@ Shell.views = {
         },
         setView: function(newView) {
             this.state.currentView = newView;
-            $("#shell-nav-trigger").attr('checked',false);
+            document.getElementById("shell-nav-trigger").setAttribute('checked',false); // todo: this should be proper react
             this.forceUpdate();
         },
         render: function() {

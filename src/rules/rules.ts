@@ -9,20 +9,18 @@ declare var RockScissorsPaperRule;
 declare var TheOddOneRule;
 
 export const MPRULES = {
-    'bigger': {
-        description: 'A luck-based game on who rolls the bigger value!',
-        rules: ['lobby', 'bigger', 'gameshell'],
-        onLoad: () => {
-            Shell.plugins.child = BiggerRule;
-            return Shell;
-        }
-    },
+    // 'bigger': {
+    //     description: 'A luck-based game on who rolls the bigger value!',
+    //     rules: ['lobby', 'gameshell', 'bigger'],
+    //     onLoad: () => {
+    //         return bigger;
+    //     }
+    // },
     'rockscissorspaper': {
         description: 'A classic 2 player game',
-        rules: ['lobby', 'rockscissorspaper', 'gameshell'],
+        rules: ['lobby', 'gameshell', 'rockscissorspaper'],
         onLoad: () => {
-            Shell.plugins.child = RockScissorsPaperRule;
-            return Shell;
+            return RockScissorsPaperRule;
         }
     },
     'theoddone': {
@@ -30,8 +28,6 @@ export const MPRULES = {
         rules: ['lobby', 'gameshell', 'theoddone'],
         onLoad: () => {
             return TheOddOneRule;
-//            Shell.plugins['child'] = TheOddOneRule;
-//            return Shell;
         }
     }
 
