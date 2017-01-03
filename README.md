@@ -48,7 +48,7 @@ join an existing room.
 The transport layer encapsulates the mechanism in which the packet is actually sent between devices. In the default
 implementation of Multiplayr, the transport layer is implemented with socket.io with nodejs backend.
 
-### Example
+#### Example
 
 An example packet from a host gameobj setting a view on a client may look something like
 
