@@ -133,10 +133,10 @@ export class Rooms {
     // @arg clientId Identifier of client
     public disconnectClient(
         clientId: string,
-        fn?: CallbackType
+        cb?: CallbackType
     ): void {
         if (!this.clientsRoomMap[clientId]) {
-            return returnError(fn, 'ClientId ' + clientId + ' does not exists.');
+            return returnError(cb, 'ClientId ' + clientId + ' does not exists.');
         }
 
         const roomId = this.getClientRoom(clientId);
@@ -177,19 +177,19 @@ export class Rooms {
         roomId: string,
         session: Session,
         clientId: string,
-        fn?: CallbackType
+        cb?: CallbackType
     ): Room {
 
         console.log('Client[' + clientId + '] reconnecting to Room[' + roomId + ']');
 
         if (!this.hasRoom(roomId)) {
-            returnError(fn, 'Room ' + roomId + ' does not exists.');
+            returnError(cb, 'Room ' + roomId + ' does not exists.');
             return null;
         } else if (this.clientsRoomMap[clientId] !== roomId) {
-            returnError(fn, 'ClientId ' + clientId + ' did not belong to room ' + roomId);
+            returnError(cb, 'ClientId ' + clientId + ' did not belong to room ' + roomId);
             return null;
         } else {
-            const room = this.rooms[roomId].reconnectClient(clientId, session, fn);
+            const room = this.rooms[roomId].reconnectClient(clientId, session, cb);
 
             if (room) {
                 this.unmarkRoomForCleanup(roomId);
@@ -202,7 +202,7 @@ export class Rooms {
     public addClient(
         roomId: string,
         session: Session,
-        fn?: CallbackType
+        cb?: CallbackType
     ): Room {
 
         let clientId = '';
@@ -218,7 +218,7 @@ export class Rooms {
 
             return this.rooms[roomId];
         } else {
-            returnError(fn, 'Room ' + roomId + ' does not exists.');
+            returnError(cb, 'Room ' + roomId + ' does not exists.');
             return null;
         }
     }

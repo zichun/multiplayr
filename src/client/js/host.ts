@@ -5,29 +5,28 @@
  *
  */
 
-import MultiplayR from '../lib/multiplayr';
-import SocketTransport from '../lib/socket.transport';
-import Session from '../lib/session';
-import {checkReturnMessage} from '../../common/messages';
-import MPRULES from '../../rules/rules';
-
 declare var io;
+declare var _mplib;
 
-MultiplayR.SetGamerulesPath('/gamerules/');
+_mplib.MultiplayR.SetGamerulesPath('/gamerules/');
 
 $(() => {
 
     let clientId = '';
-    const transport = new SocketTransport(io,
-                                          location.protocol + '//' + location.host,
-                                          (data) => {
-                                              checkReturnMessage(data, 'clientId');
-                                              clientId = data.message;
+    const transport = new _mplib.SocketTransport(
+        {
+            io: io,
+            uri: location.protocol + '//' + location.host
+        },
+        (data) => {
+            _mplib.messages.checkReturnMessage(data, 'clientId');
+            clientId = data.message;
 
-                                              Object.keys(MPRULES).forEach((rule) => {
-                                                  $('#rules').append(makeRule(rule, MPRULES[rule]));
-                                              });
-                                          });
+            Object.keys(_mplib.MPRULES).forEach((rule) => {
+                $('#rules').append(makeRule(rule, _mplib.MPRULES[rule]));
+            });
+        });
+
     function makeRule(
         name: string,
         rule: any
@@ -47,9 +46,9 @@ $(() => {
         ruleName: string
     ) {
         return () => {
-            MultiplayR.Host(ruleName,
-                            transport,
-                            document.getElementById('rules'));
+            _mplib.MultiplayR.Host(ruleName,
+                                   transport,
+                                   document.getElementById('rules'));
         };
     }
 })

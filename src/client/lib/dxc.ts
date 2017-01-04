@@ -11,7 +11,6 @@
  *
  */
 
-import Session from './session';
 import GameObject from './gameobject';
 
 import {DataExchangeMessageType,
@@ -27,13 +26,16 @@ import {returnError,
         createDataExchangeGetRulePacket,
         createDataExchangeClientReadyPacket} from '../../common/messages';
 
-export class DataExchange {
-    private session: Session;
+import {ClientDataExchangeInterface,
+        ClientSessionInterface} from '../../common/interfaces';
+
+export class DataExchange implements ClientDataExchangeInterface {
+    private session: ClientSessionInterface;
     private gameObj: any;
     private ruleName: string;
 
     constructor(
-        session: Session
+        session: ClientSessionInterface
     ) {
         this.session = session;
         this.session.setDxc(this);
@@ -135,29 +137,29 @@ export class DataExchange {
     }
 
     public onMessage(
-        data: PacketType,
-        fn?: CallbackType
+        packet: PacketType,
+        cb?: CallbackType
     ) {
-        if (!data.dxc || !data.dxc.action) {
-            return returnError(fn, 'invalid data packet (missing dxc key).');
+        if (!packet.dxc || !packet.dxc.action) {
+            return returnError(cb, 'invalid data packet (missing dxc key).');
         }
 
-        switch (data.dxc.action) {
+        switch (packet.dxc.action) {
 
         case DataExchangeMessageType.ClientReady:
-            return this.serviceClientReady(data, fn);
+            return this.serviceClientReady(packet, cb);
 
         case DataExchangeMessageType.ExecMethod:
-            return this.serviceExecMethod(data, fn);
+            return this.serviceExecMethod(packet, cb);
 
         case DataExchangeMessageType.SetView:
-            return this.serviceSetView(data, fn);
+            return this.serviceSetView(packet, cb);
 
         case DataExchangeMessageType.GetRule:
             if (!this.session.isHost()) {
-                return returnError(fn, 'Non-host clients cannot service GetRule request.');
+                return returnError(cb, 'Non-host clients cannot service GetRule request.');
             }
-            return returnSuccess(fn, 'rule', this.ruleName);
+            return returnSuccess(cb, 'rule', this.ruleName);
         }
     }
 
@@ -196,57 +198,57 @@ export class DataExchange {
     }
 
     private serviceClientReady(
-        data: PacketType,
-        fn?: CallbackType
+        packet: PacketType,
+        cb?: CallbackType
     ) {
         if (!this.session.isHost()) {
-            return returnError(fn, 'Non-host clients cannot service ClientReady notifications.');
-        } else if (!data.session || !data.session.fromClientId) {
-            return returnError(fn, 'invalid data packet (missing session.fromClientId key).');
+            return returnError(cb, 'Non-host clients cannot service ClientReady notifications.');
+        } else if (!packet.session || !packet.session.fromClientId) {
+            return returnError(cb, 'invalid data packet (missing session.fromClientId key).');
         }
 
-        const clientId = data.session.fromClientId;
+        const clientId = packet.session.fromClientId;
 
         return this.gameObj.clientIsReady(clientId);
     }
 
     private serviceExecMethod(
-        data: PacketType,
-        fn?: CallbackType
+        packet: PacketType,
+        cb?: CallbackType
     ) {
         if (!this.session.isHost()) {
-            return returnError(fn, 'Non-host clients cannot service ExecMethod request.');
-        } else if (!data.dxc || !data.dxc.execMethodProp) {
-            return returnError(fn, 'invalid data packet (missing dxc.execMethodProp key).');
-        } else if (!data.session || !data.session.fromClientId) {
-            return returnError(fn, 'invalid data packet (missing session.fromClientId key).');
+            return returnError(cb, 'Non-host clients cannot service ExecMethod request.');
+        } else if (!packet.dxc || !packet.dxc.execMethodProp) {
+            return returnError(cb, 'invalid data packet (missing dxc.execMethodProp key).');
+        } else if (!packet.session || !packet.session.fromClientId) {
+            return returnError(cb, 'invalid data packet (missing session.fromClientId key).');
         }
 
-        const clientId = data.session.fromClientId;
-        const method = data.dxc.execMethodProp.method;
-        const args = data.dxc.execMethodProp.args;
+        const clientId = packet.session.fromClientId;
+        const method = packet.dxc.execMethodProp.method;
+        const args = packet.dxc.execMethodProp.args;
 
         return this.gameObj.execMethod(clientId, method, args);
     }
 
     private serviceSetView(
-        data: PacketType,
-        fn?: CallbackType
+        packet: PacketType,
+        cb?: CallbackType
     ) {
         if (this.session.isHost()) {
-            return returnError(fn, 'Host cannot service SetView request.');
-        } else if (!data.dxc || !data.dxc.setViewProp) {
-            return returnError(fn, 'invalid data packet (missing dxc.setViewProp key).');
+            return returnError(cb, 'Host cannot service SetView request.');
+        } else if (!packet.dxc || !packet.dxc.setViewProp) {
+            return returnError(cb, 'invalid data packet (missing dxc.setViewProp key).');
         }
 
-        const displayName = data.dxc.setViewProp.displayName;
-        const props = data.dxc.setViewProp.props;
+        const displayName = packet.dxc.setViewProp.displayName;
+        const props = packet.dxc.setViewProp.props;
 
         return this.gameObj.hostSetView(this.session.getClientId(),
                                         displayName,
                                         props,
                                         this.gameObj.container,
-                                        fn);
+                                        cb);
     }
 
 }

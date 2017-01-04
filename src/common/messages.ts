@@ -14,7 +14,7 @@ import {CallbackType,
         DataExchangeMessageType} from './types';
 
 export function returnError(
-    fn: CallbackType,
+    cb: CallbackType,
     errorMessage: string
 ) {
     const returnMessage = createReturnMessage(false,
@@ -22,21 +22,21 @@ export function returnError(
                                               errorMessage);
     console.error(errorMessage);
 
-    if (isFunction(fn)) {
-        fn(returnMessage);
+    if (isFunction(cb)) {
+        cb(returnMessage);
     }
 }
 
 export function returnSuccess(
-    fn: CallbackType,
+    cb: CallbackType,
     messageType: string,
     message: any
 ) {
     const returnMessage = createReturnMessage(true,
                                               messageType,
                                               message);
-    if (isFunction(fn)) {
-        fn(returnMessage);
+    if (isFunction(cb)) {
+        cb(returnMessage);
     }
 }
 

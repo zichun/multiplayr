@@ -6,8 +6,6 @@
  *
  */
 
-import Session from './session';
-
 import {CallbackType,
         PacketType,
         ReturnPacketType} from '../../common/types';
@@ -17,26 +15,28 @@ import {isFunction} from '../../common/utils';
 import {checkReturnMessage,
         forwardReturnMessage} from '../../common/messages';
 
-export class SocketTransport {
+import {ClientTransportInterface,
+        ClientSessionInterface} from '../../common/interfaces';
+
+export class SocketTransport implements ClientTransportInterface {
     private socket: any;
     private clientId: string;
-    private session: Session;
+    private session: ClientSessionInterface;
 
     constructor(
-        io: any,
-        uri: string,
-        cb?: (data: ReturnPacketType) => any
+        conn: any,
+        cb?: (packet: ReturnPacketType) => any
     ) {
-        this.socket = io.connect(uri,
-                                 {
-                                     'reconnect': true,
-                                     'reconnection delay': 200,
-                                     'force new connection': true
-                                 });
+        this.socket = conn.io.connect(conn.uri,
+                                      {
+                                          'reconnect': true,
+                                          'reconnection delay': 200,
+                                          'force new connection': true
+                                      });
 
         this.socket.on('message',
-                       (data: PacketType, fn: CallbackType) => {
-                           this.onMessage(data, fn);
+                       (packet: PacketType, cb: CallbackType) => {
+                           this.onMessage(packet, cb);
                        });
 
         this.initializeTransport(cb);
@@ -75,10 +75,10 @@ export class SocketTransport {
     }
 
     private onMessage(
-        data: PacketType,
+        packet: PacketType,
         cb: CallbackType
     ) {
-        this.session.onMessage(data, cb);
+        this.session.onMessage(packet, cb);
     }
 
     public getClientId() {
@@ -89,35 +89,17 @@ export class SocketTransport {
         this.clientId = this.session.getClientId();
     }
 
-    public waitForConnection(timeoutInMs: number) {
-        let timeout = false;
+    public sendMessage(packet: PacketType, cb?: CallbackType) {
 
-        const timer = setTimeout(() => {
-            timeout = true;
-        }, timeoutInMs);
-
-        while (this.getClientId() === undefined) {
-            if (timeout) {
-                throw 'Connection timed-out';
-            }
-        }
-
-        clearTimeout(timer);
-
-        return true;
-    }
-
-    public sendMessage(message: PacketType, cb?: CallbackType) {
-
-        message.transport = {};
+        packet.transport = {};
 
         this.socket.emit('message',
-                         message,
+                         packet,
                          cb);
 
     }
 
-    public setSession(session: Session) {
+    public setSession(session: ClientSessionInterface) {
         this.session = session;
     }
 }

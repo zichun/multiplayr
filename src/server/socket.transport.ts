@@ -21,9 +21,12 @@ import {returnError,
         returnSuccess,
         forwardReturnMessage} from '../common/messages';
 
-export class SocketTransport {
+import {ServerTransportInterface,
+        ServerSessionInterface} from '../common/interfaces';
+
+export class SocketTransport implements ServerTransportInterface {
     private socket: any;
-    private session: Session = null;
+    private session: ServerSessionInterface = null;
     private initialized: boolean;
 
     constructor(socket: any) {
@@ -35,10 +38,10 @@ export class SocketTransport {
     private initialize() {
 
         this.socket.on('initialize',
-                       (data: any, fn: CallbackType) => {
+                       (data: any, cb: CallbackType) => {
 
                            if (this.initialized) {
-                               return returnError(fn,
+                               return returnError(cb,
                                                   'transport has already been initialized (clientId: ' + this.session.getClientId() + ')');
                            }
 
@@ -47,20 +50,20 @@ export class SocketTransport {
 
                            console.log('New client connected: ' + this.session.getClientId());
 
-                           return returnSuccess(fn, 'clientId', this.session.getClientId());
+                           return returnSuccess(cb, 'clientId', this.session.getClientId());
                        });
 
         this.socket.on('rejoin',
-                       (data: ReconnectPacketType, fn: CallbackType) => {
+                       (data: ReconnectPacketType, cb: CallbackType) => {
                            // todo: handle reconnection logic
                            if (this.session || this.initialized) {
-                               return returnError(fn,
+                               return returnError(cb,
                                                   'transport has already been initialized, cannot rejoin (clientId: ' +
                                                   this.session.getClientId() + ')');
                            }
 
                            if (!data.roomId || !data.clientId) {
-                               return returnError(fn,
+                               return returnError(cb,
                                                   'invalid reconnection packet (missing data.roomId/clientId)');
                            }
 
@@ -73,22 +76,22 @@ export class SocketTransport {
                                                           this.session = null;
                                                           this.initialized = false;
                                                       }
-                                                      return forwardReturnMessage(res, fn);
+                                                      return forwardReturnMessage(res, cb);
                                                   });
                        });
 
         this.socket.on('message',
-                       (data: PacketType, fn: CallbackType) => {
+                       (packet: PacketType, cb: CallbackType) => {
 
                            if (!this.initialized) {
-                               return returnError(fn, 'transport session has not been initialized');
+                               return returnError(cb, 'transport session has not been initialized');
                            }
 
-                           if (data.transport === undefined) {
-                               return returnError(fn, 'invalid data packet (missing transport key)');
+                           if (packet.transport === undefined) {
+                               return returnError(cb, 'invalid data packet (missing transport key)');
                            }
 
-                           this.session.onMessage(data, fn);
+                           this.session.onMessage(packet, cb);
                        });
 
         this.socket.on('disconnect', () => {
@@ -103,16 +106,12 @@ export class SocketTransport {
     }
 
     public sendMessage(
-        data: PacketType,
+        packet: PacketType,
         cb?: CallbackType
     ) {
         this.socket.emit('message',
-                         data,
+                         packet,
                          cb);
-    }
-
-    public static NEW_CONNECTION(socket: any) {
-        const transport = new SocketTransport(socket)
     }
 }
 

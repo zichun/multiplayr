@@ -85,7 +85,7 @@ import SocketTransport from './server/socket.transport.js';
 
 io.sockets.on('connection', (socket) => {
 
-    SocketTransport.NEW_CONNECTION(socket);
+    const transport = new SocketTransport(socket);
 
 });
 

@@ -1,19 +1,12 @@
 /**
  * join.ts
  *
- * entry point for host
- *
  */
 
-import MultiplayR from '../lib/multiplayr';
-import SocketTransport from '../lib/socket.transport';
-import Session from '../lib/session';
-import {checkReturnMessage} from '../../common/messages';
-import MPRULES from '../../rules/rules';
-
 declare var io;
+declare var _mplib;
 
-MultiplayR.SetGamerulesPath('/gamerules/');
+_mplib.MultiplayR.SetGamerulesPath('/gamerules/');
 
 $(() => {
 
@@ -23,14 +16,17 @@ $(() => {
 
     $joinButton.hide();
 
-    const transport = new SocketTransport(io,
-                                          location.protocol + '//' + location.host,
-                                          (data) => {
-                                              checkReturnMessage(data, 'clientId');
-                                              clientId = data.message;
-                                              connected = true;
-                                              setupJoinButton(clientId, transport);
-                                          });
+    const transport = new _mplib.SocketTransport(
+        {
+            io: io,
+            uri: location.protocol + '//' + location.host
+        },
+        (data) => {
+            _mplib.messages.checkReturnMessage(data, 'clientId');
+            clientId = data.message;
+            connected = true;
+            setupJoinButton(clientId, transport);
+        });
 
     const hash = parseHash();
     if (hash.roomId && hash.clientId) {
@@ -42,7 +38,7 @@ $(() => {
 
 function setupJoinButton(
     clientId: string,
-    transport: SocketTransport
+    transport: any
 ) {
     const $joinButton = $('#join-button');
 
@@ -56,36 +52,36 @@ function setupJoinButton(
         $joinButton.text('Connecting...');
 
         if (clientId) {
-            MultiplayR.ReJoin(roomId,
-                              clientId,
-                              transport,
-                              document.body,
-                              (res) => {
-                                  if (!res.success) {
-                                      alert(res.message);
-                                      $joinButton
-                                          .removeAttr('disabled')
-                                          .text('Join Game');
-                                      return;
-                                  }
+            _mplib.MultiplayR.ReJoin(roomId,
+                                     clientId,
+                                     transport,
+                                     document.body,
+                                     (res) => {
+                                         if (!res.success) {
+                                             alert(res.message);
+                                             $joinButton
+                                                 .removeAttr('disabled')
+                                                 .text('Join Game');
+                                             return;
+                                         }
 
-                                  window.location.hash = 'roomId=' + roomId + '&clientId=' + clientId;
-                              });
+                                         window.location.hash = 'roomId=' + roomId + '&clientId=' + clientId;
+                                     });
         } else {
-            MultiplayR.Join(roomId,
-                            transport,
-                            document.body,
-                            (res) => {
-                                if (!res.success) {
-                                    alert(res.message);
-                                    $joinButton
-                                        .removeAttr('disabled')
-                                        .text('Join Game');
-                                    return;
-                                }
+            _mplib.MultiplayR.Join(roomId,
+                                   transport,
+                                   document.body,
+                                   (res) => {
+                                       if (!res.success) {
+                                           alert(res.message);
+                                           $joinButton
+                                               .removeAttr('disabled')
+                                               .text('Join Game');
+                                           return;
+                                       }
 
-                                window.location.hash = 'roomId=' + roomId + '&clientId=' + transport.getClientId();
-                            });
+                                       window.location.hash = 'roomId=' + roomId + '&clientId=' + transport.getClientId();
+                                   });
         }
     });
 

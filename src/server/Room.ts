@@ -38,11 +38,11 @@ export class Room {
 
     public sendMessage(toClientId: string,
                         messageType: SessionMessageType,
-                        data: PacketType,
+                        packet: PacketType,
                         cb?: CallbackType) {
 
-        if (!data.session) {
-            data.session = {
+        if (!packet.session) {
+            packet.session = {
                 action: messageType
             };
         }
@@ -51,7 +51,7 @@ export class Room {
             return returnError(cb, 'Invalid toClientId - clientId ' + toClientId + ' does not belong in the room');
         } else {
             if (this.clientSessions[toClientId]) {
-                return this.clientSessions[toClientId].sendMessage(data, cb);
+                return this.clientSessions[toClientId].sendMessage(packet, cb);
             }
         }
     }
@@ -60,7 +60,7 @@ export class Room {
     // Send Messages from a client
     public clientSendMessage(fromClientId: string,
                              toClientId: string,
-                             message: PacketType,
+                             packet: PacketType,
                              cb?: CallbackType) {
 
         if (!this.hasClient(fromClientId) || !this.hasClient(toClientId)) {
@@ -68,7 +68,7 @@ export class Room {
         } else {
             this.sendMessage(toClientId,
                              SessionMessageType.SendMessage,
-                             message,
+                             packet,
                              cb);
         }
     }
@@ -108,10 +108,10 @@ export class Room {
     public reconnectClient(
         clientId: string,
         session: Session,
-        fn?: CallbackType
+        cb?: CallbackType
     ): Room {
         if (this.hasClient(clientId) === false) {
-            returnError(fn, 'Room does not have existing client ' + clientId);
+            returnError(cb, 'Room does not have existing client ' + clientId);
             return null;
         }
 
@@ -123,7 +123,7 @@ export class Room {
         this.broadcastRoomActivity(broadcastType,
                                    clientId);
 
-        returnSuccess(fn, 'reconnect', this.hostId);
+        returnSuccess(cb, 'reconnect', this.hostId);
 
         return this;
     }

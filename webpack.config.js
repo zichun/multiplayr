@@ -6,13 +6,14 @@ var path = require('path');
 module.exports = {
     context: __dirname + '/build',
     entry: {
-        host: './client/js/host',
-        join: './client/js/join'
+        lib: './client/js/lib'
     },
     output: {
         path: __dirname + '/build/client/js/',
         publicPath: '/',
-        filename: '[name].bundle.js'
+        filename: '[name].bundle.js',
+        libraryTarget: 'var',
+        library: '_mplib'
     },
     resolve: {
         root: __dirname,

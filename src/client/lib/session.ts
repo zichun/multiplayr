@@ -6,9 +6,6 @@
  *
  */
 
-import SocketTransport from './socket.transport';
-import DataExchange from './dxc';
-
 import {returnError,
         createSessionPacket,
         checkReturnMessage,
@@ -19,15 +16,19 @@ import {SessionMessageType,
         PacketType,
         RoomMessageType} from '../../common/types';
 
-export class Session {
+import {ClientTransportInterface,
+        ClientDataExchangeInterface,
+        ClientSessionInterface} from '../../common/interfaces';
+
+export class Session implements ClientSessionInterface {
     private clientId: string;
     private hostId: string;
     private roomId: string;
-    private dxc: DataExchange;
-    private transport: SocketTransport;
+    private dxc: ClientDataExchangeInterface;
+    private transport: ClientTransportInterface;
 
     constructor(
-        transport: SocketTransport
+        transport: ClientTransportInterface
     ) {
         this.transport = transport;
         this.clientId = transport.getClientId();
@@ -111,50 +112,50 @@ export class Session {
 
     public sendMessage(
         clientId: string,
-        data: PacketType,
+        packet: PacketType,
         cb?: CallbackType
     ) {
-        data.session = {
+        packet.session = {
             action: SessionMessageType.SendMessage,
             toClientId: clientId,
             fromClientId: this.clientId
         };
 
-        this.transport.sendMessage(data, cb);
+        this.transport.sendMessage(packet, cb);
     }
 
     public onMessage(
-        data: PacketType,
-        fn?: CallbackType
+        packet: PacketType,
+        cb?: CallbackType
     ) {
-        if (!data.session || !data.session.action) {
-            return returnError(fn, 'invalid data packet (missing session key)');
+        if (!packet.session || !packet.session.action) {
+            return returnError(cb, 'invalid data packet (missing session key)');
         }
 
-        switch (data.session.action) {
+        switch (packet.session.action) {
 
         case SessionMessageType.RoomBroadcast:
             // a broadcast is being emitted from the room.
-            return this.serviceBroadcastMessage(data, fn);
+            return this.serviceBroadcastMessage(packet, cb);
 
         case SessionMessageType.SendMessage:
             // Received a (routed) SendMessage from another client. Forward it to the dxc layer.
             if (this.dxc !== undefined) {
-                this.dxc.onMessage(data, fn);
+                this.dxc.onMessage(packet, cb);
             }
             break;
 
         default:
-            return returnError(fn, 'invalid data packet (invalid session action - ' + data.session.action + ')');
+            return returnError(cb, 'invalid data packet (invalid session action - ' + packet.session.action + ')');
         }
     }
 
     private serviceBroadcastMessage(
-        data: PacketType,
-        fn?: CallbackType
+        packet: PacketType,
+        cb?: CallbackType
     ) {
-        if (!data.room || !data.room.action || !data.room.clientId) {
-            return returnError(fn, 'invalid data packet (missing room key)');
+        if (!packet.room || !packet.room.action || !packet.room.clientId) {
+            return returnError(cb, 'invalid data packet (missing room key)');
         }
 
         if (!this.isHost()) {
@@ -162,27 +163,27 @@ export class Session {
             return;
         }
 
-        switch (data.room.action) {
+        switch (packet.room.action) {
 
         case RoomMessageType.JoinRoom:
-            return this.dxc.onJoinRoom(data.room.clientId);
+            return this.dxc.onJoinRoom(packet.room.clientId);
 
         case RoomMessageType.RejoinRoom:
-            return this.dxc.onRejoinRoom(data.room.clientId);
+            return this.dxc.onRejoinRoom(packet.room.clientId);
 
         case RoomMessageType.LeaveRoom:
-            return this.dxc.onLeaveRoom(data.room.clientId);
+            return this.dxc.onLeaveRoom(packet.room.clientId);
 
         default:
-            return returnError(fn, 'invalid data packet (invalid room action - ' + data.session.action + ')');
+            return returnError(cb, 'invalid data packet (invalid room action - ' + packet.session.action + ')');
         }
     }
 
-    public setDxc(dxc: DataExchange) {
+    public setDxc(dxc: ClientDataExchangeInterface) {
         if (this.dxc === undefined) {
             this.dxc = dxc;
         } else {
-            throw('DataExchange has already been set for this session object');
+            throw('ClientDataExchangeInterface has already been set for this session object');
         }
     }
 
