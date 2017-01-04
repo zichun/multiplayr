@@ -65,8 +65,8 @@ dir.subdirs(rootDir + 'rules/gamerules/', (err, subdirs) => {
 
 // Temp for local testing
 
-app.get('/test', (req, res) => {
-    res.sendFile(rootDir + 'client/static/test.html');
+app.get('/theoddone', (req, res) => {
+    res.sendFile(rootDir + 'client/static/theoddone.html');
 });
 
 // app.get('/rockscissorspaper', (req, res) => {

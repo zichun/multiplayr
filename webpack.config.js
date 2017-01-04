@@ -6,7 +6,8 @@ var path = require('path');
 module.exports = {
     context: __dirname + '/build',
     entry: {
-        lib: './client/js/lib'
+        lib: './client/js/lib',
+        locallib: './client/js/locallib'
     },
     output: {
         path: __dirname + '/build/client/js/',

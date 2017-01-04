@@ -6,7 +6,6 @@
  *
  */
 
-import Rooms from './rooms';
 import Session from './session';
 
 import {isFunction} from '../common/utils';

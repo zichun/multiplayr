@@ -50,6 +50,28 @@ export class SocketTransport implements ClientTransportInterface {
         });
     }
 
+    public getClientId() {
+        return this.clientId;
+    }
+
+    public updateClientId() {
+        this.clientId = this.session.getClientId();
+    }
+
+    public sendMessage(packet: PacketType, cb?: CallbackType) {
+
+        packet.transport = {};
+
+        this.socket.emit('message',
+                         packet,
+                         cb);
+
+    }
+
+    public setSession(session: ClientSessionInterface) {
+        this.session = session;
+    }
+
     private reconnectTransport() {
         this.socket.emit('rejoin',
                          {
@@ -79,28 +101,6 @@ export class SocketTransport implements ClientTransportInterface {
         cb: CallbackType
     ) {
         this.session.onMessage(packet, cb);
-    }
-
-    public getClientId() {
-        return this.clientId;
-    }
-
-    public updateClientId() {
-        this.clientId = this.session.getClientId();
-    }
-
-    public sendMessage(packet: PacketType, cb?: CallbackType) {
-
-        packet.transport = {};
-
-        this.socket.emit('message',
-                         packet,
-                         cb);
-
-    }
-
-    public setSession(session: ClientSessionInterface) {
-        this.session = session;
     }
 }
 

@@ -150,7 +150,7 @@ export class MultiplayR {
 
             const gameObj = new GameObject(transport,
                                            container);
-            gameObj.host(rule.name, rule);
+            gameObj.host(rule.name, rule, cb);
         });
     }
 
