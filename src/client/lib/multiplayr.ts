@@ -144,14 +144,13 @@ export class MultiplayR {
     ) {
         const ruleDef = MPRULES[rule];
 
-        MultiplayR.LoadRule(ruleDef.rules, () => {
-            const rule = ruleDef.onLoad();
-            MultiplayR.LoadRuleCssDeep(rule);
+//        MultiplayR.LoadRule(ruleDef.rules, () => {
+            MultiplayR.LoadRuleCssDeep(ruleDef.rule);
 
             const gameObj = new GameObject(transport,
                                            container);
-            gameObj.host(rule.name, rule, cb);
-        });
+            gameObj.host(ruleDef.rule.name, ruleDef.rule, cb);
+//        });
     }
 
     public static ReJoin(
@@ -175,12 +174,11 @@ export class MultiplayR {
                            const rule = res.message;
                            const ruleDef = MPRULES[rule];
 
-                           MultiplayR.LoadRule(ruleDef.rules, () => {
-                               const rule = ruleDef.onLoad();
-                               MultiplayR.LoadRuleCssDeep(rule);
+//                           MultiplayR.LoadRule(ruleDef.rules, () => {
+                               MultiplayR.LoadRuleCssDeep(ruleDef.rule);
 
-                               gameObj.setupRule(rule);
-                           });
+                               gameObj.setupRule(ruleDef.rule);
+//                           });
 
                            return forwardReturnMessage(res, cb);
                        });
@@ -205,12 +203,11 @@ export class MultiplayR {
             const rule = res.message;
             const ruleDef = MPRULES[rule];
 
-            MultiplayR.LoadRule(ruleDef.rules, () => {
-                const rule = ruleDef.onLoad();
-                MultiplayR.LoadRuleCssDeep(rule);
+//            MultiplayR.LoadRule(ruleDef.rules, () => {
+                MultiplayR.LoadRuleCssDeep(ruleDef.rule);
 
-                gameObj.setupRule(rule);
-            });
+                gameObj.setupRule(ruleDef.rule);
+//            });
 
             return forwardReturnMessage(res, cb);
         });

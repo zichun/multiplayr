@@ -35,9 +35,9 @@ app.get('/join', (req, res) => {
 // Set up gamerules path
 //
 
-dir.subdirs(rootDir + 'rules/gamerules/', (err, subdirs) => {
+dir.subdirs(rootDir + 'rules/', (err, subdirs) => {
     const hostRule = (ruleName) => {
-        const ruleFolder = rootDir + 'rules/gamerules/' + ruleName + '/';
+        const ruleFolder = rootDir + 'rules/' + ruleName + '/';
         dir.files(ruleFolder, (err, files) => {
             if (err) {
                 throw err;
@@ -45,8 +45,9 @@ dir.subdirs(rootDir + 'rules/gamerules/', (err, subdirs) => {
 
             files.forEach((file) => {
                 const fileS = file.split(/[\/\\]/);
-
-                app.get('/gamerules/' + ruleName + '/' + fileS[fileS.length - 1], (req, res) => {
+                const route = '/gamerules/' + ruleName + '/' + fileS[fileS.length - 1];
+                console.log('Setting route ' + route + ' => ' + file);
+                app.get(route, (req, res) => {
                     res.sendFile(file);
                 });
             });

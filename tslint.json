@@ -96,12 +96,12 @@
             "http://www.example.com/?.*",
             "http://www.examples.com/?.*"
         ],
-        "no-increment-decrement": true,
+        "no-increment-decrement": false,
         "no-inferrable-types": [false],
         "no-inner-html": true,
         "no-internal-module": false,
         "no-invalid-regexp": true,
-        "no-invalid-this": true,
+        "no-invalid-this": false,
         "no-jquery-raw-elements": false,
         "no-mergeable-namespace": false,
         "no-missing-visibility-modifiers": true,
@@ -121,7 +121,7 @@
         "no-string-based-set-immediate": true,
         "no-string-based-set-interval": true,
         "no-string-based-set-timeout": true,
-        "no-string-literal": true,
+        "no-string-literal": false,
         "no-suspicious-comment": false,
         "no-switch-case-fall-through": true,
         "no-trailing-whitespace": true,
@@ -188,15 +188,15 @@
         "typedef": [
             true,
             "parameter",
-            "property-declaration",
-            "member-variable-declaration"
+            "property-declaration"
+//            "member-variable-declaration"
         ],
         "typedef-whitespace": [false],
         "underscore-consistent-invocation": true,
         "use-isnan": true,
         "use-named-parameter": true,
         "valid-typeof": true,
-        "variable-name": true,
+        "variable-name": false,
         "whitespace": [
             true,
             "check-branch",

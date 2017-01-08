@@ -13,6 +13,9 @@ import DataExchange from './dxc';
 import Session from './session';
 import MPRULES from '../../rules/rules';
 
+import * as DOM from 'react-dom';
+import * as React from 'react';
+
 import {isFunction,
         isArray,
         extendObj,
@@ -27,7 +30,6 @@ import {DataStoreType,
         ReturnPacketType,
         CallbackType} from '../../common/types';
 
-declare var React;
 declare var Q;
 
 class GameObject {
@@ -422,7 +424,7 @@ class GameObject {
             if ((changed || this.hasDelta) &&
                 isFunction(this.onDataChange)) {
                 this.hasDelta = false;
-                const render = this.onDataChange.call(this.MP);
+                const render = this.onDataChange(this.MP);
 
                 if (this.parent) {
                     forEach(this.reactProps, (client) => {
@@ -533,7 +535,7 @@ class GameObject {
                     // we have this view
                     const view = this.runReactView(displayName, props);
                     if (container) {
-                        return returnSuccess('react', React.renderComponent(view, container));
+                        return returnSuccess(cb, 'react', DOM.render(view, container));
                     } else {
                         // todo: hackish. abstract out as a sync op
                         return view;
@@ -546,7 +548,11 @@ class GameObject {
                     if (!namespace || this.plugins[namespace] === undefined) {
                         throw(new Error('No such views: ' + displayName));
                     } else {
-                        return this.plugins[namespace].hostSetView(clientId, splits[1], props[namespace], container, cb);
+                        return this.plugins[namespace].hostSetView(clientId,
+                                                                   splits[1],
+                                                                   props[namespace],
+                                                                   container,
+                                                                   cb);
                     }
                 }
             } catch (e) {
@@ -599,7 +605,7 @@ class GameObject {
         props = props || {};
         props.MP = this.MP;
 
-        return reactClass(props);
+        return React.createElement(reactClass, props);
     }
 
     private execMethod(
@@ -613,7 +619,7 @@ class GameObject {
 
         if (this.methods[method] !== undefined) {
 
-            const execMethodsCallArgs = [fromClientId];
+            const execMethodsCallArgs = [this.MP, fromClientId];
             let i = 0;
 
             for (i = 0; i < args.length; i = i + 1) {
@@ -796,8 +802,8 @@ class GameObject {
     private getPluginView(
         subView: string,
         viewName: string,
-        extendProps: any,
-        props: any
+        extendProps?: any,
+        props?: any
     ) {
         props = props || (this.reactProps && this.reactProps[this.clientId]);
 
@@ -973,9 +979,11 @@ class GameObject {
         }
 
         const obj = {
+            getView: hostExposedMethodWrapper('getView'),
             getPluginView: hostExposedMethodWrapper('getPluginView'),
             getPluginSetView: hostExposedMethodWrapper('getPluginSetView'),
             clientId: gameObj.clientId,
+            hostId: gameObj.clientId, // todo: fix this for normal clients
             roomId: gameObj.roomId
         };
 
@@ -1015,8 +1023,8 @@ class GameObject {
         };
 
         forEach(dataObj, (variable) => {
-            if (dataObj[variable].value !== undefined) {
-                store[variable] = dataObj[variable].value;
+            if (dataObj[variable] !== undefined) {
+                store[variable] = dataObj[variable];
             } else if (dataObj[variable].type !== undefined) {
                 store[variable] = new dataObj[variable].type(dataObj[variable].init);
             }

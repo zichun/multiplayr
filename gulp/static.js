@@ -15,14 +15,14 @@ gulp.task('js', ['clean'], function() {
                .pipe(gulp.dest('build/client/'));
 });
 
-gulp.task('rules', ['clean'], function() {
-    return gulp.src("src/rules/gamerules/**/*.js")
-               .pipe(gulp.dest('build/rules/gamerules/'));
-});
+// gulp.task('rules', ['clean'], function() {
+//     return gulp.src("src/rules/gamerules/**/*.js")
+//                .pipe(gulp.dest('build/rules/gamerules/'));
+// });
 
 gulp.task('rules-css', ['clean'], function() {
-    return gulp.src("src/rules/gamerules/**/*.css")
-               .pipe(gulp.dest('build/rules/gamerules/'));
+    return gulp.src("src/rules/**/*.css")
+               .pipe(gulp.dest('build/rules/'));
 });
 
-gulp.task('static', ['js', 'css', 'html', 'rules', 'rules-css']);
+gulp.task('static', ['js', 'css', 'html', 'rules-css']);

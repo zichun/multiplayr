@@ -97,7 +97,7 @@ export function extendObj(
 
 export function forEach(
     kvp: any,
-    cb: (key: string, value?: any) => any
+    cb: (key: any, value?: any) => any
 ) {
     if (kvp) {
         Object.keys(kvp).forEach((key) => {

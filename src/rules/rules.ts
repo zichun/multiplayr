@@ -3,10 +3,8 @@
  * This should be deprecated and changed to a json config instead.
  */
 
-declare var BiggerRule;
-declare var Shell;
-declare var RockScissorsPaperRule;
-declare var TheOddOneRule;
+import {RockScissorsPaperRule} from './rockscissorspaper/rockscissorspaper';
+import {TheOddOneRule} from './theoddone/theoddone';
 
 export const MPRULES = {
     // 'bigger': {
@@ -19,16 +17,12 @@ export const MPRULES = {
     'rockscissorspaper': {
         description: 'A classic 2 player game',
         rules: ['lobby', 'gameshell', 'rockscissorspaper'],
-        onLoad: () => {
-            return RockScissorsPaperRule;
-        }
+        rule: RockScissorsPaperRule
     },
     'theoddone': {
         description: 'Guess the odd one',
         rules: ['lobby', 'gameshell', 'theoddone'],
-        onLoad: () => {
-            return TheOddOneRule;
-        }
+        rule: TheOddOneRule
     }
 
 };
