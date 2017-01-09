@@ -29,14 +29,14 @@ GameRules implement the ```GameRuleInterface``` interface, which is a javascript
 
 | Key | Type | Description |
 |-----|------|-------------|
-| name | ```string``` | Name of the Rule |
-| css | ```string[]``` | List of css files for the rule |
-| plugins | ```{ [gameName: string]: GameRuleInterface }``` | List of plugins |
-| globalData | ```{ [varName: string]: any }``` | Set of data available at the global scope |
-| playerData | ```{ [varName: string]: any }``` | Set of data specific to each client |
-| onDataChange | ```(mp: MPType) => boolean``` | Function to reconcile state whenever data changed |
-| methods | ```{[methodName: string]: (mb: any, clientId: string, ...args: any[]) => any}``` | List of methods that views can call |
-| views | { [viewName: string]: ReactComponent } | A set of React Components |
+| ```name``` | ```string``` | Name of the Rule |
+| ```css``` | ```string[]``` | List of css files for the rule |
+| ```plugins``` | ```{ [gameName: string]: GameRuleInterface }``` | List of plugins |
+| ```globalData``` | ```{ [varName: string]: any }``` | Set of data available at the global scope |
+| ```playerData``` | ```{ [varName: string]: any }``` | Set of data specific to each client |
+| ```onDataChange``` | ```(mp: MPType) => boolean``` | Function to reconcile state whenever data changed |
+| ```methods``` | ```{[methodName: string]: (mb: any, clientId: string, ...args: any[]) => any}``` | List of methods that views can call |
+| ```views``` | ```{ [viewName: string]: ReactComponent }``` | A set of React Components |
 
 A gamerule is written in a declarative manner. Each gamerule has a set of data (global and player-specific) with initial values that are defined in
 the ```globalData``` and ```playerData``` keys. Whenever it is changed, the ```onDataChange``` callback will be invoked. There, the gamerule will,
@@ -49,23 +49,23 @@ The gamerule has access to a special ```mp: MPView``` object in ```onDataChange`
 
 | MethodName | Description |
 |------------|-------------|
-| getData | Get the value of a (global) data |
-| setData | Set the value of a (global) data |
-| getPlayerData | Get the value of a client's data |
-| getPlayersData | Get the aggregated values of all clients data |
-| setPlayerData | Set the value of a client's data |
-| setView | Set view for a given client |
-| setViewProps | Set the React props for the view |
-| playersCount | Get the count of connected clients |
-| playersForEach | Enumerate through all connected client Ids |
-| getPluginView | Get a view of a plugin |
+| ```getData``` | Get the value of a (global) data |
+| ```setData``` | Set the value of a (global) data |
+| ```getPlayerData``` | Get the value of a client's data |
+| ```getPlayersData``` | Get the aggregated values of all clients data |
+| ```setPlayerData``` | Set the value of a client's data |
+| ```setView``` | Set view for a given client |
+| ```setViewProps``` | Set the React props for the view |
+| ```playersCount``` | Get the count of connected clients |
+| ```playersForEach``` | Enumerate through all connected client Ids |
+| ```getPluginView``` | Get a view of a plugin |
 
 There are also a few special keys on the ```mp``` object:
 
 | KeyName | Description |
 |---------|-------------|
-| hostId | Id of the host |
-| roomId | Id of the room |
+| ```hostId``` | Id of the host |
+| ```roomId``` | Id of the room |
 
 The ```mp``` object is passed in as the (only) argument in ```onDataChange```, and as the first argument for each methods. It is accessible in React ```views``` via via the view props - ```this.props.MP```.
 
