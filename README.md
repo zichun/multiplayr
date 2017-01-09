@@ -25,12 +25,59 @@ node build\app
 Rules Definition
 -----------------
 
-(todo) document how game rules are defined
+GameRules implement the ```GameRuleInterface``` interface, which is a javascript object with the following keys:
 
-Game Management (gameobj)
-----------------------------
+| Key | Type | Description |
+|-----|------|-------------|
+| name | ```string``` | Name of the Rule |
+| css | ```string[]``` | List of css files for the rule |
+| plugins | ```{ [gameName: string]: GameRuleInterface }``` | List of plugins |
+| globalData | ```{ [varName: string]: any }``` | Set of data available at the global scope |
+| playerData | ```{ [varName: string]: any }``` | Set of data specific to each client |
+| onDataChange | ```(mp: MPType) => boolean``` | Function to reconcile state whenever data changed |
+| methods | ```{[methodName: string]: (mb: any, clientId: string, ...args: any[]) => any}``` | List of methods that views can call |
+| views | { [viewName: string]: ReactComponent } | A set of React Components |
 
-(todo) document GameObject class
+A gamerule is written in a declarative manner. Each gamerule has a set of data (global and player-specific) with initial values that are defined in
+the ```globalData``` and ```playerData``` keys. Whenever it is changed, the ```onDataChange``` callback will be invoked. There, the gamerule will,
+through the ```mp: MPType``` object, reconcile the state of the game based on the data and set the corresponding React views on the host and clients.
+The views can execute methods defined in the ```methods``` key (for instance, in response to a user's action), which may then modify the dataset accordingly.
+
+### MP object
+
+The gamerule has access to a special ```mp: MPView``` object in ```onDataChange```, ```methods```, and ```views```. The following methods are exposed:
+
+| MethodName | Description |
+|------------|-------------|
+| getData | Get the value of a (global) data |
+| setData | Set the value of a (global) data |
+| getPlayerData | Get the value of a client's data |
+| getPlayersData | Get the aggregated values of all clients data |
+| setPlayerData | Set the value of a client's data |
+| setView | Set view for a given client |
+| setViewProps | Set the React props for the view |
+| playersCount | Get the count of connected clients |
+| playersForEach | Enumerate through all connected client Ids |
+| getPluginView | Get a view of a plugin |
+
+There are also a few special keys on the ```mp``` object:
+
+| KeyName | Description |
+|---------|-------------|
+| hostId | Id of the host |
+| roomId | Id of the room |
+
+The ```mp``` object is passed in as the (only) argument in ```onDataChange```, and as the first argument for each methods. It is accessible in React ```views``` via via the view props - ```this.props.MP```.
+
+### Gamerule Plugins
+
+Gamerules may define a plugin hierarchy so that common components can be re-used. Gamerules can access a plugin's asset (data / view) via namespace
+chaining. For instance, if gamerule ```toprule``` has ```foo``` as its plugin, and ```foo``` has ```bar``` as a plugin, then ```toprule``` can access ```bar```'s
+asset via the prefix ```foo_bar_*```. For instance, if ```foo``` has a data ```foodata```, and ```bar``` has a view ```barview```, ```toprule``` may access these
+assets with ```mp.getData('foo_foodata')``` and ```mp.setView(clientId, 'foo_bar_barview')``` respectively.
+
+The entire plugin hierarchy tree runs in the same manner as the root gamerule; whenever its ```data``` has changed, the plugin's ```onDataChange``` will be
+invoked. Views that are set by plugins will not have effect, but its parent rule may get the view that a plugin has set via ```mp.getView```. A view of the parent gamerule may also access a plugin's viewprops by chaining down the ```this.props``` object. For e.g, following the example above, if ```bar``` has a key ```this.props.barprops``` in its view props, the top-level gamerule ```toprule``` may access it via ```this.props.foo.bar.barprops```.
 
 Message Passing in Multiplayr
 --------------------------------

@@ -501,6 +501,7 @@ class GameObject {
     }
 
     private getView(displayName: string) {
+        // todo: re-write this. this should be the corresponding getter for setView
         return this.views[displayName];
     }
 
