@@ -16,8 +16,8 @@ $(() => {
             const $button = $('<button>Connect</button>').click(() => {
                 const transport = new _mplib.LocalClientTransport();
                 _mplib.MultiplayR.Join(roomId,
-                                       transport,
-                                       container);
+                    transport,
+                    container);
 
                 $button.text('Connecting...');
                 $button.attr('disabled', 'disabled');
@@ -33,11 +33,11 @@ $(() => {
         });
 
     _mplib.MultiplayR.Host('theoddone',
-                           transport,
-                           document.getElementById('host-container'),
-                           (res) => {
-                               _mplib.messages.checkReturnMessage(res, 'roomId');
-                               setupJoin(res.message);
-                           });
+        transport,
+        document.getElementById('host-container'),
+        (res) => {
+            _mplib.messages.checkReturnMessage(res, 'roomId');
+            setupJoin(res.message);
+        });
 
 });
