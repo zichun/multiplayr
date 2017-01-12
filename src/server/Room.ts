@@ -87,8 +87,10 @@ export class Room {
      * @param clientId Unique Id of client
      * @param socket The socket.io object of the new client
      */
-    public addClient(clientId: string,
-        session: Session) {
+    public addClient(
+        clientId: string,
+        session: Session
+    ) {
 
         if (this.hasClient(clientId)) {
             return false;
