@@ -46,7 +46,8 @@ export class SocketTransport implements ServerTransportInterface {
             (data: any, cb: CallbackType) => {
 
                 if (this.initialized) {
-                    return returnError(cb,
+                    return returnError(
+                        cb,
                         'transport has already been initialized (clientId: ' + this.session.getClientId() + ')');
                 }
 
@@ -58,23 +59,27 @@ export class SocketTransport implements ServerTransportInterface {
                 return returnSuccess(cb, 'clientId', this.session.getClientId());
             });
 
-        this.socket.on('rejoin',
+        this.socket.on(
+            'rejoin',
             (data: ReconnectPacketType, cb: CallbackType) => {
                 // todo: handle reconnection logic
                 if (this.session || this.initialized) {
-                    return returnError(cb,
+                    return returnError(
+                        cb,
                         'transport has already been initialized, cannot rejoin (clientId: ' +
                         this.session.getClientId() + ')');
                 }
 
                 if (!data.roomId || !data.clientId) {
-                    return returnError(cb,
+                    return returnError(
+                        cb,
                         'invalid reconnection packet (missing data.roomId/clientId)');
                 }
 
                 this.initialized = true;
                 this.session = new Session(this);
-                this.session.reconnect(data.roomId,
+                this.session.reconnect(
+                    data.roomId,
                     data.clientId,
                     (res) => {
                         if (res.success === false) {
@@ -85,7 +90,8 @@ export class SocketTransport implements ServerTransportInterface {
                     });
             });
 
-        this.socket.on('message',
+        this.socket.on(
+            'message',
             (packet: PacketType, cb: CallbackType) => {
 
                 if (!this.initialized) {
@@ -99,22 +105,25 @@ export class SocketTransport implements ServerTransportInterface {
                 this.session.onMessage(packet, cb);
             });
 
-        this.socket.on('disconnect', () => {
-            if (this.initialized) {
-                console.log('Client disconnected: ' + this.session.getClientId());
-                this.session.onDisconnect();
+        this.socket.on(
+            'disconnect',
+            () => {
+                if (this.initialized) {
+                    console.log('Client disconnected: ' + this.session.getClientId());
+                    this.session.onDisconnect();
 
-                this.initialized = false;
-                this.session = null;
-            }
-        });
+                    this.initialized = false;
+                    this.session = null;
+                }
+            });
     }
 
     public sendMessage(
         packet: PacketType,
-        cb?: CallbackType
-    ) {
-        this.socket.emit('message',
+        cb?: CallbackType) {
+
+        this.socket.emit(
+            'message',
             packet,
             cb);
     }

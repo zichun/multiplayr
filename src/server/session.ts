@@ -170,7 +170,8 @@ export class Session implements ServerSessionInterface {
             return returnError(cb, 'Invalid fromClientId');
         }
 
-        return this.room.sendMessage(toClientId,
+        return this.room.sendMessage(
+            toClientId,
             SessionMessageType.SendMessage,
             packet,
             cb);

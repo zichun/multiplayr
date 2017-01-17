@@ -31,7 +31,8 @@ export const Shell: GameRuleInterface = {
                 const header = React.createElement(Shell.views['HostShell-Main-Head'], this.props);
                 const body = React.createElement(Shell.views['HostShell-Main-Body'], this.props);
 
-                return React.DOM.div({ id: 'shell-main' },
+                return React.DOM.div(
+                    { id: 'shell-main' },
                     header,
                     body);
             }
@@ -39,8 +40,10 @@ export const Shell: GameRuleInterface = {
 
         'HostShell-Main-Head': class extends React.Component<ViewPropsInterface, {}> {
             public render() {
-                return React.DOM.div({ id: 'shell-header' },
-                    React.DOM.div({ id: 'shell-room' },
+                return React.DOM.div(
+                    { id: 'shell-header' },
+                    React.DOM.div(
+                        { id: 'shell-room' },
                         this.props.MP.roomId));
             }
         },
@@ -61,7 +64,8 @@ export const Shell: GameRuleInterface = {
                     setView: this.setView
                 });
 
-                const content = React.DOM.div({ id: 'shell-main-content' },
+                const content = React.DOM.div(
+                    { id: 'shell-main-content' },
                     this.props['view-' + this.state.currentView.toLowerCase()]);
 
                 return (
@@ -93,7 +97,8 @@ export const Shell: GameRuleInterface = {
                 for (let i = 0; i < this.props.links.length; i = i + 1) {
                     tr.push(React.DOM.li({ onClick: this.setView, key: ('link-' + i) }, this.props['links'][i]));
                 }
-                return React.DOM.ul({ className: 'shell-navigation' },
+                return React.DOM.ul(
+                    { className: 'shell-navigation' },
                     tr);
             }
         }

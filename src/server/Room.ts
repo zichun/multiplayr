@@ -89,8 +89,7 @@ export class Room {
      */
     public addClient(
         clientId: string,
-        session: Session
-    ) {
+        session: Session) {
 
         if (this.hasClient(clientId)) {
             return false;
@@ -104,7 +103,8 @@ export class Room {
         this._clientSessions[clientId] = session;
         this._clientActiveMap[clientId] = true;
 
-        this.broadcastRoomActivity(RoomMessageType.JoinRoom,
+        this.broadcastRoomActivity(
+            RoomMessageType.JoinRoom,
             clientId);
 
         return true;
@@ -130,7 +130,8 @@ export class Room {
 
         const broadcastType = RoomMessageType.RejoinRoom;
 
-        this.broadcastRoomActivity(broadcastType,
+        this.broadcastRoomActivity(
+            broadcastType,
             clientId);
 
         returnSuccess(cb, 'reconnect', this._hostId);
@@ -154,7 +155,8 @@ export class Room {
         this._clientActiveMap[clientId] = false;
         this._clientSessions[clientId] = null;
 
-        this.broadcastRoomActivity(RoomMessageType.LeaveRoom,
+        this.broadcastRoomActivity(
+            RoomMessageType.LeaveRoom,
             clientId);
 
         return true;
