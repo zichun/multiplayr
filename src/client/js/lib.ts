@@ -11,4 +11,4 @@ import * as messages from '../../common/messages';
 import * as utils from '../../common/utils';
 import MPRULES from '../../rules/rules';
 
-export {MultiplayR, SocketTransport, messages, utils, MPRULES};
+export { MultiplayR, SocketTransport, messages, utils, MPRULES };

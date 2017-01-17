@@ -9,19 +9,27 @@
 import Rooms from './rooms';
 import Room from './room';
 
-import {uniqueId,
-        isFunction} from '../common/utils';
+import {
+    uniqueId,
+    isFunction
+} from '../common/utils';
 
-import {CallbackType,
-        SessionMessageType,
-        PacketType} from '../common/types';
+import {
+    CallbackType,
+    SessionMessageType,
+    PacketType
+} from '../common/types';
 
-import {returnError,
-        returnSuccess,
-        checkReturnMessage} from '../common/messages';
+import {
+    returnError,
+    returnSuccess,
+    checkReturnMessage
+} from '../common/messages';
 
-import {ServerTransportInterface,
-        ServerSessionInterface} from '../common/interfaces';
+import {
+    ServerTransportInterface,
+    ServerSessionInterface
+} from '../common/interfaces';
 
 const rooms = new Rooms();
 
@@ -63,21 +71,21 @@ export class Session implements ServerSessionInterface {
 
         switch (packet.session.action) {
 
-        case SessionMessageType.CreateRoom:
-            return this.createRoom(cb);
+            case SessionMessageType.CreateRoom:
+                return this.createRoom(cb);
 
-        case SessionMessageType.JoinRoom:
-            return this.joinRoom(packet, cb);
+            case SessionMessageType.JoinRoom:
+                return this.joinRoom(packet, cb);
 
-        case SessionMessageType.SendMessage:
-            // Received a SendMessage from one client to another client. Route the message via the room object.
-            return this.routeMessage(packet, cb);
+            case SessionMessageType.SendMessage:
+                // Received a SendMessage from one client to another client. Route the message via the room object.
+                return this.routeMessage(packet, cb);
 
-        case SessionMessageType.RejoinRoom:
-            return this.rejoinRoom(packet, cb);
+            case SessionMessageType.RejoinRoom:
+                return this.rejoinRoom(packet, cb);
 
-        default:
-            return returnError(cb, 'invalid data packet (invalid data session action - ' + packet.session.action + ')');
+            default:
+                return returnError(cb, 'invalid data packet (invalid data session action - ' + packet.session.action + ')');
         }
     }
 
@@ -162,10 +170,11 @@ export class Session implements ServerSessionInterface {
             return returnError(cb, 'Invalid fromClientId');
         }
 
-        return this.room.sendMessage(toClientId,
-                                     SessionMessageType.SendMessage,
-                                     packet,
-                                     cb);
+        return this.room.sendMessage(
+            toClientId,
+            SessionMessageType.SendMessage,
+            packet,
+            cb);
     }
 }
 

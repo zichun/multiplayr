@@ -1,6 +1,6 @@
 /**
  *
- * Room.ts
+ * Rooms.ts
  *
  * Implemenetation of Rooms class.
  *
@@ -11,17 +11,19 @@ import Session from './session';
 
 import * as constants from '../common/constants';
 
-import {randomRoomId,
-        uniqueId} from '../common/utils';
+import {
+    randomRoomId,
+    uniqueId
+} from '../common/utils';
 
-import {returnError} from '../common/messages';
+import { returnError } from '../common/messages';
 
-import {CallbackType} from '../common/types';
+import { CallbackType } from '../common/types';
 
 export class Rooms {
-    private rooms: {[key: string]: Room};
-    private clientsRoomMap: {[key: string]: string};
-    private roomCleanupTimer: {[key: string]: any};
+    private rooms: { [key: string]: Room };
+    private clientsRoomMap: { [key: string]: string };
+    private roomCleanupTimer: { [key: string]: any };
 
     constructor() {
         this.rooms = {};
@@ -64,9 +66,9 @@ export class Rooms {
 
     public getClientRoom(
         clientId: string
-    ) : string {
+    ): string {
         if (this.clientsRoomMap[clientId] === undefined) {
-            throw(new Error('Client Id does not exist'));
+            throw (new Error('Client Id does not exist'));
         }
 
         return this.clientsRoomMap[clientId];
@@ -94,7 +96,7 @@ export class Rooms {
     ): boolean {
 
         if (this.hasRoom(roomId) === false) {
-            throw(new Error('Room ' + roomId + ' does not exists.'));
+            throw (new Error('Room ' + roomId + ' does not exists.'));
         }
 
         if (this.roomCleanupTimer.hasOwnProperty(roomId)) {
@@ -114,7 +116,7 @@ export class Rooms {
         roomId: string
     ) {
         if (this.hasRoom(roomId) === false) {
-            throw(new Error('Room ' + roomId + ' does not exists.'));
+            throw (new Error('Room ' + roomId + ' does not exists.'));
         }
 
         if (!this.roomCleanupTimer[roomId]) {
@@ -144,7 +146,7 @@ export class Rooms {
         console.log('Client[' + clientId + '] disconnected from Room[' + roomId + ']');
 
         this.rooms[roomId].disconnectClient(clientId);
-//        this.rooms[roomId].broadcast('leave-room', clientId);
+        //        this.rooms[roomId].broadcast('leave-room', clientId);
 
         if (this.rooms[roomId].getClients().length === 0) {
             this.markRoomForCleanup(roomId);
@@ -169,7 +171,7 @@ export class Rooms {
         if (this.hasRoom(room)) {
             return this.rooms[room].getClients();
         } else {
-            throw(new Error('Room does not exists'));
+            throw (new Error('Room does not exists'));
         }
     }
 
@@ -204,7 +206,6 @@ export class Rooms {
         session: Session,
         cb?: CallbackType
     ): Room {
-
         let clientId = '';
 
         if (this.hasRoom(roomId)) {
