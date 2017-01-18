@@ -6,6 +6,7 @@
     "express": "=4.13.4",
     "less-middleware": "=2.0.1",
     "node-dir": "^0.1.16",
+    "office-ui-fabric-react": "^1.0.0",
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
     "socket.io": "=1.4.4",

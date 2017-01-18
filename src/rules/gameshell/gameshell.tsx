@@ -3,6 +3,8 @@
  */
 
 import * as React from 'react';
+import { Panel } from 'office-ui-fabric-react/lib/Panel';
+import { Button } from 'office-ui-fabric-react/lib/Button';
 
 import {
     GameRuleInterface,
@@ -38,13 +40,37 @@ export const Shell: GameRuleInterface = {
             }
         },
 
-        'HostShell-Main-Head': class extends React.Component<ViewPropsInterface, {}> {
+        'HostShell-Main-Head': class extends React.Component<ViewPropsInterface, {showPanel: boolean}> {
+            constructor(props: ViewPropsInterface) {
+                super(props);
+                this.state = {showPanel: false};
+            }
+
+            private _showPanel() {
+                this.setState({showPanel: true});
+            }
+
+            private _hidePanel() {
+                this.setState({showPanel: false});
+            }
+
             public render() {
-                return React.DOM.div(
-                    { id: 'shell-header' },
-                    React.DOM.div(
-                        { id: 'shell-room' },
-                        this.props.MP.roomId));
+                return (
+                    <div id='shell-header'>
+                        <Button description='Menu' onClick={ this._showPanel.bind(this) }>Menu</Button>
+                        <div id='shell-room'>
+                            {this.props.MP.roomId}
+                        </div>
+                        <Panel
+                            isOpen={ this.state.showPanel }
+                            isLightDismiss={ true }
+                            isBlocking={ false }
+                            onDismiss= { this._hidePanel.bind(this) }>
+
+                            <span className='ms-font-m'>Light Dismiss usage is meant for the Contextual Menu on mobile sized breakpoints.</span>
+                        </Panel>
+                    </div>
+                );
             }
         },
 
