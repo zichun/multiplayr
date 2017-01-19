@@ -3,6 +3,8 @@
  */
 
 import * as React from 'react';
+import * as FontAwesome from 'react-fontawesome';
+
 import { Panel } from 'office-ui-fabric-react/lib/Panel';
 import { Button } from 'office-ui-fabric-react/lib/Button';
 
@@ -11,6 +13,8 @@ import {
     MPType,
     ViewPropsInterface
 } from '../../common/interfaces';
+
+import { forEach} from '../../common/utils';
 
 export const Shell: GameRuleInterface = {
 
@@ -28,77 +32,127 @@ export const Shell: GameRuleInterface = {
     },
 
     views: {
-        'HostShell-Main': class extends React.Component<ViewPropsInterface, {}> {
+        'HostShell-Main': class extends React.Component<ViewPropsInterface & { links: any, currentView: string }, { currentView: string }> {
+
+            constructor (props: ViewPropsInterface) {
+                super(props);
+                this.state = { currentView: 'home' };
+            }
+
+            private _setView(viewName: string) {
+                this.setState({ currentView: viewName });
+            }
+
             public render() {
                 const header = React.createElement(Shell.views['HostShell-Main-Head'], this.props);
-                const body = React.createElement(Shell.views['HostShell-Main-Body'], this.props);
 
-                return React.DOM.div(
-                    { id: 'shell-main' },
-                    header,
-                    body);
-            }
-        },
+                const body = React.createElement(Shell.views['HostShell-Main-Body'], {
+                    links: this.props.links,
+                    currentView: this.state.currentView
+                });
 
-        'HostShell-Main-Head': class extends React.Component<ViewPropsInterface, {showPanel: boolean}> {
-            constructor(props: ViewPropsInterface) {
-                super(props);
-                this.state = {showPanel: false};
-            }
+                const panel = React.createElement(Shell.views['HostShell-Main-Panel'], {
+                    links: this.props.links,
+                    setView: this._setView.bind(this),
+                    currentView: this.state.currentView
+                });
 
-            private _showPanel() {
-                this.setState({showPanel: true});
-            }
-
-            private _hidePanel() {
-                this.setState({showPanel: false});
-            }
-
-            public render() {
                 return (
-                    <div id='shell-header'>
-                        <Button description='Menu' onClick={ this._showPanel.bind(this) }>Menu</Button>
-                        <div id='shell-room'>
-                            {this.props.MP.roomId}
-                        </div>
-                        <Panel
-                            isOpen={ this.state.showPanel }
-                            isLightDismiss={ true }
-                            isBlocking={ false }
-                            onDismiss= { this._hidePanel.bind(this) }>
-
-                            <span className='ms-font-m'>Light Dismiss usage is meant for the Contextual Menu on mobile sized breakpoints.</span>
-                        </Panel>
+                    <div className='shell-main'>
+                    { header }
+                    { panel }
+                    { body }
                     </div>
                 );
             }
         },
 
-        'HostShell-Main-Body': class extends React.Component<ViewPropsInterface & { links: any }, { currentView: string }> {
+        'HostShell-Main-Panel': class extends React.Component<ViewPropsInterface & {
+            links: any,
+            setView: any,
+            currentView: string
+        }, { showPanel: boolean }> {
+
             constructor(props: ViewPropsInterface) {
                 super(props);
-                this.state = { currentView: 'home' };
+                this.state = { showPanel: false };
+                this._togglePanel = this._togglePanel.bind(this);
             }
-            public setView(newView: string) {
-                this.state.currentView = newView;
-                document.getElementById('shell-nav-trigger').setAttribute('checked', ''); // todo: this should be proper react
-                this.forceUpdate();
-            }
-            public render() {
-                const hamburgerMenus = React.createElement(Shell.views['HostShell-Main-Body-Menu'], {
-                    links: this.props.links,
-                    setView: this.setView
-                });
 
-                const content = React.DOM.div(
-                    { id: 'shell-main-content' },
-                    this.props['view-' + this.state.currentView.toLowerCase()]);
+            private _togglePanel() {
+                this.setState({ showPanel: !this.state.showPanel });
+            }
+
+            public render() {
+                const icons = [];
+                const labels = [];
+
+                forEach(
+                    this.props.links,
+                    (linkName: string, linkObj: any) => {
+
+                        let className = 'icon';
+
+                        if (this.props.currentView === linkName) {
+                            className += ' active';
+                        }
+
+                        icons.push(
+                            <div className='shell-main-panel-link'
+                                 onClick={ this.props.setView.bind(this, linkName) }>
+
+                                <FontAwesome name={ linkObj.icon }
+                                             className={ className }
+                                             size='2x'
+                                             key={ 'link-' + linkName } />
+                                <label>{ linkObj.label }</label>
+                            </div>
+                        );
+                        labels.push();
+                    });
+
+                const pannelExtensionClassName = this.state.showPanel ?
+                                                 'shell-main-panel show' :
+                                                 'shell-main-panel';
+                return (
+                    <div className={ pannelExtensionClassName }>
+                        <div className='shell-main-panel-link'
+                             onClick={ this._togglePanel }>
+
+                            <FontAwesome name='bars'
+                                         size='2x'
+                                         className='icon menu' />
+                        </div>
+                        { icons }
+                    </div>
+                );
+            }
+        },
+
+        'HostShell-Main-Head': class extends React.Component<ViewPropsInterface, {}> {
+            public render() {
+                return (
+                    <div className='shell-header'>
+                        <div className='shell-room'>
+                            {this.props.MP.roomId}
+                        </div>
+                    </div>
+                );
+            }
+        },
+
+        'HostShell-Main-Body': class extends React.Component<ViewPropsInterface & { currentView: string, links: any }, {}> {
+
+            public render() {
+                /* const hamburgerMenus = React.createElement(Shell.views['HostShell-Main-Body-Menu'], {
+                 *     links: this.props.links,
+                 *     setView: this.setView
+                 * });
+                 */
+                const content = this.props.links[this.props.currentView.toLowerCase()].view;
 
                 return (
-                    <div id='shell-body'>
-                        { hamburgerMenus }
-                        <input type='checkbox' id='shell-nav-trigger' className='shell-nav-trigger' />
-                        <label htmlFor='shell-nav-trigger' />
+                    <div className='shell-body'>
                         { content }
                     </div>
                 );

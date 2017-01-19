@@ -204,9 +204,18 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                 return mp.getPluginView('gameshell',
                                         'HostShell-Main',
                                         {
-                                            'links': ['Clients'],
-                                            'view-home': mp.getPluginView('lobby', 'Lobby'),
-                                            'view-clients': mp.getPluginView('lobby', 'host-roommanagement')
+                                            'links': {
+                                                'home': {
+                                                    'icon': 'home',
+                                                    'label': 'Home',
+                                                    'view': mp.getPluginView('lobby', 'Lobby')
+                                                },
+                                                'clients': {
+                                                    'icon': 'users',
+                                                    'label': 'Players',
+                                                    'view': mp.getPluginView('lobby', 'host-roommanagement')
+                                                }
+                                            }
                                         });
             }
         },
@@ -317,13 +326,25 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                 return mp.getPluginView('gameshell',
                                         'HostShell-Main',
                                         {
-                                            'links': [],
-                                            'view-home': React.DOM.table(
-                                                null,
-                                                React.DOM.thead(null,
-                                                                React.createElement(RockScissorsPaperRule.views['scoreHeader'], {})),
-                                                React.DOM.tbody(null,
-                                                                scores))
+                                            'links': {
+                                                'home': {
+                                                    'icon': 'gamepad',
+                                                    'label': 'Game',
+                                                    'view': React.DOM.table(
+                                                        null,
+                                                        React.DOM.thead(null,
+                                                                        React.createElement(
+                                                                            RockScissorsPaperRule.views['scoreHeader'],
+                                                                            {})),
+                                                        React.DOM.tbody(null,
+                                                                        scores))
+                                                },
+                                                'clients': {
+                                                    'icon': 'users',
+                                                    'label': 'Players',
+                                                    'view': mp.getPluginView('lobby', 'host-roommanagement')
+                                                }
+                                            }
                                         });
 
             }

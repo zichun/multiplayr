@@ -432,9 +432,18 @@ export const TheOddOneRule: GameRuleInterface = {
                 return mp.getPluginView('gameshell',
                                         'HostShell-Main',
                                         {
-                                            'links': ['clients'],
-                                            'view-home': mp.getPluginView('lobby', 'Lobby'),
-                                            'view-clients': mp.getPluginView('lobby', 'host-roommanagement')
+                                            'links': {
+                                                'home': {
+                                                    'icon': 'home',
+                                                    'label': 'Home',
+                                                    'view': mp.getPluginView('lobby', 'Lobby')
+                                                },
+                                                'clients': {
+                                                    'icon': 'users',
+                                                    'label': 'Players',
+                                                    'view': mp.getPluginView('lobby', 'host-roommanagement')
+                                                }
+                                            }
                                         });
             }
         },
@@ -483,11 +492,20 @@ export const TheOddOneRule: GameRuleInterface = {
                 return mp.getPluginView('gameshell',
                                         'HostShell-Main',
                                         {
-                                            'links': ['Clients'],
-                                            'view-clients': mp.getPluginView('lobby', 'host-roommanagement'),
-                                            'view-home': React.DOM.div(null,
-                                                                       React.DOM.ol({id: 'theoddone-votetable'}, scores),
-                                                                       submitButton)
+                                            'links': {
+                                                'home': {
+                                                    'icon': 'gamepad',
+                                                    'label': 'Game',
+                                                    'view': React.DOM.div(null,
+                                                                          React.DOM.ol({id: 'theoddone-votetable'}, scores),
+                                                                          submitButton)
+                                                },
+                                                'clients': {
+                                                    'icon': 'users',
+                                                    'label': 'Players',
+                                                    'view': mp.getPluginView('lobby', 'host-roommanagement')
+                                                }
+                                            }
                                         });
             }
 
@@ -505,12 +523,21 @@ export const TheOddOneRule: GameRuleInterface = {
                 return mp.getPluginView('gameshell',
                                         'HostShell-Main',
                                         {
-                                            'links': ['Clients'],
-                                            'view-clients': mp.getPluginView('lobby', 'host-roommanagement'),
-                                            'view-home': React.DOM.div(null,
-                                                                       React.createElement(TheOddOneRule.views['host-summaryTable'],
-                                                                                           this.props),
-                                                                       button)
+                                            'links': {
+                                                'home': {
+                                                    'icon': 'gamepad',
+                                                    'label': 'Game',
+                                                    'view': React.DOM.div(null,
+                                                                          React.createElement(TheOddOneRule.views['host-summaryTable'],
+                                                                                              this.props),
+                                                                          button)
+                                                },
+                                                'clients': {
+                                                    'icon': 'users',
+                                                    'label': 'Players',
+                                                    'view': mp.getPluginView('lobby', 'host-roommanagement')
+                                                }
+                                            }
                                         });
             }
             public newGame() {
