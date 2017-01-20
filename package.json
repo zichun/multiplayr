@@ -3,6 +3,8 @@
   "version": "0.0.1",
   "description": "A platform to play games",
   "dependencies": {
+    "chance": "^1.0.4",
+    "colorsys": "^1.0.9",
     "express": "=4.13.4",
     "less-middleware": "=2.0.1",
     "node-dir": "^0.1.16",

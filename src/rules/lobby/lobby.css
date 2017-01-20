@@ -1,21 +1,67 @@
+.clear { content: " "; display: block; clear: both; font: 0px; height: 0px; }
+
 body {
     font-family: Helvetica, Arial, sans-serif;
     font-size: 13px;
 }
-#setname-container {
+.lobby-setname-container {
     height: 100%;
     margin: 24px auto;
     text-align: center;
 }
-#setname-header {
-    text-align: center;
-}
-#setname-input {
+
+.lobby-setname-input {
     padding: 8px;
     width: 80%;
     margin: 8px;
-    border: 1px solid #888;
+    border: 1px solid #a5a5a5;
+    border-width: 0 0 1px 0;
     font-size: 24px;
+}
+
+.lobby-select-icon-container {
+    width: 75%;
+    margin: 0 auto;
+}
+
+.lobby-select-accent-container {
+    width: 75%;
+    margin: 0 auto;
+}
+
+.lobby-select-icon {
+    cursor: pointer;
+    color: #a5a5a5;
+    float: left;
+    margin: 3px;
+    padding: 1px;
+}
+
+.lobby-select-accent {
+    cursor: pointer;
+    float: left;
+    width: 32px;
+    height: 32px;
+    margin: 11px;
+}
+
+.lobby-select-accent.selected {
+    height: 50px;
+    width: 50px;
+    margin: 2px;
+}
+
+.lobby-select-accent:hover {
+    height: 46px;
+    width: 46px;
+    margin: 4px;
+}
+
+.lobby-select-icon-icon.selected {
+}
+
+.lobby-select-icon:hover {
+    color: black;
 }
 
 .waiting {
@@ -24,12 +70,6 @@ body {
 
 #lobby-playerlist {
     margin: 0 0 12px 4px;
-}
-
-.lobby-name {
-    margin: 0 0 0 4px;
-    font-size: 1.2em;
-    font-weight: bold;
 }
 
 button {
@@ -54,4 +94,40 @@ button {
     font-size: 0px;
     line-height: 0px;
     border-radius: 4px;
+}
+
+.lobby-name {
+    float: left;
+    display: inline-block;
+    height: 64px;
+    margin: 0 0 0 4px;
+    font-size: 1.2em;
+    font-weight: bold;
+    line-height: 64px;
+}
+
+.lobby-player-card {
+    margin: 6px 0 6px 0;
+    height: 64px;
+    line-height: 64px;
+}
+
+.lobby-avatar {
+    float: left;
+    display: inline-block;
+    height: 64px;
+    width: 64px;
+    text-align: center;
+    line-height: 64px;
+    border-radius: 64px;
+    margin: 0 3px 0 0;
+}
+
+.lobby-avatar .lobby-avatar-icon {
+    line-height: 64px;
+    text-align: center;
+}
+
+.lobby-avatar-icon {
+    color: white;
 }

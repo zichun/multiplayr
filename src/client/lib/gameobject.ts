@@ -531,33 +531,29 @@ class GameObject {
 
         if (clientId === null || clientId === this.clientId) {
             // this means that clientId matches request. we'll go ahead to render the view
-            try {
-                if (this.views[displayName] !== undefined) {
-                    // we have this view
-                    const view = this.runReactView(displayName, props);
-                    if (container) {
-                        return returnSuccess(cb, 'react', DOM.render(view, container));
-                    } else {
-                        // todo: hackish. abstract out as a sync op
-                        return view;
-                    }
+            if (this.views[displayName] !== undefined) {
+                // we have this view
+                const view = this.runReactView(displayName, props);
+                if (container) {
+                    return DOM.render(view, container);
                 } else {
-                    // we'll forward it to a plugin
-                    const splits = getFirstNamespace(displayName);
-                    const namespace = splits[0];
-
-                    if (!namespace || this.plugins[namespace] === undefined) {
-                        throw(new Error('No such views: ' + displayName));
-                    } else {
-                        return this.plugins[namespace].hostSetView(clientId,
-                                                                   splits[1],
-                                                                   props[namespace],
-                                                                   container,
-                                                                   cb);
-                    }
+                    // todo: hackish. abstract out as a sync op
+                    return view;
                 }
-            } catch (e) {
-                return returnError(cb, 'Exception: ' + e);
+            } else {
+                // we'll forward it to a plugin
+                const splits = getFirstNamespace(displayName);
+                const namespace = splits[0];
+
+                if (!namespace || this.plugins[namespace] === undefined) {
+                    throw(new Error('No such views: ' + displayName));
+                } else {
+                    return this.plugins[namespace].hostSetView(clientId,
+                                                               splits[1],
+                                                               props[namespace],
+                                                               container,
+                                                               cb);
+                }
             }
         } else {
             // Not me. forward request to client
@@ -1024,10 +1020,10 @@ class GameObject {
         };
 
         forEach(dataObj, (variable) => {
-            if (dataObj[variable] !== undefined) {
+            if (isFunction(dataObj[variable])) {
+                store[variable] = dataObj[variable]();
+            } else if (dataObj[variable] !== undefined) {
                 store[variable] = dataObj[variable];
-            } else if (dataObj[variable].type !== undefined) {
-                store[variable] = new dataObj[variable].type(dataObj[variable].init);
             }
         });
 
