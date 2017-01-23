@@ -19,8 +19,8 @@ const icons = ['car', 'id-badge', 'linode', 'thermometer-empty', 'user-circle', 
                'bed', 'beer', 'bomb', 'blind', 'cloud', 'dashboard', 'fax', 'futbol-o', 'map', 'map-signs', 'paw', 'ship',
                'etsy', 'apple', 'amazon', 'quora', 'windows', 'facebook-square', 'twitter', 'google', 'android', 'linux'];
 
-const colors = ['#001f3f', '#0074D9', '#7FDBFF', '#39CCCC', '#3D9970', '#2ECC40', '#01FF70', '#EEAB00', '#FF851B', '#FF4136',
-                '#85144b', '#F012BE', '#B10DC9', '#111111', '#AAAAAA'];
+const colors = ['#0074D9', '#7FDBFF', '#39CCCC', '#3D9970', '#2ECC40', '#01FF70', '#EEAB00', '#FF851B', '#FF4136',
+                '#F012BE', '#B10DC9', '#AAAAAA'];
 
 export const Lobby: GameRuleInterface = {
 
@@ -167,10 +167,13 @@ export const Lobby: GameRuleInterface = {
             clientIds: string[],
             names: string[],
             accents: string[],
-            icons: number[]
+            icons: number[],
+            size?: string,
+            invertColors?: boolean
         }, {}> {
             public render() {
                 let i = 0;
+                const invertColors = this.props.invertColors;
 
                 for (i = 0; i < this.props.clientIds.length; i = i + 1) {
                     if (this.props.clientId === this.props.clientIds[i]) {
@@ -182,12 +185,31 @@ export const Lobby: GameRuleInterface = {
                     return (<div />);
                 }
 
+                let style = { color: this.props.accents[i] };
+                let outerStyle = {
+                    borderColor: this.props.accents[i],
+                    backgroundColor: 'transparent'
+                };
+
+                let className = 'lobby-player-tag';
+
+                if (invertColors) {
+                    style = { color: 'white' };
+                    outerStyle['backgroundColor'] = this.props.accents[i];
+                    className += ' invert';
+                }
+
+                if (this.props.size) {
+                    className += ' ' + this.props.size;
+                }
+
                 return (
-                    <div className='lobby-player-tag'
-                         style={{ borderColor: this.props.accents[i] }}>
+                    <div className={ className }
+                         style={ outerStyle }>
                         <div className='lobby-player-tag-avatar'
-                             style={{ color: this.props.accents[i] }}>
+                             style={ style }>
                             <FontAwesome name={ icons[this.props.icons[i]] }
+                                         size={ this.props.size }
                                          className='lobby-player-tag-icon' />
                         </div>
                         <div className='lobby-player-tag-name'>

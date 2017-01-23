@@ -19,7 +19,10 @@ import {
     ViewPropsInterface
 } from '../../common/interfaces';
 
-import { shuffle } from '../../common/utils';
+import {
+    shuffle,
+    forEach
+} from '../../common/utils';
 
 enum CoupGameState {
     PlayAction = 1,       // A player chooses an action.
@@ -44,7 +47,8 @@ enum CoupCards {
     Assassin,
     Contessa,
     Captain,
-    Ambassador
+    Ambassador,
+    Unknown
 };
 
 enum CoupCardState {
@@ -84,7 +88,8 @@ function newDeck() {
 function addActions(
     mp: MPType,
     action: CoupActionInterface,
-    actionsEl: any[]
+    actionsEl: any[],
+    index: number
 ) {
     switch (action.action) {
         case CoupAction.Income:
@@ -97,8 +102,9 @@ function addActions(
             );
 
             actionsEl.push(
-                <li className='coup-actionslist-item income'>
-                    { playerTag } played Income, +1 gold.
+                <li className='coup-actionslist-item income'
+                    key={ 'action-' + index }>
+                    { playerTag } played <strong>Income</strong>, +1 gold
                 </li>
             );
     }
@@ -177,11 +183,35 @@ export const CoupRule: GameRuleInterface = {
 
         mp.setViewProps(mp.hostId, 'actions', actions);
 
-        mp.playersForEach((clientId, index) => {
-            mp.setViewProps(clientId, 'coins', playersData[index].coins);
-            mp.setViewProps(clientId, 'cards', playersData[index].cards);
-            mp.setViewProps(clientId, 'actions', actions);
-        });
+        mp.playersForEach(
+            (clientId, index) => {
+                mp.setViewProps(clientId, 'coins', playersData[index].coins);
+                mp.setViewProps(clientId, 'cards', playersData[index].cards);
+                mp.setViewProps(clientId, 'actions', actions);
+
+                const playersCards = {};
+                mp.playersForEach(
+                    (otherClientId, otherIndex) => {
+                        if (index === otherIndex) {
+                            return;
+                        }
+
+                        playersCards[otherClientId] = [];
+
+                        for (let i = 0; i < 2; i = i + 1) {
+                            if (playersData[index].cards[i].state === CoupCardState.Active) {
+                                playersCards[otherClientId].push({
+                                    card: CoupCards.Unknown,
+                                    state: CoupCardState.Active
+                                });
+                            } else {
+                                playersCards[otherClientId].push(playersData[index].cards[i]);
+                            }
+                        }
+                    });
+
+                mp.setViewProps(clientId, 'playersCards', playersCards);
+            });
 
         //
         // Render views based on game state.
@@ -368,7 +398,7 @@ export const CoupRule: GameRuleInterface = {
                 const actionsEl = [];
 
                 for (let i = actions.length - 1; i >= 0; i = i - 1) {
-                    addActions(this.props.MP, actions[i], actionsEl);
+                    addActions(this.props.MP, actions[i], actionsEl, i);
                 }
 
                 return (
@@ -410,23 +440,71 @@ export const CoupRule: GameRuleInterface = {
             }
         },
 
-        'client-cards': class extends React.Component<ViewPropsInterface & { cards: any[] }, {}> {
+        'players-cards': class extends React.Component<ViewPropsInterface & {
+            cards: any[],
+            playersCards: any[]
+        }, {}> {
             public render() {
                 const mp = this.props.MP;
+                const playersCards = this.props.playersCards;
+
+                const myCard = React.createElement(
+                    CoupRule.views['player-card'],
+                    {
+                        clientId: this.props.MP.clientId,
+                        cards: this.props.cards,
+                        MP: this.props.MP
+                    });
+
+                /* const playersCardsEl = [];
+
+                 * forEach(
+                 *     playersCards,
+                 *     (card, index) => {
+                 *         playersCardsEl.push(
+                 *             <div>
+                 *             </div>);
+                 *     });
+                 */
+                return (
+                    <div className='coup-players-cards'>
+                        { myCard }
+                    </div>
+                );
+            }
+        },
+
+        'player-card': class extends React.Component<ViewPropsInterface & {
+            clientId: string,
+            cards: any[]
+        }, {}> {
+            public render() {
                 const cards = this.props.cards;
+
                 const cardsEl = [];
+                const playerTag =  this.props.MP.getPluginView(
+                    'lobby',
+                    'player-tag',
+                    {
+                        clientId: this.props.clientId,
+                        size: '2x',
+                        invertColors: true
+                    }
+                );
 
                 for (let i = 0; i < cards.length; i = i + 1) {
+                    const cardName = CoupCards[cards[i].card];
                     cardsEl.push(
                         <div key={ 'card' + i }
-                             className='coup-card'>
-                            { CoupCards[cards[i].card] }
+                             className='coup-card { cardName }'>
+                            <footer>{ cardName }</footer>
                         </div>
                     );
                 }
 
                 return (
-                    <div className='coup-client-cards'>
+                    <div className='coup-player-cards'>
+                        { playerTag }
                         { cardsEl }
                     </div>
                 );
@@ -450,7 +528,7 @@ export const CoupRule: GameRuleInterface = {
             public render() {
                 const mp = this.props.MP;
                 const playActionPage = React.createElement(CoupRule.views['client-playaction-page'], this.props);
-                const cardsPage = React.createElement(CoupRule.views['client-cards'], this.props);
+                const cardsPage = React.createElement(CoupRule.views['players-cards'], this.props);
                 const actionsPage = React.createElement(CoupRule.views['actions-page'], this.props);
                 const coins = React.createElement(CoupRule.views['client-coins'], this.props);
                 return mp.getPluginView(
@@ -600,7 +678,7 @@ export const CoupRule: GameRuleInterface = {
             public render() {
                 const mp = this.props.MP;
                 const playActionPage = React.createElement(CoupRule.views['client-playaction-page'], this.props);
-                const cards = React.createElement(CoupRule.views['client-cards'], this.props);
+                const cards = React.createElement(CoupRule.views['players-cards'], this.props);
                 const coins = React.createElement(CoupRule.views['client-coins'], this.props);
 
                 return mp.getPluginView(
