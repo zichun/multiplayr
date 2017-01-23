@@ -3,8 +3,9 @@
  * This should be deprecated and changed to a json config instead.
  */
 
-import {RockScissorsPaperRule} from './rockscissorspaper/rockscissorspaper';
-import {TheOddOneRule} from './theoddone/theoddone';
+import { RockScissorsPaperRule } from './rockscissorspaper/rockscissorspaper';
+import { TheOddOneRule } from './theoddone/theoddone';
+import { CoupRule } from './coup/coup';
 
 export const MPRULES = {
     // 'bigger': {
@@ -23,6 +24,11 @@ export const MPRULES = {
         description: 'Guess the odd one',
         rules: ['lobby', 'gameshell', 'theoddone'],
         rule: TheOddOneRule
+    },
+    'coup': {
+        description: 'Coup - Resistance',
+        rules: ['lobby', 'gameshell', 'coup'],
+        rule: CoupRule
     }
 
 };

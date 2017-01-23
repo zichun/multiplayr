@@ -32,7 +32,11 @@ export const Shell: GameRuleInterface = {
     },
 
     views: {
-        'HostShell-Main': class extends React.Component<ViewPropsInterface & { links: any, currentView: string }, { currentView: string }> {
+        'HostShell-Main': class extends React.Component<ViewPropsInterface & {
+            links: any,
+            currentView?: string,
+            topBarContent?: any
+        }, { currentView: string }> {
 
             constructor (props: ViewPropsInterface) {
                 super(props);
@@ -44,7 +48,11 @@ export const Shell: GameRuleInterface = {
             }
 
             public render() {
-                const header = React.createElement(Shell.views['HostShell-Main-Head'], this.props);
+                const header = React.createElement(
+                    Shell.views['HostShell-Main-Head'],
+                    {
+                        topBarContent: this.props.topBarContent ? this.props.topBarContent : this.props.MP.roomId
+                    });
 
                 const body = React.createElement(Shell.views['HostShell-Main-Body'], {
                     links: this.props.links,
@@ -99,12 +107,13 @@ export const Shell: GameRuleInterface = {
 
                         icons.push(
                             <div className='shell-main-panel-link'
-                                 onClick={ this.props.setView.bind(this, linkName) }>
+                                 onClick={ this.props.setView.bind(this, linkName) }
+                                 key={ 'link-' + linkName }>
 
                                 <FontAwesome name={ linkObj.icon }
                                              className={ className }
                                              size='2x'
-                                             key={ 'link-' + linkName } />
+                                             key={ 'icon-' + linkName } />
                                 <label>{ linkObj.label }</label>
                             </div>
                         );
@@ -129,31 +138,46 @@ export const Shell: GameRuleInterface = {
             }
         },
 
-        'HostShell-Main-Head': class extends React.Component<ViewPropsInterface, {}> {
+        'HostShell-Main-Head': class extends React.Component<ViewPropsInterface & { topBarContent: any }, {}> {
             public render() {
                 return (
                     <div className='shell-header'>
                         <div className='shell-room'>
-                            {this.props.MP.roomId}
+                            { this.props.topBarContent }
                         </div>
                     </div>
                 );
             }
         },
 
-        'HostShell-Main-Body': class extends React.Component<ViewPropsInterface & { currentView: string, links: any }, {}> {
-
+        'HostShell-Main-Body': class extends React.Component<ViewPropsInterface & {
+            currentView: string,
+            links: any
+        }, {}> {
             public render() {
-                /* const hamburgerMenus = React.createElement(Shell.views['HostShell-Main-Body-Menu'], {
-                 *     links: this.props.links,
-                 *     setView: this.setView
-                 * });
-                 */
                 const content = this.props.links[this.props.currentView.toLowerCase()].view;
+                const childViews = [];
+
+                forEach(
+                    this.props.links,
+                    (key, obj) => {
+                        let style = {};
+                        if (key !== this.props.currentView.toLowerCase()) {
+                            style = { display: 'none' };
+                        }
+
+                        childViews.push(
+                            <div className='shell-body-container'
+                                 style={ style }
+                                 key={ key }>
+                                { obj.view }
+                            </div>
+                        );
+                    });
 
                 return (
                     <div className='shell-body'>
-                        { content }
+                        { childViews }
                     </div>
                 );
             }

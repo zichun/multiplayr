@@ -6,9 +6,11 @@ import * as React from 'react';
 import Lobby from '../lobby/lobby';
 import Shell from '../gameshell/gameshell';
 
-import {GameRuleInterface,
-        MPType,
-        ViewPropsInterface} from '../../common/interfaces';
+import {
+    GameRuleInterface,
+    MPType,
+    ViewPropsInterface
+} from '../../common/interfaces';
 
 const cards = [
     ['Chicken', 'KFC'],
@@ -227,6 +229,7 @@ export const TheOddOneRule: GameRuleInterface = {
         turn: 0,
         currentCard: 0
     },
+
     playerData: {
         card: 0,
         score: 0,

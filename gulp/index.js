@@ -10,4 +10,4 @@ require('./clean');
 require('./less');
 require('./static');
 
-gulp.task('default', ['tslint', 'clean', 'typescript', 'mocha', 'static', 'less', 'webpack']);
+gulp.task('default', ['tslint', 'clean', 'typescript', 'mocha', 'static', 'rules-less', 'client-less', 'webpack']);

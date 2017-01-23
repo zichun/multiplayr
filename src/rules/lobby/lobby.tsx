@@ -12,8 +12,8 @@ import {GameRuleInterface,
 const icons = ['car', 'id-badge', 'linode', 'thermometer-empty', 'user-circle', 'address-card-o', 'umbrella', 'quote-left',
                'id-card', 'bath', 'grav', 'microchip', 'telegram', 'imdb', 'adjust', 'area-chart', 'bank', 'battery-quarter',
                'bicycle', 'book', 'briefcase', 'bullhorn', 'calculator', 'circle', 'coffee', 'cube', 'envelope', 'feed',
-               'fire-extinguisher', 'gift', 'hand-peace-o', 'hand-spoke-o', 'hashtag', 'hotel', 'hourglass-3', 'legal',
-               'motar-board', 'pencil', 'phone', 'pie-chart', 'power-off', 'trash', 'binoculars', 'bug', 'cog', 'cubes',
+               'fire-extinguisher', 'gift', 'hand-peace-o', 'hand-spock-o', 'hashtag', 'hotel', 'hourglass-3', 'legal',
+               'mortar-board', 'pencil', 'phone', 'pie-chart', 'power-off', 'trash', 'binoculars', 'bug', 'cog', 'cubes',
                'female', 'flag', 'flask', 'line-chart', 'sign-language', 'sitemap', 'space-shuttle', 'tags', 'wrench',
                'ticket', 'tree', 'unlock', 'street-view', 'plug', 'money', 'male', 'fighter-jet', 'cutlery', 'bus', 'birthday-cake',
                'bed', 'beer', 'bomb', 'blind', 'cloud', 'dashboard', 'fax', 'futbol-o', 'map', 'map-signs', 'paw', 'ship',
@@ -70,8 +70,10 @@ export const Lobby: GameRuleInterface = {
             mp.setViewProps(client, 'name', names[ind]);
             mp.setViewProps(client, 'icon', icons[ind]);
             mp.setViewProps(client, 'accent', accents[ind]);
+
             mp.setViewProps(client, 'playerNum', ind);
             mp.setViewProps(client, 'playerCount', mp.playersCount());
+            mp.setViewProps(client, 'clientIds', clientIds);
             mp.setViewProps(client, 'names', orderedNames);
             mp.setViewProps(client, 'icons', orderedIcons);
             mp.setViewProps(client, 'accents', orderedAccents);
@@ -132,6 +134,7 @@ export const Lobby: GameRuleInterface = {
                             React.createElement(
                                 Lobby.views['HelloMessage'],
                                 {
+                                    key: 'hello-' + i,
                                     name: names[i],
                                     icon: icons[i],
                                     accent: accents[i]
@@ -139,8 +142,13 @@ export const Lobby: GameRuleInterface = {
                     }
 
                     if (names.length === 0) {
-                        tr.push( React.DOM.div({className: 'waiting'},
-                                               'Waiting for players to join'));
+                        tr.push(
+                            React.DOM.div(
+                                {
+                                    className: 'waiting',
+                                    key: 'waiting'
+                                },
+                                'Waiting for players to join'));
                     }
 
                     return tr;
@@ -150,6 +158,42 @@ export const Lobby: GameRuleInterface = {
                     null,
                     React.DOM.div({ id: 'lobby-playerlist' }, createHello(this.props.names, this.props.icons, this.props.accents)),
                     React.DOM.button({ onClick: this.startGame }, 'Start game')
+                );
+            }
+        },
+
+        'player-tag': class extends React.Component<ViewPropsInterface & {
+            clientId: string,
+            clientIds: string[],
+            names: string[],
+            accents: string[],
+            icons: number[]
+        }, {}> {
+            public render() {
+                let i = 0;
+
+                for (i = 0; i < this.props.clientIds.length; i = i + 1) {
+                    if (this.props.clientId === this.props.clientIds[i]) {
+                        break;
+                    }
+                }
+
+                if (i === this.props.clientIds.length) {
+                    return (<div />);
+                }
+
+                return (
+                    <div className='lobby-player-tag'
+                         style={{ borderColor: this.props.accents[i] }}>
+                        <div className='lobby-player-tag-avatar'
+                             style={{ color: this.props.accents[i] }}>
+                            <FontAwesome name={ icons[this.props.icons[i]] }
+                                         className='lobby-player-tag-icon' />
+                        </div>
+                        <div className='lobby-player-tag-name'>
+                            { this.props.names[i] }
+                        </div>
+                    </div>
                 );
             }
         },
@@ -245,7 +289,8 @@ export const Lobby: GameRuleInterface = {
                     tr.push(
                         <div className={ className }
                              style={{ backgroundColor: colors[i] }}
-                             onClick={ this._setAccent.bind(this, colors[i]) }>
+                             onClick={ this._setAccent.bind(this, colors[i]) }
+                             key={ 'accent' + i }>
                         </div>
                     );
                 }
@@ -341,7 +386,8 @@ export const Lobby: GameRuleInterface = {
                         MP: this.props.MP,
                         clientId: this.props.clientIds[i],
                         name: this.props.names[i],
-                        isConnected: this.props.playersConnection[i]
+                        isConnected: this.props.playersConnection[i],
+                        key: 'player' + i
                     }));
                 }
                 return React.DOM.tbody(null,
