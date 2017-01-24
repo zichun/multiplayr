@@ -95,6 +95,28 @@ export function extendObj(
     });
 }
 
+export function extendObjClone(
+    ori: any,
+    extend: any,
+    override: boolean
+) {
+    const tr = [];
+
+    forEach(
+        ori,
+        (key, value) => {
+            tr[key] = value;
+        });
+
+    forEach(extend, (key) => {
+        if (override || !tr.hasOwnProperty(key)) {
+            tr[key] = extend[key];
+        }
+    });
+
+    return tr;
+}
+
 export function forEach(
     kvp: any,
     cb: (key: any, value?: any) => any

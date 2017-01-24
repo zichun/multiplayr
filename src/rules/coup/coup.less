@@ -1,3 +1,13 @@
+.coup-seperator {
+    border: 0;
+    height: 1px;
+    background: #333;
+    background-image: linear-gradient(to right, #ccc, #333, #ccc);
+    font-size: 0px;
+    margin: 8px auto 8px;
+    width: 75%;
+}
+
 .coup-client-playaction {
     header {
         font-size: 1.2em;
@@ -35,4 +45,60 @@
         padding-left: 12px;
     }
 
+}
+
+.coup-player-cards {
+    display: inline-block;
+    margin: 8px;
+}
+
+.coup-player-cards-tag {
+    border-radius: 8px 8px 0 0 !important;
+}
+
+.coup-player-cards-container {
+    border: 1px solid white;
+    border-radius: 0 4px 0 4px;
+    display: inline-block;
+
+    .coup-card {
+        height: 180px;
+        width: 158px;
+        position: relative;
+        display: inline-block;
+        margin: 2px;
+
+        background-color: white;
+        background-position: center center;
+        background-repeat: no-repeat;
+
+        footer {
+            position: absolute;
+            bottom: 8px;
+            left: 0px;
+            right: 0px;
+            padding: 4px;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+    }
+}
+
+.coup-card.Assassin {
+    background-image: url(images/assassin.png);
+}
+.coup-card.Captain {
+    background-image: url(images/captain.png);
+}
+.coup-card.Ambassador {
+    background-image: url(images/ambassador.png);
+}
+.coup-card.Contessa {
+    background-image: url(images/contessa.png);
+}
+.coup-card.Duke {
+    background-image: url(images/duke.png);
+}
+.coup-card.Unknown {
+    background-image: url(images/unknown.png);
 }

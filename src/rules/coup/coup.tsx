@@ -1,9 +1,10 @@
 /**
- * Coup
+ * Coup.tsx - Rule for Coup game
  */
 
 import * as React from 'react';
 import * as FontAwesome from 'react-fontawesome';
+import * as colorsys from 'colorsys';
 
 import Lobby from '../lobby/lobby';
 import Shell from '../gameshell/gameshell';
@@ -72,7 +73,7 @@ interface CoupActionInterface {
 function newDeck() {
     const deck: CoupCards[] = [];
 
-    for (let i = 0; i < 3; i = i + 3) {
+    for (let i = 0; i < 3; i = i + 1) {
         deck.push(CoupCards.Duke);
         deck.push(CoupCards.Assassin);
         deck.push(CoupCards.Contessa);
@@ -442,33 +443,57 @@ export const CoupRule: GameRuleInterface = {
 
         'players-cards': class extends React.Component<ViewPropsInterface & {
             cards: any[],
-            playersCards: any[]
+            playersCards: any[],
+            lobby: any
         }, {}> {
             public render() {
                 const mp = this.props.MP;
                 const playersCards = this.props.playersCards;
+
+                let i = 0;
+                for (i = 0; i < this.props.lobby.clientIds.length; i = i + 1) {
+                    if (this.props.MP.clientId === this.props.lobby.clientIds[i]) {
+                        break;
+                    }
+                }
 
                 const myCard = React.createElement(
                     CoupRule.views['player-card'],
                     {
                         clientId: this.props.MP.clientId,
                         cards: this.props.cards,
-                        MP: this.props.MP
+                        MP: this.props.MP,
+                        accent: this.props.lobby.accents[i]
                     });
 
-                /* const playersCardsEl = [];
+                const playersCardsEl = [];
 
-                 * forEach(
-                 *     playersCards,
-                 *     (card, index) => {
-                 *         playersCardsEl.push(
-                 *             <div>
-                 *             </div>);
-                 *     });
-                 */
+                forEach(
+                    playersCards,
+                    (clientId, cards) => {
+                        let i = 0;
+                        for (i = 0; i < this.props.lobby.clientIds.length; i = i + 1) {
+                            if (clientId === this.props.lobby.clientIds[i]) {
+                                break;
+                            }
+                        }
+
+                        playersCardsEl.push(
+                            React.createElement(
+                                CoupRule.views['player-card'],
+                                {
+                                    clientId: clientId,
+                                    cards: cards,
+                                    MP: this.props.MP,
+                                    accent: this.props.lobby.accents[i]
+                                }));
+                    });
+
                 return (
                     <div className='coup-players-cards'>
                         { myCard }
+                        <div className='coup-seperator'>&nbsp;</div>
+                        { playersCardsEl }
                     </div>
                 );
             }
@@ -476,10 +501,23 @@ export const CoupRule: GameRuleInterface = {
 
         'player-card': class extends React.Component<ViewPropsInterface & {
             clientId: string,
-            cards: any[]
+            cards: any[],
+            accent: string
         }, {}> {
             public render() {
                 const cards = this.props.cards;
+                const accentHsv = colorsys.hex_to_hsv(this.props.accent);
+                const accent = this.props.accent;
+                /* const accent = colorsys.hsv_to_hex({
+                 *     h: accentHsv.h,
+                 *     s: accentHsv.s / 1.5,
+                 *     v: accentHsv.v
+                 * });*/
+                const accentLight = colorsys.hsv_to_hex({
+                    h: accentHsv.h,
+                    s: accentHsv.s / 4,
+                    v: 100
+                });
 
                 const cardsEl = [];
                 const playerTag =  this.props.MP.getPluginView(
@@ -487,8 +525,9 @@ export const CoupRule: GameRuleInterface = {
                     'player-tag',
                     {
                         clientId: this.props.clientId,
-                        size: '2x',
-                        invertColors: true
+                        size: 'medium',
+                        invertColors: true,
+                        className: 'coup-player-cards-tag'
                     }
                 );
 
@@ -496,16 +535,24 @@ export const CoupRule: GameRuleInterface = {
                     const cardName = CoupCards[cards[i].card];
                     cardsEl.push(
                         <div key={ 'card' + i }
-                             className='coup-card { cardName }'>
-                            <footer>{ cardName }</footer>
+                             className={ 'coup-card ' + cardName }>
+                            <footer style={{ backgroundColor: accentLight }}>
+                                { cardName }
+                            </footer>
                         </div>
                     );
                 }
 
                 return (
-                    <div className='coup-player-cards'>
+                    <div className='coup-player-cards'
+                         key={ 'player-cards-' + this.props.clientId }>
                         { playerTag }
-                        { cardsEl }
+                        <div />
+                        <div className='coup-player-cards-container'
+                             style={{ borderColor: accent,
+                                      backgroundColor: accent }}>
+                            { cardsEl }
+                        </div>
                     </div>
                 );
             }

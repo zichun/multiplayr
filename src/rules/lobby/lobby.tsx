@@ -169,7 +169,8 @@ export const Lobby: GameRuleInterface = {
             accents: string[],
             icons: number[],
             size?: string,
-            invertColors?: boolean
+            invertColors?: boolean,
+            className?: string
         }, {}> {
             public render() {
                 let i = 0;
@@ -200,7 +201,11 @@ export const Lobby: GameRuleInterface = {
                 }
 
                 if (this.props.size) {
-                    className += ' ' + this.props.size;
+                    className += ' lobby-player-tag-' + this.props.size;
+                }
+
+                if (this.props.className) {
+                    className += ' ' + this.props.className;
                 }
 
                 return (
@@ -209,7 +214,6 @@ export const Lobby: GameRuleInterface = {
                         <div className='lobby-player-tag-avatar'
                              style={ style }>
                             <FontAwesome name={ icons[this.props.icons[i]] }
-                                         size={ this.props.size }
                                          className='lobby-player-tag-icon' />
                         </div>
                         <div className='lobby-player-tag-name'>
@@ -277,7 +281,8 @@ export const Lobby: GameRuleInterface = {
                     <div className='lobby-setname-container'>
                         <input className='lobby-setname-input'
                                value={ this.state.name }
-                               onChange={ this.onChange } />
+                               onChange={ this.onChange }
+                               />
 
                         { selectIcon }
                         { selectAccent }

@@ -18,7 +18,7 @@ import * as React from 'react';
 
 import {isFunction,
         isArray,
-        extendObj,
+        extendObjClone,
         forEach} from '../../common/utils';
 
 import {returnError,
@@ -808,11 +808,11 @@ class GameObject {
             const it = this.plugins[subView];
             const extendedProps = props[subView];
 
-            extendObj(extendedProps, extendProps, true);
+            const newProps = extendObjClone(extendedProps, extendProps, true);
 
             return it.hostSetView(it.clientId,
                                   viewName,
-                                  extendedProps,
+                                  newProps,
                                   false);
 
         } else {
