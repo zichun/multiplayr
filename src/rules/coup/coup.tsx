@@ -180,15 +180,28 @@ export const CoupRule: GameRuleInterface = {
         //
 
         const playersData = mp.getPlayersData(['coins', 'cards']);
+        const playerTurn = mp.getData('playerTurn');
+        let playerTurnId = null;
         const actions = mp.getData('actions');
 
         mp.setViewProps(mp.hostId, 'actions', actions);
+        mp.setViewProps(mp.hostId, 'playerTurn', playerTurn);
+
+        mp.playersForEach((clientId, index) => {
+            if (index === playerTurn) {
+                playerTurnId = clientId;
+            }
+        });
+
+        mp.setViewProps(mp.hostId, 'playerTurnId', playerTurnId);
 
         mp.playersForEach(
             (clientId, index) => {
                 mp.setViewProps(clientId, 'coins', playersData[index].coins);
                 mp.setViewProps(clientId, 'cards', playersData[index].cards);
                 mp.setViewProps(clientId, 'actions', actions);
+                mp.setViewProps(clientId, 'playerTurn', playerTurn);
+                mp.setViewProps(clientId, 'playerTurnId', playerTurnId);
 
                 const playersCards = {};
                 mp.playersForEach(
@@ -221,8 +234,6 @@ export const CoupRule: GameRuleInterface = {
         switch (mp.getData('gameState')) {
 
             case CoupGameState.PlayAction:
-
-                const playerTurn = mp.getData('playerTurn');
 
                 mp.setView(mp.hostId, 'host-playaction');
                 mp.playersForEach((clientId, index) => {
@@ -724,9 +735,10 @@ export const CoupRule: GameRuleInterface = {
         'client-waitplayaction': class extends React.Component<ViewPropsInterface, {}> {
             public render() {
                 const mp = this.props.MP;
-                const playActionPage = React.createElement(CoupRule.views['client-playaction-page'], this.props);
+                const waitActionPage = React.createElement(CoupRule.views['client-waitplayaction-page'], this.props);
                 const cards = React.createElement(CoupRule.views['players-cards'], this.props);
                 const coins = React.createElement(CoupRule.views['client-coins'], this.props);
+                const actionsPage = React.createElement(CoupRule.views['actions-page'], this.props);
 
                 return mp.getPluginView(
                     'gameshell',
@@ -736,16 +748,41 @@ export const CoupRule: GameRuleInterface = {
                             'home': {
                                 'icon': 'gamepad',
                                 'label': 'Coup',
-                                'view': playActionPage
+                                'view': waitActionPage
                             },
                             'cards': {
                                 'icon': 'address-card',
                                 'label': 'Card',
                                 'view': cards
+                            },
+                            'actionslist': {
+                                'icon': 'list',
+                                'label': 'Actions History',
+                                'view': actionsPage
                             }
                         },
                         'topBarContent': coins
                     });
+            }
+        },
+
+        'client-waitplayaction-page': class extends React.Component<ViewPropsInterface & { playerTurnId: string }, {}> {
+            public render() {
+                const mp = this.props.MP;
+                const player =  this.props.MP.getPluginView(
+                    'lobby',
+                    'player-tag',
+                    {
+                        clientId: this.props.playerTurnId,
+                        invertColors: true
+                    }
+                );
+
+                return (
+                    <div>
+                        Waiting for { player } to make a move
+                    </div>
+                );
             }
         }
     }
