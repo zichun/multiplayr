@@ -782,6 +782,87 @@ export const CoupRule: GameRuleInterface = {
             mp.setPlayerData(clientId, 'cards', cards);
 
             nextTurn(mp);
+        },
+
+        'endChallengePhase': (
+            mp: MPType,
+            clientId: string
+        ) => {
+
+            if (clientId !== mp.hostId) {
+                throw(new Error('Only host can end challenge phase'));
+            }
+
+            if (mp.getData('gameState') !== CoupGameState.ChallengeResult) {
+                throw(new Error('endChallengePhase can only be done in ChallengeResult state'));
+            }
+
+            const actions = mp.getData('actions');
+            const lastAction = actions[actions.length - 1];
+            const { action, challenge, block, targetId } = lastAction;
+
+            if (challenge) {
+                throw(new Error('endChallengePhase cannot be done when challenge is done'));
+            }
+
+            if (block) {
+                //
+                // Block is successful. Move on to next player.
+                //
+                nextTurn(mp);
+            }
+
+            let coins = mp.getPlayerData(lastAction.clientId, 'coins');
+
+            switch (action) {
+                case CoupAction.Duke:
+
+                    mp.setPlayerData(lastAction.clientId, 'coins', coins + 3);
+                    nextTurn(mp);
+
+                    break;
+
+                case CoupAction.Coup:
+                    coins -= 4;
+                    mp.setPlayerData(lastAction.clientId, 'coins', coins);
+
+                case CoupAction.Assassin:
+                    coins -= 3;
+                    mp.setPlayerData(lastAction.clientId, 'coins', coins);
+
+                    if (challengeFailCauseDead(mp, targetId)) {
+                        lastAction.challengeCauseDead = true
+                        nextTurn(mp);
+                    } else {
+                        lastAction.challengeLoser = targetId;
+                        mp.setData('gameState', CoupGameState.ChallengeResult);
+                    }
+
+                    break;
+
+                case CoupAction.Captain:
+
+                    const targetCoins = mp.getPlayerData(targetId, 'coins');
+                    const stealCoin = Math.min(targetCoins, 2);
+
+                    mp.setPlayerData(targetId, 'coins', targetCoins - stealCoin);
+                    mp.setPlayerData(lastAction.clientId, 'coins', coins + stealCoin);
+                    nextTurn(mp);
+
+                    break;
+
+                case CoupAction.ForeignAid:
+
+                    mp.setPlayerData(lastAction.clientId, 'coins', coins + 2);
+                    nextTurn(mp);
+
+                    break;
+
+                case CoupAction.Ambassador:
+                    mp.setData('gameState', CoupGameState.AmbassadorCardChange);
+
+                    break;
+            }
         }
     },
 
