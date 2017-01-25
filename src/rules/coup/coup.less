@@ -47,6 +47,22 @@
 
 }
 
+.coup-actionslist.coup-lastaction {
+    padding: 8px;
+    margin: 0 0 16px 0;
+    border-bottom: 1px solid #a5a5a5;
+}
+
+.coup-actionslist {
+
+    .coup-actionslist-item.Challenge,
+    .coup-actionslist-item.ChallengeLoseCard,
+    .coup-actionslist-item.ChallengeDead,
+    .coup-actionslist-item.ChallengeBlock {
+        margin-left: 24px;
+    }
+}
+
 .coup-player-cards {
     display: inline-block;
     margin: 8px;
@@ -60,28 +76,40 @@
     border: 1px solid white;
     border-radius: 0 4px 0 4px;
     display: inline-block;
+}
 
-    .coup-card {
-        height: 180px;
-        width: 158px;
-        position: relative;
+.coup-card {
+    height: 180px;
+    width: 158px;
+    position: relative;
+    display: inline-block;
+    margin: 2px;
+
+    background-color: white;
+    background-position: center center;
+    background-repeat: no-repeat;
+
+    footer {
+        position: absolute;
+        bottom: 8px;
+        left: 0px;
+        right: 0px;
+        padding: 4px 0 4px 0;
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: bold;
+    }
+}
+
+.coup-card-choicelist {
+    .coup-card-choicelist-item {
         display: inline-block;
-        margin: 2px;
+        padding: 4px;
+        border: 1px solid transparent;
+    }
 
-        background-color: white;
-        background-position: center center;
-        background-repeat: no-repeat;
-
-        footer {
-            position: absolute;
-            bottom: 8px;
-            left: 0px;
-            right: 0px;
-            padding: 4px 0 4px 0;
-            text-align: center;
-            font-size: 1.1em;
-            font-weight: bold;
-        }
+    .coup-card-choicelist-item.selected {
+        border: 1px solid black;
     }
 }
 

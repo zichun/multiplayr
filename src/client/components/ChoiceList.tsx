@@ -10,7 +10,8 @@ export class ChoiceList extends React.Component<{
     onSelect: (choice: string, choiceIndex: number) => boolean,
     selectedKey: string,
     className?: string,
-    itemClassName?: string
+    itemClassName?: string,
+    style?: any
 }, {
     selectedKey: string
 }> {
@@ -56,7 +57,7 @@ export class ChoiceList extends React.Component<{
             });
 
         return (
-            <div className={ className }>
+            <div className={ className } style={ this.props.style }>
                 { children }
             </div>
         );
