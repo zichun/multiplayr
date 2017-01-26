@@ -67,7 +67,8 @@ enum CoupCardState {
 enum CoupWaitContext {
     PlayAction = 1,
     ChallengeOrBlock,
-    ChallengeFail
+    ChallengeFail,
+    AmbassadorChooseCard
 };
 
 interface CoupActionInterface {
@@ -658,8 +659,25 @@ export const CoupRule: GameRuleInterface = {
                 break;
             }
 
-            case CoupGameState.AmbassadorCardChange:
+            case CoupGameState.AmbassadorCardChange: {
+                const lastAction = actions[actions.length - 1];
+                const deck = mp.getData('deck');
+                const drawCards = [deck[0], deck[1]];
+
+                mp.setView(mp.hostId, 'host-playaction');
+                mp.playersForEach((clientId, index) => {
+                    if (clientId === lastAction.clientId) {
+                        mp.setViewProps(clientId, 'drawCards', drawCards);
+                        mp.setView(clientId, 'client-ambassadorcardchange');
+                    } else {
+                        mp.setViewProps(clientId, 'waitForId', lastAction.clientId);
+                        mp.setViewProps(clientId, 'waitContext', CoupWaitContext.AmbassadorChooseCard);
+                        mp.setView(clientId, 'client-waitforaction');
+                    }
+                });
+
                 break;
+            }
 
             case CoupGameState.GameOver:
                 let aliveCount = 0;
@@ -941,6 +959,101 @@ export const CoupRule: GameRuleInterface = {
             }
             mp.setPlayerData(clientId, 'cards', cards);
 
+            nextTurn(mp);
+        },
+
+        'ambassadorAction': (
+            mp: MPType,
+            clientId: string,
+            cardsChoice: string[]
+        ) => {
+            if (mp.getData('gameState') !== CoupGameState.AmbassadorCardChange) {
+                throw(new Error('ambassadorAction can only be taken in AmbassadorCardChange state'));
+            }
+
+            const actions = mp.getData('actions');
+            const lastAction = actions[actions.length - 1];
+            const deck = mp.getData('deck');
+            const cards = mp.getPlayerData(clientId, 'cards');
+            const top2 = deck.splice(0, 2);
+            let neededCount = 0;
+            const newCards = [];
+
+            for (let i = 0; i < cards.length; i = i + 1) {
+                if (cards[i].state === CoupCardState.Active) {
+                    neededCount = neededCount + 1;
+                } else {
+                    newCards.push({
+                        card: cards[i].card,
+                        state: cards[i].state
+                    });
+                }
+            }
+
+            if (clientId !== lastAction.clientId) {
+                throw(new Error('ambassadorAction can only be taken by the current player'));
+            }
+
+            if (cardsChoice.length !== neededCount) {
+                throw(new Error('Can only draw two cards'));
+            }
+
+            const draw = [];
+            for (let i = 0; i < cardsChoice.length; i = i + 1) {
+                const card = parseInt(cardsChoice[i], 10);
+                if (card < 0 || card >= 4) {
+                    throw(new Error('Invalid card drawn'));
+                }
+                draw.push(card);
+            }
+
+            if (neededCount === 2) {
+                if (draw[0] === draw[1]) {
+                    throw(new Error('Invalid card drawn'));
+                }
+            }
+
+            for (let i = 0; i < draw.length; i = i + 1) {
+                if (draw[i] < 2) {
+                    if (cards[draw[i]].state !== CoupCardState.Active) {
+                        throw(new Error('Invalid card drawn'));
+                    }
+
+                    newCards.push({
+                        card: cards[draw[i]].card,
+                        state: CoupCardState.Active
+                    });
+                } else {
+                    newCards.push({
+                        card: top2[draw[i] - 2],
+                        state: CoupCardState.Active
+                    });
+                }
+            }
+
+            if (neededCount === 1) {
+                draw.push(draw[0]);
+            }
+
+            for (let i = 0; i < cards.length; i = i + 1) {
+                if (cards[i].state === CoupCardState.Active &&
+                    i !== draw[0] &&
+                    i !== draw[1]) {
+                    deck.push(cards[i].card);
+                }
+            }
+
+            for (let i = 0; i < top2.length; i = i + 1) {
+                if (i !== draw[0] - 2 &&
+                    i !== draw[1] - 2) {
+                    deck.push(top2[i]);
+                }
+            }
+
+            shuffle(deck);
+
+            mp.setData('deck', deck);
+            mp.setPlayerData(clientId, 'cards', newCards);
             nextTurn(mp);
         },
 
@@ -1471,8 +1584,10 @@ export const CoupRule: GameRuleInterface = {
                     let waitingAction = null;
                     if (this.props.waitContext === CoupWaitContext.PlayAction) {
                         waitingAction = (<span>make a move</span>);
-                    } else {
+                    } else if (this.props.waitContext === CoupWaitContext.ChallengeFail) {
                         waitingAction = (<span>pick a character card to reveal</span>);
+                    } else if (this.props.waitContext === CoupWaitContext.AmbassadorChooseCard) {
+                        waitingAction = (<span>swap character cards (Ambassador)</span>);
                     }
 
                     return (
@@ -1901,7 +2016,7 @@ export const CoupRule: GameRuleInterface = {
                     <div className='coup-chooseloseinfluence'>
                         { lastAction }
                         <ChoiceList onSelect={ this._selectCard }
-                                    selectedKey={ CoupAction[this.state.card] }
+                                    selectedKey={ this.state.card }
                                     className='coup-card-choicelist'
                                     itemClassName='coup-card-choicelist-item'>
                             { choices }
@@ -1943,6 +2058,151 @@ export const CoupRule: GameRuleInterface = {
                         },
                         'topBarContent': 'xxx'
                     });
+            }
+        },
+
+        'client-ambassadorcardchange': class extends React.Component<ViewPropsInterface, {}> {
+            public render() {
+                const mp = this.props.MP;
+                const ambassadorCardChange = React.createElement(CoupRule.views['client-ambassadorcardchange-page'], this.props);
+                const cardsPage = React.createElement(CoupRule.views['players-cards'], this.props);
+                const actionsPage = React.createElement(CoupRule.views['actions-page'], this.props);
+                const coins = React.createElement(CoupRule.views['client-coins'], this.props);
+
+                return mp.getPluginView(
+                    'gameshell',
+                    'HostShell-Main',
+                    {
+                        'links': {
+                            'home': {
+                                'icon': 'gamepad',
+                                'label': 'Coup',
+                                'view': ambassadorCardChange
+                            },
+                            'cards': {
+                                'icon': 'address-card',
+                                'label': 'Cards',
+                                'view': cardsPage
+                            },
+                            'actionslist': {
+                                'icon': 'list',
+                                'label': 'Actions History',
+                                'view': actionsPage
+                            }
+                        },
+                        'topBarContent': coins
+                    });
+            }
+        },
+
+        'client-ambassadorcardchange-page': class extends React.Component<ViewPropsInterface & {
+            drawCards: CoupCard[],
+            cards: any,
+            lobby: any,
+        }, {
+            cards: string[]
+        }> {
+            constructor(props: any) {
+                super(props);
+                this.state = { cards: [] };
+                this._selectCard = this._selectCard.bind(this);
+                this._unselectCard = this._unselectCard.bind(this);
+            }
+
+            private _selectCard(choice: string, index: Number) {
+                let cards = this.state.cards;
+                for (let i = 0; i < cards.length; i++) {
+                    if (cards[i] === choice) {
+                        return;
+                    }
+                }
+                cards.push(choice);
+                this.setState({ cards: cards });
+                return true;
+            }
+
+            private _unselectCard(choice: string, index: Number) {
+                const tr = [];
+                for (let i = 0; i < this.state.cards.length; i++) {
+                    if (this.state.cards[i] !== choice) {
+                        tr.push(this.state.cards[i]);
+                    }
+                }
+                this.setState({ cards: tr });
+                return true;
+            }
+
+            public render() {
+                const drawCards = this.props.drawCards;
+                const cards = this.props.cards;
+                const choices = [];
+                let neededCount = 0;
+
+                choices.push(
+                    <li key='your-card' className='seperator'>Your cards</li>
+                );
+
+                for (let i = 0; i < cards.length; i = i + 1) {
+                    if (cards[i].state === CoupCardState.Active) {
+                        const card = React.createElement(
+                            CoupRule.views['card'],
+                            {
+                                card: cards[i],
+                                accent: this.props.lobby.accent
+                            });
+
+                        choices.push(
+                            <Choice key={ i }>
+                                { card }
+                            </Choice>
+                        );
+                        neededCount = neededCount + 1;
+                    }
+                }
+
+                choices.push(
+                    <li key='drawn-cards' className='seperator'>Drawn cards</li>
+                );
+
+                for (let i = 0; i < drawCards.length; i = i + 1) {
+                    const card = React.createElement(
+                        CoupRule.views['card'],
+                        {
+                            card: {
+                                card: drawCards[i],
+                                state: CoupCardState.Active
+                            },
+                            accent: '#ffffff'
+                        });
+
+                    choices.push(
+                        <Choice key={ i + cards.length }>
+                            { card }
+                        </Choice>
+                    );
+                }
+
+                const button = (
+                    <button className='coup-action-choicelist-button'
+                            disabled={ this.state.cards.length === neededCount ? false : true }
+                            onClick={ this.props.MP.ambassadorAction.bind(this, this.state.cards) }>
+                        Pick these cards
+                    </button>
+                );
+
+                return (
+                    <div className='coup-ambassadorchoosecard'>
+                        <ChoiceList onSelect={ this._selectCard }
+                                    onUnselect={ this._unselectCard }
+                                    multi={ true }
+                                    selectedKeys={ this.state.cards }
+                                    className='coup-card-choicelist'
+                                    itemClassName='coup-card-choicelist-item'>
+                            { choices }
+                        </ChoiceList>
+                        { button }
+                    </div>
+                );
             }
         },
 

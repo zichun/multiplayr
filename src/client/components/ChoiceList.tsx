@@ -8,22 +8,62 @@ import * as React from 'react';
 
 export class ChoiceList extends React.Component<{
     onSelect: (choice: string, choiceIndex: number) => boolean,
-    selectedKey: string,
+    onUnselect?: (choice: string, choiceIndex: number) => boolean,
+    selectedKey?: string,
+    selectedKeys?: string[],
+    multi?: boolean,
     className?: string,
     itemClassName?: string,
     style?: any
 }, {
-    selectedKey: string
+    selectedKeys: string[]
 }> {
     constructor(props: any) {
         super(props);
-        this.state = { selectedKey: this.props.selectedKey };
+
+        if (this.props.selectedKey) {
+            this.state = { selectedKeys: [this.props.selectedKey] };
+        } else if (this.props.selectedKeys) {
+            this.state = { selectedKeys: this.props.selectedKeys };
+        } else {
+            this.state = { selectedKeys: [] };
+        }
+
         this._selectItem = this._selectItem.bind(this);
+        this._unselectItem = this._unselectItem.bind(this);
     }
 
     private _selectItem(key: string, index: number) {
-        this.props.onSelect(key, index);
-        this.state.selectedKey = key;
+        if (this.props.onSelect) {
+            this.props.onSelect(key, index);
+        }
+        if (this.props.multi) {
+            for (let i = 0; i < this.state.selectedKeys.length; i = i + 1) {
+                if (this.state.selectedKeys[i] === key) {
+                    return;
+                }
+            }
+            this.state.selectedKeys.push(key);
+        } else {
+            this.state.selectedKeys = [key];
+        }
+    }
+
+    private _unselectItem(key: string, index: number) {
+
+        if (this.props.onUnselect) {
+            this.props.onUnselect(key, index);
+        }
+
+        if (this.props.multi) {
+            const tr = [];
+            for (let i = 0; i < this.state.selectedKeys.length; i = i + 1) {
+                if (this.state.selectedKeys[i] !== key) {
+                    tr.push(this.state.selectedKeys[i]);
+                }
+            }
+            this.state.selectedKeys = tr;
+        }
     }
 
     public render() {
@@ -37,7 +77,16 @@ export class ChoiceList extends React.Component<{
             this.props.children,
             (child, i) => {
                 const item = child as any;
-                const isSelected = (item.key === this.state.selectedKey);
+                if (item.type.name !== 'Choice') {
+                    return item;
+                }
+                let isSelected = false;
+                for (let i = 0; i < this.state.selectedKeys.length; i = i + 1) {
+                    if (item.key === this.state.selectedKeys[i]) {
+                        isSelected = true;
+                        break;
+                    }
+                }
                 let itemClassName = item.props.className ? item.props.className : '';
 
                 if (this.props.itemClassName) {
@@ -49,7 +98,9 @@ export class ChoiceList extends React.Component<{
 
                 return React.cloneElement(item, {
                     isSelected: isSelected,
+                    multi: this.props.multi,
                     selectItem: this._selectItem,
+                    unselectItem: this._unselectItem,
                     index: i,
                     className: itemClassName,
                     choiceKey: item.key
@@ -67,10 +118,25 @@ export class ChoiceList extends React.Component<{
 export class Choice extends React.Component<{
     choiceKey?: string,
     index?: number,
+    multi?: boolean,
     className?: string,
     selectItem?: (choice: string, choiceIndex: number) => boolean,
+    unselectItem?: (choice: string, choiceIndex: number) => boolean,
     isSelected?: boolean
 }, {}> {
+
+    private _onClick() {
+        if (this.props.multi) {
+            if (this.props.isSelected) {
+                this.props.unselectItem(this.props.choiceKey, this.props.index);
+            } else {
+                this.props.selectItem(this.props.choiceKey, this.props.index);
+            }
+        } else {
+            this.props.selectItem(this.props.choiceKey, this.props.index);
+        }
+    }
+
     public render() {
         let className = 'mp-choicelist-item';
 
@@ -85,7 +151,7 @@ export class Choice extends React.Component<{
         return (
             <div className={ className }
                  key={ this.props.choiceKey }
-                 onClick={ this.props.selectItem.bind(this, this.props.choiceKey, this.props.index) }>
+                 onClick={ this._onClick.bind(this) } >
 
                 { this.props.children }
             </div>
