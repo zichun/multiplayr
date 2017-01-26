@@ -1615,12 +1615,15 @@ export const CoupRule: GameRuleInterface = {
             public componentDidMount() {
                 this._interval = setInterval(this._tick, 1000);
             }
+            private _endChallenge() {
+                this.props.MP.endChallengePhase();
+            }
             public render() {
                 const mp = this.props.MP;
                 const lastAction = React.createElement(CoupRule.views['last-action'], this.props);
                 const button = (
                     <button className='coup-button'
-                            onClick={ this.props.MP.endChallengePhase.bind(this) }>
+                            onClick={ this._endChallenge.bind(this) }>
                         End Challenge Phase ({ this.state.timeLeft })
                     </button>);
 
@@ -1815,6 +1818,10 @@ export const CoupRule: GameRuleInterface = {
                 return true;
             }
 
+            private _takeAction() {
+                return this.props.MP.takeAction(this.state.action, this.state.player)
+            }
+
             public render() {
                 const mp = this.props.MP;
                 const { cards, coins, alivePlayers } = this.props;
@@ -1920,7 +1927,7 @@ export const CoupRule: GameRuleInterface = {
                 const button = (
                     <button className='coup-action-choicelist-button'
                             disabled={ disabled }
-                            onClick={ this.props.MP.takeAction.bind(this, this.state.action, this.state.player) }>
+                            onClick={ this._takeAction.bind(this) }>
                         Take Action!
                     </button>
                 );
@@ -2004,6 +2011,10 @@ export const CoupRule: GameRuleInterface = {
                 return true;
             }
 
+            private _takeReaction() {
+                this.props.MP.takeReaction(this.state.reaction);
+            }
+
             public render() {
                 const actions = this.props.actions;
                 const lastAction = React.createElement(CoupRule.views['last-action'], this.props);
@@ -2042,7 +2053,7 @@ export const CoupRule: GameRuleInterface = {
                 const button = (
                     <button className='coup-action-choicelist-button'
                             style={ this.state.reaction ? { display: 'block' } : { display: 'none' } }
-                            onClick={ this.props.MP.takeReaction.bind(this, this.state.reaction, null) }>
+                            onClick={ this._takeReaction.bind(this) }>
                         Confirm { CoupReaction[this.state.reaction] } Reaction!
                     </button>
                 );
@@ -2180,6 +2191,10 @@ export const CoupRule: GameRuleInterface = {
                 return true;
             }
 
+            private _revealCard() {
+                this.props.MP.revealCard(this.state.card);
+            }
+
             public render() {
                 const mp = this.props.MP;
                 const lastAction = React.createElement(CoupRule.views['last-action'], this.props);
@@ -2207,7 +2222,7 @@ export const CoupRule: GameRuleInterface = {
                 const button = (
                     <button className='coup-action-choicelist-button'
                             disabled={ this.state.card === null ? true : false }
-                            onClick={ this.props.MP.revealCard.bind(this, this.state.card, null) }>
+                            onClick={ this._revealCard.bind(this) }>
                         Reveal this card
                     </button>
                 );
@@ -2343,6 +2358,10 @@ export const CoupRule: GameRuleInterface = {
                 return true;
             }
 
+            private _ambassadorAction() {
+                this.props.MP.ambassadorAction(this.state.cards);
+            }
+
             public render() {
                 const drawCards = this.props.drawCards;
                 const cards = this.props.cards;
@@ -2396,7 +2415,7 @@ export const CoupRule: GameRuleInterface = {
                 const button = (
                     <button className='coup-action-choicelist-button'
                             disabled={ this.state.cards.length === neededCount ? false : true }
-                            onClick={ this.props.MP.ambassadorAction.bind(this, this.state.cards) }>
+                            onClick={ this._ambassadorAction.bind(this) }>
                         Pick these cards
                     </button>
                 );
@@ -2479,6 +2498,9 @@ export const CoupRule: GameRuleInterface = {
         },
 
         'host-showWinner': class extends React.Component<ViewPropsInterface, {}> {
+            private _newGame() {
+                this.props.MP.newGame();
+            }
             public render() {
                 const mp = this.props.MP;
                 const showWinnerPage = React.createElement(CoupRule.views['client-showWinner-page'], this.props);
@@ -2486,7 +2508,7 @@ export const CoupRule: GameRuleInterface = {
 
                 const button = (
                     <button className='coup-button'
-                            onClick={ this.props.MP.newGame.bind(this) }>
+                            onClick={ this._newGame.bind(this) }>
                         New Game!
                     </button>);
 

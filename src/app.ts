@@ -19,6 +19,10 @@ app.use(express.static(rootDir + '/client/'));
  * Routes
  */
 
+app.get('/', (req, res) => {
+    res.redirect('/host');
+});
+
 app.get('/rules', (req, res) => {
     res.sendFile(rootDir + '/rules/rules.js');
 });
