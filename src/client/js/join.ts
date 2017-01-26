@@ -55,7 +55,7 @@ function setupJoinButton(
             _mplib.MultiplayR.ReJoin(roomId,
                                      clientId,
                                      transport,
-                                     document.body,
+                                     document.getElementById('container'),
                                      (res) => {
                                          if (!res.success) {
                                              alert(res.message);

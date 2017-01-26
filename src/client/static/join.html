@@ -4,12 +4,19 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
         <title>Multiplayr: Join</title>
 
+        <link rel="stylesheet" href="/css/multiplayr.css" type="text/css" />
+        <link rel="stylesheet" href="/css/mp-components.css" type="text/css" />
         <script src="/socket.io/socket.io.js"></script>
         <script type="text/javascript" src="/js/jquery.js"></script>
         <script src="/js/lib.bundle.js"></script>
         <script src="/js/join.js"></script>
         <script src="https://use.fontawesome.com/0c388157c6.js"></script>
         <style>
+          #container {
+             min-height: 100%;
+             height: 100%;
+             position: relative;
+          }
          #join {
              padding: 10px;
              text-align: center;
@@ -39,7 +46,7 @@
         </style>
     </head>
     <body>
-
+      <div id="container">
         <div id="join">
             <div id="error">&nbsp;</div>
             Room
@@ -48,8 +55,6 @@
             <input disabled="disabled" type="text" id="clientId" />
             <button id="join-button">Join Game</button>
         </div>
-
-        <link rel="stylesheet" href="/css/multiplayr.css" type="text/css" />
-
+      </div>
     </body>
 </html>
