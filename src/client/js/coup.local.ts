@@ -34,7 +34,7 @@ $(() => {
         });
 
     _mplib.MultiplayR.Host(
-        'theoddone',
+        'coup',
         transport,
         document.getElementById('host-container'),
         (res) => {
