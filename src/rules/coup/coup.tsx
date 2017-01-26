@@ -59,7 +59,7 @@ enum CoupCard {
 
 enum CoupCardState {
     Active = 1,
-    ChallengeFailed,
+    Challenged,
     Assassinated,
     Couped
 };
@@ -79,7 +79,9 @@ interface CoupActionInterface {
     challengeResult?: boolean
     challengeLoser?: string,
     challengeWinner?: string,
-    challengeCauseDead?: boolean
+    challengeCauseDead?: boolean,
+    coinStolen?: number,
+    complete?: boolean
 };
 
 /**
@@ -114,6 +116,20 @@ function nextTurn(
     let firstNotDead = null;
     let meetInit = false;
 
+    let aliveCount = 0;
+
+    mp.playersForEach(
+        (clientId, index) => {
+            if (!mp.getPlayerData(clientId, 'isDead')) {
+                aliveCount++;
+            }
+        });
+
+    if (aliveCount === 1) {
+        mp.setData('gameState', CoupGameState.GameOver);
+        return;
+    }
+
     mp.playersForEach(
         (clientId, index) => {
             const isDead = mp.getPlayerData(clientId, 'isDead');
@@ -142,8 +158,6 @@ function nextTurn(
     if (nextPlayerTurn !== null) {
         mp.setData('gameState', CoupGameState.PlayAction);
         mp.setData('playerTurn', nextPlayerTurn);
-    } else {
-        mp.setData('gameState', CoupGameState.GameOver);
     }
 }
 
@@ -153,143 +167,183 @@ function addActions(
     actionsEl: any[],
     index: number = 0
 ) {
+    const { clientId, targetId, challenge, block, challengeLoser, challengeResult, challengeWinner, challengeCauseDead, complete } = action;
     const playerTag = mp.getPluginView(
         'lobby',
         'player-tag',
-        {
-            clientId: action.clientId
+        { clientId: clientId });
+
+    let targetTag = null;
+    if (targetId) {
+        targetTag = mp.getPluginView(
+            'lobby',
+            'player-tag',
+            { clientId: targetId });
+    }
+
+    if (action.action === CoupAction.Income) {
+        actionsEl.push(
+            <li className='coup-actionslist-item Income'
+                key={ 'action-' + index }>
+                { playerTag } played <strong>Income</strong>, +1 coin.
+            </li>
+        );
+    } else {
+        let against: any = '.';
+
+        if (action.action === CoupAction.Captain ||
+            action.action === CoupAction.Assassin ||
+            action.action === CoupAction.Coup) {
+
+            against = (
+                <span>
+                    &nbsp;against { targetTag }.
+                </span>
+            );
         }
-    );
-
-    switch (action.action) {
-        case CoupAction.Income:
-            actionsEl.push(
-                <li className='coup-actionslist-item Income'
-                    key={ 'action-' + index }>
-                    { playerTag } played <strong>Income</strong>, +1 gold
-                </li>
-            );
-            break;
-
-        case CoupAction.Duke:
-            actionsEl.push(
-                <li className='coup-actionslist-item Duke'
-                    key={ 'action-' + index }>
-                    { playerTag } played <strong>Duke</strong>, +3 gold
-                </li>
-            );
-            break;
-
-        case CoupAction.Assassin:
-            actionsEl.push(
-                <li className='coup-actionslist-item Assassin'
-                    key={ 'action-' + index }>
-                    { playerTag } played <strong>Assassin</strong>
-                </li>
-            );
-            break;
-
-        case CoupAction.Captain:
-            actionsEl.push(
-                <li className='coup-actionslist-item Captain'
-                    key={ 'action-' + index }>
-                    { playerTag } played <strong>Captain</strong>
-                </li>
-            );
-            break;
-
-        case CoupAction.Ambassador:
-            actionsEl.push(
-                <li className='coup-actionslist-item Ambassador'
-                    key={ 'action-' + index }>
-                    { playerTag } played <strong>Ambassador</strong>
-                </li>
-            );
-            break;
-
-        case CoupAction.Ambassador:
-            actionsEl.push(
-                <li className='coup-actionslist-item ForeignAid'
-                    key={ 'action-' + index }>
-                    { playerTag } played <strong>ForeignAid</strong>
-                </li>
-            );
-            break;
-
-        case CoupAction.Coup:
-            actionsEl.push(
-                <li className='coup-actionslist-item Coup'
-                    key={ 'action-' + index }>
-                    { playerTag } played <strong>Coup</strong>
-                </li>
-            );
-            break;
+        actionsEl.push(
+            <li className='coup-actionslist-item { CoupAction[action.action] }'
+                key={ 'action-' + index }>
+                { playerTag } played <strong>{ CoupAction[action.action] }</strong>{ against }
+            </li>
+        );
     }
 
     let blockPlayerTag = null;
 
-    if (action.block) {
+    if (block) {
         blockPlayerTag = mp.getPluginView(
             'lobby',
             'player-tag',
             {
-                clientId: action.block
+                clientId: block
             }
         );
         actionsEl.push(
-            <li className='coup-actionslist-item Block'
+            <li className='coup-actionslist-item Block subitem'
                 key={ 'action-block-' + index }>
                 { blockPlayerTag } blocked the attempt.
             </li>
         );
     }
 
-    if (action.challenge) {
+    let challengeLoserTag = null;
+    if (challengeLoser) {
+        challengeLoserTag = mp.getPluginView(
+            'lobby',
+            'player-tag',
+            {
+                clientId: challengeLoser
+            }
+        );
+    }
+
+    if (challenge) {
         const challengePlayerTag = mp.getPluginView(
             'lobby',
             'player-tag',
             {
-                clientId: action.challenge
-            }
-        );
-        const challengeLoserTag = mp.getPluginView(
-            'lobby',
-            'player-tag',
-            {
-                clientId: action.challengeLoser
+                clientId: challenge
             }
         );
 
         let blockOrAction = 'action';
-        if (action.block) {
+        if (block) {
             blockOrAction = 'block';
         }
-        let challengeResult = 'failed';
-        if (action.challengeResult) {
-            challengeResult = 'succeeded';
+
+        let challengeResultText = 'failed';
+        if (challengeResult) {
+            challengeResultText = 'succeeded';
         }
 
         actionsEl.push(
-            <li className='coup-actionslist-item Challenge'
+            <li className='coup-actionslist-item Challenge subitem'
                 key={ 'action-challenge-' + index }>
-                { challengePlayerTag } challenged the { blockOrAction }, and <strong>{ challengeResult }!</strong>
+                { challengePlayerTag } challenged the { blockOrAction }, and <strong>{ challengeResultText }!</strong>
             </li>);
 
+        if (challengeWinner) {
+            const challengeWinnerTag = mp.getPluginView(
+                'lobby',
+                'player-tag',
+                {
+                    clientId: challengeWinner
+                }
+            );
+
+            actionsEl.push(
+                <li className='coup-actionslist-item Challenge subitem'
+                    key={ 'action-challengewinner-' + index }>
+                    As a result of the challenge, { challengeWinnerTag } replaced the challenged card.
+                </li>);
+        }
+
         actionsEl.push(
-            <li className='coup-actionslist-item ChallengeLoseCard'
+            <li className='coup-actionslist-item ChallengeLoseCard subitem'
                 key={ 'action-challenge-lose-' + index }>
                 { challengeLoserTag } loses one character card.
             </li>
         );
+    }
 
-        if (action.challengeCauseDead) {
-            actionsEl.push(
-                <li className='coup-actionslist-item ChallengeDead'
-                    key={ 'action-challenge-dead-' + index }>
-                    { challengeLoserTag } has no more character cards, and is out of the game!
-                </li>
-            );
+    if (complete) {
+        switch(action.action) {
+            case CoupAction.Duke:
+                actionsEl.push(
+                    <li className='coup-actionslist-item Duke subitem'
+                        key={ 'action-result-' + index }>
+                        { playerTag } +3 coins.
+                    </li>
+                );
+                break;
+
+            case CoupAction.Assassin:
+            case CoupAction.Coup:
+                actionsEl.push(
+                    <li className='coup-actionslist-item Coup subitem'
+                        key={ 'action-result-' + index }>
+                        { targetTag } loses one character card.
+                    </li>
+                );
+                break;
+
+            case CoupAction.ForeignAid:
+                actionsEl.push(
+                    <li className='coup-actionslist-item ForeignAid subitem'
+                        key={ 'action-result-' + index }>
+                        { playerTag } +2 coins.
+                    </li>
+                );
+                break;
+
+            case CoupAction.Captain:
+                actionsEl.push(
+                    <li className='coup-actionslist-item Captain subitem'
+                        key={ 'action-result-' + index }>
+                        { playerTag } stole { action.coinStolen } coins from { targetTag }.
+                    </li>
+                );
+                break;
+
+            case CoupAction.Ambassador:
+                actionsEl.push(
+                    <li className='coup-actionslist-item Ambassador subitem'
+                        key={ 'action-result-' + index }>
+                        { playerTag } swapped cards.
+                    </li>
+                );
+                break;
         }
+    }
+
+    if (challengeCauseDead) {
+        actionsEl.push(
+            <li className='coup-actionslist-item ChallengeDead subitem'
+                key={ 'action-challenge-dead-' + index }>
+                { challengeLoserTag } has no more character cards, and is out of the game!
+            </li>
+        );
     }
 }
 
@@ -307,8 +361,6 @@ function replaceChallengedCard(
 
         if (cards[i].state === CoupCardState.Active &&
             cards[i].card === card) {
-
-            alert(i + ' ' + cards[i].card + ' ' + card);
 
             found = true;
             deck.push(card);
@@ -353,7 +405,8 @@ function hasCard(
  */
 function challengeFailCauseDead(
     mp: MPType,
-    clientId: string
+    clientId: string,
+    cardState = CoupCardState.Challenged
 ) {
     const cards = mp.getPlayerData(clientId, 'cards');
     let activeCards = 0;
@@ -368,7 +421,9 @@ function challengeFailCauseDead(
     }
 
     for (let i = 0; i < cards.length; i = i + 1) {
-        cards[i].state = CoupCardState.ChallengeFailed;
+        if (cards[i].state === CoupCardState.Active) {
+            cards[i].state = cardState;
+        }
     }
 
     mp.setPlayerData(clientId, 'cards', cards);
@@ -378,13 +433,34 @@ function challengeFailCauseDead(
 }
 
 /**
- * Checks if a challenge succeded, return true if challenger wins, and false otherwise.
+ * Checks if a challenge to a block succeeded, returns truen if challenger wins, and false otherwise.
+ */
+function checkBlock(
+    mp: MPType,
+    lastAction: CoupActionInterface
+) {
+    const { action, challenge, block } = lastAction;
+    const cards = mp.getPlayerData(block, 'cards');
+
+    switch (action) {
+        case CoupAction.ForeignAid:
+            return !hasCard(cards, CoupCard.Duke);
+        case CoupAction.Assassin:
+            return !hasCard(cards, CoupCard.Contessa);
+        case CoupAction.Captain:
+            return !hasCard(cards, CoupCard.Captain);
+        default:
+            throw(new Error('Action ' + CoupAction[action] + ' cannot be blocked.'));
+    }
+}
+/**
+ * Checks if a challenge to an action succeded, return true if challenger wins, and false otherwise.
  */
 function checkChallenge(
     mp: MPType,
     lastAction: CoupActionInterface
 ) {
-    const { action, challenge, clientId } = lastAction;
+    const { action,  clientId } = lastAction;
     const cards = mp.getPlayerData(clientId, 'cards');
 
     switch (action) {
@@ -479,8 +555,11 @@ export const CoupRule: GameRuleInterface = {
                 mp.setViewProps(clientId, 'playerTurn', playerTurn);
                 mp.setViewProps(clientId, 'playerTurnId', playerTurnId);
                 mp.setViewProps(clientId, 'alivePlayers', alivePlayers);
+                mp.setViewProps(clientId, 'waitAdditionalText', null);
 
                 const playersCards = {};
+                const playersCoins = {};
+
                 mp.playersForEach(
                     (otherClientId, otherIndex) => {
                         if (index === otherIndex) {
@@ -488,6 +567,7 @@ export const CoupRule: GameRuleInterface = {
                         }
 
                         playersCards[otherClientId] = [];
+                        playersCoins[otherClientId] = playersData[otherIndex].coins;
 
                         for (let i = 0; i < 2; i = i + 1) {
                             if (playersData[otherIndex].cards[i].state === CoupCardState.Active) {
@@ -502,6 +582,7 @@ export const CoupRule: GameRuleInterface = {
                     });
 
                 mp.setViewProps(clientId, 'playersCards', playersCards);
+                mp.setViewProps(clientId, 'playersCoins', playersCoins);
             });
 
         //
@@ -513,6 +594,7 @@ export const CoupRule: GameRuleInterface = {
             case CoupGameState.PlayAction:
 
                 mp.setView(mp.hostId, 'host-playaction');
+
                 mp.playersForEach((clientId, index) => {
                     if (index === playerTurn) {
                         mp.setView(clientId, 'client-playaction');
@@ -525,20 +607,35 @@ export const CoupRule: GameRuleInterface = {
 
                 break;
 
-            case CoupGameState.PlayReaction:
-                mp.setView(mp.hostId, 'host-playaction');
-                mp.playersForEach((clientId, index) => {
-                    if (index === playerTurn) {
-                        mp.setViewProps(clientId, 'waitContext', CoupWaitContext.ChallengeOrBlock);
-                        mp.setView(clientId, 'client-waitforaction');
-                    } else {
-                        mp.setView(clientId, 'client-playreaction');
-                    }
-                });
+            case CoupGameState.PlayReaction: {
+                const lastAction = actions[actions.length - 1];
+
+                mp.setView(mp.hostId, 'host-playreaction');
+
+                if (!lastAction.block) {
+                    mp.playersForEach((clientId, index) => {
+                        if (index === playerTurn) {
+                            mp.setViewProps(clientId, 'waitContext', CoupWaitContext.ChallengeOrBlock);
+                            mp.setView(clientId, 'client-waitforaction');
+                        } else {
+                            mp.setView(clientId, 'client-playreaction');
+                        }
+                    });
+                } else {
+                    mp.playersForEach((clientId, index) => {
+                        if (clientId === lastAction.block) {
+                            mp.setViewProps(clientId, 'waitContext', CoupWaitContext.ChallengeOrBlock);
+                            mp.setView(clientId, 'client-waitforaction');
+                        } else {
+                            mp.setView(clientId, 'client-playreaction');
+                        }
+                    });
+                }
 
                 break;
+            }
 
-            case CoupGameState.ChallengeResult:
+            case CoupGameState.ChallengeResult: {
                 const lastAction = actions[actions.length - 1];
                 const challengeLoser = lastAction.challengeLoser;
                 const challengeWinner = lastAction.challengeWinner;
@@ -559,13 +656,44 @@ export const CoupRule: GameRuleInterface = {
                     }
                 });
                 break;
+            }
 
             case CoupGameState.AmbassadorCardChange:
                 break;
 
             case CoupGameState.GameOver:
+                let aliveCount = 0;
+                let winnerId = null;
+
+                mp.playersForEach(
+                    (clientId, index) => {
+                        if (!mp.getPlayerData(clientId, 'isDead')) {
+                            aliveCount++;
+                            winnerId = clientId;
+                        }
+                    });
+
+                if (aliveCount !== 1) {
+                    throw(new Error('Game should not be over with non-1 alive players'));
+                }
+
+                mp.playersForEach(
+                    (clientId, index) => {
+                        mp.setViewProps(clientId, 'winner', winnerId);
+                        mp.setView(clientId, 'client-showWinner');
+                    });
+
+                mp.setViewProps(mp.hostId, 'winner', winnerId);
+                mp.setView(mp.hostId, 'host-showWinner');
+
                 break;
         }
+
+        mp.playersForEach((clientId, index) => {
+            if (mp.getPlayerData(clientId, 'isDead')) {
+                mp.setView(clientId, 'client-dead');
+            }
+        });
 
         return true;
     },
@@ -671,18 +799,29 @@ export const CoupRule: GameRuleInterface = {
                 block: null
             };
 
-            actions.push(actionObj);
-            mp.setData('actions', actions);
-
             if (action === CoupAction.Income) {
                 // Income action cannot be disputed, continue.
                 mp.setPlayerData(clientId, 'coins', coins + 1);
                 nextTurn(mp);
             } else if (action === CoupAction.Coup) {
-                // Coup cannot be disputed, continue.
+                // Coup cannot be disputed.
+                mp.setPlayerData(clientId, 'coins', coins - 7);
+
+                actionObj.complete = true;
+
+                actionObj.challengeLoser = targetId;
+                if (challengeFailCauseDead(mp, targetId, CoupCardState.Couped)) {
+                    actionObj.challengeCauseDead = true;
+                    nextTurn(mp);
+                } else {
+                    mp.setData('gameState', CoupGameState.ChallengeResult);
+                }
             } else {
                 mp.setData('gameState', CoupGameState.PlayReaction);
             }
+
+            actions.push(actionObj);
+            mp.setData('actions', actions);
         },
 
         'takeReaction': (
@@ -705,7 +844,7 @@ export const CoupRule: GameRuleInterface = {
                 throw(new Error('Challenge has already been performed by client:' + challenge));
             }
 
-            if (reaction === CoupReaction.Block && challenge || block) {
+            if (reaction === CoupReaction.Block && (challenge || block)) {
                 throw(new Error('Block cannot be performend, already challenged/block'));
             }
 
@@ -715,25 +854,42 @@ export const CoupRule: GameRuleInterface = {
                 }
             }
 
-            if (reaction === CoupReaction.Challenge && block) {
-                //
-                // Resolve challenge to block.
-                //
-            } else if (reaction === CoupReaction.Challenge) {
-                //
-                // Resolve challenge to action.
-                //
+            if (reaction === CoupReaction.Challenge) {
 
                 lastAction.challenge = clientId;
-                lastAction.challengeResult = checkChallenge(mp, lastAction);
+                let challengee = null;
+
+                if (block) {
+                    //
+                    // Resolve challenge to block.
+                    //
+                    lastAction.challengeResult = checkBlock(mp, lastAction);
+                    challengee = block;
+                } else {
+                    //
+                    // Resolve challenge to action.
+                    //
+                    lastAction.challengeResult = checkChallenge(mp, lastAction);
+                    challengee = lastAction.clientId;
+                }
 
                 if (lastAction.challengeResult) {
-                    lastAction.challengeLoser = lastAction.clientId;
+                    lastAction.challengeLoser = challengee;
                 } else {
                     lastAction.challengeLoser = lastAction.challenge;
-                    lastAction.challengeWinner = lastAction.clientId;
+                    lastAction.challengeWinner = challengee;
 
-                    replaceChallengedCard(mp, lastAction.challengeWinner, CoupCard[CoupAction[lastAction.action]]);
+                    if (block) {
+                        if (lastAction.action === CoupAction.ForeignAid) {
+                            replaceChallengedCard(mp, lastAction.challengeWinner, CoupCard.Duke);
+                        } else if (lastAction.action === CoupAction.Assassin) {
+                            replaceChallengedCard(mp, lastAction.challengeWinner, CoupCard.Contessa);
+                        } else if (lastAction.action === CoupAction.Captain) {
+                            replaceChallengedCard(mp, lastAction.challengeWinner, CoupCard.Captain);
+                        }
+                    } else {
+                        replaceChallengedCard(mp, lastAction.challengeWinner, CoupCard[CoupAction[lastAction.action]]);
+                    }
                 }
 
                 if (challengeFailCauseDead(mp, lastAction.challengeLoser)) {
@@ -778,7 +934,11 @@ export const CoupRule: GameRuleInterface = {
                 throw(new Error('revealCard invalid card'));
             }
 
-            cards[cardNum].state = CoupCardState.ChallengeFailed;
+            if (lastAction.challenge) {
+                cards[cardNum].state = CoupCardState.Challenged;
+            } else {
+                cards[cardNum].state = (action === CoupAction.Coup ? CoupCardState.Couped : CoupCardState.Assassinated);
+            }
             mp.setPlayerData(clientId, 'cards', cards);
 
             nextTurn(mp);
@@ -793,12 +953,12 @@ export const CoupRule: GameRuleInterface = {
                 throw(new Error('Only host can end challenge phase'));
             }
 
-            if (mp.getData('gameState') !== CoupGameState.ChallengeResult) {
-                throw(new Error('endChallengePhase can only be done in ChallengeResult state'));
+            if (mp.getData('gameState') !== CoupGameState.PlayReaction) {
+                throw(new Error('endChallengePhase can only be done in PlayReaction state'));
             }
 
             const actions = mp.getData('actions');
-            const lastAction = actions[actions.length - 1];
+            const lastAction: CoupActionInterface = actions[actions.length - 1];
             const { action, challenge, block, targetId } = lastAction;
 
             if (challenge) {
@@ -810,9 +970,11 @@ export const CoupRule: GameRuleInterface = {
                 // Block is successful. Move on to next player.
                 //
                 nextTurn(mp);
+                return;
             }
 
-            let coins = mp.getPlayerData(lastAction.clientId, 'coins');
+            lastAction.complete = true;
+            const coins = mp.getPlayerData(lastAction.clientId, 'coins');
 
             switch (action) {
                 case CoupAction.Duke:
@@ -822,19 +984,14 @@ export const CoupRule: GameRuleInterface = {
 
                     break;
 
-                case CoupAction.Coup:
-                    coins -= 4;
-                    mp.setPlayerData(lastAction.clientId, 'coins', coins);
-
                 case CoupAction.Assassin:
-                    coins -= 3;
-                    mp.setPlayerData(lastAction.clientId, 'coins', coins);
+                    mp.setPlayerData(lastAction.clientId, 'coins', coins - 3);
 
-                    if (challengeFailCauseDead(mp, targetId)) {
-                        lastAction.challengeCauseDead = true
+                    lastAction.challengeLoser = targetId;
+                    if (challengeFailCauseDead(mp, targetId, CoupCardState.Assassinated)) {
+                        lastAction.challengeCauseDead = true;
                         nextTurn(mp);
                     } else {
-                        lastAction.challengeLoser = targetId;
                         mp.setData('gameState', CoupGameState.ChallengeResult);
                     }
 
@@ -844,6 +1001,8 @@ export const CoupRule: GameRuleInterface = {
 
                     const targetCoins = mp.getPlayerData(targetId, 'coins');
                     const stealCoin = Math.min(targetCoins, 2);
+
+                    lastAction.coinStolen = stealCoin;
 
                     mp.setPlayerData(targetId, 'coins', targetCoins - stealCoin);
                     mp.setPlayerData(lastAction.clientId, 'coins', coins + stealCoin);
@@ -863,6 +1022,8 @@ export const CoupRule: GameRuleInterface = {
 
                     break;
             }
+
+            mp.setData('actions', actions);
         }
     },
 
@@ -900,9 +1061,12 @@ export const CoupRule: GameRuleInterface = {
                 }
 
                 return (
-                    <ul className='coup-actionslist'>
-                        { actionsEl }
-                    </ul>
+                    <div className='coup-actions-page'>
+                        <header>Actions history</header>
+                        <ul className='coup-actionslist'>
+                            { actionsEl }
+                        </ul>
+                    </div>
                 );
             }
         },
@@ -938,12 +1102,15 @@ export const CoupRule: GameRuleInterface = {
          */
         'players-cards': class extends React.Component<ViewPropsInterface & {
             cards: any[],
-            playersCards: any[],
+            coins: number,
+            playersCards: any,
+            playersCoins: any,
             lobby: any
         }, {}> {
             public render() {
                 const mp = this.props.MP;
                 const playersCards = this.props.playersCards;
+                const playersCoins = this.props.playersCoins;
 
                 let i = 0;
                 for (i = 0; i < this.props.lobby.clientIds.length; i = i + 1) {
@@ -956,6 +1123,7 @@ export const CoupRule: GameRuleInterface = {
                     CoupRule.views['player-card'],
                     {
                         clientId: this.props.MP.clientId,
+                        coins: this.props.coins,
                         cards: this.props.cards,
                         MP: this.props.MP,
                         accent: this.props.lobby.accents[i]
@@ -980,6 +1148,7 @@ export const CoupRule: GameRuleInterface = {
                                 CoupRule.views['player-card'],
                                 {
                                     clientId: clientId,
+                                    coins: playersCoins[clientId],
                                     cards: cards,
                                     MP: this.props.MP,
                                     accent: this.props.lobby.accents[i],
@@ -999,11 +1168,13 @@ export const CoupRule: GameRuleInterface = {
 
         'player-card': class extends React.Component<ViewPropsInterface & {
             clientId: string,
+            coins: number,
             cards: any[],
             accent: string
         }, {}> {
             public render() {
                 const cards = this.props.cards;
+                const coins = this.props.coins;
                 const accentHsv = colorsys.hex_to_hsv(this.props.accent);
                 const accent = this.props.accent;
                 /* const accent = colorsys.hsv_to_hex({
@@ -1029,6 +1200,16 @@ export const CoupRule: GameRuleInterface = {
                     }
                 );
 
+                const coinsEl = (
+                    <div className='coup-player-coin'
+                         style={{ backgroundColor: accent }}>
+                        <FontAwesome name='usd' />
+                        &nbsp;
+                        { this.props.coins }
+                    </div>
+                );
+
+
                 for (let i = 0; i < cards.length; i = i + 1) {
                     const cardName = CoupCard[cards[i].card];
                     cardsEl.push(
@@ -1045,6 +1226,7 @@ export const CoupRule: GameRuleInterface = {
                     <div className='coup-player-cards'
                          key={ 'player-cards-' + this.props.clientId }>
                         { playerTag }
+                        { coinsEl }
                         <div />
                         <div className='coup-player-cards-container'
                              style={{ borderColor: accent,
@@ -1063,12 +1245,22 @@ export const CoupRule: GameRuleInterface = {
             public render() {
                 const card = this.props.card;
                 const cardName = CoupCard[card.card];
+                let footer = null;
+
+                if (card.state !== CoupCardState.Active) {
+                    footer = (
+                        <footer className={ CoupCardState[card.state] }>
+                            { CoupCardState[card.state] }
+                        </footer>
+                    );
+                }
 
                 return (
                     <div className={ 'coup-card ' + cardName }>
-                        <footer style={{ backgroundColor: this.props.accent }}>
+                        <header style={{ backgroundColor: this.props.accent }}>
                             { cardName }
-                        </footer>
+                        </header>
+                        { footer }
                     </div>
                 );
             }
@@ -1090,11 +1282,22 @@ export const CoupRule: GameRuleInterface = {
         /**
          * PlayAction (Host) views
          */
-        'host-playaction': class extends React.Component<ViewPropsInterface, {}> {
+        'host-playaction': class extends React.Component<ViewPropsInterface & {
+            playerTurnId: string,
+            actions: any
+        }, {}> {
             public render() {
                 const mp = this.props.MP;
-                const playActionPage = React.createElement(CoupRule.views['host-playaction-page'],
-                                                           this.props);
+                const actionsPage = React.createElement(CoupRule.views['actions-page'], this.props);
+                const waitActionPage = React.createElement(
+                    CoupRule.views['client-waitforaction-page'],
+                    {
+                        MP: mp,
+                        actions: this.props.actions,
+                        waitForId: this.props.playerTurnId,
+                        waitContext: CoupWaitContext.PlayAction
+                    });
+
                 return mp.getPluginView(
                     'gameshell',
                     'HostShell-Main',
@@ -1103,21 +1306,101 @@ export const CoupRule: GameRuleInterface = {
                             'home': {
                                 'icon': 'home',
                                 'label': 'Home',
-                                'view': playActionPage
+                                'view': waitActionPage
                             },
                             'clients': {
                                 'icon': 'users',
                                 'label': 'Players',
                                 'view': mp.getPluginView('lobby', 'host-roommanagement')
                             },
+                            'actionslist': {
+                                'icon': 'list',
+                                'label': 'Actions History',
+                                'view': actionsPage
+                            }
                         }
                     });
             }
         },
 
-        'host-playaction-page': class extends React.Component<ViewPropsInterface, {}> {
+        /**
+         * PlayReaction page (host) - allows clients to challenge before a timer expires
+         */
+        'host-playreaction': class extends React.Component<ViewPropsInterface & {
+            playerTurnId: string,
+            actions: any
+        }, {}> {
             public render() {
-                return <div>hello</div>
+                const mp = this.props.MP;
+                const actionsPage = React.createElement(CoupRule.views['actions-page'], this.props);
+                const playReactionPage = React.createElement(CoupRule.views['host-playreaction-page'], {
+                    MP: this.props.MP,
+                    key: this.props.playerTurnId + Math.random(),
+                    actions: this.props.actions
+                });
+
+                return mp.getPluginView(
+                    'gameshell',
+                    'HostShell-Main',
+                    {
+                        'links': {
+                            'home': {
+                                'icon': 'home',
+                                'label': 'Home',
+                                'view': playReactionPage
+                            },
+                            'clients': {
+                                'icon': 'users',
+                                'label': 'Players',
+                                'view': mp.getPluginView('lobby', 'host-roommanagement')
+                            },
+                            'actionslist': {
+                                'icon': 'list',
+                                'label': 'Actions History',
+                                'view': actionsPage
+                            }
+                        }
+                    });
+            }
+        },
+
+        'host-playreaction-page': class extends React.Component<ViewPropsInterface, { timeLeft: number }> {
+            private _interval;
+            constructor(props: ViewPropsInterface) {
+                super(props);
+                this.state = { timeLeft: 10 };
+                this._tick = this._tick.bind(this);
+            }
+            private _tick() {
+                if (this.state.timeLeft > 0) {
+                    this.setState({ timeLeft: this.state.timeLeft - 1});
+                } else {
+                    this.props.MP.endChallengePhase();
+                }
+            }
+            public componentWillUnmount() {
+                if (this._interval) {
+                    clearInterval(this._interval);
+                }
+            }
+            public componentDidMount() {
+                this._interval = setInterval(this._tick, 1000);
+            }
+            public render() {
+                const mp = this.props.MP;
+                const lastAction = React.createElement(CoupRule.views['last-action'], this.props);
+                const button = (
+                    <button className='coup-button'
+                            onClick={ this.props.MP.endChallengePhase.bind(this) }>
+                        End Challenge Phase ({ this.state.timeLeft })
+                    </button>);
+
+                return (
+                    <div>
+                        { lastAction }
+                        { button }
+                    </div>
+                );
             }
         },
 
@@ -1144,7 +1427,7 @@ export const CoupRule: GameRuleInterface = {
                             },
                             'cards': {
                                 'icon': 'address-card',
-                                'label': 'Card',
+                                'label': 'Cards',
                                 'view': cards
                             },
                             'actionslist': {
@@ -1226,7 +1509,7 @@ export const CoupRule: GameRuleInterface = {
                             },
                             'cards': {
                                 'icon': 'address-card',
-                                'label': 'Card',
+                                'label': 'Cards',
                                 'view': cardsPage
                             },
                             'actionslist': {
@@ -1443,7 +1726,7 @@ export const CoupRule: GameRuleInterface = {
                             },
                             'cards': {
                                 'icon': 'address-card',
-                                'label': 'Card',
+                                'label': 'Cards',
                                 'view': cardsPage
                             },
                             'actionslist': {
@@ -1554,7 +1837,7 @@ export const CoupRule: GameRuleInterface = {
                             },
                             'cards': {
                                 'icon': 'address-card',
-                                'label': 'Card',
+                                'label': 'Cards',
                                 'view': cardsPage
                             },
                             'actionslist': {
@@ -1626,6 +1909,138 @@ export const CoupRule: GameRuleInterface = {
                         { button }
                     </div>
                 );
+            }
+        },
+
+        /**
+         * Show player is dead (client)
+         */
+        'client-dead': class extends React.Component<ViewPropsInterface, {}> {
+            public render() {
+                const mp = this.props.MP;
+                const cardsPage = React.createElement(CoupRule.views['players-cards'], this.props);
+                const actionsPage = React.createElement(CoupRule.views['actions-page'], this.props);
+                return mp.getPluginView(
+                    'gameshell',
+                    'HostShell-Main',
+                    {
+                        'links': {
+                            'home': {
+                                'icon': 'exclamation-triangle',
+                                'label': 'Coup',
+                                'view': 'You Are Dead'
+                            },
+                            'cards': {
+                                'icon': 'address-card',
+                                'label': 'Cards',
+                                'view': cardsPage
+                            },
+                            'actionslist': {
+                                'icon': 'list',
+                                'label': 'Actions History',
+                                'view': actionsPage
+                            }
+                        },
+                        'topBarContent': 'xxx'
+                    });
+            }
+        },
+
+        /**
+         * Show winner page
+         */
+        'client-showWinner': class extends React.Component<ViewPropsInterface, {}> {
+            public render() {
+                const mp = this.props.MP;
+                const showWinnerPage = React.createElement(CoupRule.views['client-showWinner-page'], this.props);
+                const cardsPage = React.createElement(CoupRule.views['players-cards'], this.props);
+                const actionsPage = React.createElement(CoupRule.views['actions-page'], this.props);
+                const coins = React.createElement(CoupRule.views['client-coins'], this.props);
+
+                return mp.getPluginView(
+                    'gameshell',
+                    'HostShell-Main',
+                    {
+                        'links': {
+                            'home': {
+                                'icon': 'gamepad',
+                                'label': 'Coup',
+                                'view': showWinnerPage
+                            },
+                            'cards': {
+                                'icon': 'address-card',
+                                'label': 'Cards',
+                                'view': cardsPage
+                            },
+                            'actionslist': {
+                                'icon': 'list',
+                                'label': 'Actions History',
+                                'view': actionsPage
+                            }
+                        },
+                        'topBarContent': coins
+                    });
+            }
+        },
+
+        'client-showWinner-page': class extends React.Component<ViewPropsInterface & { winner: string }, {}> {
+            public render() {
+                const mp = this.props.MP;
+
+                const player = this.props.MP.getPluginView(
+                    'lobby',
+                    'player-tag',
+                    {
+                        clientId: this.props.winner,
+                        invertColors: true
+                    }
+                );
+
+                return (<div>
+                    { player } has won!
+                </div>);
+            }
+        },
+
+        'host-showWinner': class extends React.Component<ViewPropsInterface, {}> {
+            public render() {
+                const mp = this.props.MP;
+                const showWinnerPage = React.createElement(CoupRule.views['client-showWinner-page'], this.props);
+                const actionsPage = React.createElement(CoupRule.views['actions-page'], this.props);
+
+                const button = (
+                    <button className='coup-button'
+                            onClick={ this.props.MP.newGame.bind(this) }>
+                        New Game!
+                    </button>);
+
+                return mp.getPluginView(
+                    'gameshell',
+                    'HostShell-Main',
+                    {
+                        'links': {
+                            'home': {
+                                'icon': 'home',
+                                'label': 'Home',
+                                'view': (
+                                    <div>
+                                        { showWinnerPage }
+                                        { button }
+                                    </div>
+                                )
+                            },
+                            'clients': {
+                                'icon': 'users',
+                                'label': 'Players',
+                                'view': mp.getPluginView('lobby', 'host-roommanagement')
+                            },
+                            'actionslist': {
+                                'icon': 'list',
+                                'label': 'Actions History',
+                                'view': actionsPage
+                            }
+                        }
+                    });
             }
         }
     }
