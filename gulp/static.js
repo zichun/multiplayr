@@ -25,4 +25,9 @@ gulp.task('rules-css', ['clean'], function() {
                .pipe(gulp.dest('build/rules/'));
 });
 
-gulp.task('static', ['js', 'css', 'html', 'rules-css']);
+gulp.task('rules-static', ['clean'], function() {
+    return gulp.src("src/rules/**/*.png")
+               .pipe(gulp.dest('build/rules/'));
+});
+
+gulp.task('static', ['js', 'css', 'html', 'rules-css', 'rules-static']);

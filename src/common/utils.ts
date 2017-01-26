@@ -95,6 +95,28 @@ export function extendObj(
     });
 }
 
+export function extendObjClone(
+    ori: any,
+    extend: any,
+    override: boolean
+) {
+    const tr = [];
+
+    forEach(
+        ori,
+        (key, value) => {
+            tr[key] = value;
+        });
+
+    forEach(extend, (key) => {
+        if (override || !tr.hasOwnProperty(key)) {
+            tr[key] = extend[key];
+        }
+    });
+
+    return tr;
+}
+
 export function forEach(
     kvp: any,
     cb: (key: any, value?: any) => any
@@ -103,5 +125,14 @@ export function forEach(
         Object.keys(kvp).forEach((key) => {
             cb(key, kvp[key]);
         });
+    }
+}
+
+export function shuffle(
+    a: any[]
+) {
+    for (let i = a.length; i; i = i - 1) {
+        const j = Math.floor(Math.random() * i);
+        [a[i - 1], a[j]] = [a[j], a[i - 1]];
     }
 }

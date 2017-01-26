@@ -1,0 +1,180 @@
+.coup-seperator {
+    border: 0;
+    height: 1px;
+    background: #333;
+    background-image: linear-gradient(to right, #ccc, #333, #ccc);
+    font-size: 0px;
+    margin: 8px auto 8px;
+    width: 75%;
+}
+
+.coup-client-playaction {
+    header {
+        font-size: 1.2em;
+    }
+}
+
+.coup-actionslist {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+        padding: 0;
+        margin: 4px 0 4px 0;
+    }
+}
+
+.coup-action-choicelist {
+
+    .coup-action-choicelist-item {
+        padding: 0px 8px 0px 0px;
+    }
+
+    .coup-action-choicelist-item.selected {
+        border-left: 2px solid #555;
+        padding-left: 12px;
+    }
+
+    .coup-action-choicelist-lie {
+        color: red;
+    }
+
+    .coup-action-choicelist-lie.selected {
+        border-left: 2px solid red;
+        padding-left: 12px;
+    }
+
+}
+
+.coup-actionslist.coup-lastaction {
+    padding: 8px;
+    margin: 0 0 16px 0;
+    border-bottom: 1px solid #a5a5a5;
+}
+
+.coup-actions-page {
+    header {
+        font-size: 1.2em;
+        margin: 0 0 8px 0;
+    }
+
+    .coup-actionslist {
+        margin-left: 4px;
+    }
+}
+.coup-actionslist {
+    .coup-actionslist-item.subitem {
+        margin-left: 24px;
+    }
+}
+.coup-player-cards {
+    display: inline-block;
+    margin: 8px;
+    position: relative;
+
+    .coup-player-coin {
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        height: 30px;
+        line-height: 30px;
+        padding: 0 12px 0 12px;
+        color: white;
+        font-size: 1.2em;
+        border-radius: 24px 24px;
+    }
+}
+
+.coup-player-cards-tag {
+    border-radius: 8px 8px 0 0 !important;
+}
+
+.coup-player-cards-container {
+    border: 1px solid white;
+    border-radius: 0 4px 0 4px;
+    display: inline-block;
+}
+
+.coup-card {
+    height: 180px;
+    width: 158px;
+    position: relative;
+    display: inline-block;
+    margin: 2px;
+
+    background-color: white;
+    background-position: center center;
+    background-repeat: no-repeat;
+
+    header {
+        position: absolute;
+        bottom: 8px;
+        left: 0px;
+        right: 0px;
+        padding: 4px 0 4px 0;
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: bold;
+    }
+
+    footer {
+        position: absolute;
+        transform: rotate(35deg);
+        z-index: 10;
+        padding: 3px;
+        font-variant: small-caps;
+        background-color: #FF4136;
+    }
+
+    footer.Challenged {
+        right: -5px;
+        top: 20px;
+    }
+
+    footer.Couped {
+        top: 10px;
+        right: -5px;
+    }
+
+    footer.Assassinated {
+        top: 20px;
+        right: -10px;
+    }
+}
+
+.coup-card-choicelist {
+    .coup-card-choicelist-item {
+        display: inline-block;
+        padding: 4px;
+        border: 1px solid transparent;
+    }
+
+    .coup-card-choicelist-item.selected {
+        border: 1px solid black;
+    }
+
+    .seperator {
+        display: block;
+        border-bottom: 1px solid #a5a5a5;
+    }
+}
+
+.coup-card.Assassin {
+    background-image: url(images/assassin.png);
+}
+.coup-card.Captain {
+    background-image: url(images/captain.png);
+}
+.coup-card.Ambassador {
+    background-image: url(images/ambassador.png);
+}
+.coup-card.Contessa {
+    background-image: url(images/contessa.png);
+}
+.coup-card.Duke {
+    background-image: url(images/duke.png);
+}
+.coup-card.Unknown {
+    background-image: url(images/unknown.png);
+}
