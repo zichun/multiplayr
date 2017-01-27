@@ -51,8 +51,9 @@ import {
 } from './methods/CoupMethods';
 
 import {
+    CoupHostLobby,
     CoupGameRule
-} from './CoupRules';
+} from './views/CoupViews';
 
 export const CoupRule: GameRuleInterface = {
 
@@ -328,33 +329,7 @@ export const CoupRule: GameRuleInterface = {
     },
 
     views: {
-        'host-lobby': class extends React.Component<ViewPropsInterface, {}> {
-            public render() {
-                const mp = this.props.MP;
-                return mp.getPluginView(
-                    'gameshell',
-                    'HostShell-Main',
-                    {
-                        'links': {
-                            'home': {
-                                'icon': 'home',
-                                'label': 'Home',
-                                'view': mp.getPluginView('lobby', 'Lobby')
-                            },
-                            'clients': {
-                                'icon': 'users',
-                                'label': 'Players',
-                                'view': mp.getPluginView('lobby', 'host-roommanagement')
-                            },
-                            'rules': {
-                                'icon': 'book',
-                                'label': 'Rules',
-                                'view': CoupGameRule
-                            }
-                        }
-                    });
-            }
-        },
+        'host-lobby': CoupHostLobby,
 
         'actions-page': class extends React.Component<ViewPropsInterface & { actions: CoupActionInterface[] }, {}> {
             public render() {
