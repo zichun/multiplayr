@@ -17,6 +17,7 @@ export interface ClientSessionInterface {
     joinRoom(roomId: string, cb?: CallbackType);
     rejoinRoom(roomId: string, clientId: string, cb?: CallbackType);
     sendMessage(clientId: string, packet: PacketType, cb?: CallbackType);
+    onReconnect();
     onMessage(packet: PacketType, cb?: CallbackType);
     setDxc(dxc: ClientDataExchangeInterface);
     getClientId();

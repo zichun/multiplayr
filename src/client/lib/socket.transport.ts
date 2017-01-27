@@ -80,6 +80,7 @@ export class SocketTransport implements ClientTransportInterface {
                          },
                          (data) => {
                              checkReturnMessage(data, 'reconnect');
+                             this.session.onReconnect();
                          });
     }
 

@@ -179,6 +179,10 @@ export class Session implements ClientSessionInterface {
         }
     }
 
+    public onReconnect() {
+        this.dxc.clientReady();
+    }
+
     public setDxc(dxc: ClientDataExchangeInterface) {
         if (this.dxc === undefined) {
             this.dxc = dxc;

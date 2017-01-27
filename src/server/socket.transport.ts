@@ -85,7 +85,10 @@ export class SocketTransport implements ServerTransportInterface {
                         if (res.success === false) {
                             this.session = null;
                             this.initialized = false;
+                        } else {
+                            console.log('Transport[' + data.clientId + '] successfully reconnected to Room[' + data.roomId + ']');
                         }
+
                         return forwardReturnMessage(res, cb);
                     });
             });

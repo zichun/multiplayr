@@ -70,7 +70,7 @@ function setupJoinButton(
         } else {
             _mplib.MultiplayR.Join(roomId,
                                    transport,
-                                   document.body,
+                                   document.getElementById('container'),
                                    (res) => {
                                        if (!res.success) {
                                            alert(res.message);
