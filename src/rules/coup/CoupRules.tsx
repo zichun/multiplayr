@@ -42,5 +42,5 @@ const CoupRuleComponent = class extends React.Component<{}, {}> {
     }
 }
 
-export const CoupRule = React.createElement(CoupRuleComponent, {});
-export default CoupRule;
+export const CoupGameRule = React.createElement(CoupRuleComponent, {});
+export default CoupGameRule;

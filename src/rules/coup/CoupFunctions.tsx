@@ -370,3 +370,25 @@ export function challengeFailCauseDead(
 
     return true;
 }
+
+export function distributeCards(
+    mp: MPType
+) {
+    const deck = mp.getData('deck');
+
+    mp.playersForEach((clientId) => {
+        const draw = deck.splice(0, 2);
+        const cards = [];
+
+        [0, 1].forEach((i) => {
+            cards.push({
+                card: draw[i],
+                state: CoupCardState.Active
+            });
+        });
+
+        mp.setPlayerData(clientId, 'cards', cards);
+    });
+
+    mp.setData('deck', deck);
+}

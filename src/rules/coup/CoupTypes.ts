@@ -9,7 +9,7 @@ export enum CoupGameState {
     ChallengeResult,      // Shows the result of a challenge, and interface for loser to pick losing card.
     AmbassadorCardChange, // Ambassador action - player choose cards to swap.
     GameOver              // Game over screen.
-};
+}
 
 export enum CoupAction {
     Duke = 1,    // Take 3 coins from the treasury
@@ -19,12 +19,12 @@ export enum CoupAction {
     Income,      // Take one coin from the treasury
     ForeignAid,  // Take two coins from the treasury
     Coup         // Spend 7 coins and assassinate an opponent
-};
+}
 
 export enum CoupReaction {
     Challenge = 1,
     Block
-};
+}
 
 export enum CoupCard {
     Duke = 1,
@@ -33,14 +33,14 @@ export enum CoupCard {
     Captain,
     Ambassador,
     Unknown
-};
+}
 
 export enum CoupCardState {
     Active = 1,
     Challenged,
     Assassinated,
     Couped
-};
+}
 
 export enum CoupWaitContext {
     PlayAction = 1,
@@ -48,7 +48,7 @@ export enum CoupWaitContext {
     ChallengeReaction,
     ChallengeFail,
     AmbassadorChooseCard
-};
+}
 
 export interface CoupActionInterface {
     action: CoupAction,
@@ -62,4 +62,4 @@ export interface CoupActionInterface {
     challengeCauseDead?: boolean,
     coinStolen?: number,
     complete?: boolean
-};
+}
