@@ -280,7 +280,7 @@ export const Lobby: GameRuleInterface = {
                 return (
                     <div className='lobby-setname-container'>
                         <input className='lobby-setname-input'
-                               value={ this.state.name }
+                               defaultValue={ this.state.name }
                                onChange={ this.onChange }
                                />
 
@@ -340,7 +340,6 @@ export const Lobby: GameRuleInterface = {
             private _setIcon(icon: number) {
                 this.props.MP.setIcon(icon);
                 this.setState({ icon: icon });
-                console.log('seticon called');
                 return true;
             }
 
