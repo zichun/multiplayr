@@ -245,11 +245,19 @@ export function addActions(
                 break;
 
             case CoupAction.Assassin:
+                actionsEl.push(
+                    <li className='coup-actionslist-item Coup subitem'
+                        key={ 'action-result-' + index }>
+                        { targetTag } loses one character card to an assassination.
+                    </li>
+                );
+                break;
+
             case CoupAction.Coup:
                 actionsEl.push(
                     <li className='coup-actionslist-item Coup subitem'
                         key={ 'action-result-' + index }>
-                        { targetTag } loses one character card.
+                        { targetTag } loses one character card to a coup.
                     </li>
                 );
                 break;

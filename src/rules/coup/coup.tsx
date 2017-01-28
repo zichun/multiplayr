@@ -223,13 +223,13 @@ export const CoupRule: GameRuleInterface = {
                     challengee = lastAction.clientId;
                 }
 
-                mp.setViewProps(mp.hostId, 'waitForId', challenge);
+                mp.setViewProps(mp.hostId, 'waitForId', challengee);
                 mp.setView(mp.hostId, 'host-playaction');
                 mp.playersForEach((clientId, index) => {
                     if (clientId === challengee) {
                         mp.setView(clientId, 'client-challengereaction');
                     } else {
-                        mp.setViewProps(clientId, 'waitForId', challenge);
+                        mp.setViewProps(clientId, 'waitForId', challengee);
                         mp.setViewProps(clientId, 'waitContext', CoupWaitContext.ChallengeReaction);
                         mp.setView(clientId, 'client-waitforaction');
                     }
@@ -661,7 +661,7 @@ export const CoupRule: GameRuleInterface = {
             private _interval;
             constructor(props: ViewPropsInterface) {
                 super(props);
-                this.state = { timeLeft: 10 };
+                this.state = { timeLeft: 40 };
                 this._tick = this._tick.bind(this);
             }
             private _tick() {

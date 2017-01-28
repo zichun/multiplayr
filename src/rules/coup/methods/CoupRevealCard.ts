@@ -59,11 +59,13 @@ export const CoupRevealCard = (
 
         if (lastAction.challenge) {
             cards[cardNum].state = CoupCardState.Challenged;
+            mp.endChallengePhase();
         } else {
             cards[cardNum].state = (action === CoupAction.Coup ? CoupCardState.Couped : CoupCardState.Assassinated);
+            nextTurn(mp);
         }
         mp.setPlayerData(clientId, 'cards', cards);
-        nextTurn(mp);
+
         return;
     }
 
@@ -114,6 +116,7 @@ export const CoupRevealCard = (
         if (challengeFailCauseDead(mp, lastAction.challengeLoser)) {
             lastAction.challengeCauseDead = true;
             nextTurn(mp);
+            return;
         } else {
             mp.setData('gameState', CoupGameState.ChallengeResult);
         }
@@ -124,11 +127,12 @@ export const CoupRevealCard = (
 
         if (challengeFailCauseDead(mp, lastAction.challengeLoser)) {
             lastAction.challengeCauseDead = true;
+            nextTurn(mp);
+            return;
         } else {
             cards[cardNum].state = CoupCardState.Challenged;
+            mp.endChallengePhase();
         }
-
-        nextTurn(mp);
     }
 
     mp.setPlayerData(clientId, 'cards', cards);
