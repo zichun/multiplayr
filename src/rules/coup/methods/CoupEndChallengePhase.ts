@@ -32,24 +32,33 @@ export const CoupEndChallengePhase = (
         throw(new Error('Only host can end challenge phase'));
     }
 
-    if (mp.getData('gameState') !== CoupGameState.PlayReaction) {
+    if (mp.getData('gameState') !== CoupGameState.PlayReaction &&
+        mp.getData('gameState') !== CoupGameState.ChallengeReaction &&
+        mp.getData('gameState') !== CoupGameState.ChallengeResult) {
         throw(new Error('endChallengePhase can only be done in PlayReaction state'));
     }
 
     const actions = mp.getData('actions');
     const lastAction: CoupActionInterface = actions[actions.length - 1];
-    const { action, challenge, block, targetId } = lastAction;
-
-    if (challenge) {
-        throw(new Error('endChallengePhase cannot be done when challenge is done'));
-    }
+    const { action, challenge, block, targetId, challengeLoser } = lastAction;
 
     if (block) {
-        //
-        // Block is successful. Move on to next player.
-        //
-        nextTurn(mp);
-        return;
+        if (!challenge) {
+            // Block is not contested
+            nextTurn(mp);
+            return;
+        }
+        if (challengeLoser !== block) {
+            // Block is successful. Move on to next player.
+            nextTurn(mp);
+            return;
+        }
+    } else {
+        if (challenge && challengeLoser !== challenge) {
+            // Action was challenged, but failed.
+            nextTurn(mp);
+            return;
+        }
     }
 
     lastAction.complete = true;
