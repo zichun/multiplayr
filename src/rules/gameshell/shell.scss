@@ -1,6 +1,6 @@
-@headerHeight: 48px;
-@panelWidth: @headerHeight;
-@panelExtendWidth: 180px;
+$headerHeight: 48px;
+$panelWidth: $headerHeight;
+$panelExtendWidth: 180px;
 
 .shell-main {
     position: relative;
@@ -11,7 +11,7 @@
         background: #353535;
         color: white;
         text-align: right;
-        height: @headerHeight;
+        height: $headerHeight;
     }
 
     .shell-room {
@@ -20,13 +20,13 @@
         padding: 0px 16px 0px 16px;
         color: white;
         font-size: 24px;
-        height: @headerHeight;
-        line-height: @headerHeight;
+        height: $headerHeight;
+        line-height: $headerHeight;
         box-sizing: border-box;
     }
 
     .shell-main-panel.show {
-        width: @panelWidth + @panelExtendWidth;
+        width: $panelWidth + $panelExtendWidth;
     }
 
     .shell-main-panel {
@@ -34,7 +34,7 @@
         top: 0px;
         bottom: 0px;
         left: 0px;
-        width: @panelWidth;
+        width: $panelWidth;
         background-color: #d5d5d5;
         overflow-x: hidden;
         overflow-y: visible;
@@ -43,13 +43,13 @@
 
         .shell-main-panel-link {
 
-            width: @panelWidth + @panelExtendWidth;
-            height: @headerHeight;
+            width: $panelWidth + $panelExtendWidth;
+            height: $headerHeight;
             cursor: pointer;
 
             label {
-                line-height: @headerHeight;
-                width: @panelExtendWidth;
+                line-height: $headerHeight;
+                width: $panelExtendWidth;
                 display: block;
                 float: left;
                 cursor: pointer;
@@ -59,7 +59,7 @@
                 display: block;
                 float: left;
                 text-align: center;
-                width: @panelWidth;
+                width: $panelWidth;
                 padding: 11px 0 11px 0;
                 color: #656565;
             }
@@ -85,8 +85,8 @@
 
     .shell-body {
         position: absolute;
-        top: @headerHeight;
-        left: @panelWidth;
+        top: $headerHeight;
+        left: $panelWidth;
         bottom: 0px;
         right: 0px;
         box-sizing: border-box;

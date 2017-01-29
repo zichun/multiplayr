@@ -1,7 +1,6 @@
 import * as express from 'express';
 import * as http from 'http';
 import * as socketio from 'socket.io';
-import * as lessMiddleware from 'less-middleware';
 import * as dir from 'node-dir';
 import MPRULES from './rules/rules';
 
@@ -12,7 +11,6 @@ const rootDir = __dirname;
 
 app.set('port', process.env.PORT || 3000);
 app.set('view options', { layout: false, pretty: true });
-app.use(lessMiddleware('public'));
 app.use(express.static(rootDir + '/client/'));
 
 /**

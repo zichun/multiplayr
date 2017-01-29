@@ -4,6 +4,7 @@
 import * as React from 'react';
 import * as Chance from 'chance';
 import * as FontAwesome from 'react-fontawesome';
+import './lobby.scss';
 
 import {GameRuleInterface,
         MPType,
