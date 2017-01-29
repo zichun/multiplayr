@@ -5,6 +5,7 @@
 import * as React from 'react';
 import Lobby from '../lobby/lobby';
 import Shell from '../gameshell/gameshell';
+import './theoddone.scss';
 
 import {
     GameRuleInterface,
