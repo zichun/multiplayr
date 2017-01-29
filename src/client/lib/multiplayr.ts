@@ -144,13 +144,9 @@ export class MultiplayR {
     ) {
         const ruleDef = MPRULES[rule];
 
-//        MultiplayR.LoadRule(ruleDef.rules, () => {
-            MultiplayR.LoadRuleCssDeep(ruleDef.rule);
-
-            const gameObj = new GameObject(transport,
-                                           container);
-            gameObj.host(ruleDef.rule.name, ruleDef.rule, cb);
-//        });
+        const gameObj = new GameObject(transport,
+                                       container);
+        gameObj.host(ruleDef.rule.name, ruleDef.rule, cb);
     }
 
     public static ReJoin(
@@ -174,11 +170,7 @@ export class MultiplayR {
                            const rule = res.message;
                            const ruleDef = MPRULES[rule];
 
-//                           MultiplayR.LoadRule(ruleDef.rules, () => {
-                               MultiplayR.LoadRuleCssDeep(ruleDef.rule);
-
-                               gameObj.setupRule(ruleDef.rule);
-//                           });
+                           gameObj.setupRule(ruleDef.rule);
 
                            return forwardReturnMessage(res, cb);
                        });
@@ -203,11 +195,7 @@ export class MultiplayR {
             const rule = res.message;
             const ruleDef = MPRULES[rule];
 
-//            MultiplayR.LoadRule(ruleDef.rules, () => {
-                MultiplayR.LoadRuleCssDeep(ruleDef.rule);
-
-                gameObj.setupRule(ruleDef.rule);
-//            });
+            gameObj.setupRule(ruleDef.rule);
 
             return forwardReturnMessage(res, cb);
         });
