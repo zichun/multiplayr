@@ -1,5 +1,5 @@
 /**
- * Multiplayr.js
+ * Multiplayr.ts
  */
 
 import SocketTransport from './socket.transport';
