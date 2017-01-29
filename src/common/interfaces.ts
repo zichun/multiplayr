@@ -13,11 +13,48 @@ export interface ClientTransportInterface {
 }
 
 export interface ClientSessionInterface {
+    /**
+     * @method createRoom
+     *
+     * Creates a new room. On success, callback will be called with the
+     * roomId. The client that created the room will be the host of the room.
+     */
     createRoom(cb?: CallbackType);
+
+    /**
+     * @method joinRoom
+     *
+     * Joins a room. On success, callback will be called with the hostId.
+     */
     joinRoom(roomId: string, cb?: CallbackType);
+
+    /**
+     * @method rejoinRoom
+     *
+     * Rejoins a room as a given clientId. This is for the purpose of reconnection.
+     * On success, callback will be called with the hostId.
+     */
     rejoinRoom(roomId: string, clientId: string, cb?: CallbackType);
+
+    /**
+     * @method sendMessage
+     *
+     * Sends a packet to a given client.
+     */
     sendMessage(clientId: string, packet: PacketType, cb?: CallbackType);
+
+    /**
+     * @method onReconnect
+     *
+     * This is callback for the transport layer when the transport reconnected.
+     */
     onReconnect();
+
+    /**
+     * @method onMessage
+     *
+     * This is a callback for the transport layer when a new message is received.
+     */
     onMessage(packet: PacketType, cb?: CallbackType);
     setDxc(dxc: ClientDataExchangeInterface);
     getClientId();
