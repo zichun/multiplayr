@@ -56,7 +56,25 @@ export interface ClientSessionInterface {
      * This is a callback for the transport layer when a new message is received.
      */
     onMessage(packet: PacketType, cb?: CallbackType);
-    setDxc(dxc: ClientDataExchangeInterface);
+
+    /**
+     * @method setCallbacks
+     *
+     * Sets the respective callbacks for the following events:
+     *     onMessage - Callback for when transport layer receives a new message
+     *     onJoinRoom - Callback for when a new client connected to the room
+     *     onRejoinRoom - Callback for when a (disconnected) client rejoins the room
+     *     onLeaveRoom - Callback for when a client leaves the room (disconnected)
+     *     onReconnect - Callback for when the transport layer reconnects
+     */
+    setCallbacks(callBacks: {
+        onMessage?: (packet: PacketType, cb?: CallbackType) => void,
+        onJoinRoom?: (clientId: string) => void,
+        onRejoinRoom?: (clientId: string) => void,
+        onLeaveRoom?: (clientId: string) => void,
+        onReconnect?: () => void
+    });
+
     getClientId();
     getRoomId();
     getHostId();
