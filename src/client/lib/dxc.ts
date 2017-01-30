@@ -38,7 +38,23 @@ export class DataExchange implements ClientDataExchangeInterface {
         session: ClientSessionInterface
     ) {
         this.session = session;
-        this.session.setDxc(this);
+        this.session.setCallbacks({
+            onMessage: (packet: PacketType, cb?: CallbackType) => {
+                this.onMessage(packet, cb);
+            },
+            onJoinRoom: (clientId: string) => {
+                this.onJoinRoom(clientId);
+            },
+            onRejoinRoom: (clientId: string) => {
+                this.onRejoinRoom(clientId);
+            },
+            onLeaveRoom: (clientId: string) => {
+                this.onLeaveRoom(clientId);
+            },
+            onReconnect: () => {
+                this.clientReady();
+            }
+        });
     }
 
     public host(

@@ -4,6 +4,7 @@
 import * as React from 'react';
 import * as Chance from 'chance';
 import * as FontAwesome from 'react-fontawesome';
+import './lobby.scss';
 
 import {GameRuleInterface,
         MPType,
@@ -396,8 +397,7 @@ export const Lobby: GameRuleInterface = {
                     null,
                     React.DOM.th(null, ' '),
                     React.DOM.th(null, 'Client-Id'),
-                    React.DOM.th(null, 'Name'),
-                    React.DOM.th(null, ' ')
+                    React.DOM.th(null, 'Name')
                 );
             }
         },
@@ -437,11 +437,7 @@ export const Lobby: GameRuleInterface = {
                                      className: this.props.isConnected ? 'lobby-connected' : 'lobby-disconnected'
                                  }, '')),
                     React.DOM.td(null, this.props.clientId),
-                    React.DOM.td(null, this.props.name),
-                    React.DOM.td(null,
-                                 React.DOM.button({
-                                     onClick: this.disconnect
-                                 }, 'Disconnect'))
+                    React.DOM.td(null, this.props.name)
 
                 );
             }

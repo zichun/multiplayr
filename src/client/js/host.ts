@@ -25,6 +25,8 @@ $(() => {
             Object.keys(_mplib.MPRULES).forEach((rule) => {
                 $('#rules').append(makeRule(rule, _mplib.MPRULES[rule]));
             });
+
+            $('#rules').append('<a href="/join" style="font-size:1.5em; margin: 5px;">Join games</a>');
         });
 
     function makeRule(

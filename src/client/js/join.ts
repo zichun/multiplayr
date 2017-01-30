@@ -30,7 +30,9 @@ $(() => {
 
     const hash = parseHash();
     if (hash.roomId && hash.clientId) {
-        $('#roomId').val(hash.roomId);
+        $('#roomId').val(hash.roomId).change(function() {
+            $('#clientId').val('');
+        });
         $('#clientId').attr('disabled', '').val(hash.clientId);
     }
 

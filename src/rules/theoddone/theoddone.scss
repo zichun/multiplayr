@@ -1,4 +1,4 @@
-@bg: #151515;
+$bg: #151515;
 
 #choices {
 }
@@ -13,7 +13,7 @@ html,body { height: 100%; }
 #theoddone-voting {
     text-align: center;
     height: 100%;
-    background: @bg;
+    background: $bg;
     color: white;
 }
 #theoddone-word {

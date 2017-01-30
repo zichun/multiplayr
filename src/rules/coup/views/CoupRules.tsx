@@ -5,15 +5,15 @@ const CoupRuleComponent = class extends React.Component<{}, {}> {
         return (
             <div className='coupRule'>
                 <h1>Objective</h1>
-                <div>
+                <p>
                     In <strong>Coup</strong>, you want to be the last player with a character card left in the game.
-                </div>
+                </p>
                 <h2>Set up</h2>
-                <div>
+                <p>
                     Each player starts the game with 2 coinds and 2 character cards (which are unknown to other players). The 2 cards
                     are chosen from a deck of 15 character cards (comprising 3 copies of 5 different characters, each with a unique
                     set of abilities).
-                </div>
+                </p>
                 <h2>Characters</h2>
                 <ul>
                     <li><strong>Duke</strong> - Take 3 coins from the treasury. Block someone from taking foreign aid</li>

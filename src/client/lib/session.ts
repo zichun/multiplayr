@@ -6,38 +6,55 @@
  *
  */
 
-import {returnError,
-        createSessionPacket,
-        checkReturnMessage,
-        forwardReturnMessage} from '../../common/messages';
+import {
+    returnError,
+    createSessionPacket,
+    checkReturnMessage,
+    forwardReturnMessage
+} from '../../common/messages';
 
-import {SessionMessageType,
-        CallbackType,
-        PacketType,
-        RoomMessageType} from '../../common/types';
+import {
+    SessionMessageType,
+    CallbackType,
+    PacketType,
+    RoomMessageType
+} from '../../common/types';
 
-import {ClientTransportInterface,
-        ClientDataExchangeInterface,
-        ClientSessionInterface} from '../../common/interfaces';
+import {
+    ClientTransportInterface,
+    ClientDataExchangeInterface,
+    ClientSessionInterface
+} from '../../common/interfaces';
 
 export class Session implements ClientSessionInterface {
-    private clientId: string;
-    private hostId: string;
-    private roomId: string;
-    private dxc: ClientDataExchangeInterface;
-    private transport: ClientTransportInterface;
+    private _onMessage: (packet: PacketType, cb?: CallbackType) => void;
+    private _onJoinRoom: (clientId: string) => void;
+    private _onRejoinRoom: (clientId: string) => void;
+    private _onLeaveRoom: (clientId: string) => void;
+    private _onReconnect: () => void;
+
+    private _clientId: string;
+    private _hostId: string;
+    private _roomId: string;
+    private _transport: ClientTransportInterface;
 
     constructor(
         transport: ClientTransportInterface
     ) {
-        this.transport = transport;
-        this.clientId = transport.getClientId();
+        this._transport = transport;
+        this._clientId = transport.getClientId();
 
-        this.transport.setSession(this);
+        this._transport.setSession(this);
 
-        if (!this.clientId) {
+        if (!this._clientId) {
             throw 'Session constructed with an invalid transport object';
         }
+
+        this._onMessage = (packet, cb) => {};
+        this._onJoinRoom = (clientId) => {};
+        this._onRejoinRoom = (clientId) => {};
+        this._onLeaveRoom = (clientId) => {};
+        this._onReconnect = () => {};
     }
 
     /**
@@ -49,15 +66,15 @@ export class Session implements ClientSessionInterface {
         cb?: CallbackType
     ) {
         const packet = createSessionPacket(SessionMessageType.CreateRoom);
-        packet.session.fromClientId = this.clientId;
+        packet.session.fromClientId = this._clientId;
 
-        this.transport.sendMessage(packet, (data) => {
+        this._transport.sendMessage(packet, (data) => {
             if (!data.success) {
                 return checkReturnMessage(data, 'roomId', cb);
             }
 
-            this.roomId = data.message;
-            this.hostId = this.clientId;
+            this._roomId = data.message;
+            this._hostId = this._clientId;
 
             return forwardReturnMessage(data, cb);
         });
@@ -73,15 +90,15 @@ export class Session implements ClientSessionInterface {
     ) {
         const packet = createSessionPacket(SessionMessageType.JoinRoom);
         packet.session.roomId = roomId;
-        packet.session.fromClientId = this.clientId;
+        packet.session.fromClientId = this._clientId;
 
-        this.transport.sendMessage(packet, (res) => {
+        this._transport.sendMessage(packet, (res) => {
             if (!res.success) {
                 return checkReturnMessage(res, 'hostId', cb);
             }
 
-            this.hostId = res.message;
-            this.roomId = roomId;
+            this._hostId = res.message;
+            this._roomId = roomId;
 
             return forwardReturnMessage(res, cb);
         });
@@ -96,15 +113,15 @@ export class Session implements ClientSessionInterface {
         packet.session.roomId = roomId;
         packet.session.fromClientId = clientId;
 
-        this.transport.sendMessage(packet, (res) => {
+        this._transport.sendMessage(packet, (res) => {
             if (!res.success) {
                 return checkReturnMessage(res, 'hostId', cb);
             }
 
-            this.hostId = res.message;
-            this.roomId = roomId;
-            this.clientId = clientId;
-            this.transport.updateClientId();
+            this._hostId = res.message;
+            this._roomId = roomId;
+            this._clientId = clientId;
+            this._transport.updateClientId();
 
             return forwardReturnMessage(res, cb);
         });
@@ -118,10 +135,10 @@ export class Session implements ClientSessionInterface {
         packet.session = {
             action: SessionMessageType.SendMessage,
             toClientId: clientId,
-            fromClientId: this.clientId
+            fromClientId: this._clientId
         };
 
-        this.transport.sendMessage(packet, cb);
+        this._transport.sendMessage(packet, cb);
     }
 
     public onMessage(
@@ -139,10 +156,8 @@ export class Session implements ClientSessionInterface {
             return this.serviceBroadcastMessage(packet, cb);
 
         case SessionMessageType.SendMessage:
-            // Received a (routed) SendMessage from another client. Forward it to the dxc layer.
-            if (this.dxc !== undefined) {
-                this.dxc.onMessage(packet, cb);
-            }
+            // Received a (routed) SendMessage from another client. Forward it to the layer above.
+            this._onMessage(packet, cb);
             break;
 
         default:
@@ -166,13 +181,13 @@ export class Session implements ClientSessionInterface {
         switch (packet.room.action) {
 
         case RoomMessageType.JoinRoom:
-            return this.dxc.onJoinRoom(packet.room.clientId);
+            return this._onJoinRoom(packet.room.clientId);
 
         case RoomMessageType.RejoinRoom:
-            return this.dxc.onRejoinRoom(packet.room.clientId);
+            return this._onRejoinRoom(packet.room.clientId);
 
         case RoomMessageType.LeaveRoom:
-            return this.dxc.onLeaveRoom(packet.room.clientId);
+            return this._onLeaveRoom(packet.room.clientId);
 
         default:
             return returnError(cb, 'invalid data packet (invalid room action - ' + packet.session.action + ')');
@@ -180,31 +195,50 @@ export class Session implements ClientSessionInterface {
     }
 
     public onReconnect() {
-        this.dxc.clientReady();
+        this._onReconnect();
     }
 
-    public setDxc(dxc: ClientDataExchangeInterface) {
-        if (this.dxc === undefined) {
-            this.dxc = dxc;
-        } else {
-            throw('ClientDataExchangeInterface has already been set for this session object');
+    public setCallbacks(
+        callBacks: {
+            onMessage?: (packet: PacketType, cb?: CallbackType) => void,
+            onJoinRoom?: (clientId: string) => void,
+            onRejoinRoom?: (clientId: string) => void,
+            onLeaveRoom?: (clientId: string) => void,
+            onReconnect?: () => void
+        }
+    ) {
+        if (callBacks.onMessage) {
+            this._onMessage = callBacks.onMessage;
+        }
+        if (callBacks.onJoinRoom) {
+            this._onJoinRoom = callBacks.onJoinRoom;
+        }
+        if (callBacks.onRejoinRoom) {
+            this._onRejoinRoom = callBacks.onRejoinRoom;
+        }
+        if (callBacks.onLeaveRoom) {
+            this._onLeaveRoom = callBacks.onLeaveRoom;
+        }
+        if (callBacks.onReconnect) {
+            this._onReconnect = callBacks.onReconnect;
         }
     }
 
+
     public getClientId() {
-        return this.clientId;
+        return this._clientId;
     }
 
     public getRoomId() {
-        return this.roomId;
+        return this._roomId;
     }
 
     public getHostId() {
-        return this.hostId;
+        return this._hostId;
     }
 
     public isHost() {
-        return this.hostId === this.clientId;
+        return this._hostId === this._clientId;
     }
 }
 

@@ -5,6 +5,7 @@
 import * as React from 'react';
 import * as FontAwesome from 'react-fontawesome';
 import * as colorsys from 'colorsys';
+import './coup.scss';
 
 import Lobby from '../lobby/lobby';
 import Shell from '../gameshell/gameshell';
@@ -1219,7 +1220,8 @@ export const CoupRule: GameRuleInterface = {
                             'cards': {
                                 'icon': 'address-card',
                                 'label': 'Cards',
-                                'view': cardsPage
+                                'view': cardsPage
+
                             },
                             'actionslist': {
                                 'icon': 'list',
