@@ -9,7 +9,8 @@ build.postCopy.setConfig({
       'build/rules/': ['src/**/*.png'],
       'build/client/static': ['src/client/static/*.html'],
       'build/client/css': ['src/client/css/*.css']
-  }
+  },
+  shouldFlatten: false
 });
 
 
