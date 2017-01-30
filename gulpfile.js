@@ -6,9 +6,9 @@ let gulp = require('gulp');
 
 build.postCopy.setConfig({
   copyTo: {
-      'build/rules/': ['src/**/*.png'],
+      'build': ['src/**/*.png'],
       'build/client/static': ['src/client/static/*.html'],
-      'build/client/css': ['src/client/css/*.css']
+      'build': ['src/**/*.css']
   },
   shouldFlatten: false
 });
