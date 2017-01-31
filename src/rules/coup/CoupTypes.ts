@@ -2,6 +2,10 @@
  * Types for Coup rules
  */
 
+import {
+    MPType
+} from '../../common/interfaces';
+
 export enum CoupGameState {
     PlayAction = 1,       // A player chooses an action.
     PlayReaction,         // Other players react to the action chooses - challenge / block etc.
@@ -62,4 +66,24 @@ export interface CoupActionInterface {
     challengeCauseDead?: boolean,
     coinStolen?: number,
     complete?: boolean
+}
+
+export interface CoupViewPropsInterface {
+    MP: MPType,
+    actions: CoupActionInterface[],
+    playerTurn: number,
+    playerTurnId: string
+    isDead?: boolean,
+    coins: number,
+    cards: any,
+    alivePlayers: string[],
+    playersCards: any,
+    playersCoins: number[],
+    waitForId?: string,
+    waitContext?: CoupWaitContext,
+    waitAdditionalText?: string,
+    drawCards: any,
+    winner: string,
+    lobby: any,
+    gameobject: any
 }
