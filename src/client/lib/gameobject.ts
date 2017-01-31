@@ -16,21 +16,25 @@ import MPRULES from '../../rules/rules';
 import * as DOM from 'react-dom';
 import * as React from 'react';
 
-import {isFunction,
-        isArray,
-        extendObjClone,
-        forEach} from '../../common/utils';
+import {
+    extendObjClone,
+    forEach,
+    isArray,
+    isFunction
+} from '../../common/utils';
 
-import {returnError,
-        returnSuccess,
-        checkReturnMessage,
-        forwardReturnMessage} from '../../common/messages';
+import {
+    checkReturnMessage,
+    forwardReturnMessage,
+    returnError,
+    returnSuccess
+} from '../../common/messages';
 
-import {DataStoreType,
-        ReturnPacketType,
-        CallbackType} from '../../common/types';
-
-declare var Q;
+import {
+    CallbackType,
+    DataStoreType,
+    ReturnPacketType
+} from '../../common/types';
 
 class GameObject {
 
@@ -49,16 +53,20 @@ class GameObject {
     private views: any;
     private dataStore: DataStoreType;
     private clients: string[];
-    private clientsData: { [clientId: string]: {
-        ready: boolean,
-        active: boolean,
-        dataStore: DataStoreType
-    }};
-    private reactProps: { [clientId: string]: {
-        __view?: string,
-        props?: any
-    }};
-    private plugins: { [ruleName: string]: GameObject};
+    private clientsData: {
+        [clientId: string]: {
+            ready: boolean,
+            active: boolean,
+            dataStore: DataStoreType
+        }
+    };
+    private reactProps: {
+        [clientId: string]: {
+            __view?: string,
+            props?: any
+        }
+    };
+    private plugins: { [ruleName: string]: GameObject };
     private playerData: any;
 
     protected session: Session;
@@ -160,12 +168,11 @@ class GameObject {
         });
     }
 
-    public setupRule
-    (
+    public setupRule(
         rule: any
     ) {
         if (this.setupRuleCalled) {
-            throw(new Error('setupRule can only be called once'));
+            throw (new Error('setupRule can only be called once'));
         }
 
         this.setupRuleCalled = true;
@@ -197,7 +204,7 @@ class GameObject {
             forEach(rule.plugins, (plugin) => {
 
                 if (typeof plugin !== 'string' || plugin.match(/[^a-zA-Z]/)) {
-                    throw(new Error('Invalid plugin name: namespace must be purely alpha'));
+                    throw (new Error('Invalid plugin name: namespace must be purely alpha'));
                 }
 
                 this.plugins[plugin] = new GameObject(
@@ -280,7 +287,7 @@ class GameObject {
         clientId: string
     ) {
         if (!this.isHost) {
-            throw(new Error('Only host can call clientIsReady'));
+            throw (new Error('Only host can call clientIsReady'));
         }
 
         if (!this.parent) {
@@ -301,7 +308,7 @@ class GameObject {
         clientId: string
     ) {
         if (!this.isHost) {
-            throw(new Error('Only host can call addNewClient'));
+            throw (new Error('Only host can call addNewClient'));
         }
 
         if (!this.parent) {
@@ -316,7 +323,7 @@ class GameObject {
             if (this.clientsData[clientId].active === false) {
                 return this.rejoinClient(clientId);
             } else {
-                throw(new Error('Client cannot re-join an active session'));
+                throw (new Error('Client cannot re-join an active session'));
             }
         }
 
@@ -394,7 +401,7 @@ class GameObject {
         clientId: string
     ) {
         if (!this.isHost) {
-            throw(new Error('Only host can call addNewClient'));
+            throw (new Error('Only host can call addNewClient'));
         }
 
         //            if (!this.parent) {
@@ -428,9 +435,10 @@ class GameObject {
 
                 if (this.parent) {
                     forEach(this.reactProps, (client) => {
-                        this.parent.setViewProps(client,
-                                                 getLastNamespace(this.namespace),
-                                                 this.reactProps[client]);
+                        this.parent.setViewProps(
+                            client,
+                            getLastNamespace(this.namespace),
+                            this.reactProps[client]);
                     });
                 }
 
@@ -475,7 +483,7 @@ class GameObject {
             }
 
         } else {
-            throw(new Error('Invalid call'));
+            throw (new Error('Invalid call'));
         }
 
         return this;
@@ -483,7 +491,7 @@ class GameObject {
 
     private renderViews() {
         if (this.parent) {
-            throw(new Error('Only top level gameobject can render views'));
+            throw (new Error('Only top level gameobject can render views'));
         }
 
         const promises = [];
@@ -493,11 +501,11 @@ class GameObject {
             }
         });
 
-        Q.allSettled(promises)
+        Promise.all(promises)
             .then((results) => {
                 return true;
             })
-            .fail(console.error);
+            .catch(console.error);
     }
 
     private getView(displayName: string) {
@@ -546,13 +554,14 @@ class GameObject {
                 const namespace = splits[0];
 
                 if (!namespace || this.plugins[namespace] === undefined) {
-                    throw(new Error('No such views: ' + displayName));
+                    throw (new Error('No such views: ' + displayName));
                 } else {
-                    return this.plugins[namespace].hostSetView(clientId,
-                                                               splits[1],
-                                                               props[namespace],
-                                                               container,
-                                                               cb);
+                    return this.plugins[namespace].hostSetView(
+                        clientId,
+                        splits[1],
+                        props[namespace],
+                        container,
+                        cb);
                 }
             }
         } else {
@@ -575,22 +584,23 @@ class GameObject {
         container: any,
         cb?: CallbackType
     ) {
-        const deferred = Q.defer();
-        const args = [];
+        return new Promise((resolve, reject) => {
+            const args = [];
 
-        this.hostSetView(clientId,
-                         displayName,
-                         props,
-                         container,
-                         (res) => {
-                             if (!res.success) {
-                                 deferred.reject(new Error(res.message));
-                             } else {
-                                 deferred.resolve(res.message);
-                             }
-                         });
+            this.hostSetView(
+                clientId,
+                displayName,
+                props,
+                container,
+                (res) => {
+                    if (!res.success) {
+                        reject(new Error(res.message));
+                    } else {
+                        resolve(res.message);
+                    }
+                });
 
-        return deferred.promise;
+        });
     }
 
     private runReactView(
@@ -611,7 +621,7 @@ class GameObject {
         args: any
     ) {
         if (!this.isHost) {
-            throw(new Error('Invalid call: only host can invoke methods'));
+            throw (new Error('Invalid call: only host can invoke methods'));
         }
 
         if (this.methods[method] !== undefined) {
@@ -633,7 +643,7 @@ class GameObject {
             const namespace = splits[0];
 
             if (!namespace || this.plugins[namespace] === undefined) {
-                throw(new Error('No such method: ' + method));
+                throw (new Error('No such method: ' + method));
             } else {
                 return this.plugins[namespace].execMethod(fromClientId, splits[1], args);
             }
@@ -655,13 +665,13 @@ class GameObject {
                 const namespace = splits[0];
 
                 if (!namespace || this.plugins[namespace] === undefined) {
-                    throw(new Error('Variable [' + variable + '] does not exists'));
+                    throw (new Error('Variable [' + variable + '] does not exists'));
                 } else {
                     return this.plugins[namespace].getData(splits[1]);
                 }
             }
         } else {
-            throw(new Error('Only host can get data'));
+            throw (new Error('Only host can get data'));
         }
     }
 
@@ -678,13 +688,13 @@ class GameObject {
                 const namespace = splits[0];
 
                 if (!namespace || this.plugins[namespace] === undefined) {
-                    throw(new Error('Variable [' + variable + '] does not exists'));
+                    throw (new Error('Variable [' + variable + '] does not exists'));
                 } else {
                     this.plugins[namespace].setData(splits[1], value);
                 }
             }
         } else {
-            throw(new Error('Only host can set data'));
+            throw (new Error('Only host can set data'));
         }
 
         return this;
@@ -697,11 +707,11 @@ class GameObject {
         let i = 0;
 
         if (this.isHost === false) {
-            throw(new Error('Only host can get player data'));
+            throw (new Error('Only host can get player data'));
         } else {
 
             if (this.clientsData[playerId] === undefined) {
-                throw(new Error('Client [' + playerId + '] does not exists'));
+                throw (new Error('Client [' + playerId + '] does not exists'));
             }
 
             const getVariable = (variable: string) => {
@@ -712,7 +722,7 @@ class GameObject {
                     const namespace = splits[0];
 
                     if (!namespace || this.plugins[namespace] === undefined) {
-                        throw(new Error('Variable [' + variable + '] does not exists'));
+                        throw (new Error('Variable [' + variable + '] does not exists'));
                     } else {
                         return this.plugins[namespace].getPlayerData(playerId, splits[1]);
                     }
@@ -738,13 +748,13 @@ class GameObject {
         value: any
     ) {
         if (this.isHost === false) {
-            throw(new Error('Only host can set player data'));
+            throw (new Error('Only host can set player data'));
         } else {
             if (this.clientsData[playerId] === undefined) {
-                throw(new Error('Client [' + playerId + '] does not exists'));
+                throw (new Error('Client [' + playerId + '] does not exists'));
             } else if (this.clientsData[playerId].active === false) {
                 // todo: think about disconnection implication
-                throw(new Error('Client [' + playerId + '] has disconnected'));
+                throw (new Error('Client [' + playerId + '] has disconnected'));
             } else {
                 if (this.hasPlayerData(playerId, variable)) {
                     return this.clientsData[playerId].dataStore(variable).setValue(value);
@@ -753,7 +763,7 @@ class GameObject {
                     const namespace = splits[0];
 
                     if (!namespace || this.plugins[namespace] === undefined) {
-                        throw(new Error('Variable [' + variable + '] does not exists'));
+                        throw (new Error('Variable [' + variable + '] does not exists'));
                     } else {
                         this.plugins[namespace].setPlayerData(playerId, splits[1], value);
                     }
@@ -775,7 +785,7 @@ class GameObject {
         if (this.isHost) {
             this.setViewProps(clientId, '__view', view);
         } else {
-            throw(new Error('Only host can call setView'));
+            throw (new Error('Only host can call setView'));
         }
         return this;
     }
@@ -790,7 +800,7 @@ class GameObject {
             this.reactProps[clientId][key] = value;
         } else {
             // todo: rethink whether we only want to restrict host to deal with data changes, by design
-            throw(new Error('Only host can call setViewProps'));
+            throw (new Error('Only host can call setViewProps'));
         }
 
         return this;
@@ -810,22 +820,24 @@ class GameObject {
 
             const newProps = extendObjClone(extendedProps, extendProps, true);
 
-            return it.hostSetView(it.clientId,
-                                  viewName,
-                                  newProps,
-                                  false);
+            return it.hostSetView(
+                it.clientId,
+                viewName,
+                newProps,
+                false);
 
         } else {
             const splits = getFirstNamespace(subView);
             const namespace = splits[0];
 
             if (!namespace || this.plugins[namespace] === undefined) {
-                throw(new Error('Plugin [' + namespace + '] does not exists'));
+                throw (new Error('Plugin [' + namespace + '] does not exists'));
             } else {
-                return this.plugins[namespace].getPluginView(splits[1],
-                                                             viewName,
-                                                             extendProps,
-                                                             props[namespace]);
+                return this.plugins[namespace].getPluginView(
+                    splits[1],
+                    viewName,
+                    extendProps,
+                    props[namespace]);
             }
         }
     }
@@ -840,10 +852,11 @@ class GameObject {
             const it = this.plugins[subView];
 
             if (props[subView].__view) {
-                return it.hostSetView(it.clientId,
-                                      props[subView].__view,
-                                      props[subView],
-                                      false);
+                return it.hostSetView(
+                    it.clientId,
+                    props[subView].__view,
+                    props[subView],
+                    false);
             } else {
                 return null;
             }
@@ -853,7 +866,7 @@ class GameObject {
             const namespace = splits[0];
 
             if (!namespace || this.plugins[namespace] === undefined) {
-                throw(new Error('Plugin [' + namespace + '] does not exists'));
+                throw (new Error('Plugin [' + namespace + '] does not exists'));
             } else {
                 return this.plugins[namespace].getPluginSetView(splits[1], props[namespace]);
             }
@@ -876,7 +889,7 @@ class GameObject {
         fn: any // todo: type fn correctly
     ) {
         if (!this.isHost) {
-            throw(new Error('Only host can call playersForEach'));
+            throw (new Error('Only host can call playersForEach'));
         }
 
         if (this.parent) {
@@ -890,7 +903,7 @@ class GameObject {
 
     private playersCount() {
         if (!this.isHost) {
-            throw(new Error('Only host can call playersCount'));
+            throw (new Error('Only host can call playersCount'));
         }
 
         if (this.parent) {
@@ -908,7 +921,7 @@ class GameObject {
         variable: string
     ) {
         if (!this.isHost) {
-            throw(new Error('Invalid call: only host can accumulate all players data'));
+            throw (new Error('Invalid call: only host can accumulate all players data'));
         }
 
         const cnter = this.clients.length;
@@ -958,19 +971,19 @@ class GameObject {
     ) {
         const prefix = namespace ? namespace + '_' : '';
         function hostMethodWrapper(method: string) {
-            return function() {
+            return function () {
                 return gameObj.execMethod(gameObj.clientId, method, arguments);
             };
         }
 
         function hostExposedMethodWrapper(method: string) {
-            return function() {
+            return function () {
                 return gameObj[method].apply(gameObj, arguments);
             }
         }
 
         function clientMethodWrapper(method: string) {
-            return function() {
+            return function () {
                 return gameObj.dxc.execMethod(prefix + method, arguments);
             };
         }
@@ -997,10 +1010,10 @@ class GameObject {
             //       instead views should call a method defined in the rule instead.
             // Expose methods
             const exposed = ['getData', 'setData',
-                             'getPlayerData', 'setPlayerData', 'getPlayersData',
-                             'setView', 'setViewProps', 'deleteViewProps',
-                             'playersForEach', 'playersCount',
-                             'removeClient'];
+                'getPlayerData', 'setPlayerData', 'getPlayersData',
+                'setView', 'setViewProps', 'deleteViewProps',
+                'playersForEach', 'playersCount',
+                'removeClient'];
             exposed.forEach((method) => {
                 obj[method] = hostExposedMethodWrapper(method);
             });
@@ -1032,7 +1045,7 @@ class GameObject {
          */
         return (variable: string) => {
             if (store[variable] === undefined) {
-                throw(new Error('Variable ' + variable + ' is not declared'));
+                throw (new Error('Variable ' + variable + ' is not declared'));
             }
 
             return {
@@ -1045,7 +1058,7 @@ class GameObject {
                         (dataObj[variable] !== undefined) &&
                         dataObj[variable].const === true) {
 
-                        throw(new Error('Variable [' + variable + '] is constant'));
+                        throw (new Error('Variable [' + variable + '] is constant'));
                     }
 
                     store[variable] = newValue;
