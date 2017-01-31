@@ -168,10 +168,9 @@ class GameObject {
         });
     }
 
-    public setupRule
-        (
+    public setupRule(
         rule: any
-        ) {
+    ) {
         if (this.setupRuleCalled) {
             throw (new Error('setupRule can only be called once'));
         }
@@ -436,7 +435,8 @@ class GameObject {
 
                 if (this.parent) {
                     forEach(this.reactProps, (client) => {
-                        this.parent.setViewProps(client,
+                        this.parent.setViewProps(
+                            client,
                             getLastNamespace(this.namespace),
                             this.reactProps[client]);
                     });
@@ -556,7 +556,8 @@ class GameObject {
                 if (!namespace || this.plugins[namespace] === undefined) {
                     throw (new Error('No such views: ' + displayName));
                 } else {
-                    return this.plugins[namespace].hostSetView(clientId,
+                    return this.plugins[namespace].hostSetView(
+                        clientId,
                         splits[1],
                         props[namespace],
                         container,
@@ -586,7 +587,8 @@ class GameObject {
         return new Promise((resolve, reject) => {
             const args = [];
 
-            this.hostSetView(clientId,
+            this.hostSetView(
+                clientId,
                 displayName,
                 props,
                 container,
@@ -818,7 +820,8 @@ class GameObject {
 
             const newProps = extendObjClone(extendedProps, extendProps, true);
 
-            return it.hostSetView(it.clientId,
+            return it.hostSetView(
+                it.clientId,
                 viewName,
                 newProps,
                 false);
@@ -830,7 +833,8 @@ class GameObject {
             if (!namespace || this.plugins[namespace] === undefined) {
                 throw (new Error('Plugin [' + namespace + '] does not exists'));
             } else {
-                return this.plugins[namespace].getPluginView(splits[1],
+                return this.plugins[namespace].getPluginView(
+                    splits[1],
                     viewName,
                     extendProps,
                     props[namespace]);
@@ -848,7 +852,8 @@ class GameObject {
             const it = this.plugins[subView];
 
             if (props[subView].__view) {
-                return it.hostSetView(it.clientId,
+                return it.hostSetView(
+                    it.clientId,
                     props[subView].__view,
                     props[subView],
                     false);
