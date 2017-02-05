@@ -15,9 +15,9 @@ build.postCopy.setConfig({
 });
 
 build.typescript.setConfig({ 'libDir': 'build' });
-
-// process *.Example.tsx as text.
-build.text.setConfig({ textMatch: ['src/**/*.txt', 'src/**/*.Example.tsx', 'src/**/*.Props.ts'] });
+build.mocha.setConfig({
+  testMatch: 'build/tests/*.js'
+});
 
 // change the port of serve.
 build.serve.setConfig({
