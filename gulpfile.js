@@ -2,7 +2,9 @@
 
 let build = require('node-web-build');
 let gulp = require('gulp');
+let webpack = require('webpack');
 
+build.webpack.setConfig({ webpack: webpack });
 
 build.postCopy.setConfig({
   copyTo: {
@@ -11,8 +13,6 @@ build.postCopy.setConfig({
   },
   shouldFlatten: false
 });
-
-
 
 build.typescript.setConfig({ 'libDir': 'build' });
 
