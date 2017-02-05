@@ -52,7 +52,9 @@ export class DataExchange implements ClientDataExchangeInterface {
                 this.onLeaveRoom(clientId);
             },
             onReconnect: () => {
-                this.clientReady();
+                if (!this.session.isHost()) {
+                    this.clientReady();
+                }
             }
         });
     }

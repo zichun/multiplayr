@@ -354,6 +354,10 @@ class GameObject {
                 console.log('Client[' + clientId + '] reconnected');
             }
 
+            if (clientId === this.clientId) {
+                return;
+            }
+
             this.clientsData[clientId].ready = false;
             this.clientsData[clientId].active = true;
             this.setPlayerData(clientId, '__isConnected', false);
