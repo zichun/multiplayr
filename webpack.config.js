@@ -15,7 +15,7 @@ function createConfig() {
             locallib: './client/js/locallib'
         },
         output: {
-            path: path.resolve(__dirname, '/build/client/js/'),
+            path: path.resolve(__dirname, './build/client/js/'),
             publicPath: '/',
             filename: '[name].bundle.js',
             libraryTarget: 'var',
