@@ -59,6 +59,27 @@ export class DataExchange implements ClientDataExchangeInterface {
         });
     }
 
+    public rehost(
+        roomId: string,
+        clientId: string,
+        cb?: CallbackType
+    ) {
+        this.session.rejoinRoom(
+            roomId,
+            clientId,
+            (res) => {
+                if (!res.success) {
+                    return checkReturnMessage(res, 'hostId', cb);
+                }
+
+                if (res.message !== clientId) {
+                    return returnError(cb, 'Room does not belong to the host');
+                }
+
+                return forwardReturnMessage(res, cb);
+            });
+    }
+
     public host(
         ruleName: string,
         cb?: CallbackType

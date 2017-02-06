@@ -136,6 +136,28 @@ export class MultiplayR {
         }
     }
 
+    public static ReHost(
+        ruleName: string,
+        roomId: string,
+        clientId: string,
+        gameState: string,
+        transport: SocketTransport,
+        container: any,
+        cb?: CallbackType
+    ) {
+        const ruleDef = MPRULES[ruleName];
+
+        const gameObj = new GameObject(transport,
+                                       container);
+
+        gameObj.rehost(ruleDef.rule.name,
+                       ruleDef.rule,
+                       roomId,
+                       clientId,
+                       gameState,
+                       cb);
+    }
+
     public static Host(
         rule: string,
         transport: SocketTransport,

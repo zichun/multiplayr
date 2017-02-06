@@ -33,8 +33,13 @@ import {
 import {
     CallbackType,
     DataStoreType,
-    ReturnPacketType
+    ReturnPacketType,
 } from '../../common/types';
+
+import {
+    GameRuleInterface
+} from '../../common/interfaces';
+
 
 class GameObject {
 
@@ -42,6 +47,7 @@ class GameObject {
     protected roomId: string;
     protected isHost: boolean;
     protected container: any;
+    protected rule: GameRuleInterface;
 
     private namespace: string;
     private parent: GameObject;
@@ -91,6 +97,9 @@ class GameObject {
             this.dxc.setGameObject(this);
             this.isHost = false;
             this.clientId = transport.getClientId();
+            if (!this.parent) {
+                sessionStorage.setItem('clientId', this.clientId);
+            }
         } else {
             this.parent = parent;
             this.dxc = parent.dxc;
@@ -111,9 +120,45 @@ class GameObject {
         return this;
     }
 
+    public rehost(
+        ruleName: string,
+        rule: GameRuleInterface,
+        roomId: string,
+        clientId: string,
+        gameState: string,
+        cb?: CallbackType
+    ) {
+        this.isHost = true;
+
+        this.dxc.rehost(
+            roomId,
+            clientId,
+            (res: ReturnPacketType) => {
+                if (!res.success) {
+                    this.isHost = false;
+                    return forwardReturnMessage(res, cb);
+                }
+
+                if (!this.parent) {
+                    sessionStorage.setItem('ruleName', ruleName);
+                    sessionStorage.setItem('roomId', roomId);
+                    sessionStorage.setItem('clientId', clientId);
+                }
+
+                this.roomId = roomId;
+                this.setupRule(rule);
+                this.init();
+
+                console.log(gameState);
+                this.setState(JSON.parse(gameState));
+
+                return forwardReturnMessage(res, cb);
+            });
+    }
+
     public host(
         ruleName: string,
-        rule: any,
+        rule: GameRuleInterface,
         cb?: CallbackType
     ) {
 
@@ -124,6 +169,11 @@ class GameObject {
             if (!res || !res.success) {
                 this.isHost = false;
                 return checkReturnMessage(res, 'roomId', cb);
+            }
+
+            if (!this.parent) {
+                sessionStorage.setItem('ruleName', ruleName);
+                sessionStorage.setItem('roomId', res.message);
             }
 
             this.roomId = res.message;
@@ -169,11 +219,13 @@ class GameObject {
     }
 
     public setupRule(
-        rule: any
+        rule: GameRuleInterface
     ) {
         if (this.setupRuleCalled) {
             throw (new Error('setupRule can only be called once'));
         }
+
+        this.rule = rule;
 
         this.setupRuleCalled = true;
 
@@ -305,7 +357,8 @@ class GameObject {
     }
 
     public addNewClient(
-        clientId: string
+        clientId: string,
+        ready: boolean = false
     ) {
         if (!this.isHost) {
             throw (new Error('Only host can call addNewClient'));
@@ -329,7 +382,7 @@ class GameObject {
 
         this.clients.push(clientId);
         this.clientsData[clientId] = {
-            ready: false,
+            ready: ready,
             active: true,
             dataStore: GameObject.CreateStore(this.playerData, this)
         };
@@ -339,11 +392,11 @@ class GameObject {
             props: {}
         };
 
-        this.setPlayerData(clientId, '__isConnected', false);
+        this.setPlayerData(clientId, '__isConnected', ready);
         this.setPlayerData(clientId, '__clientId', clientId);
 
         return this;
-    };
+    }
 
     private rejoinClient(
         clientId: string
@@ -434,8 +487,14 @@ class GameObject {
 
             if ((changed || this.hasDelta) &&
                 isFunction(this.onDataChange)) {
+
                 this.hasDelta = false;
                 const render = this.onDataChange(this.MP);
+
+                if (!this.parent) {
+                    const gameState = this.getState();
+                    sessionStorage.setItem('gameState', JSON.stringify(gameState));
+                }
 
                 if (this.parent) {
                     forEach(this.reactProps, (client) => {
@@ -917,10 +976,6 @@ class GameObject {
         }
     }
 
-    ///
-    /// Sugars for gameObject (probably will be exposed)
-    ///
-
     private getPlayersData(
         variable: string
     ) {
@@ -938,29 +993,131 @@ class GameObject {
         return accumulatedResults;
     }
 
-    // Make promises function for async functions
-    // ['setView'].forEach(function(method) {
-    //     MPGameObject.prototype['Q' + method] = function() {
-    //         var self = this;
-    //         var deferred = Q.defer();
-    //         var args = [];
+    ///
+    /// Methods to serialize and deserialize a game's state.
+    ///
 
-    //         for (var i=0;i<arguments.length;++i) {
-    //             args.push(arguments[i]);
-    //         }
-    //         args.push(function(res) {
-    //             if (!res.success) {
-    //                 deferred.reject(new Error(res.message));
-    //             } else {
-    //                 deferred.resolve(res.message);
-    //             }
-    //         });
+    private getHostStore() {
+        if (!this.isHost) {
+            throw (new Error('Invalid call: only host can serialize state'));
+        }
+        const store = {};
 
-    //         self[method].apply(this, args);
+        forEach(this.rule.globalData, (variable) => {
+            store[variable] = this.dataStore(variable).getValue();
+        });
 
-    //         return deferred.promise;
-    //     };
-    // });
+        return store;
+    }
+
+    private getClientsStore() {
+        if (!this.isHost) {
+            throw (new Error('Invalid call: only host can get clients\' store'));
+        }
+
+        const clientsStore = {};
+        forEach(this.clientsData, (clientId, playerStore) => {
+            const store = {};
+
+            forEach(this.rule.playerData, (variable) => {
+                store[variable] = playerStore.dataStore(variable).getValue();
+            });
+
+            clientsStore[clientId] = store;
+        });
+
+        return clientsStore;
+    }
+
+    private getPluginsStore() {
+        if (!this.isHost) {
+            throw (new Error('Invalid call: only host can get pluginsStore'));
+        }
+        const pluginsStore = {};
+
+        forEach(this.plugins, (pluginName, plugin) => {
+            pluginsStore[pluginName] = plugin.getState();
+        });
+
+        return pluginsStore;
+    }
+
+    public getState() {
+        if (!this.isHost) {
+            throw (new Error('Invalid call: only host can get state object'));
+        }
+
+        const tr = {
+            hostStore: this.getHostStore(),
+            clientsStore: this.getClientsStore(),
+            pluginsStore: this.getPluginsStore()
+        };
+
+        return tr;
+    }
+
+    private setHostStore(hostStore: any) {
+        if (!this.isHost) {
+            throw (new Error('Invalid call: only host can set host state'));
+        }
+
+        forEach(this.rule.globalData, (variable) => {
+            this.dataStore(variable).setValue(hostStore[variable]);
+        });
+    }
+
+    private setPluginsStore(pluginStore: any) {
+        if (!this.isHost) {
+            throw (new Error('Invalid call: only host can set plugin state'));
+        }
+
+        forEach(this.plugins, (pluginName, plugin) => {
+            plugin.setState(pluginStore[pluginName]);
+        });
+    }
+
+    private setClientsStore(clientsStore: any) {
+        if (!this.isHost) {
+            throw (new Error('Invalid call: only host can set clients\' store'));
+        }
+
+        forEach(this.clientsData, (clientId, playerStore) => {
+            if (!clientsStore.hasOwnProperty(clientId) === undefined) {
+                throw (new Error('Invalid client store state - no ' + clientId));
+            }
+            forEach(this.rule.playerData, (variable) => {
+                playerStore.dataStore(variable).setValue(clientsStore[clientId][variable]);
+            });
+        });
+
+        forEach(clientsStore, (clientId, store) => {
+            if (!this.clientsData.hasOwnProperty(clientId)) {
+                this.addNewClient(clientId, true);
+
+                forEach(this.rule.playerData, (variable) => {
+                   this.clientsData[clientId].dataStore(variable).setValue(clientsStore[clientId][variable]);
+                });
+            }
+        });
+    }
+
+    public setState(state: any) {
+        if (!this.isHost) {
+            throw (new Error('Invalid call: only host can set state'));
+        }
+
+        if (!state.hostStore) {
+            throw (new Error('Invalid state - no host store'));
+        }
+
+        this.setHostStore(state.hostStore);
+        this.setClientsStore(state.clientsStore);
+        this.setPluginsStore(state.pluginsStore);
+
+        if (!this.parent) {
+            this.dataChange(true);
+        }
+    }
 
     /**
      * Sets up the object that will be passed to the rule (views and methods)
@@ -968,7 +1125,7 @@ class GameObject {
      */
 
     protected static SetupMPObject(
-        methods: string[],
+        methods: { [methodName: string]: (mb: any, clientId: string, ...args: any[]) => any; },
         isHost: boolean,
         gameObj: GameObject,
         namespace: string
@@ -1057,14 +1214,6 @@ class GameObject {
                     return store[variable];
                 },
                 setValue: (newValue: any) => {
-
-                    if (dataObj !== undefined &&
-                        (dataObj[variable] !== undefined) &&
-                        dataObj[variable].const === true) {
-
-                        throw (new Error('Variable [' + variable + '] is constant'));
-                    }
-
                     store[variable] = newValue;
 
                     gameObj.dataChange(false);
