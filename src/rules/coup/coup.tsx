@@ -194,6 +194,7 @@ export const CoupRule: GameRuleInterface = {
 
             case CoupGameState.PlayAction:
 
+                mp.setViewProps(mp.hostId, 'waitForId', playerTurnId);
                 mp.setView(mp.hostId, 'host-playaction');
 
                 mp.playersForEach((clientId, index) => {
