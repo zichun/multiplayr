@@ -3,7 +3,6 @@
  */
 
 import * as React from 'react';
-import * as FontAwesome from 'react-fontawesome';
 import './coup.scss';
 
 import Lobby from '../lobby/lobby';

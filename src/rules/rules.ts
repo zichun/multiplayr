@@ -6,6 +6,12 @@
 import { RockScissorsPaperRule } from './rockscissorspaper/rockscissorspaper';
 import { TheOddOneRule } from './theoddone/theoddone';
 import { CoupRule } from './coup/coup';
+import { Debugger } from './debugger/debugger';
+
+const CoupDebugger = {
+    ...Debugger,
+    plugins: { 'Coup': CoupRule }
+};
 
 export const MPRULES = {
     // 'bigger': {
@@ -29,8 +35,13 @@ export const MPRULES = {
         description: 'Coup - Resistance',
         rules: ['lobby', 'gameshell', 'coup'],
         rule: CoupRule
+    },
+    'coup-debug': {
+        description: 'Coup - Resistance (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'coup', 'debugger'],
+        rule: CoupDebugger
     }
-
 };
 
 export default MPRULES;

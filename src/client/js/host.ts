@@ -38,8 +38,11 @@ $(() => {
             _mplib.messages.checkReturnMessage(data, 'clientId');
             clientId = data.message;
 
-            Object.keys(_mplib.MPRULES).forEach((rule) => {
-                $('#rules').append(makeRule(rule, _mplib.MPRULES[rule]));
+            Object.keys(_mplib.MPRULES).forEach((ruleName) => {
+                const rule = _mplib.MPRULES[ruleName];
+                if (!rule.debug) {
+                    $('#rules').append(makeRule(ruleName, rule));
+                }
             });
 
             $('#rules').append('<a href="/join" style="font-size:1.5em; margin: 5px;">Join games</a>');

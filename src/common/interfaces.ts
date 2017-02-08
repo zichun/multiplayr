@@ -115,7 +115,7 @@ export interface GameRuleInterface {
     plugins: { [gameName: string]: GameRuleInterface };
     globalData: { [varName: string]: any };
     playerData: { [varName: string]: any };
-    onDataChange(mp: MPType): boolean;
+    onDataChange(mp: MPType, rule?: GameRuleInterface): boolean;
     methods: {[methodName: string]: (mb: any, clientId: string, ...args: any[]) => any};
     views: { [viewName: string]: any };
 }

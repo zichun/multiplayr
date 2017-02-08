@@ -34,7 +34,7 @@ $(() => {
         });
 
     _mplib.MultiplayR.Host(
-        'coup',
+        'coup-debug',
         transport,
         document.getElementById('host-container'),
         (res) => {

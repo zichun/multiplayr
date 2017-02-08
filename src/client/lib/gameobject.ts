@@ -147,9 +147,10 @@ class GameObject {
 
                 this.roomId = roomId;
                 this.setupRule(rule);
-                this.init();
+                if (!this.parent) {
+                    this.tick();
+                }
 
-                console.log(gameState);
                 this.setState(JSON.parse(gameState));
 
                 return forwardReturnMessage(res, cb);
@@ -178,7 +179,9 @@ class GameObject {
 
             this.roomId = res.message;
             this.setupRule(rule);
-            this.init();
+            if (!this.parent) {
+                this.tick();
+            }
 
             return forwardReturnMessage(res, cb);
         });
@@ -267,22 +270,8 @@ class GameObject {
             });
         }
 
-        if (!this.isHost) {
+        if (!this.isHost && !this.parent) {
             this.dxc.clientReady();
-        }
-    }
-
-    protected init() {
-        // goes down plugin's tree hierarchy, and run dataChange on leaf nodes
-        let found = false;
-
-        forEach(this.plugins, (plugin) => {
-            found = true;
-            this.plugins[plugin].init();
-        });
-
-        if (found === false) {
-            this.dataChange(true);
         }
     }
 
@@ -348,12 +337,15 @@ class GameObject {
 
         this.clientsData[clientId].ready = true;
         this.setPlayerData(clientId, '__isConnected', true);
+        this.hasDelta = true;
 
         forEach(this.plugins, (plugin) => {
             this.plugins[plugin].clientIsReady(clientId);
         });
 
-        this.dataChange(true);
+        if (!this.parent) {
+            this.tick();
+        }
     }
 
     public addNewClient(
@@ -394,6 +386,7 @@ class GameObject {
 
         this.setPlayerData(clientId, '__isConnected', ready);
         this.setPlayerData(clientId, '__clientId', clientId);
+        this.hasDelta = true;
 
         return this;
     }
@@ -432,7 +425,11 @@ class GameObject {
             //                this.clients.splice(this.clients.indexOf(clientId), 1);
             this.clientsData[clientId].active = false;
             this.clientsData[clientId].ready = false;
-            this.dataChange(true);
+
+            this.hasDelta = true;
+            if (!this.parent) {
+                this.tick();
+            }
 
         }
         return this;
@@ -444,10 +441,14 @@ class GameObject {
         if (this.isHost) {
             if (!this.parent) {
                 this.rootRemoveClient(clientId);
-                this.dataChange(true);
             } else {
                 this.parent.rootRemoveClient(clientId);
-                this.dataChange(true);
+            }
+
+            this.hasDelta = true;
+
+            if (!this.parent) {
+                this.tick();
             }
         }
 
@@ -489,7 +490,7 @@ class GameObject {
                 isFunction(this.onDataChange)) {
 
                 this.hasDelta = false;
-                const render = this.onDataChange(this.MP);
+                const render = this.onDataChange(this.MP, this.rule);
 
                 if (!this.parent) {
                     const gameState = this.getState();
@@ -576,6 +577,28 @@ class GameObject {
         return this.views[displayName];
     }
 
+    private propagateProps(
+        props?: any
+    ) {
+        props = props || {};
+
+        if (this.reactProps === undefined) {
+            this.reactProps = {};
+        }
+
+        if (this.reactProps[this.clientId] === undefined) {
+            this.reactProps[this.clientId] = {};
+        }
+
+        this.reactProps[this.clientId] = props;
+
+        forEach(this.plugins, (plugin) => {
+            if (props.hasOwnProperty(plugin)) {
+                this.plugins[plugin].propagateProps(props[plugin]);
+            }
+        });
+    }
+
     public hostSetView(
         clientId: string,
         displayName: string,
@@ -585,19 +608,12 @@ class GameObject {
     ) {
         props = props || {};
 
-        if (container && !this.isHost) {
-            if (this.reactProps === undefined) {
-                this.reactProps = {};
-            }
-
-            if (this.reactProps[clientId] === undefined) {
-                this.reactProps[clientId] = {};
-            }
-            this.reactProps[clientId] = props;
-        }
-
         if (this.isHost === false && clientId !== this.clientId) {
             return returnError(cb, 'only host can set views');
+        }
+
+        if (container && !this.isHost) {
+            this.propagateProps(props);
         }
 
         if (clientId === null || clientId === this.clientId) {
@@ -862,7 +878,6 @@ class GameObject {
         if (this.isHost) {
             this.reactProps[clientId][key] = value;
         } else {
-            // todo: rethink whether we only want to restrict host to deal with data changes, by design
             throw (new Error('Only host can call setViewProps'));
         }
 
@@ -907,7 +922,7 @@ class GameObject {
 
     private getPluginSetView(
         subView: string,
-        props: any
+        props?: any
     ) {
         props = props || (this.reactProps && this.reactProps[this.clientId]);
 
@@ -1053,7 +1068,7 @@ class GameObject {
             pluginsStore: this.getPluginsStore()
         };
 
-        return tr;
+        return JSON.parse(JSON.stringify(tr));
     }
 
     private setHostStore(hostStore: any) {
@@ -1066,19 +1081,52 @@ class GameObject {
         });
     }
 
-    private setPluginsStore(pluginStore: any) {
+    private setPluginsStore(
+        pluginStore: any,
+        mapPlayers: boolean = false
+    ) {
         if (!this.isHost) {
             throw (new Error('Invalid call: only host can set plugin state'));
         }
 
         forEach(this.plugins, (pluginName, plugin) => {
-            plugin.setState(pluginStore[pluginName]);
+            plugin.setState(pluginStore[pluginName], mapPlayers);
         });
     }
 
-    private setClientsStore(clientsStore: any) {
+    private setClientsStore(
+        clientsStore: any,
+        mapPlayers: boolean = false
+    ) {
         if (!this.isHost) {
             throw (new Error('Invalid call: only host can set clients\' store'));
+        }
+
+        if (mapPlayers) {
+            let dataCount = 0;
+            const clientsMap = {};
+
+            forEach(clientsStore, (clientId, store) => {
+                clientsMap[dataCount] = clientId;
+                dataCount = dataCount + 1;
+            });
+
+            forEach(this.clientsData, (clientId, playerStore) => {
+                dataCount = dataCount - 1;
+            });
+
+            if (dataCount !== 0) {
+                alert('Number connected clients do not match state');
+                throw (new Error('Connected clients do not match state'));
+            }
+
+            forEach(this.clientsData, (clientId, playerStore) => {
+                forEach(this.rule.playerData, (variable) => {
+                    playerStore.dataStore(variable).setValue(clientsStore[clientsMap[dataCount]][variable]);
+                });
+                dataCount = dataCount + 1
+            });
+            return;
         }
 
         forEach(this.clientsData, (clientId, playerStore) => {
@@ -1101,7 +1149,10 @@ class GameObject {
         });
     }
 
-    public setState(state: any) {
+    public setState(
+        state: any,
+        mapPlayers: boolean = false
+    ) {
         if (!this.isHost) {
             throw (new Error('Invalid call: only host can set state'));
         }
@@ -1111,8 +1162,8 @@ class GameObject {
         }
 
         this.setHostStore(state.hostStore);
-        this.setClientsStore(state.clientsStore);
-        this.setPluginsStore(state.pluginsStore);
+        this.setClientsStore(state.clientsStore, mapPlayers);
+        this.setPluginsStore(state.pluginsStore, mapPlayers);
 
         if (!this.parent) {
             this.dataChange(true);
@@ -1170,7 +1221,7 @@ class GameObject {
             // todo: views shouldn't be given methods below, even on host.
             //       instead views should call a method defined in the rule instead.
             // Expose methods
-            const exposed = ['getData', 'setData',
+            const exposed = ['getData', 'setData', 'getState', 'setState',
                 'getPlayerData', 'setPlayerData', 'getPlayersData',
                 'setView', 'setViewProps', 'deleteViewProps',
                 'playersForEach', 'playersCount',

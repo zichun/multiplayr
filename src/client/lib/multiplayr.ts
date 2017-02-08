@@ -150,7 +150,7 @@ export class MultiplayR {
         const gameObj = new GameObject(transport,
                                        container);
 
-        gameObj.rehost(ruleDef.rule.name,
+        gameObj.rehost(ruleName,
                        ruleDef.rule,
                        roomId,
                        clientId,
@@ -159,16 +159,16 @@ export class MultiplayR {
     }
 
     public static Host(
-        rule: string,
+        ruleName: string,
         transport: SocketTransport,
         container: any,
         cb?: CallbackType
     ) {
-        const ruleDef = MPRULES[rule];
+        const ruleDef = MPRULES[ruleName];
 
         const gameObj = new GameObject(transport,
                                        container);
-        gameObj.host(ruleDef.rule.name, ruleDef.rule, cb);
+        gameObj.host(ruleName, ruleDef.rule, cb);
     }
 
     public static ReJoin(

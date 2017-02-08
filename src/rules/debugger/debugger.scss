@@ -1,0 +1,61 @@
+.debugger-container {
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
+
+.debugger-icon {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    opacity: 0.2;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    z-index: 21;
+}
+
+.debugger-icon:hover {
+    opacity: 1.0;
+}
+
+.debugger-pane {
+    z-index: 20;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 300px;
+    background: #e5e5e5;
+    opacity: 0.0;
+    transition: all 0.4s ease;
+    display: none;
+}
+
+.debugger-pane.show {
+    display: block;
+    opacity: 0.9;
+}
+
+.debugger-stepper {
+    margin: 0 auto;
+    text-align: center;
+
+    .debugger-stepper-left, .debugger-stepper-right {
+        cursor: pointer;
+    }
+
+    .debugger-stepper-count {
+        font-size: 2.0em;
+        margin: 0 3px 0 3px;
+    }
+}
+
+.debugger-serialized {
+    text-align: center;
+    textarea {
+        display: block;
+        margin: 5px auto 5px;
+        width: 80%;
+        min-height: 200px;
+    }
+}

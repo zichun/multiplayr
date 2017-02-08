@@ -1,14 +1,16 @@
 /**
- * lobby.ts
+ * lobby.tsx
  */
 import * as React from 'react';
 import * as Chance from 'chance';
 import * as FontAwesome from 'react-fontawesome';
 import './lobby.scss';
 
-import {GameRuleInterface,
-        MPType,
-        ViewPropsInterface} from '../../common/interfaces';
+import {
+    GameRuleInterface,
+    MPType,
+    ViewPropsInterface
+} from '../../common/interfaces';
 
 const icons = ['car', 'id-badge', 'linode', 'thermometer-empty', 'user-circle', 'address-card-o', 'umbrella', 'quote-left',
                'id-card', 'bath', 'grav', 'microchip', 'telegram', 'imdb', 'adjust', 'area-chart', 'bank', 'battery-quarter',
