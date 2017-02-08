@@ -29,7 +29,7 @@ interface DebuggerViewPropsInterface extends ViewPropsInterface {
  * stored within the state of the game rule, then there will be a cyclic reference during serialization.
  */
 class GameStates {
-    private gameStates: any;
+    private gameStates: string[];
     private bufferSize: number;
     private pointer: number;
 
@@ -80,25 +80,24 @@ class GameStates {
 
         if (this.count()) {
             const previousState = this.top();
-            const thisState = JSON.stringify(state);
 
-            if (JSON.stringify(previousState) === thisState) {
+            if (previousState === state) {
                 // if the serialized state is the same, skip inserting this state.
                 return;
             }
 
             if (this.pointer + 1 < this.count() &&
-                JSON.stringify(this.gameStates[this.pointer + 1]) === thisState) {
+                this.gameStates[this.pointer + 1] === state) {
                 // if the serialized state is the same as the next, skip inserting this state.
+                this.pointer = this.pointer + 1;
                 return;
             }
 
-            if (Object.keys(previousState.clientsStore).length !== Object.keys(state.clientsStore).length) {
+            if (Object.keys(JSON.parse(previousState).clientsStore).length !== Object.keys(JSON.parse(state).clientsStore).length) {
                 // If the number of players differ, we start from scratch.
                 this.clear();
             } else if (this.pointer !== this.count() - 1) {
-                const newGameStates = this.gameStates.splice(0, this.pointer + 1);
-                this.gameStates = newGameStates;
+                this.gameStates.splice(this.pointer + 1);
             }
         }
 
@@ -146,7 +145,7 @@ export const Debugger: GameRuleInterface = {
         mp.setViewProps(mp.hostId, 'plugin', debuggee);
         mp.setViewProps(mp.hostId, 'historyCount', gameStatesHistory.count());
         mp.setViewProps(mp.hostId, 'historyPointer', gameStatesHistory.getPointer());
-        mp.setViewProps(mp.hostId, 'serializedState', JSON.stringify(gameStatesHistory.top()));
+        mp.setViewProps(mp.hostId, 'serializedState', gameStatesHistory.top());
         mp.setView(mp.hostId, 'debugger-host');
 
         mp.playersForEach((clientId) => {
@@ -171,7 +170,7 @@ export const Debugger: GameRuleInterface = {
             }
         },
         'setSerializedState': (mp: MPType, clientId: string, state: string) => {
-            mp.setState(JSON.parse(state), true);
+            mp.setState(state, true);
         }
     },
 

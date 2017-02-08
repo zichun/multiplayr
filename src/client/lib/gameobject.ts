@@ -151,7 +151,7 @@ class GameObject {
                     this.tick();
                 }
 
-                this.setState(JSON.parse(gameState));
+                this.setState(gameState);
 
                 return forwardReturnMessage(res, cb);
             });
@@ -494,7 +494,7 @@ class GameObject {
 
                 if (!this.parent) {
                     const gameState = this.getState();
-                    sessionStorage.setItem('gameState', JSON.stringify(gameState));
+                    sessionStorage.setItem('gameState', gameState);
                 }
 
                 if (this.parent) {
@@ -1068,7 +1068,7 @@ class GameObject {
             pluginsStore: this.getPluginsStore()
         };
 
-        return JSON.parse(JSON.stringify(tr));
+        return JSON.stringify(tr);
     }
 
     private setHostStore(hostStore: any) {
@@ -1150,12 +1150,14 @@ class GameObject {
     }
 
     public setState(
-        state: any,
+        stateString: string,
         mapPlayers: boolean = false
     ) {
         if (!this.isHost) {
             throw (new Error('Invalid call: only host can set state'));
         }
+
+        const state = JSON.parse(stateString);
 
         if (!state.hostStore) {
             throw (new Error('Invalid state - no host store'));
