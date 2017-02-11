@@ -15,6 +15,15 @@ function createConfig() {
             lib: './client/js/lib',
             locallib: './client/js/locallib'
         },
+        module: {
+            rules: [
+                {
+                    test: /\.js$/,
+                    use: ['source-map-loader'],
+                    enforce: 'pre'
+                }
+            ]
+        },
         output: {
             path: path.resolve(__dirname, './build/client/js/'),
             publicPath: '/',
