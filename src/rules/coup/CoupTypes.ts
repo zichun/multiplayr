@@ -54,6 +54,12 @@ export enum CoupWaitContext {
     AmbassadorChooseCard
 }
 
+export interface CoupActionOutcomesInterface {
+    clientId: string,
+    coins?: number,
+    cards?: number
+}
+
 export interface CoupActionInterface {
     action: CoupAction,
     clientId: string,
@@ -65,7 +71,8 @@ export interface CoupActionInterface {
     challengeWinner?: string,
     challengeCauseDead?: boolean,
     coinStolen?: number,
-    complete?: boolean
+    complete?: boolean,
+    outcomes?: CoupActionOutcomesInterface[]
 }
 
 export interface CoupViewPropsInterface {

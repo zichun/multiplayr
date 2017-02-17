@@ -6,12 +6,15 @@
 import { RockScissorsPaperRule } from './rockscissorspaper/rockscissorspaper';
 import { TheOddOneRule } from './theoddone/theoddone';
 import { CoupRule } from './coup/coup';
-import { Debugger } from './debugger/debugger';
+import { NewDebuggerRule } from './debugger/debugger';
 
-const CoupDebugger = {
-    ...Debugger,
-    plugins: { 'Coup': CoupRule }
-};
+const CoupDebugger = NewDebuggerRule(
+    'coup',
+    CoupRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
 
 export const MPRULES = {
     // 'bigger': {

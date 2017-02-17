@@ -33,6 +33,8 @@ $(() => {
             _mplib.messages.checkReturnMessage(data, 'clientId');
         });
 
+    const statesS = sessionStorage.getItem('debuggerGameStates');
+
     _mplib.MultiplayR.Host(
         'coup-debug',
         transport,
@@ -40,6 +42,15 @@ $(() => {
         (res) => {
             _mplib.messages.checkReturnMessage(res, 'roomId');
             setupJoin(res.message);
-        });
 
+            if (statesS) {
+                const states = JSON.parse(statesS);
+                const state = states[states.length - 1];
+                const players = Object.keys(JSON.parse(state).clientsStore).length;
+
+                for (let i = 0; i < players; i = i + 1) {
+                    $('#client' + i + '-container button').click();
+                }
+            }
+        });
 });

@@ -117,6 +117,11 @@ export const CoupAmbassadorAction = (
 
     shuffle(deck);
 
+    lastAction.outcomes.push({
+        clientId: clientId,
+        cards: neededCount
+    });
+
     mp.setData('deck', deck);
     mp.setPlayerData(clientId, 'cards', newCards);
     nextTurn(mp);

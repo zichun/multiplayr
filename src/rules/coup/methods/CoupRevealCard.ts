@@ -113,9 +113,20 @@ export const CoupRevealCard = (
         lastAction.challengeLoser = challenge;
         replaceChallengedCard(mp, challengee, cardNum);
 
+        lastAction.outcomes.push({
+            clientId: lastAction.challengeWinner,
+            cards: 1
+        });
+
         if (challengeFailCauseDead(mp, lastAction.challengeLoser)) {
             lastAction.challengeCauseDead = true;
             nextTurn(mp);
+
+            lastAction.outcomes.push({
+                clientId: lastAction.challengeLoser,
+                cards: -1
+            });
+
             return;
         } else {
             mp.setData('gameState', CoupGameState.ChallengeResult);
@@ -125,8 +136,14 @@ export const CoupRevealCard = (
         lastAction.challengeResult = true;
         lastAction.challengeLoser = challengee;
 
+        lastAction.outcomes.push({
+            clientId: lastAction.challengeLoser,
+            cards: -1
+        });
+
         if (challengeFailCauseDead(mp, lastAction.challengeLoser)) {
             lastAction.challengeCauseDead = true;
+
             nextTurn(mp);
             return;
         } else {

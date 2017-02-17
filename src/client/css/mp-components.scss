@@ -18,3 +18,53 @@
         opacity: 1.0;
     }
 }
+
+/**
+ * Notification Component
+ */
+.mp-notification {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    right: 0px;
+    left: 0px;
+}
+.mp-notification-appear {
+    opacity: 0.01;
+    margin-top: -50px;
+}
+.mp-notification-appear.mp-notification-appear-active {
+    opacity: 1;
+    margin-top: 0px;
+    transition: opacity .5s ease-in, margin .5s;
+}
+.mp-notification-leave {
+    opacity: 1;
+}
+.mp-notification-leave.mp-notification-leave-active {
+    opacity: 0.01;
+    margin-top: 50px;
+    transition: opacity .5s ease-in, margin .5s;
+}
+
+.mp-notification-overlay {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    right: 0px;
+    left: 0px;
+    background-color: #333;
+    opacity: 0.4;
+    z-index: 100;
+    cursor: pointer;
+}
+
+.mp-notification-content {
+    margin: 0;
+    position: absolute;
+    z-index: 101;
+    top: 50%;
+    left: 50%;
+    margin-right: -50%;
+    transform: translate(-50%, -50%);
+}

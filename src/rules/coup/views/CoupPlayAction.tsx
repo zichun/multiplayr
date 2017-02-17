@@ -21,6 +21,7 @@ import { hasCard } from '../CoupFunctions';
 
 import { CoupGameRule } from './CoupRules';
 import { CoupLastAction } from './CoupLastAction';
+import { CoupNotification } from './CoupNotification';
 import { CoupActionsHistory } from './CoupActionsHistory';
 import { CoupClientCoins } from './CoupClientCoins';
 import { CoupPlayersCards } from './CoupCards';
@@ -195,6 +196,7 @@ function CoupClientPlayActionPage(props: CoupViewPropsInterface) {
     return (
         <div className='coup-client-playaction'>
             <CoupLastAction { ...props } />
+            <CoupNotification { ...props } />
             <header>Select your action</header>
             <CoupClientSelectAction { ...props } />
         </div>

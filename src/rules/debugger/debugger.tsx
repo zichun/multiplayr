@@ -22,6 +22,35 @@ interface DebuggerViewPropsInterface extends ViewPropsInterface {
     serializedState: string
 }
 
+function reMapClient(
+    previousState: any,
+    mp: MPType
+) {
+    const clientsStore = JSON.parse(previousState[0]).clientsStore
+    const playersRequired = Object.keys(clientsStore).length;
+    let stateString = JSON.stringify(previousState);
+    const newPlayers = [];
+
+    mp.playersForEach((clientId) => {
+        newPlayers.push(clientId);
+    });
+
+    if (newPlayers.length !== playersRequired) {
+        throw (new Error('Players count mismatched'));
+    }
+
+    let count = 0;
+    forEach(clientsStore, (clientId) => {
+        stateString = stateString.replace(
+            new RegExp(clientId.replace('.', '\\.'), 'g'),
+            newPlayers[count]);
+        count = count + 1;
+    });
+
+    return JSON.parse(stateString);
+}
+
+const DebuggerGameStatesLocalStorageName = 'debuggerGameStates';
 /**
  * @class GameStates
  * A store for a history of game states. While game rules are designed to be stateless, the debugger
@@ -32,11 +61,29 @@ class GameStates {
     private gameStates: string[];
     private bufferSize: number;
     private pointer: number;
+    private historyInLocalStorage: boolean;
+    private previousGameStates: any;
+    private requiredPlayers: number;
+    private MP: MPType;
 
-    constructor(size: number) {
-        this.bufferSize = size;
+    constructor(
+        Size: number,
+        HistoryInLocalStorage: boolean = false,
+        MP: MPType
+    ) {
+        this.bufferSize = Size;
         this.gameStates = [];
         this.pointer = 0;
+        this.historyInLocalStorage = HistoryInLocalStorage;
+        this.MP = MP;
+
+        this.previousGameStates = null;
+        this.requiredPlayers = 0;
+
+        if (HistoryInLocalStorage && sessionStorage.getItem(DebuggerGameStatesLocalStorageName)) {
+            this.previousGameStates = JSON.parse(sessionStorage.getItem(DebuggerGameStatesLocalStorageName));
+            this.requiredPlayers = Object.keys(JSON.parse(this.previousGameStates[this.previousGameStates.length - 1]).clientsStore).length;
+        }
     }
 
     public count() {
@@ -78,6 +125,9 @@ class GameStates {
 
     public push(state: any) {
 
+        let freshLoad = false;
+        const cPlayers = Object.keys(JSON.parse(state).clientsStore).length
+
         if (this.count()) {
             const previousState = this.top();
 
@@ -93,12 +143,28 @@ class GameStates {
                 return;
             }
 
-            if (Object.keys(JSON.parse(previousState).clientsStore).length !== Object.keys(JSON.parse(state).clientsStore).length) {
+            const pPlayers = Object.keys(JSON.parse(previousState).clientsStore).length;
+
+            if (pPlayers !== cPlayers) {
                 // If the number of players differ, we start from scratch.
                 this.clear();
             } else if (this.pointer !== this.count() - 1) {
                 this.gameStates.splice(this.pointer + 1);
             }
+
+        } else {
+            freshLoad = true;
+        }
+
+        if (cPlayers === this.requiredPlayers && this.previousGameStates !== null) {
+            this.gameStates = reMapClient(this.previousGameStates, this.MP);
+            this.previousGameStates = null;
+            this.pointer = this.gameStates.length - 1;
+            if (this.gameStates.length) {
+                this.MP.setState(this.gameStates[this.pointer], true);
+            }
+            sessionStorage.setItem(DebuggerGameStatesLocalStorageName, JSON.stringify(this.gameStates));
+            return;
         }
 
         this.gameStates.push(state);
@@ -108,146 +174,174 @@ class GameStates {
         }
 
         this.pointer = this.count() - 1;
+
+        if (this.historyInLocalStorage && !freshLoad) {
+            sessionStorage.setItem(DebuggerGameStatesLocalStorageName, JSON.stringify(this.gameStates));
+        }
     }
 }
-
-const gameStatesHistory = new GameStates(10);
 
 interface DebuggerRuleInterface extends GameRuleInterface {
     gameStates?: any
 }
 
-export const Debugger: GameRuleInterface = {
+interface DebuggerRuleOptions {
+    HistoryBufferSize?: number,
+    HistoryInSessionStorage?: boolean
+}
 
-    name: 'debugger',
-    css: [],
+export function NewDebuggerRule(
+    BaseGameRuleName: string,
+    BaseGameRule: GameRuleInterface,
+    Options: DebuggerRuleOptions
+) : GameRuleInterface {
 
-    plugins: {},
+    const BaseGameRuleObject = {};
+    BaseGameRuleObject[BaseGameRuleName] = BaseGameRule;
+    const historyBufferSize = Options.HistoryBufferSize || 10;
+    const historyInSessionStorage = Options.HistoryInSessionStorage || false;
 
-    globalData: {},
-    playerData: {},
+    let gameStatesHistory = null;
 
-    onDataChange: (mp: MPType, rule: DebuggerRuleInterface) => {
-        let pluginCount = 0;
-        let debuggee = '';
+    return {
 
-        forEach(rule.plugins, (plugin) => {
+        name: 'debugger',
+        css: [],
+
+        plugins: BaseGameRuleObject,
+
+        globalData: {},
+        playerData: {},
+
+        onDataChange: (mp: MPType, rule: DebuggerRuleInterface) => {
+            let pluginCount = 0;
+            let debuggee = '';
+
+            forEach(rule.plugins, (plugin) => {
             ++pluginCount;
-            debuggee = plugin;
-        });
+                debuggee = plugin;
+            });
 
-        if (pluginCount !== 1) {
-            throw (new Error('Debugger can only have one plugin as a child.'));
-        }
+            if (pluginCount !== 1) {
+                throw (new Error('Debugger can only have one plugin as a child.'));
+            }
 
-        gameStatesHistory.push(mp.getState());
+            if (!gameStatesHistory) {
+                gameStatesHistory = new GameStates(historyBufferSize, historyInSessionStorage, mp);
+            }
 
-        mp.setViewProps(mp.hostId, 'plugin', debuggee);
-        mp.setViewProps(mp.hostId, 'historyCount', gameStatesHistory.count());
-        mp.setViewProps(mp.hostId, 'historyPointer', gameStatesHistory.getPointer());
-        mp.setViewProps(mp.hostId, 'serializedState', gameStatesHistory.top());
-        mp.setView(mp.hostId, 'debugger-host');
+            gameStatesHistory.push(mp.getState());
 
-        mp.playersForEach((clientId) => {
-            mp.setViewProps(clientId, 'plugin', debuggee);
-            mp.setView(clientId, 'debugger-client');
-        });
+            mp.setViewProps(mp.hostId, 'plugin', debuggee);
+            mp.setViewProps(mp.hostId, 'historyCount', gameStatesHistory.count());
+            mp.setViewProps(mp.hostId, 'historyPointer', gameStatesHistory.getPointer());
+            mp.setViewProps(mp.hostId, 'serializedState', gameStatesHistory.top());
+            mp.setView(mp.hostId, 'debugger-host');
 
-        return true;
-    },
+            mp.playersForEach((clientId) => {
+                mp.setViewProps(clientId, 'plugin', debuggee);
+                mp.setView(clientId, 'debugger-client');
+            });
 
-    methods: {
-        'stepLeft': (mp: MPType, clientId: string) => {
-            const state = gameStatesHistory.seekLeft();
-            if (state) {
-                mp.setState(state);
+            return true;
+        },
+
+        methods: {
+            'stepLeft': (mp: MPType, clientId: string) => {
+                const state = gameStatesHistory.seekLeft();
+                if (state) {
+                    mp.setState(state, true);
+                }
+            },
+            'stepRight': (mp: MPType, clientId: string) => {
+                const state = gameStatesHistory.seekRight();
+                if (state) {
+                    mp.setState(state, true);
+                }
+            },
+            'setSerializedState': (mp: MPType, clientId: string, state: string) => {
+                mp.setState(state, true);
             }
         },
-        'stepRight': (mp: MPType, clientId: string) => {
-            const state = gameStatesHistory.seekRight();
-            if (state) {
-                mp.setState(state);
-            }
-        },
-        'setSerializedState': (mp: MPType, clientId: string, state: string) => {
-            mp.setState(state, true);
-        }
-    },
 
-    views: {
-        'debugger-host': class extends React.Component<DebuggerViewPropsInterface, {
-            showDebugger: boolean,
-            serializedState: string
-        }> {
-            constructor(props: DebuggerViewPropsInterface) {
-                super(props);
-                this._onClick = this._onClick.bind(this);
-                this._updateSerializedState = this._updateSerializedState.bind(this);
-                this.state = {
-                    showDebugger: false,
-                    serializedState: this.props.serializedState
-                };
-            }
-            private _updateSerializedState(evt) {
-                this.setState({
-                    showDebugger: this.state.showDebugger,
-                    serializedState: evt.target.value
-                });
-            }
-            private _onClick() {
-                this.setState({
-                    showDebugger: !this.state.showDebugger,
-                    serializedState: this.state.serializedState
-                });
-            }
-            public componentWillReceiveProps(nextProps) {
-                if (nextProps.serializedState !== this.state.serializedState) {
+        views: {
+            'debugger-host': class extends React.Component<DebuggerViewPropsInterface, {
+                showDebugger: boolean,
+                serializedState: string
+            }> {
+                constructor(props: DebuggerViewPropsInterface) {
+                    super(props);
+                    this._onClick = this._onClick.bind(this);
+                    this._updateSerializedState = this._updateSerializedState.bind(this);
+                    this.state = {
+                        showDebugger: false,
+                        serializedState: this.props.serializedState
+                    };
+                }
+                private _updateSerializedState(evt) {
                     this.setState({
-                        serializedState: nextProps.serializedState,
-                        showDebugger: this.state.showDebugger
+                        showDebugger: this.state.showDebugger,
+                        serializedState: evt.target.value
                     });
                 }
-            }
-            public render() {
-                const hostView = this.props.MP.getPluginSetView(this.props.plugin);
-                const debuggerPaneClassName = this.state.showDebugger ?
-                                              'debugger-pane show' :
-                                              'debugger-pane';
-                return (
-                    <div className='debugger-container'>
-                        <FontAwesome className='debugger-icon'
-                                     name='cogs'
-                                     onClick={ this._onClick } />
-                        <div className={ debuggerPaneClassName }>
-                            <div className='debugger-stepper'>
-                                <FontAwesome className='debugger-stepper-left'
-                                             name='chevron-left'
-                                             size='2x'
-                                             onClick={ this.props.MP.stepLeft } />
-                                <span className='debugger-stepper-count'>
-                                    { (this.props.historyPointer + 1) + ' / ' + this.props.historyCount }
-                                </span>
-                                <FontAwesome className='debugger-stepper-right'
-                                             name='chevron-right'
-                                             size='2x'
-                                             onClick={ this.props.MP.stepRight } />
+                private _onClick() {
+                    this.setState({
+                        showDebugger: !this.state.showDebugger,
+                        serializedState: this.state.serializedState
+                    });
+                }
+                public componentWillReceiveProps(nextProps) {
+                    if (nextProps.serializedState !== this.state.serializedState) {
+                        this.setState({
+                            serializedState: nextProps.serializedState,
+                            showDebugger: this.state.showDebugger
+                        });
+                    }
+                }
+                public render() {
+                    const hostView = this.props.MP.getPluginSetView(this.props.plugin);
+                    const debuggerPaneClassName = this.state.showDebugger ?
+                                                  'debugger-pane show' :
+                                                  'debugger-pane';
+                    return (
+                        <div className='debugger-container'>
+                            <FontAwesome className='debugger-icon'
+                                         name='cogs'
+                                         onClick={ this._onClick } />
+                            <div className={ debuggerPaneClassName }>
+                                <div className='debugger-stepper'>
+                                    <FontAwesome className='debugger-stepper-left'
+                                                 name='chevron-left'
+                                                 size='2x'
+                                                 onClick={ this.props.MP.stepLeft } />
+                                    <span className='debugger-stepper-count'>
+                                        { (this.props.historyPointer + 1) + ' / ' + this.props.historyCount }
+                                    </span>
+                                    <FontAwesome className='debugger-stepper-right'
+                                                 name='chevron-right'
+                                                 size='2x'
+                                                 onClick={ this.props.MP.stepRight } />
+                                </div>
+                                <div className='debugger-serialized'>
+                                    <textarea value={ this.state.serializedState }
+                                              onChange={ this._updateSerializedState } />
+                                    <button onClick={ this.props.MP.setSerializedState.bind(this, this.state.serializedState) }>Set State</button>
+                                </div>
                             </div>
-                            <div className='debugger-serialized'>
-                                <textarea value={ this.state.serializedState }
-                                          onChange={ this._updateSerializedState } />
-                                <button onClick={ this.props.MP.setSerializedState.bind(this, this.state.serializedState) }>Set State</button>
-                            </div>
+                            { hostView }
                         </div>
-                        { hostView }
-                    </div>
-                );
-            }
-        },
+                    );
+                }
+            },
 
-        'debugger-client': class extends React.Component<DebuggerViewPropsInterface, {}> {
-            public render() {
-                return this.props.MP.getPluginSetView(this.props.plugin);
+            'debugger-client': class extends React.Component<DebuggerViewPropsInterface, {}> {
+                public render() {
+                    return this.props.MP.getPluginSetView(this.props.plugin);
+                }
             }
         }
     }
-};
+
+}
+
+export default NewDebuggerRule;

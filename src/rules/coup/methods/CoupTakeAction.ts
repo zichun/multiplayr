@@ -76,12 +76,19 @@ export const CoupTakeAction = (
         clientId: clientId,
         targetId: targetId,
         challenge: null,
-        block: null
+        block: null,
+        outcomes: []
     };
 
     if (action === CoupAction.Income) {
         // Income action cannot be disputed, continue.
         mp.setPlayerData(clientId, 'coins', coins + 1);
+
+        actionObj.outcomes.push({
+            clientId: clientId,
+            coins: 1
+        });
+
         nextTurn(mp);
     } else if (action === CoupAction.Coup) {
         // Coup cannot be disputed.
@@ -92,6 +99,12 @@ export const CoupTakeAction = (
         actionObj.challengeLoser = targetId;
         if (challengeFailCauseDead(mp, targetId, CoupCardState.Couped)) {
             actionObj.challengeCauseDead = true;
+
+            actionObj.outcomes.push({
+                clientId: clientId,
+                cards: -1
+            });
+
             nextTurn(mp);
         } else {
             mp.setData('gameState', CoupGameState.ChallengeResult);

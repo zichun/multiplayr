@@ -67,6 +67,11 @@ export const CoupEndChallengePhase = (
     switch (action) {
     case CoupAction.Duke:
 
+        lastAction.outcomes.push({
+            clientId: lastAction.clientId,
+            coins: 3
+        });
+
         mp.setPlayerData(lastAction.clientId, 'coins', coins + 3);
         nextTurn(mp);
 
@@ -76,6 +81,10 @@ export const CoupEndChallengePhase = (
         mp.setPlayerData(lastAction.clientId, 'coins', coins - 3);
 
         lastAction.challengeLoser = targetId;
+        lastAction.outcomes.push({
+            clientId: targetId,
+            cards: -1
+        });
         if (challengeFailCauseDead(mp, targetId, CoupCardState.Assassinated)) {
             lastAction.challengeCauseDead = true;
             nextTurn(mp);
@@ -92,6 +101,16 @@ export const CoupEndChallengePhase = (
 
         lastAction.coinStolen = stealCoin;
 
+        lastAction.outcomes.push({
+            clientId: targetId,
+            coins: -stealCoin
+        });
+
+        lastAction.outcomes.push({
+            clientId: lastAction.clientId,
+            coins: stealCoin
+        });
+
         mp.setPlayerData(targetId, 'coins', targetCoins - stealCoin);
         mp.setPlayerData(lastAction.clientId, 'coins', coins + stealCoin);
         nextTurn(mp);
@@ -99,6 +118,11 @@ export const CoupEndChallengePhase = (
         break;
 
     case CoupAction.ForeignAid:
+
+        lastAction.outcomes.push({
+            clientId: lastAction.clientId,
+            coins: 2
+        });
 
         mp.setPlayerData(lastAction.clientId, 'coins', coins + 2);
         nextTurn(mp);

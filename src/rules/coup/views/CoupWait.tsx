@@ -11,6 +11,7 @@ import {
 
 import { CoupClientCoins } from './CoupClientCoins';
 import { CoupLastAction } from './CoupLastAction';
+import { CoupNotification } from './CoupNotification';
 import { CoupGameRule } from './CoupRules';
 import { CoupActionsHistory } from './CoupActionsHistory';
 import { CoupPlayersCards } from './CoupCards';
@@ -50,6 +51,7 @@ export function CoupWaitFor(props: CoupViewPropsInterface) {
         return (
             <div>
                 <CoupLastAction { ...props } />
+                <CoupNotification { ...props } />
                 { props.waitAdditionalText }
                 Waiting for { player } to { waitingAction }.
             </div>

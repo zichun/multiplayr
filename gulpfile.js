@@ -1,3 +1,4 @@
+/*global reload */
 'use strict';
 
 let build = require('node-web-build');
@@ -19,9 +20,34 @@ build.mocha.setConfig({
   testMatch: 'build/tests/*.js'
 });
 
+var sourceMatch = [
+  'src/**/*.{ts,tsx,scss,js,txt,html}',
+  '!src/**/*.scss.ts'
+];
+
+build.setRigConfig({
+    serveTask: function(config) {
+        return {
+            execute: function() {
+                return build.serve.execute(config)
+            },
+            isEnabled: function() { return false; }
+        };
+    }
+});
+
+build.task(
+    'mp-watch',
+    build.watch(
+        sourceMatch,
+        build.serial(
+            build.preCopy, build.sass, build.compileTsTasks,
+            build.postCopy, build.webpack, build.postProcessSourceMapsTask, build.reload)));
+
 // change the port of serve.
 build.serve.setConfig({
-  port: 4323
+  port: 3000,
+  initialPage: '/'
 });
 
 let isProduction = process.argv.indexOf('--production') >= 0;
