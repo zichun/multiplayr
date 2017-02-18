@@ -3,6 +3,7 @@
  */
 
 import * as React from 'react';
+import * as Sound from 'react-sound';
 
 import {
     CoupViewPropsInterface,
@@ -34,29 +35,51 @@ export function CoupNotification(
 
             if (coins) {
                 let coinsDelta = '';
+                let sound = null;
+
                 if (coins > 0) {
                     coinsDelta = '+' + coins;
+                    sound = (
+                        <Sound
+                            url={ 'gamerules/coup/sounds/coin' + coins + '.mp3' }
+                            playStatus={ Sound.status.PLAYING } />);
+
+
                 } else {
                     coinsDelta = '-' + (-coins);
                 }
+
                 if (coins > 1 || coins < -1) {
                     coinsDelta += ' coins';
                 } else {
                     coinsDelta += ' coin';
                 }
+
                 return (
                     <Notification>
+                        { sound }
                         <h1>{ coinsDelta }</h1>
                     </Notification>
                 );
             }
 
             if (cards) {
+                let sound = null;
                 let cardsDelta = '';
                 if (cards > 0) {
                     cardsDelta = '+' + cards;
+
+                    sound = (
+                        <Sound
+                            url='gamerules/coup/sounds/ambassador.mp3'
+                            playStatus={ Sound.status.PLAYING } />);
                 } else {
                     cardsDelta = '-' + (-cards);
+
+                    sound = (
+                        <Sound
+                            url='gamerules/coup/sounds/card.mp3'
+                            playStatus={ Sound.status.PLAYING } />);
                 }
 
                 if (cards > 1 || cards < -1) {
@@ -64,8 +87,10 @@ export function CoupNotification(
                 } else {
                     cardsDelta += ' card';
                 }
+
                 return (
                     <Notification>
+                        { sound }
                         <h1>{ cardsDelta }</h1>
                     </Notification>
                 );

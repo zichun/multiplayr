@@ -10,7 +10,8 @@ build.webpack.setConfig({ webpack: webpack });
 build.postCopy.setConfig({
   copyTo: {
     'build': ['src/**/*.png', 'src/**/*.css'],
-    'build/client/static': ['src/client/static/*.html']
+    'build/client/static': ['src/client/static/*.html'],
+    'build/rules': ['src/rules/**/*.mp3']
   },
   shouldFlatten: false
 });
