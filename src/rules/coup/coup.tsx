@@ -317,7 +317,7 @@ export const CoupRule: GameRuleInterface = {
                     });
 
                 if (aliveCount !== 1) {
-                    throw(new Error('Game should not be over with non-1 alive players'));
+                    throw (new Error('Game should not be over with non-1 alive players'));
                 }
 
                 mp.playersForEach(
