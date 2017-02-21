@@ -8,13 +8,17 @@ import GameObject from './gameobject';
 
 import MPRULES from '../../rules/rules';
 
-import {isArray, isFunction} from '../../common/utils';
+import { isArray, isFunction } from '../../common/utils';
 
-import {checkReturnMessage,
-        forwardReturnMessage} from '../../common/messages';
+import {
+    checkReturnMessage,
+    forwardReturnMessage
+} from '../../common/messages';
 
-import {CallbackType,
-        ReturnPacketType} from '../../common/types';
+import {
+    CallbackType,
+    ReturnPacketType
+} from '../../common/interfaces';
 
 declare var MPGameObject;
 
@@ -143,7 +147,7 @@ export class MultiplayR {
         gameState: string,
         transport: SocketTransport,
         container: any,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         const ruleDef = MPRULES[ruleName];
 
@@ -162,7 +166,7 @@ export class MultiplayR {
         ruleName: string,
         transport: SocketTransport,
         container: any,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         const ruleDef = MPRULES[ruleName];
 
@@ -176,18 +180,16 @@ export class MultiplayR {
         clientId: string,
         transport: SocketTransport,
         container: any,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         const gameObj = new GameObject(transport,
                                        container);
         gameObj.rejoin(roomId,
                        clientId,
                        (res: ReturnPacketType) => {
-                           if (!res.success) {
-                               return forwardReturnMessage(res, cb);
+                           if (!checkReturnMessage(res, 'rule', cb)) {
+                               return;
                            }
-
-                           checkReturnMessage(res, 'rule');
 
                            const rule = res.message;
                            const ruleDef = MPRULES[rule];
@@ -202,17 +204,15 @@ export class MultiplayR {
         roomId: string,
         transport: SocketTransport,
         container: any,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
 
         const gameObj = new GameObject(transport,
                                        container);
         gameObj.join(roomId, (res: ReturnPacketType) => {
-            if (!res.success) {
-                return forwardReturnMessage(res, cb);
+            if (!checkReturnMessage(res, 'rule', cb)) {
+                return;
             }
-
-            checkReturnMessage(res, 'rule');
 
             const rule = res.message;
             const ruleDef = MPRULES[rule];

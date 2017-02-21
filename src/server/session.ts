@@ -15,18 +15,16 @@ import {
 } from '../common/utils';
 
 import {
-    CallbackType,
-    SessionMessageType,
-    PacketType
-} from '../common/types';
-
-import {
     returnError,
     returnSuccess,
     checkReturnMessage
 } from '../common/messages';
 
 import {
+    ReturnPacketType,
+    CallbackType,
+    SessionMessageType,
+    PacketType,
     ServerTransportInterface,
     ServerSessionInterface
 } from '../common/interfaces';
@@ -48,7 +46,7 @@ export class Session implements ServerSessionInterface {
     public reconnect(
         roomId: string,
         clientId: string,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         this.clientId = clientId;
         this.room = rooms.reconnectClient(roomId, this, clientId, cb);
@@ -56,14 +54,14 @@ export class Session implements ServerSessionInterface {
 
     public sendMessage(
         packetet: PacketType,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         this.transport.sendMessage(packetet, cb);
     }
 
     public onMessage(
         packet: PacketType,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         if (!packet.session || !packet.session.action) {
             return returnError(cb, 'invalid data packet (missing session key)');
@@ -90,7 +88,7 @@ export class Session implements ServerSessionInterface {
     }
 
     public onDisconnect(
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         rooms.disconnectClient(this.clientId, cb);
     }
@@ -100,7 +98,7 @@ export class Session implements ServerSessionInterface {
     }
 
     private createRoom(
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         if (this.room !== undefined) {
             return returnError(cb, 'Session of clientId ' + this.clientId + ' already belongs to a room');
@@ -112,7 +110,7 @@ export class Session implements ServerSessionInterface {
 
     private rejoinRoom(
         packet: PacketType,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         if (!packet.session || !packet.session.roomId || !packet.session.fromClientId) {
             return returnError(cb, 'Invalid packet - missing session.roomid/fromClientId');
@@ -126,8 +124,8 @@ export class Session implements ServerSessionInterface {
         const clientId = packet.session.fromClientId;
 
         this.reconnect(roomId, clientId, (res) => {
-            if (!res.success) {
-                return checkReturnMessage(res, 'reconnect', cb);
+            if (!checkReturnMessage(res, 'reconnect', cb)) {
+                return;
             }
 
             console.log('Client[' + clientId + '] successfully reconnected to Room[' + roomId + ']');
@@ -138,7 +136,7 @@ export class Session implements ServerSessionInterface {
 
     private joinRoom(
         packet: PacketType,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         if (!packet.session || !packet.session.roomId) {
             return returnError(cb, 'Invalid packet - missing session.roomid');
@@ -161,7 +159,7 @@ export class Session implements ServerSessionInterface {
 
     private routeMessage(
         packet: PacketType,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         const toClientId = packet.session.toClientId;
         const fromClientId = packet.session.fromClientId;

@@ -34,9 +34,6 @@ import {
     CallbackType,
     DataStoreType,
     ReturnPacketType,
-} from '../../common/types';
-
-import {
     GameRuleInterface
 } from '../../common/interfaces';
 
@@ -126,7 +123,7 @@ class GameObject {
         roomId: string,
         clientId: string,
         gameState: string,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         this.isHost = true;
 
@@ -160,16 +157,16 @@ class GameObject {
     public host(
         ruleName: string,
         rule: GameRuleInterface,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
 
         this.isHost = true;
 
         this.dxc.host(ruleName, (res) => {
 
-            if (!res || !res.success) {
+            if (!checkReturnMessage(res, 'roomId', cb)) {
                 this.isHost = false;
-                return checkReturnMessage(res, 'roomId', cb);
+                return;
             }
 
             if (!this.parent) {
@@ -190,11 +187,11 @@ class GameObject {
     public rejoin(
         roomId: string,
         clientId: string,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         this.dxc.rejoin(roomId, clientId, (res: ReturnPacketType) => {
-            if (!res.success) {
-                return checkReturnMessage(res, 'rule', cb);
+            if (!checkReturnMessage(res, 'rule', cb)) {
+                return;
             }
 
             this.clientId = clientId;
@@ -207,11 +204,11 @@ class GameObject {
 
     public join(
         roomId: string,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         this.dxc.join(roomId, (res: ReturnPacketType) => {
-            if (!res.success) {
-                return checkReturnMessage(res, 'rule', cb);
+            if (!checkReturnMessage(res, 'rule', cb)) {
+                return;
             }
 
             this.roomId = roomId;
@@ -604,7 +601,7 @@ class GameObject {
         displayName: string,
         props: any,
         container: any,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         props = props || {};
 
@@ -661,7 +658,7 @@ class GameObject {
         displayName: string,
         props: any,
         container: any,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         return new Promise((resolve, reject) => {
             const args = [];

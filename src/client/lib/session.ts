@@ -14,20 +14,19 @@ import {
 } from '../../common/messages';
 
 import {
+    ReturnPacketType,
+    JoinRoomReturnPacketType,
     SessionMessageType,
     CallbackType,
     PacketType,
-    RoomMessageType
-} from '../../common/types';
-
-import {
+    RoomMessageType,
     ClientTransportInterface,
     ClientDataExchangeInterface,
     ClientSessionInterface
 } from '../../common/interfaces';
 
 export class Session implements ClientSessionInterface {
-    private _onMessage: (packet: PacketType, cb?: CallbackType) => void;
+    private _onMessage: (packet: PacketType, cb?: CallbackType<ReturnPacketType>) => void;
     private _onJoinRoom: (clientId: string) => void;
     private _onRejoinRoom: (clientId: string) => void;
     private _onLeaveRoom: (clientId: string) => void;
@@ -63,14 +62,14 @@ export class Session implements ClientSessionInterface {
      * The current client will be the host of the room.
      */
     public createRoom(
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         const packet = createSessionPacket(SessionMessageType.CreateRoom);
         packet.session.fromClientId = this._clientId;
 
         this._transport.sendMessage(packet, (data) => {
-            if (!data.success) {
-                return checkReturnMessage(data, 'roomId', cb);
+            if (!checkReturnMessage(data, 'roomId', cb)) {
+                return;
             }
 
             this._roomId = data.message;
@@ -86,15 +85,15 @@ export class Session implements ClientSessionInterface {
      */
     public joinRoom(
         roomId: string,
-        cb?: CallbackType
+        cb?: CallbackType<JoinRoomReturnPacketType>
     ) {
         const packet = createSessionPacket(SessionMessageType.JoinRoom);
         packet.session.roomId = roomId;
         packet.session.fromClientId = this._clientId;
 
         this._transport.sendMessage(packet, (res) => {
-            if (!res.success) {
-                return checkReturnMessage(res, 'hostId', cb);
+            if (!checkReturnMessage(res, 'hostId', cb)) {
+                return;
             }
 
             this._hostId = res.message;
@@ -107,15 +106,15 @@ export class Session implements ClientSessionInterface {
     public rejoinRoom(
         roomId: string,
         clientId: string,
-        cb?: CallbackType
+        cb?: CallbackType<JoinRoomReturnPacketType>
     ) {
         const packet = createSessionPacket(SessionMessageType.RejoinRoom);
         packet.session.roomId = roomId;
         packet.session.fromClientId = clientId;
 
         this._transport.sendMessage(packet, (res) => {
-            if (!res.success) {
-                return checkReturnMessage(res, 'hostId', cb);
+            if (!checkReturnMessage(res, 'hostId', cb)) {
+                return;
             }
 
             this._hostId = res.message;
@@ -130,7 +129,7 @@ export class Session implements ClientSessionInterface {
     public sendMessage(
         clientId: string,
         packet: PacketType,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         packet.session = {
             action: SessionMessageType.SendMessage,
@@ -143,7 +142,7 @@ export class Session implements ClientSessionInterface {
 
     public onMessage(
         packet: PacketType,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         if (!packet.session || !packet.session.action) {
             return returnError(cb, 'invalid data packet (missing session key)');
@@ -167,7 +166,7 @@ export class Session implements ClientSessionInterface {
 
     private serviceBroadcastMessage(
         packet: PacketType,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         if (!packet.room || !packet.room.action || !packet.room.clientId) {
             return returnError(cb, 'invalid data packet (missing room key)');
@@ -200,7 +199,7 @@ export class Session implements ClientSessionInterface {
 
     public setCallbacks(
         callBacks: {
-            onMessage?: (packet: PacketType, cb?: CallbackType) => void,
+            onMessage?: (packet: PacketType, cb?: CallbackType<ReturnPacketType>) => void,
             onJoinRoom?: (clientId: string) => void,
             onRejoinRoom?: (clientId: string) => void,
             onLeaveRoom?: (clientId: string) => void,

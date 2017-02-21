@@ -13,21 +13,27 @@
 
 import GameObject from './gameobject';
 
-import {DataExchangeMessageType,
-        CallbackType,
-        PacketType} from '../../common/types';
+import {
+    returnError,
+    returnSuccess,
+    forwardReturnMessage,
+    checkReturnMessage,
+    createDataExchangeSetViewPacket,
+    createDataExchangeExecMethodPacket,
+    createDataExchangeGetRulePacket,
+    createDataExchangeClientReadyPacket
+} from '../../common/messages';
 
-import {returnError,
-        returnSuccess,
-        forwardReturnMessage,
-        checkReturnMessage,
-        createDataExchangeSetViewPacket,
-        createDataExchangeExecMethodPacket,
-        createDataExchangeGetRulePacket,
-        createDataExchangeClientReadyPacket} from '../../common/messages';
-
-import {ClientDataExchangeInterface,
-        ClientSessionInterface} from '../../common/interfaces';
+import {
+    GetRuleReturnPacketType,
+    CreateRoomReturnPacketType,
+    DataExchangeMessageType,
+    ReturnPacketType,
+    CallbackType,
+    PacketType,
+    ClientDataExchangeInterface,
+    ClientSessionInterface
+} from '../../common/interfaces';
 
 export class DataExchange implements ClientDataExchangeInterface {
     private session: ClientSessionInterface;
@@ -39,7 +45,7 @@ export class DataExchange implements ClientDataExchangeInterface {
     ) {
         this.session = session;
         this.session.setCallbacks({
-            onMessage: (packet: PacketType, cb?: CallbackType) => {
+            onMessage: (packet: PacketType, cb?: CallbackType<ReturnPacketType>) => {
                 this.onMessage(packet, cb);
             },
             onJoinRoom: (clientId: string) => {
@@ -62,14 +68,14 @@ export class DataExchange implements ClientDataExchangeInterface {
     public rehost(
         roomId: string,
         clientId: string,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         this.session.rejoinRoom(
             roomId,
             clientId,
             (res) => {
-                if (!res.success) {
-                    return checkReturnMessage(res, 'hostId', cb);
+                if (!checkReturnMessage(res, 'hostId', cb)) {
+                    return;
                 }
 
                 if (res.message !== clientId) {
@@ -82,7 +88,7 @@ export class DataExchange implements ClientDataExchangeInterface {
 
     public host(
         ruleName: string,
-        cb?: CallbackType
+        cb?: CallbackType<CreateRoomReturnPacketType>
     ) {
         this.ruleName = ruleName;
         return this.session.createRoom(cb);
@@ -91,11 +97,11 @@ export class DataExchange implements ClientDataExchangeInterface {
     public rejoin(
         roomId: string,
         clientId: string,
-        cb?: CallbackType
+        cb?: CallbackType<GetRuleReturnPacketType>
     ) {
         this.session.rejoinRoom(roomId, clientId, (res) => {
-            if (!res.success) {
-                return checkReturnMessage(res, 'hostId', cb);
+            if (!checkReturnMessage(res, 'hostId', cb)) {
+                return;
             }
             return this.getRule(cb);
         });
@@ -103,18 +109,18 @@ export class DataExchange implements ClientDataExchangeInterface {
 
     public join(
         roomId: string,
-        cb?: CallbackType
+        cb?: CallbackType<GetRuleReturnPacketType>
     ) {
         this.session.joinRoom(roomId, (res) => {
-            if (!res.success) {
-                return checkReturnMessage(res, 'hostId', cb);
+            if (!checkReturnMessage(res, 'hostId', cb)) {
+                return;
             }
             return this.getRule(cb);
         });
     }
 
     public getRule(
-        cb?: CallbackType
+        cb?: CallbackType<GetRuleReturnPacketType>
     ) {
         if (this.session.isHost()) {
             return returnError(cb, 'Host doesn\'t need to go through dxc layer to get the current loaded rule.');
@@ -125,7 +131,9 @@ export class DataExchange implements ClientDataExchangeInterface {
         return this.session.sendMessage(this.session.getHostId(),
                                         packet,
                                         (res) => {
-                                            checkReturnMessage(res, 'rule');
+                                            if (!checkReturnMessage(res, 'rule')) {
+                                                return;
+                                            }
 
                                             this.ruleName = res.message;
 
@@ -137,7 +145,7 @@ export class DataExchange implements ClientDataExchangeInterface {
         clientId: string,
         displayName: string,
         props: any,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         if (!this.session.isHost()) {
             return returnError(cb, 'Only host can set view.');
@@ -151,7 +159,7 @@ export class DataExchange implements ClientDataExchangeInterface {
     public execMethod(
         method: string,
         args: any,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         if (this.session.isHost()) {
             return returnError(cb, 'Host doesn\'t need to go through dxc layer to execute methods.');
@@ -164,7 +172,7 @@ export class DataExchange implements ClientDataExchangeInterface {
     }
 
     public clientReady(
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         if (this.session.isHost()) {
             return returnError(cb, 'Host doesn\'t need to notify that its ready.');
@@ -177,7 +185,7 @@ export class DataExchange implements ClientDataExchangeInterface {
 
     public onMessage(
         packet: PacketType,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         if (!packet.dxc || !packet.dxc.action) {
             return returnError(cb, 'invalid data packet (missing dxc key).');
@@ -238,7 +246,7 @@ export class DataExchange implements ClientDataExchangeInterface {
 
     private serviceClientReady(
         packet: PacketType,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         if (!this.session.isHost()) {
             return returnError(cb, 'Non-host clients cannot service ClientReady notifications.');
@@ -253,7 +261,7 @@ export class DataExchange implements ClientDataExchangeInterface {
 
     private serviceExecMethod(
         packet: PacketType,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         if (!this.session.isHost()) {
             return returnError(cb, 'Non-host clients cannot service ExecMethod request.');
@@ -272,7 +280,7 @@ export class DataExchange implements ClientDataExchangeInterface {
 
     private serviceSetView(
         packet: PacketType,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         if (this.session.isHost()) {
             return returnError(cb, 'Host cannot service SetView request.');

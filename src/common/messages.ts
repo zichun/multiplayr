@@ -4,22 +4,26 @@
  * Defines helper functions for message passing between interfaces.
  */
 
-import {isFunction} from './utils';
+import { isFunction } from './utils';
 
-import {CallbackType,
-        ReturnPacketType,
-        PacketType,
-        SessionMessageType,
-        RoomMessageType,
-        DataExchangeMessageType} from './types';
+import {
+    CallbackType,
+    ReturnPacketType,
+    PacketType,
+    SessionMessageType,
+    RoomMessageType,
+    DataExchangeMessageType
+} from './interfaces';
 
 export function returnError(
-    cb: CallbackType,
+    cb: CallbackType<ReturnPacketType>,
     errorMessage: string
 ) {
-    const returnMessage = createReturnMessage(false,
-                                              'error',
-                                              errorMessage);
+    const returnMessage = createReturnMessage(
+        false,
+        'error',
+        errorMessage);
+
     console.error(errorMessage);
 
     if (isFunction(cb)) {
@@ -28,13 +32,18 @@ export function returnError(
 }
 
 export function returnSuccess(
-    cb: CallbackType,
+    cb: CallbackType<ReturnPacketType>,
     messageType: string,
     message: any
 ) {
-    const returnMessage = createReturnMessage(true,
-                                              messageType,
-                                              message);
+    const returnMessage = createReturnMessage(
+        true,
+        messageType,
+        message
+    );
+
+    returnMessage[messageType] = message;
+
     if (isFunction(cb)) {
         cb(returnMessage);
     }
@@ -55,7 +64,7 @@ export function createReturnMessage(
 
 export function forwardReturnMessage(
     data: ReturnPacketType,
-    cb?: CallbackType
+    cb?: CallbackType<ReturnPacketType>
 ) {
     return isFunction(cb) && cb(data);
 }
@@ -63,7 +72,7 @@ export function forwardReturnMessage(
 export function checkReturnMessage(
     data: ReturnPacketType,
     messageType?: string,
-    cb?: CallbackType
+    cb?: CallbackType<ReturnPacketType>
 ) {
     const ret = (msg) => {
         if (cb) {
@@ -74,16 +83,21 @@ export function checkReturnMessage(
     };
 
     if (!data || !data.messageType) {
-        return ret('Invalid data returned');
+        ret('Invalid data returned');
+        return false;
     }
 
     if (!data.success) {
-        return ret(data.message);
+        ret(data.message);
+        return false;
     }
 
     if (messageType && data.messageType !== messageType) {
-        return ret('Invalid data message type returned');
+        ret('Invalid data message type returned');
+        return false;
     }
+
+    return true;
 }
 
 export function createSessionPacket(

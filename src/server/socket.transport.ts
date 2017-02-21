@@ -11,20 +11,18 @@ import Session from './session';
 import { isFunction } from '../common/utils';
 
 import {
-    CallbackType,
-    JoinRoomType,
-    RoomMessageType,
-    PacketType,
-    ReconnectPacketType
-} from '../common/types';
-
-import {
     returnError,
     returnSuccess,
     forwardReturnMessage
 } from '../common/messages';
 
 import {
+    ReturnPacketType,
+    CallbackType,
+    JoinRoomType,
+    RoomMessageType,
+    PacketType,
+    ReconnectPacketType,
     ServerTransportInterface,
     ServerSessionInterface
 } from '../common/interfaces';
@@ -43,7 +41,7 @@ export class SocketTransport implements ServerTransportInterface {
     private initialize() {
 
         this.socket.on('initialize',
-            (data: any, cb: CallbackType) => {
+            (data: any, cb: CallbackType<ReturnPacketType>) => {
 
                 if (this.initialized) {
                     return returnError(
@@ -61,7 +59,7 @@ export class SocketTransport implements ServerTransportInterface {
 
         this.socket.on(
             'rejoin',
-            (data: ReconnectPacketType, cb: CallbackType) => {
+            (data: ReconnectPacketType, cb: CallbackType<ReturnPacketType>) => {
                 // todo: handle reconnection logic
                 if (this.session || this.initialized) {
                     return returnError(
@@ -95,7 +93,7 @@ export class SocketTransport implements ServerTransportInterface {
 
         this.socket.on(
             'message',
-            (packet: PacketType, cb: CallbackType) => {
+            (packet: PacketType, cb: CallbackType<ReturnPacketType>) => {
 
                 if (!this.initialized) {
                     return returnError(cb, 'transport session has not been initialized');
@@ -123,7 +121,7 @@ export class SocketTransport implements ServerTransportInterface {
 
     public sendMessage(
         packet: PacketType,
-        cb?: CallbackType) {
+        cb?: CallbackType<ReturnPacketType>) {
 
         this.socket.emit(
             'message',

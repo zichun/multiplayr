@@ -9,11 +9,12 @@
 import Session from './Session';
 
 import {
+    ReturnPacketType,
     CallbackType,
     RoomMessageType,
     SessionMessageType,
     PacketType
-} from '../common/types';
+} from '../common/interfaces';
 
 import {
     returnError,
@@ -43,7 +44,7 @@ export class Room {
         toClientId: string,
         messageType: SessionMessageType,
         packet: PacketType,
-        cb?: CallbackType) {
+        cb?: CallbackType<ReturnPacketType>) {
 
         if (!packet.session) {
             packet.session = {
@@ -66,7 +67,7 @@ export class Room {
         fromClientId: string,
         toClientId: string,
         packet: PacketType,
-        cb?: CallbackType) {
+        cb?: CallbackType<ReturnPacketType>) {
 
         if (!this.hasClient(fromClientId) || !this.hasClient(toClientId)) {
             return returnError(cb, 'Invalid fromClientId / toClientId');
@@ -118,7 +119,7 @@ export class Room {
     public reconnectClient(
         clientId: string,
         session: Session,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ): Room {
         if (this.hasClient(clientId) === false) {
             returnError(cb, 'Room does not have existing client ' + clientId);
@@ -172,7 +173,7 @@ export class Room {
     public broadcastRoomActivity(
         roomAction: RoomMessageType,
         clientId: string,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         Object.keys(this._clientActiveMap).forEach(
             (toClientId) => {

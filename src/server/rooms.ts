@@ -18,7 +18,10 @@ import {
 
 import { returnError } from '../common/messages';
 
-import { CallbackType } from '../common/types';
+import {
+    ReturnPacketType,
+    CallbackType
+} from '../common/interfaces';
 
 export class Rooms {
     private rooms: { [key: string]: Room };
@@ -135,7 +138,7 @@ export class Rooms {
     // @arg clientId Identifier of client
     public disconnectClient(
         clientId: string,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ): void {
         if (!this.clientsRoomMap[clientId]) {
             return returnError(cb, 'ClientId ' + clientId + ' does not exists.');
@@ -179,7 +182,7 @@ export class Rooms {
         roomId: string,
         session: Session,
         clientId: string,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ): Room {
 
         console.log('Client[' + clientId + '] reconnecting to Room[' + roomId + ']');
@@ -204,7 +207,7 @@ export class Rooms {
     public addClient(
         roomId: string,
         session: Session,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ): Room {
         let clientId = '';
 

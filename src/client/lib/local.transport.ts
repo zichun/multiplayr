@@ -6,17 +6,20 @@
  *
  */
 
-import {CallbackType,
-        PacketType,
-        ReturnPacketType} from '../../common/types';
+import {
+    returnSuccess,
+    checkReturnMessage
+} from '../../common/messages';
 
-import {returnSuccess,
-        checkReturnMessage} from '../../common/messages';
-
-import {ClientTransportInterface,
-        ClientSessionInterface,
-        ServerTransportInterface,
-        ServerSessionInterface} from '../../common/interfaces';
+import {
+    CallbackType,
+    PacketType,
+    ReturnPacketType,
+    ClientTransportInterface,
+    ClientSessionInterface,
+    ServerTransportInterface,
+    ServerSessionInterface
+} from '../../common/interfaces';
 
 import Session from '../../server/session';
 
@@ -29,7 +32,10 @@ export class LocalClientTransport implements ClientTransportInterface {
         cb?: (packet: ReturnPacketType) => any
     ) {
         this.serverTransport = new LocalServerTransport(this, (res) => {
-            checkReturnMessage(res, 'clientId');
+            if (!checkReturnMessage(res, 'clientId')) {
+                return;
+            }
+
             this.clientId = res.message;
         });
     }
@@ -42,11 +48,11 @@ export class LocalClientTransport implements ClientTransportInterface {
         this.clientId = this.session.getClientId();
     }
 
-    public sendMessage(packet: PacketType, cb?: CallbackType) {
+    public sendMessage(packet: PacketType, cb?: CallbackType<ReturnPacketType>) {
         this.serverTransport.onMessage(packet, cb);
     }
 
-    public onMessage(packet: PacketType, cb?: CallbackType) {
+    public onMessage(packet: PacketType, cb?: CallbackType<ReturnPacketType>) {
         this.session.onMessage(packet, cb);
     }
 
@@ -61,20 +67,20 @@ class LocalServerTransport implements ServerTransportInterface {
 
     constructor(
         clientTransport: LocalClientTransport,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         this.session = new Session(this);
         this.clientTransport = clientTransport;
         returnSuccess(cb, 'clientId', this.session.getClientId());
     }
 
-    public onMessage(packet: PacketType, cb?: CallbackType) {
+    public onMessage(packet: PacketType, cb?: CallbackType<ReturnPacketType>) {
         this.session.onMessage(packet, cb);
     }
 
     public sendMessage(
         packet: PacketType,
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         this.clientTransport.onMessage(packet, cb);
     }

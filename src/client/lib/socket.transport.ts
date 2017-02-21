@@ -6,17 +6,20 @@
  *
  */
 
-import {CallbackType,
-        PacketType,
-        ReturnPacketType} from '../../common/types';
+import { isFunction } from '../../common/utils';
 
-import {isFunction} from '../../common/utils';
+import {
+    checkReturnMessage,
+    forwardReturnMessage
+} from '../../common/messages';
 
-import {checkReturnMessage,
-        forwardReturnMessage} from '../../common/messages';
-
-import {ClientTransportInterface,
-        ClientSessionInterface} from '../../common/interfaces';
+import {
+    CallbackType,
+    PacketType,
+    ReturnPacketType,
+    ClientTransportInterface,
+    ClientSessionInterface
+} from '../../common/interfaces';
 
 export class SocketTransport implements ClientTransportInterface {
     private socket: any;
@@ -35,7 +38,7 @@ export class SocketTransport implements ClientTransportInterface {
                                       });
 
         this.socket.on('message',
-                       (packet: PacketType, cb: CallbackType) => {
+                       (packet: PacketType, cb: CallbackType<ReturnPacketType>) => {
                            this.onMessage(packet, cb);
                        });
 
@@ -58,7 +61,7 @@ export class SocketTransport implements ClientTransportInterface {
         this.clientId = this.session.getClientId();
     }
 
-    public sendMessage(packet: PacketType, cb?: CallbackType) {
+    public sendMessage(packet: PacketType, cb?: CallbackType<ReturnPacketType>) {
 
         packet.transport = {};
 
@@ -79,18 +82,22 @@ export class SocketTransport implements ClientTransportInterface {
                              clientId: this.clientId
                          },
                          (data) => {
-                             checkReturnMessage(data, 'reconnect');
+                             if (!checkReturnMessage(data, 'reconnect')) {
+                                 return;
+                             }
                              this.session.onReconnect();
                          });
     }
 
     private initializeTransport(
-        cb?: CallbackType
+        cb?: CallbackType<ReturnPacketType>
     ) {
         this.socket.emit('initialize',
                          {},
                          (data) => {
-                             checkReturnMessage(data, 'clientId');
+                             if (!checkReturnMessage(data, 'clientId', cb)) {
+                                 return;
+                             }
                              this.clientId = data.message;
 
                              return forwardReturnMessage(data, cb);
@@ -99,7 +106,7 @@ export class SocketTransport implements ClientTransportInterface {
 
     private onMessage(
         packet: PacketType,
-        cb: CallbackType
+        cb: CallbackType<ReturnPacketType>
     ) {
         this.session.onMessage(packet, cb);
     }

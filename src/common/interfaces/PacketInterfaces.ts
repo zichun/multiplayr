@@ -1,58 +1,40 @@
 /**
  *
- * types.ts
+ * PacketInterfaces.ts
  *
- * Export types for the service.
+ * Interfaces for packets used in the message passing protocol.
  *
  */
-
-export type ReturnPacketType = {
-    success: boolean,
-    messageType: string,
-    message: any
-}
-
-export type CallbackType = (res: ReturnPacketType) => any;
-
-export type JoinRoomType = {
-    roomId: string,
-    clientId: string
-};
 
 //
 // Packet Types - Packets are the object that is sent in between
 // the communication layers. Each layer (transport/session/room/dxc) can
-// add in metadata via subkeys in the packet.
+// add in metadata via subkeys in the main packet object (PacketType).
 //
 
-export type ReconnectPacketType = {
-    roomId: string,
-    clientId: string
-};
-
-export type PacketType = {
+export interface PacketType {
     transport?: TransportSubPacketType,
     session?: SessionSubPacketType
     room?: RoomSubPacketType,
-    dxc?: DataExchangePacketType
-};
+    dxc?: DataExchangeSubPacketType
+}
 
-export type TransportSubPacketType = {
-};
+export interface TransportSubPacketType {
+}
 
-export type SessionSubPacketType = {
+export interface SessionSubPacketType {
     action: SessionMessageType,
     roomId?: string,
     toClientId?: string,
     fromClientId?: string
-};
+}
 
-export type RoomSubPacketType = {
+export interface RoomSubPacketType {
     action: RoomMessageType,
     clientId: string
-};
+}
 
-export type DataExchangePacketType = {
+export interface DataExchangeSubPacketType {
     action: DataExchangeMessageType,
     execMethodProp?: {
         method: string,
@@ -62,7 +44,7 @@ export type DataExchangePacketType = {
         displayName: string,
         props: any
     }
-};
+}
 
 export enum SessionMessageType {
     CreateRoom = 1, // client wants to create a new room.
@@ -85,11 +67,38 @@ export enum DataExchangeMessageType {
     ClientReady     // Client notifies host that rule has been loaded
 }
 
+export interface JoinRoomType {
+    roomId: string,
+    clientId: string
+}
+
+export interface ReconnectPacketType {
+    roomId: string,
+    clientId: string
+}
+
 //
-// Gameobject types
+// Each callback will be given a return packet (with base type ReturnPacketType).
 //
 
-export type DataStoreType = (variable: string) => {
-    getValue: () => any,
-    setValue: (value: any) => any
-};
+export interface ReturnPacketType {
+    success: boolean,
+    messageType: string,
+    message?: any
+}
+
+export interface JoinRoomReturnPacketType extends ReturnPacketType {
+    hostId?: string
+}
+
+export interface CreateRoomReturnPacketType extends ReturnPacketType {
+    roomId?: string
+}
+
+export interface GetRuleReturnPacketType extends ReturnPacketType {
+    rule?: string
+}
+
+export interface CallbackType<T> {
+    (res: T): any
+}
