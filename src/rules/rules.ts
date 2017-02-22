@@ -7,6 +7,7 @@ import { RockScissorsPaperRule } from './rockscissorspaper/rockscissorspaper';
 import { TheOddOneRule } from './theoddone/theoddone';
 import { CoupRule } from './coup/coup';
 import { NewDebuggerRule } from './debugger/debugger';
+import { AvalonRule } from './avalon/avalon';
 
 const CoupDebugger = NewDebuggerRule(
     'coup',
@@ -38,6 +39,11 @@ export const MPRULES = {
         description: 'Coup - Resistance',
         rules: ['lobby', 'gameshell', 'coup'],
         rule: CoupRule
+    },
+    'avalon': {
+        description: 'The Resistance - Avalon',
+        rules: ['lobby', 'gameshell', 'avalon'],
+        rule: AvalonRule
     },
     'coup-debug': {
         description: 'Coup - Resistance (Debug)',
