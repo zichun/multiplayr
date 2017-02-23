@@ -12,6 +12,11 @@ import {
     ViewPropsInterface
 } from '../../common/interfaces';
 
+import {
+    AvalonGameState,
+    AvalonCharacter
+} from './AvalonTypes';
+
 export const AvalonRule: GameRuleInterface = {
     name: 'avalon',
     css: [],
@@ -21,12 +26,13 @@ export const AvalonRule: GameRuleInterface = {
     },
 
     globalData: {
-        state: 0,
-        missions: [],
-        currentMission: 0,
+        state: null,
+        quests: [],
+        currentQuest: 0,
     },
 
     playerData: {
+        character: null
     },
 
     onDataChange: (mp: MPType) => {
