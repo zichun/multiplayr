@@ -5,11 +5,28 @@
 declare var io;
 declare var _mplib;
 
+
 _mplib.MultiplayR.SetGamerulesPath('/gamerules/');
 
 $(() => {
+
+    const clientsCount = 10;
+
+    const setupClients = () => {
+        for (let i = 0; i < clientsCount; i = i + 1) {
+            let $client = $('<div id="client' + i + '" class="client"> ' +
+                            'Client ' + i + ':' +
+                            '<div id="client' + i + '-container" class="client-container">' +
+                            '</div>');
+
+            $("#clients").append($client);
+        }
+    };
+
+    setupClients();
+
     const setupJoin = (roomId) => {
-        [0, 1, 2, 3].forEach((i) => {
+        for (let i = 0; i < clientsCount; i = i + 1) {
             const name = 'client' + i + '-container';
             const container = document.getElementById(name);
 
@@ -25,7 +42,7 @@ $(() => {
             });
 
             $(container).append($button);
-        });
+        }
     };
 
     const transport = new _mplib.LocalClientTransport(

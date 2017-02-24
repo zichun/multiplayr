@@ -5,6 +5,7 @@
  *
  */
 
+import '../css/local.scss';
 import MultiplayR from '../lib/multiplayr';
 import LocalClientTransport from '../lib/local.transport';
 import * as messages from '../../common/messages';
