@@ -13,13 +13,21 @@ import {
 } from '../../common/interfaces';
 
 import {
-    AvalonGameState,
-    AvalonCharacter
-} from './AvalonTypes';
+    AvalonStartGame,
+    AvalonNewGame
+} from './AvalonMethods';
+
+import {
+    AvalonHostLobby,
+    AvalonHostMainPage,
+    AvalonClientChooseQuestMembers,
+    AvalonClientWaitChooseQuestMembers
+} from './AvalonViews';
 
 export const AvalonRule: GameRuleInterface = {
     name: 'avalon',
     css: [],
+
     plugins: {
         'lobby': Lobby,
         'gameshell': Shell
@@ -36,11 +44,36 @@ export const AvalonRule: GameRuleInterface = {
     },
 
     onDataChange: (mp: MPType) => {
+        const started = mp.getData('lobby_started');
+
+        const showLobby = () => {
+            mp.setView(mp.clientId, 'host-lobby');
+
+            mp.playersForEach((clientId) => {
+                mp.setView(clientId, 'lobby_SetName');
+            });
+
+            return true;
+        }
+
+        if (!started) {
+            return showLobby();
+        }
+
         return true;
     },
 
-    methods: {},
-    views: {}
+    methods: {
+        'startGame': AvalonStartGame,
+        'newGame': AvalonNewGame
+    },
+
+    views: {
+        'host-lobby': AvalonHostLobby,
+        'host-mainpage': AvalonHostMainPage,
+        'client-choosequestmembers': AvalonClientChooseQuestMembers,
+        'client-waitchoosequestmembers': AvalonClientWaitChooseQuestMembers
+    }
 };
 
 export default AvalonRule;
