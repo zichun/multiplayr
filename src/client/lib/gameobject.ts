@@ -8,7 +8,7 @@
 
 const NAMESPACE_DELIMITER = '_';
 
-import Transport from './socket.transport';
+import { ClientTransportInterface } from '../../common/interfaces';
 import DataExchange from './dxc';
 import Session from './session';
 import MPRULES from '../../rules/rules';
@@ -37,8 +37,7 @@ import {
     GameRuleInterface
 } from '../../common/interfaces';
 
-
-class GameObject {
+export class GameObject {
 
     protected clientId: string;
     protected roomId: string;
@@ -77,7 +76,7 @@ class GameObject {
     protected MP: any;
 
     constructor(
-        transport: Transport, // Transport object
+        transport: ClientTransportInterface, // Transport object
         container?: any, // (optional) DOM object to render views in. default to document.body
         namespace?: string, // (optional) namespace string for all variables and methods
         parent?: GameObject // (optional) parent MPGameObject
@@ -270,6 +269,10 @@ class GameObject {
         if (!this.isHost && !this.parent) {
             this.dxc.clientReady();
         }
+    }
+
+    public getMPObject() {
+        return this.MP;
     }
 
     private hasLocalData(

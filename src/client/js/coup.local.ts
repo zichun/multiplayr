@@ -5,7 +5,6 @@
 declare var io;
 declare var _mplib;
 
-
 _mplib.MultiplayR.SetGamerulesPath('/gamerules/');
 
 $(() => {
