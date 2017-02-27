@@ -41,15 +41,36 @@ export const CoupEndChallengePhase = (
     const actions = mp.getData('actions');
     const lastAction: CoupActionInterface = actions[actions.length - 1];
     const { action, challenge, block, targetId, challengeLoser } = lastAction;
+    const coins = mp.getPlayerData(lastAction.clientId, 'coins');
 
     if (block) {
         if (!challenge) {
-            // Block is not contested
+            // Block is not contested.
+
+            if (action === CoupAction.Assassin) {
+                // Player must still pay for the attempt.
+                mp.setPlayerData(lastAction.clientId, 'coins', coins - 3);
+                lastAction.outcomes.push({
+                    clientId: lastAction.clientId,
+                    coins: -3
+                });
+            }
+
             nextTurn(mp);
             return;
         }
+
         if (challengeLoser !== block) {
             // Block is successful. Move on to next player.
+
+            if (action === CoupAction.Assassin) {
+                // Player must still pay for the attempt.
+                mp.setPlayerData(lastAction.clientId, 'coins', coins - 3);
+                lastAction.outcomes.push({
+                    clientId: lastAction.clientId,
+                    coins: -3
+                });
+            }
             nextTurn(mp);
             return;
         }
@@ -62,7 +83,6 @@ export const CoupEndChallengePhase = (
     }
 
     lastAction.complete = true;
-    const coins = mp.getPlayerData(lastAction.clientId, 'coins');
 
     switch (action) {
     case CoupAction.Duke:
@@ -79,12 +99,17 @@ export const CoupEndChallengePhase = (
 
     case CoupAction.Assassin:
         mp.setPlayerData(lastAction.clientId, 'coins', coins - 3);
+        lastAction.outcomes.push({
+            clientId: lastAction.clientId,
+            coins: -3
+        });
 
         lastAction.challengeLoser = targetId;
         lastAction.outcomes.push({
             clientId: targetId,
             cards: -1
         });
+
         if (challengeFailCauseDead(mp, targetId, CoupCardState.Assassinated)) {
             lastAction.challengeCauseDead = true;
             nextTurn(mp);

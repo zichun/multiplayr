@@ -120,7 +120,11 @@ export const CoupRevealCard = (
 
         if (challengeFailCauseDead(mp, lastAction.challengeLoser)) {
             lastAction.challengeCauseDead = true;
-            nextTurn(mp);
+            if (action === CoupAction.Ambassador) {
+                mp.setData('gameState', CoupGameState.AmbassadorCardChange);
+            } else {
+                nextTurn(mp);
+            }
 
             lastAction.outcomes.push({
                 clientId: lastAction.challengeLoser,

@@ -77,7 +77,7 @@ export class GameObject {
 
     constructor(
         transport: ClientTransportInterface, // Transport object
-        container?: any, // (optional) DOM object to render views in. default to document.body
+        container?: any, // (optional) DOM object to render views in.
         namespace?: string, // (optional) namespace string for all variables and methods
         parent?: GameObject // (optional) parent MPGameObject
     ) {
@@ -93,7 +93,7 @@ export class GameObject {
             this.dxc.setGameObject(this);
             this.isHost = false;
             this.clientId = transport.getClientId();
-            if (!this.parent) {
+            if (!this.parent && container) {
                 sessionStorage.setItem('clientId', this.clientId);
             }
         } else {
@@ -104,7 +104,7 @@ export class GameObject {
             this.clientId = parent.clientId;
         }
 
-        this.container = container || document.body;
+        this.container = container;
         this.namespace = namespace;
 
         this.hasDelta = true;
@@ -135,7 +135,7 @@ export class GameObject {
                     return forwardReturnMessage(res, cb);
                 }
 
-                if (!this.parent) {
+                if (!this.parent && this.container) {
                     sessionStorage.setItem('ruleName', ruleName);
                     sessionStorage.setItem('roomId', roomId);
                     sessionStorage.setItem('clientId', clientId);
@@ -168,7 +168,7 @@ export class GameObject {
                 return;
             }
 
-            if (!this.parent) {
+            if (!this.parent && this.container) {
                 sessionStorage.setItem('ruleName', ruleName);
                 sessionStorage.setItem('roomId', res.message);
             }
@@ -269,6 +269,10 @@ export class GameObject {
         if (!this.isHost && !this.parent) {
             this.dxc.clientReady();
         }
+    }
+
+    public getClientId() {
+        return this.clientId;
     }
 
     public getMPObject() {
@@ -492,7 +496,7 @@ export class GameObject {
                 this.hasDelta = false;
                 const render = this.onDataChange(this.MP, this.rule);
 
-                if (!this.parent) {
+                if (!this.parent && this.container) {
                     const gameState = this.getState();
                     sessionStorage.setItem('gameState', gameState);
                 }
