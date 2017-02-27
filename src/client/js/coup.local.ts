@@ -9,6 +9,11 @@ _mplib.MultiplayR.SetGamerulesPath('/gamerules/');
 
 $(() => {
 
+    $("#res-select").on('change', (evt) => {
+        const style = $(evt.target).val();
+        $("#clients").attr('class', style);
+    });
+
     const clientsCount = 10;
 
     const setupClients = () => {

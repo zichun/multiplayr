@@ -1,7 +1,70 @@
 .client-container {
     border: 1px solid black;
-    height: 559px;
-    width: 375px;
+    overflow: auto;
+}
+
+.iphone6_P {
+    .client-container {
+        border: 1px solid black;
+        height: 559px;
+        width: 375px;
+    }
+}
+.iphone6_L {
+    .client-container {
+        border: 1px solid black;
+        width: 559px;
+        height: 375px;
+    }
+}
+.iphone6p_P {
+    .client-container {
+        border: 1px solid black;
+        width: 414px;
+        height: 625px;
+    }
+}
+.iphone6p_L {
+    .client-container {
+        border: 1px solid black;
+        width: 625px;
+        height: 414px;
+    }
+}
+.iphone5_P {
+    .client-container {
+        border: 1px solid black;
+        width: 320px;
+        height: 460px;
+    }
+}
+.iphone5_L {
+    .client-container {
+        border: 1px solid black;
+        width: 460px;
+        height: 320px;
+    }
+}
+.iphone4_P {
+    .client-container {
+        border: 1px solid black;
+        width: 320px;
+        height: 372px;
+    }
+}
+.iphone4_L {
+    .client-container {
+        border: 1px solid black;
+        width: 372px;
+        height: 320px;
+    }
+}
+
+
+#top-bar {
+    border-bottom: 1px solid #888;
+    margin: 4px;
+    padding: 4px;
 }
 
 .client {
