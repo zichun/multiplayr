@@ -4489,6 +4489,13 @@ rc@^1.0.1, rc@^1.1.6, rc@~1.1.6:
     minimist "^1.2.0"
     strip-json-comments "~1.0.4"
 
+react-addons-css-transition-group@^15.4.2:
+  version "15.4.2"
+  resolved "https://registry.yarnpkg.com/react-addons-css-transition-group/-/react-addons-css-transition-group-15.4.2.tgz#b7828834dfa14229fe07750e331e8a8cb6fb7745"
+  dependencies:
+    fbjs "^0.8.4"
+    object-assign "^4.1.0"
+
 react-dom@^15.4.2:
   version "15.4.2"
   resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-15.4.2.tgz#015363f05b0a1fd52ae9efdd3a0060d90695208f"
@@ -4501,7 +4508,14 @@ react-fontawesome@^1.5.0:
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/react-fontawesome/-/react-fontawesome-1.5.0.tgz#879d1b2aa5c48bba551e9237f84993217b5645c4"
 
-react@^15.4.2:
+react-sound@^0.5.2:
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/react-sound/-/react-sound-0.5.2.tgz#8514a44b1500feefca85ef87670dc65e26ea0720"
+  dependencies:
+    react ">=0.13.3 <16.0.0"
+    soundmanager2 "^2.97.20150601-a"
+
+"react@>=0.13.3 <16.0.0", react@^15.4.2:
   version "15.4.2"
   resolved "https://registry.yarnpkg.com/react/-/react-15.4.2.tgz#41f7991b26185392ba9bae96c8889e7e018397ef"
   dependencies:
@@ -4988,6 +5002,10 @@ socket.io@=1.4.4:
     socket.io-adapter "0.4.0"
     socket.io-client "1.4.4"
     socket.io-parser "2.2.6"
+
+soundmanager2@^2.97.20150601-a:
+  version "2.97.20150601"
+  resolved "https://registry.yarnpkg.com/soundmanager2/-/soundmanager2-2.97.20150601.tgz#673edacb9b52bbcfa57712c370b011f6983c6f36"
 
 source-list-map@~0.1.7:
   version "0.1.8"

@@ -2,7 +2,7 @@
  * Multiplayr.ts
  */
 
-import SocketTransport from './socket.transport';
+import { ClientTransportInterface } from '../../common/interfaces';
 import Session from './session';
 import GameObject from './gameobject';
 
@@ -145,7 +145,7 @@ export class MultiplayR {
         roomId: string,
         clientId: string,
         gameState: string,
-        transport: SocketTransport,
+        transport: ClientTransportInterface,
         container: any,
         cb?: CallbackType<ReturnPacketType>
     ) {
@@ -164,7 +164,7 @@ export class MultiplayR {
 
     public static Host(
         ruleName: string,
-        transport: SocketTransport,
+        transport: ClientTransportInterface,
         container: any,
         cb?: CallbackType<ReturnPacketType>
     ) {
@@ -178,7 +178,7 @@ export class MultiplayR {
     public static ReJoin(
         roomId: string,
         clientId: string,
-        transport: SocketTransport,
+        transport: ClientTransportInterface,
         container: any,
         cb?: CallbackType<ReturnPacketType>
     ) {
@@ -202,7 +202,7 @@ export class MultiplayR {
 
     public static Join(
         roomId: string,
-        transport: SocketTransport,
+        transport: ClientTransportInterface,
         container: any,
         cb?: CallbackType<ReturnPacketType>
     ) {

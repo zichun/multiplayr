@@ -3,3 +3,4 @@
  **/
 
 import './utils';
+import './coup/couptest';
