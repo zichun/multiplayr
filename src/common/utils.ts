@@ -128,6 +128,18 @@ export function forEach(
     }
 }
 
+export function contains(
+    arr: any[],
+    needle: any
+) {
+    for (let i = 0; i < arr.length; i = i + 1) {
+        if (arr[i] === needle) {
+            return true;
+        }
+    }
+    return false;
+}
+
 export function shuffle(
     a: any[]
 ) {

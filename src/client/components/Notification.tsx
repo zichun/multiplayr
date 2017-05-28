@@ -10,9 +10,10 @@ import * as ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 import * as React from 'react';
 
 export class Notification extends React.Component<{
+    hideAfter?: number,
     clickToHide?: boolean
 }, {
-    hidden: boolean
+    hidden: boolean,
 }> {
     private _clickToHide: boolean;
 
@@ -27,6 +28,11 @@ export class Notification extends React.Component<{
             this._clickToHide = true;
         } else {
             this._clickToHide = this.props.clickToHide;
+        }
+
+        if (this.props.hideAfter !== undefined) {
+            setTimeout(this._onClick.bind(this),
+                       this.props.hideAfter);
         }
     }
 

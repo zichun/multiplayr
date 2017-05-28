@@ -3,5 +3,5 @@
  */
 
 export * from './views/AvalonHostLobby';
-export * from './views/AvalonChooseQuestMembers';
+export * from './views/AvalonClientViews';
 export * from './views/AvalonHostMainPage';

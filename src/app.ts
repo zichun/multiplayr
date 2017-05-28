@@ -82,6 +82,10 @@ app.get('/coup', (req, res) => {
     res.sendFile(rootDir + '/client/static/coup.html');
 });
 
+app.get('/avalon', (req, res) => {
+    res.sendFile(rootDir + '/client/static/avalon.html');
+});
+
 // app.get('/rockscissorspaper', (req, res) => {
 //     res.sendFile(rootDir + '/tests/v2.html');
 // });

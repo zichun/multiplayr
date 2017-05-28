@@ -10,6 +10,7 @@ export class ChoiceList extends React.Component<{
     onSelect: (choice: string, choiceIndex: number) => boolean,
     onUnselect?: (choice: string, choiceIndex: number) => boolean,
     selectedKey?: string,
+    maximum?: number,
     selectedKeys?: string[],
     multi?: boolean,
     className?: string,
@@ -34,17 +35,25 @@ export class ChoiceList extends React.Component<{
     }
 
     private _selectItem(key: string, index: number) {
+
+        if (this.props.multi && this.props.maximum !== undefined && this.state.selectedKeys.length >= this.props.maximum) {
+            return;
+        }
+
         if (this.props.onSelect) {
             this.props.onSelect(key, index);
         }
+
         if (this.props.multi) {
             for (let i = 0; i < this.state.selectedKeys.length; i = i + 1) {
                 if (this.state.selectedKeys[i] === key) {
                     return;
                 }
             }
+
             this.state.selectedKeys.push(key);
         } else {
+
             this.state.selectedKeys = [key];
         }
     }

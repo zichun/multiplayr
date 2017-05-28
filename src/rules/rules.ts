@@ -17,6 +17,14 @@ const CoupDebugger = NewDebuggerRule(
         HistoryInSessionStorage: true
     });
 
+const AvalonDebugger = NewDebuggerRule(
+    'avalon',
+    AvalonRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
 export const MPRULES = {
     // 'bigger': {
     //     description: 'A luck-based game on who rolls the bigger value!',
@@ -50,6 +58,12 @@ export const MPRULES = {
         debug: true,
         rules: ['lobby', 'gameshell', 'coup', 'debugger'],
         rule: CoupDebugger
+    },
+    'avalon-debug': {
+        description: 'Avalon (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'avalon', 'debugger'],
+        rule: AvalonDebugger
     }
 };
 

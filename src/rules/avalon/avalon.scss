@@ -1,0 +1,57 @@
+.avalon-quests {
+    .quest {
+        margin: 5px 0 5px 0;
+        padding: 5px;
+        border: 1px solid #bbb;
+        background: #f8f8f8;
+
+        .outcome {
+            font-weight: bold;
+        }
+    }
+
+    .quest.passed {
+        border-right: 8px solid #8f8;
+    }
+    .quest.failed {
+        border-right: 8px solid #f88;
+    }
+    .quest.rejected {
+        border-right: 8px solid #bbb;
+    }
+
+}
+
+.avalon-hostmainpage {
+    .status {
+        font-size: 1.5em;
+        margin: 8px 0 8px 0;
+    }
+
+    .grid {
+        display: inline-block;
+        margin: 3px;
+        width: 64px;
+        height: 64px;
+        text-align: center;
+        line-height: 64px;
+        font-size: 1.3em;
+        border: 1px solid #888;
+        color: #888;
+    }
+
+    .grid.succeeded {
+        border-color: #2ECC40;
+        background-color: #8f9;
+        color: black;
+    }
+    .grid.failed {
+        border-color: #FF4136;
+        background-color: #f98;
+        color: black;
+    }
+    .grid.current {
+        border-color: black;
+        color: black;
+    }
+}

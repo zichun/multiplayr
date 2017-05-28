@@ -168,6 +168,7 @@ export const Lobby: GameRuleInterface = {
         'player-tag': class extends React.Component<ViewPropsInterface & {
             clientId: string,
             clientIds: string[],
+            clientIndex: number,
             names: string[],
             accents: string[],
             icons: number[],
@@ -176,16 +177,21 @@ export const Lobby: GameRuleInterface = {
             className?: string
         }, {}> {
             public render() {
-                let i = 0;
+                let i = undefined;
                 const invertColors = this.props.invertColors;
 
-                for (i = 0; i < this.props.clientIds.length; i = i + 1) {
-                    if (this.props.clientId === this.props.clientIds[i]) {
-                        break;
+                if (this.props.clientIndex !== undefined) {
+                    i = this.props.clientIndex;
+                } else if (this.props.clientId !== undefined) {
+
+                    for (i = 0; i < this.props.clientIds.length; i = i + 1) {
+                        if (this.props.clientId === this.props.clientIds[i]) {
+                            break;
+                        }
                     }
                 }
 
-                if (i === this.props.clientIds.length) {
+                if (i === this.props.clientIds.length || i === undefined) {
                     return (<div />);
                 }
 
