@@ -6,7 +6,7 @@
  *
  */
 
-import Room from './Room.js';
+import Room from './room';
 import Session from './session';
 
 import * as constants from '../common/constants';
