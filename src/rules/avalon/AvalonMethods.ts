@@ -94,14 +94,12 @@ export const AvalonCommitTeam = (
         throw (new Error('Cannot commit team from state: ' + state));
     }
 
-    if (members.length != AvalonQuestMembers[mp.playersCount()][currentQuest]) {
+    if (members.length !== AvalonQuestMembers[mp.playersCount()][currentQuest]) {
         throw (new Error('Insufficient quest members'));
     }
 
-    for (let i = 0; i < members.length; i = i + 1)
-    {
-        if (members[i] < 0 || members[i] >= mp.playersCount() || members[i] === undefined)
-        {
+    for (let i = 0; i < members.length; i = i + 1) {
+        if (members[i] < 0 || members[i] >= mp.playersCount() || members[i] === undefined) {
             throw (new Error('Invalid quest member: ' + members[i]));
         }
     }
