@@ -203,25 +203,21 @@ export class AvalonSettings extends React.Component<AvalonViewPropsInterface, {
     }
 
     public render() {
-        if (this.state.startingNewGame) {
-
-            const marginLeft = {
-                marginLeft: '10px'
-            };
-
-            return (
-                <div>
-                    <button onClick={ this._startNewGame }>Confirm starting new game</button>
-                    <button 
-                        onClick={ this._unsetStartingNewGameFlag }
-                        style={ marginLeft }
-                    >
-                        Cancel
-                    </button>
-                </div>
-            )
-        } else {
-            return <button onClick={ this._setStartingNewGameFlag }>Start New Game</button>
-        }
+        const avalonSettingsBody = this.state.startingNewGame ? (
+            <div>
+                <button onClick={ this._startNewGame }>Confirm starting new game</button>
+                <button 
+                    onClick={ this._unsetStartingNewGameFlag }
+                    className='avalon-cancel-new-game'
+                >
+                    Cancel
+                </button>
+            </div>
+        ) : (
+            <button onClick={ this._setStartingNewGameFlag }>Start New Game</button>
+        );
+        return (<div className='avalon-settings'>
+            { avalonSettingsBody }
+        </div>);
     }
 }
