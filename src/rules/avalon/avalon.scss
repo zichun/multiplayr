@@ -56,8 +56,19 @@
     }
 }
 
+.avalon-profile {
+    .player-card {
+        margin: 0 6px 0 2px;
+    }
+}
+
 .avalon-settings {
     .avalon-cancel-new-game {
         margin-left: 10px;
+    }
+    .avalon-select-characters {
+        ul {
+            list-style-type: none;
+        }
     }
 }

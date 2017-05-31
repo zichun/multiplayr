@@ -61,7 +61,13 @@ export const AvalonRule: GameRuleInterface = {
         'currentQuest': 0,
         'currentLeader': 0,
         'currentTeam': [],
-        'gameOutcome': null
+        'gameOutcome': null,
+        'charactersInPlay': {
+            'merlin': true,
+            'mondred': true,
+            'percival': true,
+            'morgana': true
+        }
     },
 
     playerData: {
@@ -98,6 +104,16 @@ export const AvalonRule: GameRuleInterface = {
         mp.setViewProps(mp.hostId, 'requiredMembers', requiredMembers);
         mp.setViewProps(mp.hostId, 'currentTeam', currentTeam);
         mp.setViewProps(mp.hostId, 'quests', quests);
+        mp.setViewProps(mp.hostId, 'charactersInPlay', mp.getData('charactersInPlay'));
+
+        let charactersInPlay = {};
+
+        const objValues = Object.keys(AvalonCharacter).map(k => AvalonCharacter[k]);
+        const characters = objValues.filter(v => typeof v === "string") as string[];
+
+        for (const character in characters) {
+            charactersInPlay[character] = 0;
+        }
 
         mp.playersForEach((clientId, index) => {
             mp.setViewProps(clientId, 'leader', currentLeader);
@@ -106,18 +122,50 @@ export const AvalonRule: GameRuleInterface = {
             mp.setViewProps(clientId, 'quests', quests);
 
             const character = mp.getPlayerData(clientId, 'character');
+            charactersInPlay[character] = charactersInPlay[character] + 1;
             mp.setViewProps(clientId, 'character', character);
 
-            if (character === AvalonCharacter.Merlin || character === AvalonCharacter.Minion) {
+            mp.setViewProps(clientId, 'minions', null);
+            mp.setViewProps(clientId, 'merlins', null);
+            if (character === AvalonCharacter.Merlin) {
                 let minions = [];
                 mp.playersForEach((clientId, index) => {
-                    if (mp.getPlayerData(clientId, 'character') === AvalonCharacter.Minion) {
+                    if (mp.getPlayerData(clientId, 'character') === AvalonCharacter.Minion || mp.getPlayerData(clientId, 'character') === AvalonCharacter.Morgana) {
                         minions.push(index);
                     }
                 });
 
                 mp.setViewProps(clientId, 'minions', minions);
+            } else if (character === AvalonCharacter.Minion ||
+                       character === AvalonCharacter.Mondred ||
+                       character === AvalonCharacter.Morgana) {
+
+                let minions = [];
+                mp.playersForEach((clientId, index) => {
+                    if (mp.getPlayerData(clientId, 'character') === AvalonCharacter.Minion ||
+                        mp.getPlayerData(clientId, 'character') === AvalonCharacter.Mondred ||
+                        mp.getPlayerData(clientId, 'character') === AvalonCharacter.Morgana) {
+
+                        minions.push(index);
+                    }
+                });
+
+                mp.setViewProps(clientId, 'minions', minions);
+            } else if (character === AvalonCharacter.Percival) {
+                let merlins = [];
+
+                mp.playersForEach((clientId, index) => {
+                    if (mp.getPlayerData(clientId, 'character') === AvalonCharacter.Merlin || mp.getPlayerData(clientId, 'character') === AvalonCharacter.Morgana) {
+                        merlins.push(index);
+                    }
+                });
+
+                mp.setViewProps(clientId, 'merlins', merlins);
             }
+        });
+
+        mp.playersForEach((clientId, index) => {
+            mp.setViewProps(clientId, 'cardsInPlay', charactersInPlay);
         });
 
         switch(mp.getData('state'))

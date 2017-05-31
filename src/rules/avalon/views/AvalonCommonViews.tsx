@@ -20,13 +20,20 @@ import {
     AvalonQuestStatus
 } from '../AvalonTypes';
 
+import {
+    CharacterName
+} from '../AvalonUtils';
+
 export function AvalonPlayerProfile(props: AvalonViewPropsInterface) {
     const mp = props.MP;
     let character = '';
-    let extra = null;
+    let minionObj = null;
+    let merlinObj = null;
 
-    let minions = [];
     if (props.minions) {
+
+        let minions = [];
+
         for (let i = 0; i < props.minions.length; i = i + 1) {
 
             const playerCard = mp.getPluginView(
@@ -38,33 +45,81 @@ export function AvalonPlayerProfile(props: AvalonViewPropsInterface) {
                 });
 
             minions.push(
-                (<span key={ 'minion-' + i }>
+                (<span className="player-card" key={ 'minion-' + i }>
                      { playerCard }
                  </span>));
         }
 
-        extra = (
-            <div>Minions are: { minions }</div>
+        let minionText = '';
+        if (minions.length > 1) {
+            minionText = 'Minions are';
+        } else {
+            minionText = 'Minion is';
+        }
+
+        minionObj = (
+            <div>{ minionText }: { minions }</div>
         );
     }
 
-    switch(props.character) {
-        case AvalonCharacter.Merlin:
-            character = 'Merlin';
-            break;
-        case AvalonCharacter.LoyalServant:
-            character = 'Loyal Servant of Arthur';
-            minions = null;
-            break;
-        case AvalonCharacter.Minion:
-            character = 'Minion of Mordred';
-            break;
+    if (props.merlins) {
+
+        let merlins = [];
+
+        for (let i = 0; i < props.merlins.length; i = i + 1) {
+
+            const playerCard = mp.getPluginView(
+                'lobby',
+                'player-tag',
+                {
+                    clientIndex: props.merlins[i],
+                    invertColors: true
+                });
+
+            merlins.push(
+                (<span className="player-card" key={ 'merlin-' + i }>
+                { playerCard }
+                </span>));
+        }
+
+        let merlinText = '';
+        if (merlins.length > 1) {
+            merlinText = 'Merlins are';
+        } else {
+            merlinText = 'Merlin is';
+        }
+
+        merlinObj = (
+            <div>{ merlinText }: { merlins }</div>
+        );
+    }
+
+    character = CharacterName(props.character);
+
+    let cardsInPlay = [];
+    for (const character in props.cardsInPlay) {
+
+        if (props.cardsInPlay[character] === 0) {
+            continue;
+        }
+
+        const achar = AvalonCharacter[AvalonCharacter[character]];
+
+        cardsInPlay.push(
+            <li key={ character }>{ CharacterName(achar) }: { props.cardsInPlay[character] }</li>
+        );
     }
 
     return (
         <div className="avalon-profile">
             Your role is: <strong className="character">{ character }</strong>
-            { extra }
+            { minionObj }
+            { merlinObj }
+            <hr />
+            Cards in play:
+            <ul>
+                { cardsInPlay }
+            </ul>
         </div>
     );
 }
@@ -178,7 +233,11 @@ export function AvalonQuests(props: AvalonViewPropsInterface) {
 }
 
 export class AvalonSettings extends React.Component<AvalonViewPropsInterface, {
-    startingNewGame: boolean
+    startingNewGame: boolean,
+    merlin: boolean,
+    percival: boolean,
+    mondred: boolean,
+    morgana: boolean
 }> {
 
     constructor(props: AvalonViewPropsInterface) {
@@ -186,27 +245,83 @@ export class AvalonSettings extends React.Component<AvalonViewPropsInterface, {
         this._setStartingNewGameFlag = this._setStartingNewGameFlag.bind(this);
         this._unsetStartingNewGameFlag = this._unsetStartingNewGameFlag.bind(this);
         this._startNewGame = this._startNewGame.bind(this);
-        this.state = { startingNewGame: false };
+        this._setCharInPlay = this._setCharInPlay.bind(this);
+        this.state = {
+            startingNewGame: false,
+            merlin: this.props.charactersInPlay.merlin,
+            percival: this.props.charactersInPlay.percival,
+            mondred: this.props.charactersInPlay.mondred,
+            morgana: this.props.charactersInPlay.morgana
+        };
     }
 
     private _setStartingNewGameFlag() {
-        this.setState({ startingNewGame: true });
+        this.setState({
+            startingNewGame: true,
+            merlin: this.state.merlin,
+            percival: this.state.merlin && this.state.percival,
+            mondred: this.state.merlin && this.state.mondred,
+            morgana: this.state.merlin && this.state.percival && this.state.morgana
+        });
     }
 
     private _unsetStartingNewGameFlag() {
-        this.setState({ startingNewGame: false });
+        this.setState({
+            startingNewGame: false,
+            merlin: this.state.merlin,
+            percival: this.state.percival,
+            mondred: this.state.mondred,
+            morgana: this.state.morgana
+        });
+    }
+
+    private _setCharInPlay(character: string) {
+        return () => {
+            const prevState = this.state;
+            prevState[character] = !prevState[character];
+            this.setState(prevState);
+        };
     }
 
     private _startNewGame() {
         this._unsetStartingNewGameFlag();
-        this.props.MP.newGame();
+        this.props.MP.newGame({
+            merlin: this.state.merlin,
+            percival: this.state.percival,
+            mondred: this.state.mondred,
+            morgana: this.state.morgana
+        });
     }
 
     public render() {
+        const charactersSelect = (
+            <div className="avalon-select-characters">
+                Select characters in play:
+                <ul>
+                    <li>
+                        <input type="checkbox" checked={ this.state.merlin } onClick={ this._setCharInPlay('merlin') } />
+                        Merlin
+                    </li>
+                    <li>
+                        <input type="checkbox" checked={ this.state.merlin && this.state.mondred } onClick={ this._setCharInPlay('mondred') } disabled={ !this.state.merlin } />
+                        Mondred
+                    </li>
+                    <li>
+                        <input type="checkbox" checked={ this.state.merlin && this.state.percival } onClick={ this._setCharInPlay('percival') } disabled={ !this.state.merlin } />
+                        Percival
+                    </li>
+                    <li>
+                        <input type="checkbox" checked={ this.state.percival && this.state.merlin && this.state.morgana } onClick={ this._setCharInPlay('morgana') } disabled={ !this.state.merlin || !this.state.percival } />
+                        Morgana
+                    </li>
+                </ul>
+            </div>
+        );
+
         const avalonSettingsBody = this.state.startingNewGame ? (
             <div>
                 <button onClick={ this._startNewGame }>Confirm starting new game</button>
-                <button 
+                <button
                     onClick={ this._unsetStartingNewGameFlag }
                     className='avalon-cancel-new-game'
                 >
@@ -216,8 +331,11 @@ export class AvalonSettings extends React.Component<AvalonViewPropsInterface, {
         ) : (
             <button onClick={ this._setStartingNewGameFlag }>Start New Game</button>
         );
-        return (<div className='avalon-settings'>
-            { avalonSettingsBody }
-        </div>);
+
+        return (
+            <div className='avalon-settings'>
+                { charactersSelect}
+                { avalonSettingsBody }
+            </div>);
     }
 }

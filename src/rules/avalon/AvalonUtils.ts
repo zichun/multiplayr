@@ -97,7 +97,13 @@ export const IsWin = (
 export const WinGame = (
     mp: MPType
 ) => {
-    mp.setData('state', AvalonGameState.ChooseMerlin);
+    const charactersInPlay = mp.getData('charactersInPlay');
+    if (charactersInPlay.merlin) {
+        mp.setData('state', AvalonGameState.ChooseMerlin);
+    } else {
+        mp.setData('state', AvalonGameState.GameOver);
+        mp.setData('gameOutcome', AvalonGameOutcome.ArthurWin);
+    }
 };
 
 export const LoseGame = (
@@ -113,3 +119,29 @@ export const IsMinion = (
 ) => {
     return mp.getPlayerData(clientId, 'character') === AvalonCharacter.Minion;
 };
+
+export const CharacterName = (
+    character: any
+) => {
+    switch(character) {
+
+    case AvalonCharacter.LoyalServant:
+        return 'Loyal Servant of Arthur';
+
+    case AvalonCharacter.Minion:
+        return 'Minion of Mordred';
+
+    case AvalonCharacter.Merlin:
+        return 'Merlin (Loyal Servant of Arthur)';
+
+    case AvalonCharacter.Percival:
+        return 'Percival (Loyal Servant of Arthur)';
+
+    case AvalonCharacter.Mondred:
+        return 'Mondred (The Evil Mondred)';
+
+    case AvalonCharacter.Morgana:
+        return 'Morgana (Minion of Mondred)';
+
+    }
+}

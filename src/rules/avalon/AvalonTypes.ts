@@ -21,9 +21,12 @@ export enum AvalonGameOutcome {
 }
 
 export enum AvalonCharacter {
-    Merlin,
     LoyalServant,
-    Minion
+    Minion,
+    Merlin,
+    Percival,
+    Mondred,
+    Morgana
 }
 
 export enum AvalonQuestStatus {
@@ -41,6 +44,13 @@ export interface AvalonQuest {
     questStatus: AvalonQuestStatus
 }
 
+export interface AvalonCharactersInPlay {
+    merlin: boolean,
+    percival: boolean,
+    mondred: boolean,
+    morgana: boolean
+}
+
 export interface AvalonViewPropsInterface extends ViewPropsInterface {
     lobby: any;
 
@@ -52,7 +62,10 @@ export interface AvalonViewPropsInterface extends ViewPropsInterface {
     voteType: string,
     character: AvalonCharacter,
     minions: number[],
+    merlins: number[],
     quests: AvalonQuest[],
     notification: boolean,
     chooseMerlin: boolean
+    charactersInPlay: AvalonCharactersInPlay,
+    cardsInPlay: any
 }

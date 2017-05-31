@@ -12,7 +12,8 @@ import {
     AvalonCharacter,
     AvalonQuest,
     AvalonQuestStatus,
-    AvalonGameOutcome
+    AvalonGameOutcome,
+    AvalonCharactersInPlay
 } from './AvalonTypes';
 
 import {
@@ -39,15 +40,50 @@ export const AvalonStartGame = (mp: MPType) => {
     }
 };
 
-export const AvalonNewGame = (mp: MPType) => {
-    const playerDeck = [];
-    playerDeck.push(AvalonCharacter.Merlin);
+export const AvalonNewGame = (
+    mp: MPType,
+    clientId: string,
+    charactersInPlay?: AvalonCharactersInPlay
+) => {
 
-    for (let i = 0; i < AvalonGoodEvilDistribution[mp.playersCount()][0] - 1; i = i + 1) {
+    if (clientId !== mp.hostId) {
+        throw (new Error('Only host can start a new game'));
+    }
+
+    if (charactersInPlay) {
+        mp.setData('charactersInPlay', charactersInPlay);
+    }
+
+    const playerDeck = [];
+    const charsInPlay = mp.getData('charactersInPlay');
+    let goodRequired = AvalonGoodEvilDistribution[mp.playersCount()][0];
+    let evilRequired = AvalonGoodEvilDistribution[mp.playersCount()][1];
+
+    if (charsInPlay['merlin']) {
+        playerDeck.push(AvalonCharacter.Merlin);
+        goodRequired = goodRequired - 1;
+    }
+
+    if (charsInPlay['percival']) {
+        playerDeck.push(AvalonCharacter.Percival);
+        goodRequired = goodRequired - 1;
+    }
+
+    if (charsInPlay['mondred']) {
+        playerDeck.push(AvalonCharacter.Mondred);
+        evilRequired = evilRequired - 1;
+    }
+
+    if (charsInPlay['morgana']) {
+        playerDeck.push(AvalonCharacter.Morgana);
+        evilRequired = evilRequired - 1;
+    }
+
+    for (let i = 0; i < goodRequired; i = i + 1) {
         playerDeck.push(AvalonCharacter.LoyalServant);
     }
 
-    for (let i = 0; i < AvalonGoodEvilDistribution[mp.playersCount()][1]; i = i + 1) {
+    for (let i = 0; i < evilRequired; i = i + 1) {
         playerDeck.push(AvalonCharacter.Minion);
     }
 
