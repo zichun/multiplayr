@@ -56,14 +56,25 @@ export const PushQuestData = (
 
     const quests: AvalonQuest[] = mp.getData('quests');
 
-    quests.push({
-        'quest': quest,
-        'leader': leader,
-        'teamMembers': teamMembers,
-        'teamVote': teamVote,
-        'questVote': questVote,
-        'questStatus': questStatus
-    });
+    if (!questVote) {
+
+        quests.push({
+            'quest': quest,
+            'leader': leader,
+            'teamMembers': teamMembers,
+            'teamVote': teamVote,
+            'questVote': questVote,
+            'questStatus': questStatus
+        });
+    } else {
+
+        if (quests.length === 0) {
+            throw (new Error('Impossible to have quest vote without team vote'));
+        }
+
+        quests[quests.length - 1].questVote = questVote;
+        quests[quests.length - 1].questStatus = questStatus;
+    }
 
     mp.setData('quests', quests);
 };
@@ -113,11 +124,14 @@ export const LoseGame = (
     mp.setData('gameOutcome', AvalonGameOutcome.MinionWin);
 };
 
-export const IsMinion = (
+export const IsClientMinion = (
     mp: MPType,
     clientId: string
 ) => {
-    return mp.getPlayerData(clientId, 'character') === AvalonCharacter.Minion;
+    const character = mp.getPlayerData(clientId, 'character');
+    return (character === AvalonCharacter.Minion ||
+            character === AvalonCharacter.Mondred ||
+            character === AvalonCharacter.Morgana);
 };
 
 export const CharacterName = (

@@ -30,6 +30,7 @@ export enum AvalonCharacter {
 }
 
 export enum AvalonQuestStatus {
+    TeamApproved,
     TeamRejected,
     QuestFailed,
     QuestSucceeded

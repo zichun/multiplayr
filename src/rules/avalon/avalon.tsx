@@ -37,7 +37,7 @@ import {
 
 import {
     AvalonQuestMembers,
-    IsMinion
+    IsClientMinion
 } from './AvalonUtils';
 
 import {
@@ -136,15 +136,11 @@ export const AvalonRule: GameRuleInterface = {
                 });
 
                 mp.setViewProps(clientId, 'minions', minions);
-            } else if (character === AvalonCharacter.Minion ||
-                       character === AvalonCharacter.Mondred ||
-                       character === AvalonCharacter.Morgana) {
+            } else if (IsClientMinion(mp, clientId)) {
 
                 let minions = [];
                 mp.playersForEach((clientId, index) => {
-                    if (mp.getPlayerData(clientId, 'character') === AvalonCharacter.Minion ||
-                        mp.getPlayerData(clientId, 'character') === AvalonCharacter.Mondred ||
-                        mp.getPlayerData(clientId, 'character') === AvalonCharacter.Morgana) {
+                    if (IsClientMinion(mp, clientId)) {
 
                         minions.push(index);
                     }
@@ -177,6 +173,7 @@ export const AvalonRule: GameRuleInterface = {
                 mp.setView(mp.hostId, 'host-mainpage');
                 mp.playersForEach((clientId, index) => {
                     if (index === currentLeader) {
+                        mp.setViewProps(clientId, 'chooseMerlin', false);
                         mp.setView(clientId, 'client-choosequestmembers');
                     } else {
                         mp.setViewProps(clientId, 'status', 'Waiting for quest members to be chosen');
@@ -253,7 +250,7 @@ export const AvalonRule: GameRuleInterface = {
 
                 let foundMinion = false;
                 mp.playersForEach((clientId, index) => {
-                    if (foundMinion === false && IsMinion(mp, clientId)) {
+                    if (foundMinion === false && IsClientMinion(mp, clientId)) {
                         foundMinion = true;
                         mp.setViewProps(clientId, 'chooseMerlin', true);
                         mp.setView(clientId, 'client-choosequestmembers');

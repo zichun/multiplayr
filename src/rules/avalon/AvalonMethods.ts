@@ -149,6 +149,20 @@ export const AvalonCommitTeam = (
     }
 
     if (rejectedCount >= 4) {
+        const autoApproveVote = {};
+
+        mp.playersForEach((clientId, index) => {
+            autoApproveVote[index] = true;
+        });
+
+        PushQuestData(mp,
+                      mp.getData('currentQuest'),
+                      mp.getData('currentLeader'),
+                      mp.getData('currentTeam'),
+                      autoApproveVote,
+                      null,
+                      AvalonQuestStatus.TeamApproved);
+
         mp.setData('state', AvalonGameState.VoteQuest);
     } else {
         mp.setData('state', AvalonGameState.VoteQuestMembers);
@@ -205,6 +219,13 @@ export const AvalonCommitTeamVote = (
     } else {
 
         // Team is accepted.
+        PushQuestData(mp,
+                      mp.getData('currentQuest'),
+                      mp.getData('currentLeader'),
+                      mp.getData('currentTeam'),
+                      playersVote,
+                      null,
+                      AvalonQuestStatus.TeamApproved);
         mp.setData('state', AvalonGameState.VoteQuest);
     }
 }

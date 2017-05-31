@@ -171,7 +171,10 @@ export function AvalonQuestView(
     let outcome = null;
     let questClass = 'quest ';
 
-    if (quest.questStatus === AvalonQuestStatus.TeamRejected) {
+    if (quest.questStatus === AvalonQuestStatus.TeamApproved) {
+        outcome = 'Team approved';
+        questClass += ' rejected';
+    } else if (quest.questStatus === AvalonQuestStatus.TeamRejected) {
         outcome = 'Team rejected';
         questClass += ' rejected';
     } else if (quest.questStatus === AvalonQuestStatus.QuestFailed) {
