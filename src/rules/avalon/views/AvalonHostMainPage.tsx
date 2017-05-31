@@ -14,6 +14,7 @@ import {
 } from '../AvalonUtils';
 
 import {
+    AvalonSettings,
     AvalonQuests
 } from './AvalonCommonViews';
 
@@ -144,6 +145,11 @@ export class AvalonHostMainPage extends React.Component<AvalonViewPropsInterface
                         'icon': 'history',
                         'label': 'Quest History',
                         'view': AvalonQuests(this.props)
+                    },
+                    'newgame': {
+                        'icon': 'cog',
+                        'label': 'Settings',
+                        'view': (<AvalonSettings { ...this.props } />)
                     }
                 },
                 'topBarContent': 'Quest ' + (this.props.currentQuest + 1)

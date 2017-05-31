@@ -5,7 +5,7 @@
 import * as React from 'react';
 
 import {
-    MPType,
+    MPType
 } from '../../../common/interfaces';
 
 import {
@@ -175,4 +175,49 @@ export function AvalonQuests(props: AvalonViewPropsInterface) {
             { message }
         </div>
     );
+}
+
+export class AvalonSettings extends React.Component<AvalonViewPropsInterface, {
+    startingNewGame: boolean
+}> {
+
+    constructor(props: AvalonViewPropsInterface) {
+        super(props);
+        this._setStartingNewGameFlag = this._setStartingNewGameFlag.bind(this);
+        this._unsetStartingNewGameFlag = this._unsetStartingNewGameFlag.bind(this);
+        this._startNewGame = this._startNewGame.bind(this);
+        this.state = { startingNewGame: false };
+    }
+
+    private _setStartingNewGameFlag() {
+        this.setState({ startingNewGame: true });
+    }
+
+    private _unsetStartingNewGameFlag() {
+        this.setState({ startingNewGame: false });
+    }
+
+    private _startNewGame() {
+        this._unsetStartingNewGameFlag();
+        this.props.MP.newGame();
+    }
+
+    public render() {
+        const avalonSettingsBody = this.state.startingNewGame ? (
+            <div>
+                <button onClick={ this._startNewGame }>Confirm starting new game</button>
+                <button 
+                    onClick={ this._unsetStartingNewGameFlag }
+                    className='avalon-cancel-new-game'
+                >
+                    Cancel
+                </button>
+            </div>
+        ) : (
+            <button onClick={ this._setStartingNewGameFlag }>Start New Game</button>
+        );
+        return (<div className='avalon-settings'>
+            { avalonSettingsBody }
+        </div>);
+    }
 }

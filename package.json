@@ -6,6 +6,7 @@
     "chance": "^1.0.4",
     "colorsys": "^1.0.9",
     "express": "=4.13.4",
+    "lodash": "^4.17.4",
     "node-dir": "^0.1.16",
     "office-ui-fabric-react": "^1.0.0",
     "react": "^15.4.2",
@@ -19,6 +20,7 @@
   "devDependencies": {
     "@types/chai": "*",
     "@types/jquery": "^2.0.34",
+    "@types/lodash": "^4.14.47",
     "@types/mocha": "^2.2.35",
     "@types/node": "^6.0.53",
     "@types/react": "^0.14.55",
@@ -27,6 +29,7 @@
     "del": "^2.2.2",
     "gulp": "^3.9.1",
     "node-web-build": "^0.2.1",
+    "typescript": "^2.3.3",
     "webpack": "^2.2.1"
   }
 }
