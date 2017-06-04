@@ -3,10 +3,16 @@
  */
 
 import * as React from 'react';
+import * as ReactCSSTransitionGroup from 'react-addons-css-transition-group';
+
+import {
+    contains
+} from '../../../common/utils';
 
 import {
     AvalonViewPropsInterface,
-    AvalonQuestStatus
+    AvalonQuestStatus,
+    AvalonGameState
 } from '../AvalonTypes';
 
 import {
@@ -22,66 +28,342 @@ import {
     Notification
 } from '../../../client/components/Notification';
 
+import {
+    Segment,
+    Rail,
+    List,
+    Card,
+    Grid,
+    Dimmer,
+    Loader
+} from 'semantic-ui-react'
+
+import * as FontAwesome from 'react-fontawesome';
+import * as Sound from 'react-sound';
+
+const PlayerTeamVote = (
+    props: AvalonViewPropsInterface & { playerIndex: number }
+) => {
+    const state = props.state;
+    const quests = props.quests;
+    let voteQuestMembers = props.voteQuestMembers;
+
+    if (quests.length === 0 ||
+        state === AvalonGameState.ChooseMerlin) {
+
+        return null;
+    }
+
+    if (state === AvalonGameState.VoteQuestMembers || state === AvalonGameState.GameOver) {
+        return null;
+    }
+
+    if (state === AvalonGameState.ChooseQuestMembers &&
+        quests[quests.length - 1].questStatus !== AvalonQuestStatus.TeamRejected) {
+        return null;
+    }
+
+    if (state === AvalonGameState.ChooseQuestMembers) {
+        voteQuestMembers = quests[quests.length - 1].teamVote;
+    }
+
+    const vote = voteQuestMembers[props.playerIndex];
+    const className = ['teamvote'];
+
+    className.push(vote ? 'accept' : 'reject');
+
+    return (
+        <ReactCSSTransitionGroup
+        transitionName='teamvote'
+        transitionAppear={ true }
+        transitionAppearTimeout={ 1000 }
+        transitionLeaveTimeout={ 0 }
+        transitionLeave={ false }
+        transitionEnter={ false }>
+            <div className={ className.join(' ') }>
+                { vote ? 'Accepted' : 'Rejected' }
+            </div>
+        </ReactCSSTransitionGroup>
+    );
+}
+
+const PlayerStatus = (
+    props: AvalonViewPropsInterface & { playerIndex: number }
+) => {
+    if (props.state === AvalonGameState.VoteQuestMembers) {
+        if (props.voteQuestMembers[props.playerIndex] === null) {
+            return (
+                <Dimmer active inverted>
+                    <Loader inverted>Voting Team</Loader>
+                </Dimmer>
+            );
+        }
+    } else if (props.state === AvalonGameState.VoteQuest) {
+        const quest = props.quests[props.quests.length - 1];
+        if (contains(quest.teamMembers, props.playerIndex.toString()) && props.voteQuest[props.playerIndex] === null) {
+            return (
+                <Dimmer active inverted>
+                    <Loader inverted>Voting Quest</Loader>
+                </Dimmer>
+            );
+        }
+    }
+
+    return null;
+};
+
+const PlayersList = (
+    props: AvalonViewPropsInterface
+) => {
+    const players = [];
+    const mp = props.MP;
+
+    for (let i = 0; i < props.lobby.playerCount; i = i + 1) {
+
+        const playerTag = mp.getPluginView(
+            'lobby',
+            'player-tag',
+            {
+                clientIndex: i,
+                invertColors: false,
+                border: false
+            });
+
+        let inTeam = null;
+        let className = 'ui ribbon label';
+
+        if (i === props.leader) {
+            className += ' red';
+        }
+
+        let teamIcon = null;
+        if (contains(props.currentTeam, i.toString())) {
+            teamIcon = (
+                <FontAwesome name="bolt"
+                             className="player-card-team" />);
+
+            if (i !== props.leader) {
+                className += ' blue';
+            }
+
+        } else {
+            teamIcon = (<span>&nbsp;</span>);
+        }
+
+        inTeam = (
+            <div className={ className }>
+                { teamIcon }
+            </div>
+        );
+
+        players.push(
+            <Card centered raised key={ 'Card' + i }>
+                <Card.Content>
+                    <Card.Header>
+                        { inTeam }
+                        <PlayerTeamVote {...props}
+                                  playerIndex={ i } />
+                    </Card.Header>
+                    <div className="player-tag">
+                        { playerTag }
+                    </div>
+                    <PlayerStatus {...props}
+                                  playerIndex={ i } />
+                 </Card.Content>
+            </Card>
+        );
+    }
+
+    return (
+        <Card.Group stackable className="players-list">
+            { players }
+        </Card.Group>
+    );
+};
+
+const VoteQuestResultCard = (
+    props: {
+        result: boolean,
+        flipped: boolean,
+        hidden: boolean
+    }
+) => {
+    const className = ["votequest-result-card"];
+    const cardClassName = ["back"];
+
+    if (props.flipped) {
+        className.push('flip');
+    }
+
+    if (props.hidden) {
+        className.push('hidden');
+    }
+
+    cardClassName.push(props.result ? 'pass' : 'fail');
+
+    return (
+        <div className={ className.join(' ') }>
+		    <div className="flipper">
+                <div className="front">
+                    &nbsp;
+                </div>
+                <div className={ cardClassName.join(' ') }>
+                    { props.result ? 'Pass' : 'Fail' }
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export class VoteQuestResult extends React.Component<
+    AvalonViewPropsInterface,
+      {
+          currentCardIndex: number,
+          hiddenCardIndex: number
+      }
+> {
+    constructor(props) {
+        super(props);
+        this.state = {
+            currentCardIndex: 0,
+            hiddenCardIndex: 0
+        };
+        this._nextCard = this._nextCard.bind(this);
+        this._nextState = this._nextState.bind(this);
+        this._hideCard = this._hideCard.bind(this);
+    }
+
+    private _nextCard() {
+        const quest = this.props.quests[this.props.quests.length - 1];
+
+        if (this.state.currentCardIndex <= quest.teamMembers.length) {
+            this.setState({
+                currentCardIndex: this.state.currentCardIndex + 1,
+                hiddenCardIndex: this.state.hiddenCardIndex
+            });
+
+            setTimeout(
+                this._nextCard,
+                1000);
+        } else {
+            setTimeout(
+                this._hideCard,
+                1600);
+        }
+    }
+
+    private _hideCard() {
+        const quest = this.props.quests[this.props.quests.length - 1];
+
+        if (this.state.hiddenCardIndex <= quest.teamMembers.length) {
+            this.setState({
+                currentCardIndex: this.state.currentCardIndex,
+                hiddenCardIndex: this.state.hiddenCardIndex + 1
+            });
+
+            if (this.state.hiddenCardIndex > quest.teamMembers.length) {
+                this._nextState();
+            } else {
+                setTimeout(
+                    this._hideCard,
+                    400);
+            }
+        }
+    }
+
+    private _nextState() {
+        this.props.MP.finishVoteQuestResult();
+    }
+
+    private componentDidMount() {
+        if (this.props.state !== AvalonGameState.VoteQuestResult) {
+            return;
+        }
+        setTimeout(
+            this._nextCard,
+            500);
+    }
+
+    public render() {
+        if (this.props.state !== AvalonGameState.VoteQuestResult) {
+            return null;
+        }
+
+        const votes = [];
+        const quest = this.props.quests[this.props.quests.length - 1];
+        let pass = 0;
+
+        for (let i = 0; i < this.props.lobby.playerCount; i = i + 1) {
+            if (quest.questVote[i] === true) {
+                pass = pass + 1;
+            }
+        }
+
+        for (let i = 0; i < quest.teamMembers.length; i = i + 1) {
+            let sound = null;
+            if (this.state.hiddenCardIndex === 0 && this.state.currentCardIndex - 1 === i) {
+                const result = this.state.currentCardIndex <= pass;
+                sound = (<Sound
+                             url={ 'gamerules/avalon/sounds/' + (result ? 'pass' : 'fail') + '.mp3' }
+                             playStatus={ Sound.status.PLAYING } />);
+            }
+            votes.push(
+                <Grid.Column key={ 'quest-' + quest.quest + '-vote-' + i }>
+                    <VoteQuestResultCard
+                        key={ 'quest-' + quest.quest + '-card-' + i }
+                        result={ pass > i }
+                        flipped={ this.state.currentCardIndex > i }
+                        hidden={ this.state.hiddenCardIndex > i } />
+                    { sound }
+                </Grid.Column>
+            );
+        }
+
+        return (
+            <div className="votequest-result">
+                <Grid columns={ this.props.lobby.playerCount }
+                      relaxed stackable stretched centered container>
+                    <Grid.Row stretched>
+                        { votes }
+                    </Grid.Row>
+                </Grid>
+            </div>
+        );
+    }
+}
+
 export class AvalonHostMainPage extends React.Component<AvalonViewPropsInterface, {}> {
     public render() {
         const mp = this.props.MP;
         const quests = this.props.quests;
-
-        const leader = mp.getPluginView(
-            'lobby',
-            'player-tag',
-            {
-                clientIndex: this.props.leader,
-                invertColors: false
-            });
-
-        const members = [];
-        for (let i = 0; i < this.props.currentTeam.length; i = i + 1) {
-
-            const member = mp.getPluginView(
-                'lobby',
-                'player-tag',
-                {
-                    clientIndex: this.props.currentTeam[i],
-                    invertColors: false
-                });
-
-            members.push(
-                <li key={ i }>{ member }</li>
-            );
-        }
-
-        for (let i = 0; i < this.props.requiredMembers - this.props.currentTeam.length; i = i + 1) {
-            members.push(<li key={ '?' + i }>?</li>);
-        }
 
         //
         // Quest outcome popup.
         //
 
         let questOutcome = null;
-        if (quests.length && this.props.notification === true) {
-            if (quests[quests.length - 1].questStatus === AvalonQuestStatus.TeamRejected) {
-                questOutcome = (
-                    <Notification hideAfter={ 2000 }>
-                        <h1 className="outcome rejected">Team was <strong>rejected</strong>!</h1>
-                    </Notification>
-                );
-            } else if (quests[quests.length - 1].questStatus === AvalonQuestStatus.QuestFailed) {
-                questOutcome = (
-                    <Notification hideAfter={ 2000 }>
-                        <h1 className="outcome failed">Quest <strong>failed</strong>!</h1>
-                    </Notification>
-                );
-            } else if (quests[quests.length - 1].questStatus === AvalonQuestStatus.QuestSucceeded) {
-                questOutcome = (
-                    <Notification hideAfter={ 2000 }>
-                        <h1 className="outcome succeeded">Quest <strong>succeeded</strong>!</h1>
-                    </Notification>
-                );
-            }
-        }
-
+        /* if (quests.length && this.props.notification === true) {
+         *     if (quests[quests.length - 1].questStatus === AvalonQuestStatus.TeamRejected) {
+         *         questOutcome = (
+         *             <Notification hideAfter={ 2000 }>
+         *                 <h1 className="outcome rejected">Team was <strong>rejected</strong>!</h1>
+         *             </Notification>
+         *         );
+         *     } else if (quests[quests.length - 1].questStatus === AvalonQuestStatus.QuestFailed) {
+         *         questOutcome = (
+         *             <Notification hideAfter={ 2000 }>
+         *                 <h1 className="outcome failed">Quest <strong>failed</strong>!</h1>
+         *             </Notification>
+         *         );
+         *     } else if (quests[quests.length - 1].questStatus === AvalonQuestStatus.QuestSucceeded) {
+         *         questOutcome = (
+         *             <Notification hideAfter={ 2000 }>
+         *                 <h1 className="outcome succeeded">Quest <strong>succeeded</strong>!</h1>
+         *             </Notification>
+         *         );
+         *     }
+         * }
+         */
         //
         // Quest Grid.
         //
@@ -90,6 +372,8 @@ export class AvalonHostMainPage extends React.Component<AvalonViewPropsInterface
         const required = AvalonQuestMembers[playersCount];
         const questGrid = [];
         const outcome = [];
+        const questNumber = quests.length;
+
         for (let i = 0; i < quests.length; i = i + 1) {
             if (quests[i].questStatus === AvalonQuestStatus.QuestFailed) {
                 outcome.push(false);
@@ -121,13 +405,15 @@ export class AvalonHostMainPage extends React.Component<AvalonViewPropsInterface
 
         const main = (
             <div className="avalon-hostmainpage">
-                { questGrid }
+                <div className="quest-grid">
+                    { questGrid }
+                </div>
                 { questOutcome }
-                <div className="status">{ this.props.status }</div>
-                <div className="leader">Leader is { leader }</div>
-                <ul className="">
-                    { members }
-                </ul>
+                <Rail internal position='right'>
+                    <Segment>{ this.props.status }</Segment>
+                </Rail>
+                <PlayersList { ...this.props } />
+                <VoteQuestResult key={ questNumber + '-' + this.props.state } { ...this.props} />
             </div>
         );
 

@@ -150,6 +150,10 @@ button {
     }
 }
 
+.lobby-player-tag.no-border {
+    border: 0px !important;
+}
+
 .lobby-player-tag.lobby-player-tag-medium {
     padding: 4px 16px 4px 16px;
     border-radius: 8px;

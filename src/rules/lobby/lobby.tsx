@@ -174,7 +174,8 @@ export const Lobby: GameRuleInterface = {
             icons: number[],
             size?: string,
             invertColors?: boolean,
-            className?: string
+            className?: string,
+            border?: boolean
         }, {}> {
             public render() {
                 let i = undefined;
@@ -215,6 +216,10 @@ export const Lobby: GameRuleInterface = {
 
                 if (this.props.className) {
                     className += ' ' + this.props.className;
+                }
+
+                if (this.props.border === false) {
+                    className += ' ' + 'no-border';
                 }
 
                 return (

@@ -18,6 +18,11 @@ import {
     AvalonQuests
 } from './AvalonCommonViews';
 
+import {
+    Button,
+    Grid
+} from 'semantic-ui-react';
+
 export class AvalonClientChooseQuestMembers extends React.Component<AvalonViewPropsInterface, {
     members: string[]
 }> {
@@ -157,7 +162,7 @@ export class AvalonClientChooseQuestMembers extends React.Component<AvalonViewPr
 }
 
 export class AvalonClientVote extends React.Component<AvalonViewPropsInterface, {
-    vote: string
+    vote: boolean
 }> {
 
     constructor(props: AvalonViewPropsInterface) {
@@ -168,11 +173,12 @@ export class AvalonClientVote extends React.Component<AvalonViewPropsInterface, 
         this._selectVote = this._selectVote.bind(this);
     }
 
-    private _selectVote(choice: string, index: Number) {
-        this.setState({
-            vote: choice
-        });
-        return true;
+    private _selectVote(choice: boolean) {
+        return () => {
+            this.setState({
+                vote: choice
+            });
+        };
     }
 
     private _commitVote() {
@@ -187,26 +193,22 @@ export class AvalonClientVote extends React.Component<AvalonViewPropsInterface, 
         const mp = this.props.MP;
 
         const choices = (
-            <ChoiceList onSelect={ this._selectVote }
-                        selectedKey={ this.state.vote }
-                        className='coup-action-choicelist'
-                        itemClassName='coup-action-choicelist-item'>
-                <Choice key="Pass">
-                    { this.props.voteType === 'team' ? 'Accept Team' : 'Pass Quest' }
-                </Choice>
-                <Choice key="Fail">
-                    { this.props.voteType === 'team' ? 'Reject Team' : 'Fail Quest' }
-                </Choice>
-            </ChoiceList>
+            <Button.Group>
+                <Button onClick={ this._selectVote(true) } positive={ this.state.vote === true }>{ this.props.voteType === 'team' ? 'Accept' : 'Pass' }</Button>
+                <Button.Or />
+                <Button onClick={ this._selectVote(false) } negative={ this.state.vote === false }>{ this.props.voteType === 'team' ? 'Reject' : 'Fail' }</Button>
+            </Button.Group>
         );
 
-        const commitVote = (
-            <button className='coup-action-choicelist-button'
-                    disabled={ !(this.state.vote) }
-                    onClick={ this._commitVote.bind(this) }>
-                Commit vote
-            </button>
-        );
+        let commitVote = null;
+        if (this.state.vote !== null) {
+            commitVote = (
+                <Button className='coup-action-choicelist-button'
+                        onClick={ this._commitVote.bind(this) }>
+                    Commit vote
+                </Button>
+            );
+        }
 
         return mp.getPluginView(
             'gameshell',
@@ -217,10 +219,14 @@ export class AvalonClientVote extends React.Component<AvalonViewPropsInterface, 
                         'icon': 'gamepad',
                         'label': 'Avalon',
                         'view': (
-                            <div>
-                                { choices }
-                                { commitVote }
-                            </div>
+                            <Grid padded relaxed verticalAlign="middle">
+                                <Grid.Row centered>
+                                    { choices }
+                                </Grid.Row>
+                                <Grid.Row centered>
+                                    { commitVote }
+                                </Grid.Row>
+                            </Grid>
                         )
                     },
                     'profile': {
@@ -251,9 +257,10 @@ export function AvalonWait(props: AvalonViewPropsInterface) {
                     'icon': 'gamepad',
                     'label': 'Avalon',
                     'view': (
-                        <div>
+                        <Grid className="avalon-client-wait"
+                              centered stretched textAlign="center" verticalAlign="middle" relaxed padded>
                             { props.status }
-                        </div>
+                        </Grid>
                     )
                 },
                 'profile': {

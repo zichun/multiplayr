@@ -49,7 +49,7 @@ $panelExtendWidth: 180px;
 
             label {
                 line-height: $headerHeight;
-                width: $panelExtendWidth;
+                width: $panelExtendWidth - 10;
                 display: block;
                 float: left;
                 cursor: pointer;

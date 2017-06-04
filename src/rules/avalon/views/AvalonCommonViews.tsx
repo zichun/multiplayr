@@ -3,6 +3,7 @@
  */
 
 import * as React from 'react';
+import { Checkbox } from 'semantic-ui-react';
 
 import {
     MPType
@@ -302,20 +303,16 @@ export class AvalonSettings extends React.Component<AvalonViewPropsInterface, {
                 Select characters in play:
                 <ul>
                     <li>
-                        <input type="checkbox" checked={ this.state.merlin } onClick={ this._setCharInPlay('merlin') } />
-                        Merlin
+                        <Checkbox toggle checked={ this.state.merlin } onClick={ this._setCharInPlay('merlin') } label="Merlin" />
                     </li>
                     <li>
-                        <input type="checkbox" checked={ this.state.merlin && this.state.mondred } onClick={ this._setCharInPlay('mondred') } disabled={ !this.state.merlin } />
-                        Mondred
+                        <Checkbox toggle checked={ this.state.merlin && this.state.mondred } onClick={ this._setCharInPlay('mondred') } disabled={ !this.state.merlin } label="Mondred" />
                     </li>
                     <li>
-                        <input type="checkbox" checked={ this.state.merlin && this.state.percival } onClick={ this._setCharInPlay('percival') } disabled={ !this.state.merlin } />
-                        Percival
+                        <Checkbox toggle checked={ this.state.merlin && this.state.percival } onClick={ this._setCharInPlay('percival') } disabled={ !this.state.merlin } label="Percival" />
                     </li>
                     <li>
-                        <input type="checkbox" checked={ this.state.percival && this.state.merlin && this.state.morgana } onClick={ this._setCharInPlay('morgana') } disabled={ !this.state.merlin || !this.state.percival } />
-                        Morgana
+                        <Checkbox toggle checked={ this.state.percival && this.state.merlin && this.state.morgana } onClick={ this._setCharInPlay('morgana') } disabled={ !this.state.merlin || !this.state.percival } label="Morgana" />
                     </li>
                 </ul>
             </div>

@@ -10,6 +10,7 @@ export enum AvalonGameState {
     ChooseQuestMembers,
     VoteQuestMembers,
     VoteQuest,
+    VoteQuestResult,
     ChooseMerlin,
     GameOver
 }
@@ -55,6 +56,7 @@ export interface AvalonCharactersInPlay {
 export interface AvalonViewPropsInterface extends ViewPropsInterface {
     lobby: any;
 
+    state: AvalonGameState;
     status: string;
     leader: number;
     requiredMembers: number;
@@ -68,5 +70,9 @@ export interface AvalonViewPropsInterface extends ViewPropsInterface {
     notification: boolean,
     chooseMerlin: boolean
     charactersInPlay: AvalonCharactersInPlay,
-    cardsInPlay: any
+    cardsInPlay: any,
+    voteQuestMembers: any,
+    voteQuest: {
+        [playerIndex: number]: boolean
+    }
 }

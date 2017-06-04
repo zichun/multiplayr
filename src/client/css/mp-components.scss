@@ -25,9 +25,9 @@
 .mp-notification {
     position: absolute;
     top: 0px;
-    bottom: 0px;
-    right: 0px;
     left: 0px;
+    bottom: 0;
+    right: 0;
 }
 .mp-notification-appear {
     opacity: 0.01;
@@ -50,9 +50,9 @@
 .mp-notification-overlay {
     position: absolute;
     top: 0px;
-    bottom: 0px;
-    right: 0px;
     left: 0px;
+    bottom: 0;
+    right: 0;
     background-color: #333;
     opacity: 0.4;
     z-index: 100;

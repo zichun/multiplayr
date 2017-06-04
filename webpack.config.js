@@ -18,6 +18,18 @@ function createConfig() {
         module: {
             rules: [
                 {
+                    test: /\.css$/,
+                    use: [
+                        {
+                            loader: 'style-loader'
+                        }
+                      // ,{
+                      //       loader: 'css-loader',
+                      //       options: { url: false }
+                      //   }
+                    ]
+                },
+                {
                     test: /\.js$/,
                     use: ['source-map-loader'],
                     enforce: 'pre'

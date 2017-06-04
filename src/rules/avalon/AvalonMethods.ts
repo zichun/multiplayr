@@ -172,13 +172,13 @@ export const AvalonCommitTeam = (
 export const AvalonCommitTeamVote = (
     mp: MPType,
     clientId: string,
-    vote: string
+    vote: boolean
 ) => {
     if (mp.getData('state') !== AvalonGameState.VoteQuestMembers) {
         throw (new Error('Cannot commit team vote from current state'));
     }
 
-    if (vote !== 'Pass' && vote !== 'Fail') {
+    if (vote !== true && vote !== false) {
         throw (new Error('Invalid team vote ' + vote));
     }
 
@@ -186,7 +186,7 @@ export const AvalonCommitTeamVote = (
         throw (new Error('Client ' + clientId + ' already voted for quest members'));
     }
 
-    mp.setPlayerData(clientId, 'voteQuestMembers', vote === 'Pass');
+    mp.setPlayerData(clientId, 'voteQuestMembers', vote);
 
     const playersVote = mp.getPlayersData('voteQuestMembers');
     let accept = 0;
@@ -233,13 +233,13 @@ export const AvalonCommitTeamVote = (
 export const AvalonCommitQuestVote = (
     mp: MPType,
     clientId: string,
-    vote: string
+    vote: boolean
 ) => {
     if (mp.getData('state') !== AvalonGameState.VoteQuest) {
         throw (new Error('Cannot commit team vote from current state'));
     }
 
-    if (vote !== 'Pass' && vote !== 'Fail') {
+    if (vote !== true && vote !== false) {
         throw (new Error('Invalid team vote ' + vote));
     }
 
@@ -255,7 +255,7 @@ export const AvalonCommitQuestVote = (
         }
     });
 
-    mp.setPlayerData(clientId, 'voteQuest', vote === 'Pass');
+    mp.setPlayerData(clientId, 'voteQuest', vote);
 
     const playersVote = mp.getPlayersData('voteQuest');
     const currentQuest = mp.getData('currentQuest');
@@ -293,12 +293,6 @@ export const AvalonCommitQuestVote = (
                       playersVote,
                       AvalonQuestStatus.QuestFailed);
 
-        if (IsLose(mp)) {
-            LoseGame(mp);
-        } else {
-            mp.setData('currentQuest', currentQuest + 1);
-            NewRound(mp);
-        }
 
     } else {
 
@@ -311,14 +305,32 @@ export const AvalonCommitQuestVote = (
                       playersVote,
                       AvalonQuestStatus.QuestSucceeded);
 
-        if (IsWin(mp)) {
-            WinGame(mp);
-        } else {
-            mp.setData('currentQuest', currentQuest + 1);
-            NewRound(mp);
-        }
     }
+
+    mp.setData('state', AvalonGameState.VoteQuestResult);
 }
+
+export const AvalonFinishVoeQuestResult = (
+    mp: MPType,
+    clientId: string
+) => {
+    if (mp.getData('state') !== AvalonGameState.VoteQuestResult) {
+        throw (new Error('Invalid State'));
+    }
+
+    if (clientId !== mp.hostId) {
+        throw (new Error('Invalid call'));
+    }
+
+    if (IsLose(mp)) {
+        LoseGame(mp);
+    } else if (IsWin(mp)) {
+        WinGame(mp);
+    } else {
+        mp.setData('currentQuest', mp.getData('currentQuest') + 1);
+        NewRound(mp);
+    }
+};
 
 export const AvalonChooseMerlin = (
     mp: MPType,

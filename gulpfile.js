@@ -17,9 +17,9 @@ build.postCopy.setConfig({
 });
 
 build.typescript.setConfig({ 'libDir': 'build' });
-build.mocha.setConfig({
-  testMatch: 'build/tests/*.js'
-});
+// build.mocha.setConfig({
+//   testMatch: 'build/tests/*.js'
+// });
 
 var sourceMatch = [
   'src/**/*.{ts,tsx,scss,js,txt,html}',

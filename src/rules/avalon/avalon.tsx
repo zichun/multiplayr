@@ -24,6 +24,7 @@ import {
     AvalonCommitTeam,
     AvalonCommitTeamVote,
     AvalonCommitQuestVote,
+    AvalonFinishVoeQuestResult,
     AvalonChooseMerlin
 } from './AvalonMethods';
 
@@ -43,7 +44,8 @@ import {
 import {
     AvalonGameState,
     AvalonCharacter,
-    AvalonGameOutcome
+    AvalonGameOutcome,
+    AvalonQuestStatus
 } from './AvalonTypes';
 
 export const AvalonRule: GameRuleInterface = {
@@ -93,18 +95,25 @@ export const AvalonRule: GameRuleInterface = {
             return showLobby();
         }
 
+        const state = mp.getData('state');
         const currentLeader = mp.getData('currentLeader');
         const currentQuest = mp.getData('currentQuest');
         const currentTeam = mp.getData('currentTeam');
         const requiredMembers = AvalonQuestMembers[mp.playersCount()][currentQuest];
         const quests = mp.getData('quests');
+        const voteQuestMembers = mp.getPlayersData('voteQuestMembers');
+        const voteQuest = mp.getPlayersData('voteQuest');
 
+        mp.setViewProps(mp.hostId, 'state', state);
         mp.setViewProps(mp.hostId, 'leader', currentLeader);
         mp.setViewProps(mp.hostId, 'currentQuest', currentQuest);
         mp.setViewProps(mp.hostId, 'requiredMembers', requiredMembers);
         mp.setViewProps(mp.hostId, 'currentTeam', currentTeam);
         mp.setViewProps(mp.hostId, 'quests', quests);
         mp.setViewProps(mp.hostId, 'charactersInPlay', mp.getData('charactersInPlay'));
+
+        mp.setViewProps(mp.hostId, 'voteQuestMembers', voteQuestMembers);
+        mp.setViewProps(mp.hostId, 'voteQuest', voteQuest);
 
         let charactersInPlay = {};
 
@@ -164,7 +173,7 @@ export const AvalonRule: GameRuleInterface = {
             mp.setViewProps(clientId, 'cardsInPlay', charactersInPlay);
         });
 
-        switch(mp.getData('state'))
+        switch(state)
         {
             case AvalonGameState.ChooseQuestMembers:
             {
@@ -185,7 +194,7 @@ export const AvalonRule: GameRuleInterface = {
 
             case AvalonGameState.VoteQuestMembers:
             {
-                const playersVote = mp.getPlayersData('voteQuestMembers');
+                const playersVote = voteQuestMembers;
                 let voted = 0;
 
                 for (let i = 0; i < mp.playersCount(); i = i + 1) {
@@ -196,7 +205,6 @@ export const AvalonRule: GameRuleInterface = {
 
                 const voteCount = '(' + voted + '/' + mp.playersCount()  + ')';
 
-                mp.setViewProps(mp.hostId, 'playersVote', playersVote);
                 mp.setViewProps(mp.hostId, 'status', 'Waiting for team mandate ' + voteCount);
                 mp.setViewProps(mp.hostId, 'notification', false);
                 mp.setView(mp.hostId, 'host-mainpage');
@@ -225,7 +233,6 @@ export const AvalonRule: GameRuleInterface = {
 
                 const voteCount = '(' + voted + '/' + requiredMembers  + ')';
 
-                mp.setViewProps(mp.hostId, 'playersVote', playersVote);
                 mp.setViewProps(mp.hostId, 'status', 'Waiting for quest outcome ' + voteCount);
                 mp.setViewProps(mp.hostId, 'notification', false);
                 mp.setView(mp.hostId, 'host-mainpage');
@@ -238,6 +245,25 @@ export const AvalonRule: GameRuleInterface = {
                         mp.setViewProps(clientId, 'status', 'Waiting for quest outcome');
                         mp.setView(clientId, 'client-wait');
                     }
+                });
+                break;
+            }
+
+            case AvalonGameState.VoteQuestResult:
+            {
+                let status = '';
+
+                if (quests[quests.length - 1].questStatus === AvalonQuestStatus.QuestFailed) {
+                    status = 'Quest failed.';
+                } else {
+                    status = 'Quest passed!';
+                }
+
+                mp.setViewProps(mp.hostId, 'status', status);
+                mp.setView(mp.hostId, 'host-mainpage');
+                mp.playersForEach((clientId, index) => {
+                    mp.setViewProps(clientId, 'status', status);
+                    mp.setView(clientId, 'client-wait');
                 });
                 break;
             }
@@ -295,6 +321,7 @@ export const AvalonRule: GameRuleInterface = {
         'commitTeam': AvalonCommitTeam,
         'commitTeamVote': AvalonCommitTeamVote,
         'commitQuestVote': AvalonCommitQuestVote,
+        'finishVoteQuestResult': AvalonFinishVoeQuestResult,
         'chooseMerlin': AvalonChooseMerlin
     },
 
