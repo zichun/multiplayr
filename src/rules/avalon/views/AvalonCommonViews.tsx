@@ -3,7 +3,16 @@
  */
 
 import * as React from 'react';
-import { Checkbox } from 'semantic-ui-react';
+import {
+    Checkbox,
+    Header,
+    Grid,
+    Container
+} from 'semantic-ui-react';
+
+import {
+    contains
+} from '../../../common/utils';
 
 import {
     MPType
@@ -164,8 +173,12 @@ export function AvalonQuestView(
                 invertColors: false
             });
 
+        const className = quest.teamVote[i] ? 'accept' : 'reject';
         mandate.push(
-            <li key={ i }>{ member } - { quest.teamVote[i] ? 'Accept' : 'Reject'}</li>
+            <li key={ i } className="teammandate">
+                { member } -
+                <div className={ className }>{ quest.teamVote[i] ? 'Accepted' : 'Rejected'}</div>
+            </li>
         );
     }
 
@@ -201,7 +214,7 @@ export function AvalonQuestView(
 
     return (
         <div className={ questClass }>
-            <div>Quest: { quest.quest + 1 }</div>
+            <Header size="medium">Quest: { quest.quest + 1 }</Header>
             <div>Leader: { leader }</div>
             <div>Team:</div>
             <ul>{ members }</ul>
@@ -214,7 +227,8 @@ export function AvalonQuestView(
 
 export function AvalonQuests(props: AvalonViewPropsInterface) {
     const quests = [];
-    for (let i = 0; i < props.quests.length; i = i + 1) {
+
+    for (let i = props.quests.length - 1; i >= 0; i = i - 1) {
         const quest = AvalonQuestView(props, props.quests[i]);
         quests.push(
             <div key={ 'quest-' + i }>
@@ -238,6 +252,7 @@ export function AvalonQuests(props: AvalonViewPropsInterface) {
 
 export class AvalonSettings extends React.Component<AvalonViewPropsInterface, {
     startingNewGame: boolean,
+    remotePlay: boolean,
     merlin: boolean,
     percival: boolean,
     mondred: boolean,
@@ -252,6 +267,7 @@ export class AvalonSettings extends React.Component<AvalonViewPropsInterface, {
         this._setCharInPlay = this._setCharInPlay.bind(this);
         this.state = {
             startingNewGame: false,
+            remotePlay: this.props.remotePlay,
             merlin: this.props.charactersInPlay.merlin,
             percival: this.props.charactersInPlay.percival,
             mondred: this.props.charactersInPlay.mondred,
@@ -262,6 +278,7 @@ export class AvalonSettings extends React.Component<AvalonViewPropsInterface, {
     private _setStartingNewGameFlag() {
         this.setState({
             startingNewGame: true,
+            remotePlay: this.state.remotePlay,
             merlin: this.state.merlin,
             percival: this.state.merlin && this.state.percival,
             mondred: this.state.merlin && this.state.mondred,
@@ -272,6 +289,7 @@ export class AvalonSettings extends React.Component<AvalonViewPropsInterface, {
     private _unsetStartingNewGameFlag() {
         this.setState({
             startingNewGame: false,
+            remotePlay: this.state.remotePlay,
             merlin: this.state.merlin,
             percival: this.state.percival,
             mondred: this.state.mondred,
@@ -290,6 +308,7 @@ export class AvalonSettings extends React.Component<AvalonViewPropsInterface, {
     private _startNewGame() {
         this._unsetStartingNewGameFlag();
         this.props.MP.newGame({
+            remotePlay: this.state.remotePlay,
             merlin: this.state.merlin,
             percival: this.state.percival,
             mondred: this.state.mondred,
@@ -300,6 +319,11 @@ export class AvalonSettings extends React.Component<AvalonViewPropsInterface, {
     public render() {
         const charactersSelect = (
             <div className="avalon-select-characters">
+                <ul>
+                    <li>
+                        <Checkbox toggle checked={ this.state.remotePlay } onClick={ this._setCharInPlay('remotePlay') } label="Remote Play" />
+                    </li>
+                </ul>
                 Select characters in play:
                 <ul>
                     <li>
@@ -338,4 +362,91 @@ export class AvalonSettings extends React.Component<AvalonViewPropsInterface, {
                 { avalonSettingsBody }
             </div>);
     }
+}
+
+export function AvalonTeamMembers(props: AvalonViewPropsInterface) {
+    const currentTeam = props.currentTeam;
+    const members = [];
+    let currentTeamCount = 0;
+
+    for (let i = 0; i < props.lobby.playerCount; i = i + 1) {
+
+        if (!contains(currentTeam, i.toString())) {
+            continue;
+        }
+
+        currentTeamCount = currentTeamCount + 1;
+
+        const member = props.MP.getPluginView(
+            'lobby',
+            'player-tag',
+            {
+                clientIndex: i,
+                invertColors: true
+            });
+
+        members.push(
+            <Grid.Column key={ 'player-' + i }>
+                { member }
+            </Grid.Column>
+        );
+    }
+
+    return (
+        <Grid columns={ currentTeamCount as any }
+              padded relaxed verticalAlign="middle">
+            <Grid.Row centered>
+                <Grid.Column stretched>
+                    <Header size="medium">Team Members</Header>
+                </Grid.Column>
+            </Grid.Row>
+            <Grid.Row centered>
+                { members }
+            </Grid.Row>
+        </Grid>
+    );
+
+}
+
+export function AvalonRules() {
+    return (
+        <div className="avalon-rule">
+            <Container text textAlign="center"><Header size="large">Avalon</Header></Container>
+            <Container text><Header size="medium">Objective</Header></Container>
+            <Container text textAlign="justified">
+                The Resistance:Avalon is a social deduction game with secret identities. Players play either on the side of the Loyal Servants of Arthur, attempting to complete honorable quests for Arthur, or on the side of Mondred trying to thwart the quests. The servants of Arthur wins the game if three quests are completed successfully; the minions of Mondred wins if three quests fails.
+            </Container>
+            <Container text textAlign="justified">
+                A fundamental rule of the game is that players may say anything that they want, at anytime during the game. Discussions, deception, intuition, social interaction and logical deductions are all equally important to winning.
+            </Container>
+            <Container text><Header size="medium">Gameplay</Header></Container>
+            <Container text textAlign="justified">
+                At the start of the game, a fixed number of the group (approximatedly one third) are randomly and secretly chosen to be minions of Mondred, and the rest of the players are loyal servants of Arthur. The minions are made aware of each other without the loyal servants knowing their identity - the only thing the loyal servants know is how many other servants of Arthur exist, not who they are.
+            </Container>
+            <Container text><Header size="small">Rounds</Header></Container>
+            <Container text textAlign="justified">
+                At the start of the game, a player is randomly selected to be the quest leader. Subsequently, the next player will become the new leader of the round. The Leader selects a certain number of players to send out on a quest (the Leader may choose to go out on the mission himself/herself), starting with Quest 1. All of the players then discuss the Leader's choice and, simultaneous and in public, vote on whether to accept the team make-up or not. If a majority of players votes no to the proposal or if it's a tie, leadership passes on to the next player to the left, who proposes their own quest members. This continues until a majority of players agrees with the current Leader's mission assignment. After four rejected quest proposals in a row, the next proposed quest will <strong>automatically be accepted</strong>.
+            </Container>
+            <Container text textAlign="justified">
+                Once a mission team is agreed on, the players then "go" on the quest. To "go" on a quest, players on the quest are given a set of Quest choice, one for indicating Success, the other indicating Fail. Player may either secretly submit a Sucess or Fail card. The cards are shuffled and then revealed. If all cards show Success, the loyal servants of Arthur earns one point. If even one card shows Fail, the quest has been sabotaged and the minions of Mondred earn one point (except for the an exceptions on Mission 4 with 7 or more players, where it may be necessary for 2 Fail cards to be played in order for the mission to fail).
+            </Container>
+            <Container text textAlign="justified">
+                The game continues until one team accumulates 3 points.
+            </Container>
+            <Container text><Header size="medium">Special Characters</Header></Container>
+            <Container text textAlign="justified">
+                There are 4 special roles that may be configured to be included in the game or not. <strong>Merlin</strong>, playing on the side of Arthur, is told at the beginning of the game which player plays on the side of Mondred. If the minons of Mondred lose the game, however, they have one last chance of winning by correctly guessing Merlin's identity. If they can do this, they win.
+            </Container>
+            <Container text textAlign="justified">
+                <strong>Percival</strong>, also on the side of Arthur, knows the identity of Merlin at the start of the game and is in a position to help protect Merlin's identity.
+            </Container>
+            <Container text textAlign="justified">
+                <strong>Mondred</strong> (playing on his own side of course), does not reveal their identity to Merlin at the start of the game, leaving Merlin in the dark.
+            </Container>
+            <Container text textAlign="justified">
+                <strong>Morgana</strong>, playing on the side of Mondred, reveal their identity to Percival as Merlin. When Morgana is in play, Percival will have to guess which of the player playing Morgana and Merlin is the true Merlin.
+            </Container>
+
+        </div>
+    );
 }

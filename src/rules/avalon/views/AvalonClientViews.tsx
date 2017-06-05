@@ -13,15 +13,62 @@ import {
     AvalonViewPropsInterface
 } from '../AvalonTypes';
 
+import { AvalonHostMainPageView } from './AvalonHostMainPage';
+
 import {
     AvalonPlayerProfile,
-    AvalonQuests
+    AvalonQuests,
+    AvalonTeamMembers,
+    AvalonRules
 } from './AvalonCommonViews';
 
 import {
     Button,
     Grid
 } from 'semantic-ui-react';
+
+function ClientView(
+    props: AvalonViewPropsInterface,
+    view: any) {
+
+    const links = {};
+    if (props.remotePlay) {
+        links['action'] = {
+            'icon': 'desktop',
+            'label': 'Board',
+            'view': AvalonHostMainPageView(props)
+        };
+    }
+
+    links['home'] = {
+        'icon': 'gamepad',
+        'label': 'Avalon',
+        'view': view,
+    };
+    links['profile'] = {
+        'icon': 'address-card',
+        'label': 'Profile',
+        'view': AvalonPlayerProfile(props)
+    };
+    links['quests'] = {
+        'icon': 'history',
+        'label': 'Quest History',
+        'view': AvalonQuests(props)
+    };
+    links['rules'] = {
+        'icon': 'book',
+        'label': 'Rules',
+        'view': <AvalonRules />
+    };
+
+    return props.MP.getPluginView(
+        'gameshell',
+        'HostShell-Main',
+        {
+            'links': links,
+            'topBarContent': 'Quest ' + (props.currentQuest + 1)
+        });
+}
 
 export class AvalonClientChooseQuestMembers extends React.Component<AvalonViewPropsInterface, {
     members: string[]
@@ -129,35 +176,15 @@ export class AvalonClientChooseQuestMembers extends React.Component<AvalonViewPr
             </button>
         );
 
-        return mp.getPluginView(
-            'gameshell',
-            'HostShell-Main',
-            {
-                'links': {
-                    'home': {
-                        'icon': 'gamepad',
-                        'label': 'Avalon',
-                        'view': (
-                            <div>
-                                { chooseMessage }
-                                { choiceList }
-                                { commitTeam }
-                            </div>
-                        )
-                    },
-                    'profile': {
-                        'icon': 'address-card',
-                        'label': 'Profile',
-                        'view': AvalonPlayerProfile(this.props)
-                    },
-                    'quests': {
-                        'icon': 'history',
-                        'label': 'Quest History',
-                        'view': AvalonQuests(this.props)
-                    }
-                },
-                'topBarContent': 'Quest ' + (this.props.currentQuest + 1)
-            });
+        return ClientView(
+            this.props,
+            (
+                <div>
+                    { chooseMessage }
+                    { choiceList }
+                    { commitTeam }
+                </div>
+            ));
     }
 }
 
@@ -209,71 +236,33 @@ export class AvalonClientVote extends React.Component<AvalonViewPropsInterface, 
                 </Button>
             );
         }
-
-        return mp.getPluginView(
-            'gameshell',
-            'HostShell-Main',
-            {
-                'links': {
-                    'home': {
-                        'icon': 'gamepad',
-                        'label': 'Avalon',
-                        'view': (
-                            <Grid padded relaxed verticalAlign="middle">
-                                <Grid.Row centered>
-                                    { choices }
-                                </Grid.Row>
-                                <Grid.Row centered>
-                                    { commitVote }
-                                </Grid.Row>
-                            </Grid>
-                        )
-                    },
-                    'profile': {
-                        'icon': 'address-card',
-                        'label': 'Profile',
-                        'view': AvalonPlayerProfile(this.props)
-                    },
-                    'quests': {
-                        'icon': 'history',
-                        'label': 'Quest History',
-                        'view': AvalonQuests(this.props)
-                    }
-                },
-                'topBarContent': 'Quest ' + (this.props.currentQuest + 1)
-            });
+        return ClientView(
+            this.props,
+            (
+                <Grid padded relaxed verticalAlign="middle">
+                    <Grid.Row centered>
+                        <AvalonTeamMembers {...this.props} />
+                    </Grid.Row>
+                    <Grid.Row centered>
+                        { choices }
+                    </Grid.Row>
+                    <Grid.Row centered>
+                        { commitVote }
+                    </Grid.Row>
+                </Grid>
+            ));
     }
 }
 
 export function AvalonWait(props: AvalonViewPropsInterface) {
     const mp = props.MP;
 
-    return mp.getPluginView(
-        'gameshell',
-        'HostShell-Main',
-        {
-            'links': {
-                'home': {
-                    'icon': 'gamepad',
-                    'label': 'Avalon',
-                    'view': (
-                        <Grid className="avalon-client-wait"
-                              centered stretched textAlign="center" verticalAlign="middle" relaxed padded>
-                            { props.status }
-                        </Grid>
-                    )
-                },
-                'profile': {
-                    'icon': 'address-card',
-                    'label': 'Profile',
-                    'view': AvalonPlayerProfile(props)
-                },
-                'quests': {
-                    'icon': 'history',
-                    'label': 'Quest History',
-                    'view': AvalonQuests(props)
-                }
-            },
-            'topBarContent': 'Quest ' + (props.currentQuest + 1)
-        });
+    return ClientView(
+        props,
+        (
+            <Grid className="avalon-client-wait"
+                  centered stretched textAlign="center" verticalAlign="middle" relaxed padded>
+                { props.status }
+            </Grid>
+        ));
 }

@@ -50,8 +50,10 @@ export const AvalonNewGame = (
         throw (new Error('Only host can start a new game'));
     }
 
+    let remotePlay = false;
     if (charactersInPlay) {
         mp.setData('charactersInPlay', charactersInPlay);
+        mp.setData('remotePlay', charactersInPlay.remotePlay);
     }
 
     const playerDeck = [];
@@ -204,7 +206,7 @@ export const AvalonCommitTeamVote = (
         return;
     }
 
-    if (reject > accept) {
+    if (reject >= accept) {
 
         // Team got rejected.
         PushQuestData(mp,

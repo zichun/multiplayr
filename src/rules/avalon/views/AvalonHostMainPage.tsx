@@ -21,7 +21,8 @@ import {
 
 import {
     AvalonSettings,
-    AvalonQuests
+    AvalonQuests,
+    AvalonRules
 } from './AvalonCommonViews';
 
 import {
@@ -248,7 +249,7 @@ export class VoteQuestResult extends React.Component<
         } else {
             setTimeout(
                 this._hideCard,
-                1600);
+                1200);
         }
     }
 
@@ -332,90 +333,95 @@ export class VoteQuestResult extends React.Component<
     }
 }
 
+export function AvalonHostMainPageView(props: AvalonViewPropsInterface) {
+    const mp = props.MP;
+    const quests = props.quests;
+
+    //
+    // Quest outcome popup.
+    //
+
+    let questOutcome = null;
+    /* if (quests.length && props.notification === true) {
+     *     if (quests[quests.length - 1].questStatus === AvalonQuestStatus.TeamRejected) {
+     *         questOutcome = (
+     *             <Notification hideAfter={ 2000 }>
+     *                 <h1 className="outcome rejected">Team was <strong>rejected</strong>!</h1>
+     *             </Notification>
+     *         );
+     *     } else if (quests[quests.length - 1].questStatus === AvalonQuestStatus.QuestFailed) {
+     *         questOutcome = (
+     *             <Notification hideAfter={ 2000 }>
+     *                 <h1 className="outcome failed">Quest <strong>failed</strong>!</h1>
+     *             </Notification>
+     *         );
+     *     } else if (quests[quests.length - 1].questStatus === AvalonQuestStatus.QuestSucceeded) {
+     *         questOutcome = (
+     *             <Notification hideAfter={ 2000 }>
+     *                 <h1 className="outcome succeeded">Quest <strong>succeeded</strong>!</h1>
+     *             </Notification>
+     *         );
+     *     }
+     * }
+     */
+    //
+    // Quest Grid.
+    //
+
+    const playersCount = props.lobby.playerCount;
+    const required = AvalonQuestMembers[playersCount];
+    const questGrid = [];
+    const outcome = [];
+    const questNumber = quests.length;
+
+    for (let i = 0; i < quests.length; i = i + 1) {
+        if (quests[i].questStatus === AvalonQuestStatus.QuestFailed) {
+            outcome.push(false);
+        } else if (quests[i].questStatus === AvalonQuestStatus.QuestSucceeded) {
+            outcome.push(true);
+        }
+    }
+
+    for (let i = 0; i < required.length; i = i + 1) {
+        let className = 'grid ';
+        let extra = '';
+
+        if (i < outcome.length) {
+            className += (outcome[i] ? 'succeeded' : 'failed');
+        } else if (i === props.currentQuest) {
+            className += 'current';
+        }
+
+        if (playersCount >= 7 && i === 4) {
+            extra = '*';
+        }
+
+        questGrid.push(
+            <div className={ className } key={ i }>
+                { required[i] + extra }
+            </div>
+        );
+    }
+
+    const main = (
+        <div className="avalon-hostmainpage">
+            <Segment>{ props.status }</Segment>
+            <div className="quest-grid">
+                { questGrid }
+            </div>
+            { questOutcome }
+            <PlayersList { ...props } />
+            <VoteQuestResult key={ questNumber + '-' + props.state } { ...props} />
+        </div>
+    );
+
+    return main;
+}
+
 export class AvalonHostMainPage extends React.Component<AvalonViewPropsInterface, {}> {
     public render() {
         const mp = this.props.MP;
-        const quests = this.props.quests;
 
-        //
-        // Quest outcome popup.
-        //
-
-        let questOutcome = null;
-        /* if (quests.length && this.props.notification === true) {
-         *     if (quests[quests.length - 1].questStatus === AvalonQuestStatus.TeamRejected) {
-         *         questOutcome = (
-         *             <Notification hideAfter={ 2000 }>
-         *                 <h1 className="outcome rejected">Team was <strong>rejected</strong>!</h1>
-         *             </Notification>
-         *         );
-         *     } else if (quests[quests.length - 1].questStatus === AvalonQuestStatus.QuestFailed) {
-         *         questOutcome = (
-         *             <Notification hideAfter={ 2000 }>
-         *                 <h1 className="outcome failed">Quest <strong>failed</strong>!</h1>
-         *             </Notification>
-         *         );
-         *     } else if (quests[quests.length - 1].questStatus === AvalonQuestStatus.QuestSucceeded) {
-         *         questOutcome = (
-         *             <Notification hideAfter={ 2000 }>
-         *                 <h1 className="outcome succeeded">Quest <strong>succeeded</strong>!</h1>
-         *             </Notification>
-         *         );
-         *     }
-         * }
-         */
-        //
-        // Quest Grid.
-        //
-
-        const playersCount = this.props.lobby.playerCount;
-        const required = AvalonQuestMembers[playersCount];
-        const questGrid = [];
-        const outcome = [];
-        const questNumber = quests.length;
-
-        for (let i = 0; i < quests.length; i = i + 1) {
-            if (quests[i].questStatus === AvalonQuestStatus.QuestFailed) {
-                outcome.push(false);
-            } else if (quests[i].questStatus === AvalonQuestStatus.QuestSucceeded) {
-                outcome.push(true);
-            }
-        }
-
-        for (let i = 0; i < required.length; i = i + 1) {
-            let className = 'grid ';
-            let extra = '';
-
-            if (i < outcome.length) {
-                className += (outcome[i] ? 'succeeded' : 'failed');
-            } else if (i === this.props.currentQuest) {
-                className += 'current';
-            }
-
-            if (playersCount >= 7 && i === 4) {
-                extra = '*';
-            }
-
-            questGrid.push(
-                <div className={ className } key={ i }>
-                    { required[i] + extra }
-                </div>
-            );
-        }
-
-        const main = (
-            <div className="avalon-hostmainpage">
-                <div className="quest-grid">
-                    { questGrid }
-                </div>
-                { questOutcome }
-                <Rail internal position='right'>
-                    <Segment>{ this.props.status }</Segment>
-                </Rail>
-                <PlayersList { ...this.props } />
-                <VoteQuestResult key={ questNumber + '-' + this.props.state } { ...this.props} />
-            </div>
-        );
 
         return mp.getPluginView(
             'gameshell',
@@ -425,7 +431,7 @@ export class AvalonHostMainPage extends React.Component<AvalonViewPropsInterface
                     'home': {
                         'icon': 'gamepad',
                         'label': 'Avalon',
-                        'view': main
+                        'view': AvalonHostMainPageView(this.props)
                     },
                     'quests': {
                         'icon': 'history',
@@ -436,6 +442,11 @@ export class AvalonHostMainPage extends React.Component<AvalonViewPropsInterface
                         'icon': 'cog',
                         'label': 'Settings',
                         'view': (<AvalonSettings { ...this.props } />)
+                    },
+                    'rules': {
+                        'icon': 'book',
+                        'label': 'Rules',
+                        'view': <AvalonRules />
                     }
                 },
                 'topBarContent': 'Quest ' + (this.props.currentQuest + 1)

@@ -9,6 +9,8 @@ import {
     ViewPropsInterface
 } from '../../../common/interfaces';
 
+import { AvalonRules } from './AvalonCommonViews';
+
 export class AvalonHostLobby extends React.Component<ViewPropsInterface, {}> {
     public render() {
         const mp = this.props.MP;
@@ -31,7 +33,7 @@ export class AvalonHostLobby extends React.Component<ViewPropsInterface, {}> {
                     'rules': {
                         'icon': 'book',
                         'label': 'Rules',
-                        'view': null
+                        'view': <AvalonRules />
                     }
                 }
             });

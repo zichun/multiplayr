@@ -69,7 +69,8 @@ export const AvalonRule: GameRuleInterface = {
             'mondred': true,
             'percival': true,
             'morgana': true
-        }
+        },
+        'remotePlay': false
     },
 
     playerData: {
@@ -114,6 +115,7 @@ export const AvalonRule: GameRuleInterface = {
 
         mp.setViewProps(mp.hostId, 'voteQuestMembers', voteQuestMembers);
         mp.setViewProps(mp.hostId, 'voteQuest', voteQuest);
+        mp.setViewProps(mp.hostId, 'remotePlay', mp.getData('remotePlay'));
 
         let charactersInPlay = {};
 
@@ -125,10 +127,17 @@ export const AvalonRule: GameRuleInterface = {
         }
 
         mp.playersForEach((clientId, index) => {
+            mp.setViewProps(clientId, 'state', state);
             mp.setViewProps(clientId, 'leader', currentLeader);
             mp.setViewProps(clientId, 'currentQuest', currentQuest);
             mp.setViewProps(clientId, 'requiredMembers', requiredMembers);
+            mp.setViewProps(clientId, 'currentTeam', currentTeam);
             mp.setViewProps(clientId, 'quests', quests);
+            mp.setViewProps(clientId, 'charactersInPlay', mp.getData('charactersInPlay'));
+
+            mp.setViewProps(clientId, 'voteQuestMembers', voteQuestMembers);
+            mp.setViewProps(clientId, 'voteQuest', voteQuest);
+            mp.setViewProps(clientId, 'remotePlay', mp.getData('remotePlay'));
 
             const character = mp.getPlayerData(clientId, 'character');
             charactersInPlay[character] = charactersInPlay[character] + 1;
@@ -178,7 +187,6 @@ export const AvalonRule: GameRuleInterface = {
             case AvalonGameState.ChooseQuestMembers:
             {
                 mp.setViewProps(mp.hostId, 'status', 'Choose Team');
-                mp.setViewProps(mp.hostId, 'notification', true);
                 mp.setView(mp.hostId, 'host-mainpage');
                 mp.playersForEach((clientId, index) => {
                     if (index === currentLeader) {
@@ -206,7 +214,6 @@ export const AvalonRule: GameRuleInterface = {
                 const voteCount = '(' + voted + '/' + mp.playersCount()  + ')';
 
                 mp.setViewProps(mp.hostId, 'status', 'Waiting for team mandate ' + voteCount);
-                mp.setViewProps(mp.hostId, 'notification', false);
                 mp.setView(mp.hostId, 'host-mainpage');
                 mp.playersForEach((clientId, index) => {
                     if (playersVote[index] === null) {
@@ -234,7 +241,6 @@ export const AvalonRule: GameRuleInterface = {
                 const voteCount = '(' + voted + '/' + requiredMembers  + ')';
 
                 mp.setViewProps(mp.hostId, 'status', 'Waiting for quest outcome ' + voteCount);
-                mp.setViewProps(mp.hostId, 'notification', false);
                 mp.setView(mp.hostId, 'host-mainpage');
 
                 mp.playersForEach((clientId, index) => {
@@ -271,7 +277,6 @@ export const AvalonRule: GameRuleInterface = {
             case AvalonGameState.ChooseMerlin:
             {
                 mp.setViewProps(mp.hostId, 'status', 'Minion of Mondred will attempt to identify Merlin');
-                mp.setViewProps(mp.hostId, 'notification', true);
                 mp.setView(mp.hostId, 'host-mainpage');
 
                 let foundMinion = false;
@@ -300,7 +305,6 @@ export const AvalonRule: GameRuleInterface = {
                 }
 
                 mp.setViewProps(mp.hostId, 'status', 'Game Over! ' + outcome);
-                mp.setViewProps(mp.hostId, 'notification', true);
                 mp.setView(mp.hostId, 'host-mainpage');
 
                 mp.playersForEach((clientId, index) => {

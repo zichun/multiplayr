@@ -17,6 +17,22 @@ $red: #FF6156;
         }
     }
 
+    .teammandate {
+        margin: 4px 0 4px 0;
+        .accept, .reject {
+            display: inline-block;
+            font-size: 0.9em;
+            padding: 3px 12px 3px 12px;
+            border-radius: 0 8px 0 0;
+        }
+        .accept {
+            background: $green;
+        }
+        .reject {
+            background: $red;
+        }
+    }
+
     .quest.passed {
         border-right: 8px solid #8f8;
     }
@@ -231,4 +247,13 @@ $red: #FF6156;
     text-align: center;
     font-size: 24px;
     line-height: 30px;
+}
+
+.avalon-rule {
+    .container {
+        margin: 4px 0 4px 0;
+    }
+    .header {
+        margin: 16px 0 8px 0 !important;
+    }
 }

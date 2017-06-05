@@ -47,6 +47,7 @@ export interface AvalonQuest {
 }
 
 export interface AvalonCharactersInPlay {
+    remotePlay: boolean,
     merlin: boolean,
     percival: boolean,
     mondred: boolean,
@@ -67,12 +68,12 @@ export interface AvalonViewPropsInterface extends ViewPropsInterface {
     minions: number[],
     merlins: number[],
     quests: AvalonQuest[],
-    notification: boolean,
     chooseMerlin: boolean
     charactersInPlay: AvalonCharactersInPlay,
     cardsInPlay: any,
     voteQuestMembers: any,
     voteQuest: {
         [playerIndex: number]: boolean
-    }
+    },
+    remotePlay: boolean
 }
