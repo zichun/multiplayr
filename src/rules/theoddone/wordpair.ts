@@ -314,5 +314,21 @@ export const WordPairs = [
     ['Allegience','Loyalty'],
     ['Devotion','Loyal'],
     ['Obedience','Loyal'],
-    ['Obedience','Adherence']
+    ['Obedience','Adherence'],
+    ['Cookie monster on the moon', 'Eating peanut button in Mars'],
+    ['Walk walk walk fall down', 'Walk walk walk bump into tree'],
+    ['6 Disturbing Truths Your Mother Isn\'t Telling You', '20 Shocking Facts Teachers Are Using Against You'],
+    ['ROFLMAO','TROLOLOL'],
+    ['Infinite Termination','Indefinite End'],
+    ['Podcasts are for geeks', 'Watching twitch.tv like a nerd'],
+    ['Lonely plumber squating on a toilet', 'Sad electrician taking a piss'],
+    ['My worthless date at Kohls', 'Buying junk at at best buy'],
+    ['Whispering sweet nothings into her ear', 'Cheesy pick-up lines on Tinder'],
+    ['Staring at a text for damn long', 'Getting stuck how to reply on whatsapp'],
+    ['Having a Mental conversation about having a mental conversation with oneself', 'Dreaming about myself dreaming about myself'],
+    ['Sex positions', 'Alcoholic beverages with sexual innuendos'],
+    ['Getting drunk', 'Getting high'],
+    ['Famous last words', 'Famous movie quotes'],
+    ['Films with 2 men on its poster', 'Cop-buddy comedy films'],
+    ['43','47']
 ];
