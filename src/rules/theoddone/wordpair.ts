@@ -277,6 +277,6 @@ export const WordPairs = [
     ['Obese', 'Overweight'],
     ['Kneel', 'Crawl'],
     ['Coerce', 'Persuade'],
-    ['Coax', 'Persuade']
+    ['Coax', 'Persuade'],
     ['Convince', 'Persuade']
 ];
