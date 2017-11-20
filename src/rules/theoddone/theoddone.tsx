@@ -488,7 +488,8 @@ export const TheOddOneRule: GameRuleInterface = {
         'host-summaryTable': class extends React.Component<ViewPropsInterface & {
             currentCard: any,
             lobby: any,
-            playerSummary: any
+            playerSummary: any,
+            gameType: any
         }, {}> {
             public render() {
                 const scores = [];
@@ -502,7 +503,8 @@ export const TheOddOneRule: GameRuleInterface = {
                         word: word,
                         score: this.props.playerSummary[i].score,
                         isOdd: this.props.playerSummary[i].isOdd,
-                        isDead: this.props.playerSummary[i].isDead
+                        isDead: this.props.playerSummary[i].isDead,
+                        gameType: this.props.gameType
                     }));
                 }
 
@@ -528,7 +530,8 @@ export const TheOddOneRule: GameRuleInterface = {
             isDead: boolean,
             name: string,
             word: string,
-            score: string
+            score: string,
+            gameType: any
         }, {}> {
             public render() {
                 const cn = [];
@@ -538,9 +541,14 @@ export const TheOddOneRule: GameRuleInterface = {
                 if (this.props.isDead) {
                     cn.push('dead');
                 }
+                let word = this.props.word;
+                if (this.props.isOdd && this.props.gameType === 1)
+                {
+                    word = '???';
+                }
                 return React.DOM.tr({className: cn.join(' ')},
                                     React.DOM.td({className: 'name'}, this.props.name),
-                                    React.DOM.td(null, this.props.word),
+                                    React.DOM.td(null, word),
                                     React.DOM.td(null, this.props.score));
             }
         },
