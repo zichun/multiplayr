@@ -22,6 +22,14 @@ html,body { height: 100%; }
     font-size: 32px;
 }
 
+.startFirst {
+    font-size: 2em;
+    text-align: center;
+    margin: 8px 0 16px 0;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #aaa;
+}
+
 #choices {
 
     .choice {
@@ -68,7 +76,7 @@ html,body { height: 100%; }
 
 #theoddone-votetable li {
     padding: 0;
-    margin: 2px 0 1px 4px;
+    margin: 6px 0 5px 4px;
 }
 
 #theoddone-vote-submit {
@@ -98,4 +106,9 @@ html,body { height: 100%; }
 }
 #theoddone-summary-table .dead .name {
     text-decoration: line-through;
+}
+
+.votebuttons button
+{
+    margin: 8px;
 }
