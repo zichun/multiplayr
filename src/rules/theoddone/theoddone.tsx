@@ -19,6 +19,12 @@ import {
 
 const cards = WordPairs;
 
+interface TheOddOneHostVoteTableViewInterface extends ViewPropsInterface {
+    votes: any,
+    lobby: any,
+    startPlayer: any
+};
+
 export const TheOddOneRule: GameRuleInterface = {
 
     name: 'theoddone',
@@ -319,12 +325,8 @@ export const TheOddOneRule: GameRuleInterface = {
             }
         },
 
-        'host-voteTable': class extends React.Component<ViewPropsInterface & {
-            votes: any,
-            lobby: any,
-            startPlayer: any
-        }, {}> {
-            constructor(props: ViewPropsInterface) {
+        'host-voteTable': class extends React.Component<TheOddOneHostVoteTableViewInterface, {}> {
+            constructor(props: TheOddOneHostVoteTableViewInterface) {
                 super(props);
                 this.commitVote = this.commitVote.bind(this);
             }
@@ -361,7 +363,8 @@ export const TheOddOneRule: GameRuleInterface = {
                             border: false
                         });
                     scores.push(
-                        React.DOM.li(
+                        React.createElement(
+                            'li',
                             {className: 'major'},
                             playerTag, ' - ' + votes[major]));
 
@@ -385,7 +388,8 @@ export const TheOddOneRule: GameRuleInterface = {
                     const voteCount = votes[i] ? ' - ' + votes[i] : null;
 
                     scores.push(
-                        React.DOM.li(
+                        React.createElement(
+                            'li',
                             {},
                             playerTag,
                             voteCount));
@@ -394,14 +398,16 @@ export const TheOddOneRule: GameRuleInterface = {
                 if (major === -1) {
                     submitButton = null;
                 } else {
-                    submitButton = React.DOM.button({id: 'theoddone-vote-submit', onClick: this.commitVote }, 'Commit Vote!');
+                    submitButton = React.createElement('button', {id: 'theoddone-vote-submit', onClick: this.commitVote }, 'Commit Vote!');
                 }
 
-                const StandardButton = React.DOM.button(
+                const StandardButton = React.createElement(
+                    'button',
                     {onClick: function() { mp.newGame(0); } },
                     'Standard Rule');
 
-                const NowordsButton  = React.DOM.button(
+                const NowordsButton  = React.createElement(
+                    'button',
                     {onClick: function() { mp.newGame(1); } },
                     'Oddone no words rule');
 
@@ -421,13 +427,16 @@ export const TheOddOneRule: GameRuleInterface = {
                                                 'home': {
                                                     'icon': 'gamepad',
                                                     'label': 'Game',
-                                                    'view': React.DOM.div(null,
-                                                                          React.DOM.div(
-                                                                              { className: 'startFirst' },
-                                                                              playerTag,
-                                                                              ' will start first'),
-                                                                          React.DOM.ol({id: 'theoddone-votetable'}, scores),
-                                                                          submitButton)
+                                                    'view': React.createElement(
+                                                        'div',
+                                                        null,
+                                                        React.createElement(
+                                                            'div',
+                                                            { className: 'startFirst' },
+                                                            playerTag,
+                                                            ' will start first'),
+                                                        React.createElement('ol', {id: 'theoddone-votetable'}, scores),
+                                                        submitButton)
                                                 },
                                                 'clients': {
                                                     'icon': 'users',
@@ -437,7 +446,8 @@ export const TheOddOneRule: GameRuleInterface = {
                                                 'newgame': {
                                                     'icon': 'cog',
                                                     'label': 'Game Type',
-                                                    'view': React.DOM.div(
+                                                    'view': React.createElement(
+                                                        'div',
                                                         { className: 'votebuttons' },
                                                         StandardButton,
                                                         NowordsButton
@@ -456,7 +466,7 @@ export const TheOddOneRule: GameRuleInterface = {
         'host-summary': class extends React.Component<ViewPropsInterface, {}> {
             public render() {
                 const mp = this.props.MP;
-                const button = React.DOM.button({onClick: function() { mp.newGame(); } },
+                const button = React.createElement('button', {onClick: function() { mp.newGame(); } },
                                                 'New Game');
                 return mp.getPluginView('gameshell',
                                         'HostShell-Main',
@@ -465,10 +475,12 @@ export const TheOddOneRule: GameRuleInterface = {
                                                 'home': {
                                                     'icon': 'gamepad',
                                                     'label': 'Game',
-                                                    'view': React.DOM.div(null,
-                                                                          React.createElement(TheOddOneRule.views['host-summaryTable'],
-                                                                                              this.props),
-                                                                          button)
+                                                    'view': React.createElement(
+                                                        'div',
+                                                        null,
+                                                        React.createElement(TheOddOneRule.views['host-summaryTable'],
+                                                                            this.props),
+                                                        button)
                                                 },
                                                 'clients': {
                                                     'icon': 'users',
@@ -508,7 +520,7 @@ export const TheOddOneRule: GameRuleInterface = {
                     }));
                 }
 
-                return React.DOM.table({id: 'theoddone-summary-table', cellSpacing: '1px'},
+                return React.createElement('table', {id: 'theoddone-summary-table', cellSpacing: '1px'},
                                        React.createElement(TheOddOneRule.views['host-summaryTable-scoreHeader'], {}),
                                        scores);
             }
@@ -516,11 +528,11 @@ export const TheOddOneRule: GameRuleInterface = {
 
         'host-summaryTable-scoreHeader': class extends React.Component<ViewPropsInterface, {}> {
             public render() {
-                return React.DOM.tr(
+                return React.createElement('tr',
                     null,
-                    React.DOM.th(null, 'Player'),
-                    React.DOM.th(null, 'Word'),
-                    React.DOM.th(null, 'Score')
+                    React.createElement('th', null, 'Player'),
+                    React.createElement('th', null, 'Word'),
+                    React.createElement('th', null, 'Score')
                 );
             }
         },
@@ -546,10 +558,10 @@ export const TheOddOneRule: GameRuleInterface = {
                 {
                     word = '???';
                 }
-                return React.DOM.tr({className: cn.join(' ')},
-                                    React.DOM.td({className: 'name'}, this.props.name),
-                                    React.DOM.td(null, word),
-                                    React.DOM.td(null, this.props.score));
+                return React.createElement('tr', {className: cn.join(' ')},
+                                    React.createElement('td', {className: 'name'}, this.props.name),
+                                    React.createElement('td', null, word),
+                                    React.createElement('td', null, this.props.score));
             }
         },
 
@@ -559,9 +571,11 @@ export const TheOddOneRule: GameRuleInterface = {
 
         'client-voting': class extends React.Component<ViewPropsInterface, {}> {
             public render() {
-                return React.DOM.div({id: 'theoddone-voting'},
-                                     React.createElement(TheOddOneRule.views['client-word'], this.props),
-                                     React.createElement(TheOddOneRule.views['client-voting-choices'], this.props));
+                return React.createElement(
+                    'div',
+                    {id: 'theoddone-voting'},
+                    React.createElement(TheOddOneRule.views['client-word'], this.props),
+                    React.createElement(TheOddOneRule.views['client-voting-choices'], this.props));
             }
         },
 
@@ -572,7 +586,7 @@ export const TheOddOneRule: GameRuleInterface = {
                 {
                     word = '???';
                 }
-                return React.DOM.div({id: 'theoddone-word'}, word);
+                return React.createElement('div', {id: 'theoddone-word'}, word);
             }
         },
 
@@ -592,8 +606,11 @@ export const TheOddOneRule: GameRuleInterface = {
                     const player = this.props.lobby.names[i];
 
                     if (vote === i) {
-                        reactChoices.push(React.DOM.div({className: 'choice selected'},
-                                                        player));
+                        reactChoices.push(
+                            React.createElement(
+                                'div',
+                                {className: 'choice selected'},
+                                player));
                     } else {
                         let oc = null;
 
@@ -607,15 +624,18 @@ export const TheOddOneRule: GameRuleInterface = {
 
                         const deadClass = dead[i] ? ' dead' : '';
 
-                        reactChoices.push(React.DOM.div({className: 'choice' + deadClass, onClick: oc},
-                                                        player));
+                        reactChoices.push(
+                            React.createElement(
+                                'div',
+                                {className: 'choice' + deadClass, onClick: oc},
+                                player));
                     }
                 }
 
                 const cn = vote === -1 ? 'unselected' : 'selected';
 
-                reactChoices.push(React.DOM.div({className: 'clearer'}));
-                return React.DOM.div({id: 'choices', className: cn}, reactChoices);
+                reactChoices.push(React.createElement('div', {className: 'clearer'}));
+                return React.createElement('div', {id: 'choices', className: cn}, reactChoices);
             }
         }
     }

@@ -276,7 +276,7 @@ export class VoteQuestResult extends React.Component<
         this.props.MP.finishVoteQuestResult();
     }
 
-    private componentDidMount() {
+    public componentDidMount() {
         if (this.props.state !== AvalonGameState.VoteQuestResult) {
             return;
         }

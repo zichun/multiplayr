@@ -25,6 +25,15 @@ const icons = ['car', 'id-badge', 'linode', 'thermometer-empty', 'user-circle', 
 const colors = ['#0074D9', '#7FDBFF', '#39CCCC', '#3D9970', '#2ECC40', '#01FF70', '#EEAB00', '#FF851B', '#FF4136',
                 '#F012BE', '#B10DC9', '#AAAAAA'];
 
+interface LobbyViewInterface extends ViewPropsInterface {
+    names: string[],
+    icons: number[],
+    accents: string[]
+};
+interface LobbySetNameViewInterface extends ViewPropsInterface {
+    name: string
+};
+
 export const Lobby: GameRuleInterface = {
 
     name: 'lobby',
@@ -113,12 +122,8 @@ export const Lobby: GameRuleInterface = {
     },
 
     views: {
-        'Lobby': class extends React.Component<ViewPropsInterface & {
-            names: string[],
-            icons: number[],
-            accents: string[]
-        }, {}> {
-            constructor(props: ViewPropsInterface) {
+        'Lobby': class extends React.Component<LobbyViewInterface, {}> {
+            constructor(props: LobbyViewInterface) {
                 super(props);
                 this.startGame = this.startGame.bind(this);
             }
@@ -146,7 +151,8 @@ export const Lobby: GameRuleInterface = {
 
                     if (names.length === 0) {
                         tr.push(
-                            React.DOM.div(
+                            React.createElement(
+                                'div',
                                 {
                                     className: 'waiting',
                                     key: 'waiting'
@@ -157,10 +163,11 @@ export const Lobby: GameRuleInterface = {
                     return tr;
                 };
 
-                return React.DOM.div(
+                return React.createElement(
+                    'div',
                     null,
-                    React.DOM.div({ id: 'lobby-playerlist' }, createHello(this.props.names, this.props.icons, this.props.accents)),
-                    React.DOM.button({ onClick: this.startGame }, 'Start game')
+                    React.createElement('div', { id: 'lobby-playerlist' }, createHello(this.props.names, this.props.icons, this.props.accents)),
+                    React.createElement('button', { onClick: this.startGame }, 'Start game')
                 );
             }
         },
@@ -274,15 +281,15 @@ export const Lobby: GameRuleInterface = {
             }
         },
 
-        'SetName': class extends React.Component<ViewPropsInterface & { name: string }, { name: string }> {
-            constructor(props: { name: string }) {
+        'SetName': class extends React.Component<LobbySetNameViewInterface, { name: string }> {
+            constructor(props: LobbySetNameViewInterface) {
                 super(props);
                 this.state = { name: this.props.name };
                 this.onChange = this.onChange.bind(this);
             }
 
             public onChange(e: any) {
-                this.state.name = e.target.value;
+                this.setState({ name: e.target.value });
                 this.props.MP.setName(e.target.value);
                 return true;
             }
@@ -396,7 +403,8 @@ export const Lobby: GameRuleInterface = {
         'host-roommanagement': class extends React.Component<ViewPropsInterface, {}> {
             public render() {
 
-                return React.DOM.table(
+                return React.createElement(
+                    'table',
                     {id: 'lobby-roommanagement'},
                     React.createElement(Lobby.views['host-roommanagement-header'], {}),
                     React.createElement(Lobby.views['host-roommanagement-body'], this.props)
@@ -406,11 +414,12 @@ export const Lobby: GameRuleInterface = {
 
         'host-roommanagement-header': class extends React.Component<ViewPropsInterface, {}> {
             public render() {
-                return React.DOM.tr(
+                return React.createElement(
+                    'tr',
                     null,
-                    React.DOM.th(null, ' '),
-                    React.DOM.th(null, 'Client-Id'),
-                    React.DOM.th(null, 'Name')
+                    React.createElement('th', null, ' '),
+                    React.createElement('th', null, 'Client-Id'),
+                    React.createElement('th', null, 'Name')
                 );
             }
         },
@@ -429,8 +438,9 @@ export const Lobby: GameRuleInterface = {
                         key: 'player' + i
                     }));
                 }
-                return React.DOM.tbody(null,
-                                       tr);
+                return React.createElement('tbody',
+                                           null,
+                                           tr);
             }
         },
 
@@ -443,14 +453,20 @@ export const Lobby: GameRuleInterface = {
             }
 
             public render() {
-                return React.DOM.tr(
+                return React.createElement(
+                    'tr',
                     null,
-                    React.DOM.td(null,
-                                 React.DOM.div({
-                                     className: this.props.isConnected ? 'lobby-connected' : 'lobby-disconnected'
-                                 }, '')),
-                    React.DOM.td(null, this.props.clientId),
-                    React.DOM.td(null, this.props.name)
+                    React.createElement(
+                        'td',
+                        null,
+                        React.createElement(
+                            'div',
+                            {
+                                className: this.props.isConnected ? 'lobby-connected' : 'lobby-disconnected'
+                            },
+                            '')),
+                    React.createElement('td', null, this.props.clientId),
+                    React.createElement('td', null, this.props.name)
 
                 );
             }

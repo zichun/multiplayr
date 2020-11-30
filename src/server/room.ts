@@ -6,7 +6,7 @@
  *
  */
 
-import Session from './Session';
+import Session from './session';
 
 import {
     ReturnPacketType,

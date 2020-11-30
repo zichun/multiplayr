@@ -5,8 +5,8 @@
 import * as React from 'react';
 import * as FontAwesome from 'react-fontawesome';
 
-import { Panel } from 'office-ui-fabric-react/lib/Panel';
-import { Button } from 'office-ui-fabric-react/lib/Button';
+//import { Panel } from 'office-ui-fabric-react/lib/Panel';
+//import { Button } from 'office-ui-fabric-react/lib/Button';
 import './shell.scss';
 
 import {
@@ -15,7 +15,19 @@ import {
     ViewPropsInterface
 } from '../../common/interfaces';
 
-import { forEach} from '../../common/utils';
+import { forEach } from '../../common/utils';
+
+interface HostShellMainInterface extends ViewPropsInterface {
+    links: any,
+    currentView?: string,
+    topBarContent?: any
+};
+
+interface HostShellMainPanelInterface extends ViewPropsInterface {
+    links: any,
+    setView: any,
+    currentView: string
+};
 
 export const Shell: GameRuleInterface = {
 
@@ -33,13 +45,9 @@ export const Shell: GameRuleInterface = {
     },
 
     views: {
-        'HostShell-Main': class extends React.Component<ViewPropsInterface & {
-            links: any,
-            currentView?: string,
-            topBarContent?: any
-        }, { currentView: string }> {
+        'HostShell-Main': class extends React.Component<HostShellMainInterface, { currentView: string }> {
 
-            constructor (props: ViewPropsInterface) {
+            constructor (props: HostShellMainInterface) {
                 super(props);
                 this.state = { currentView: 'home' };
             }
@@ -76,13 +84,9 @@ export const Shell: GameRuleInterface = {
             }
         },
 
-        'HostShell-Main-Panel': class extends React.Component<ViewPropsInterface & {
-            links: any,
-            setView: any,
-            currentView: string
-        }, { showPanel: boolean }> {
+        'HostShell-Main-Panel': class extends React.Component<HostShellMainPanelInterface, { showPanel: boolean }> {
 
-            constructor(props: ViewPropsInterface) {
+            constructor(props: HostShellMainPanelInterface) {
                 super(props);
                 this.state = { showPanel: false };
                 this._togglePanel = this._togglePanel.bind(this);
@@ -198,11 +202,12 @@ export const Shell: GameRuleInterface = {
             }
 
             public render() {
-                const tr = [React.DOM.li({ onClick: this.setView, key: 'home' }, 'Home')];
+                const tr = [React.createElement('li', { onClick: this.setView, key: 'home' }, 'Home')];
                 for (let i = 0; i < this.props.links.length; i = i + 1) {
-                    tr.push(React.DOM.li({ onClick: this.setView, key: ('link-' + i) }, this.props['links'][i]));
+                    tr.push(React.createElement('li', { onClick: this.setView, key: ('link-' + i) }, this.props['links'][i]));
                 }
-                return React.DOM.ul(
+                return React.createElement(
+                    'li',
                     { className: 'shell-navigation' },
                     tr);
             }

@@ -221,10 +221,12 @@ export const RockScissorsPaperRule: GameRuleInterface = {
         },
         'chooseMove': class extends React.Component<ViewPropsInterface, {}> {
             public render() {
-                return React.DOM.div(null,
-                                     React.createElement(RockScissorsPaperRule.views['choices'], this.props),
-                                     React.createElement(RockScissorsPaperRule.views['prevMove'], this.props),
-                                     React.createElement(RockScissorsPaperRule.views['clientScoreTable'], this.props));
+                return React.createElement(
+                    'div',
+                    null,
+                    React.createElement(RockScissorsPaperRule.views['choices'], this.props),
+                    React.createElement(RockScissorsPaperRule.views['prevMove'], this.props),
+                    React.createElement(RockScissorsPaperRule.views['clientScoreTable'], this.props));
             }
         },
         'choices': class extends React.Component<ViewPropsInterface & {choice: number}, {}> {
@@ -238,8 +240,10 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                 forEach(choices, (c) => {
 
                     if (choice === c) {
-                        reactChoices.push(React.DOM.div({className: 'choice selected'},
-                                                        choices[c]));
+                        reactChoices.push(React.createElement(
+                            'div',
+                            {className: 'choice selected'},
+                            choices[c]));
                     } else {
                         let oc = null;
                         if (choice === -1) {
@@ -249,15 +253,19 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                                 };
                             })(c);
                         }
-                        reactChoices.push(React.DOM.div({className: 'choice', onClick: oc},
-                                                        choices[c]));
+                        reactChoices.push(React.createElement(
+                            'div',
+                            {className: 'choice', onClick: oc},
+                            choices[c]));
                     }
                 });
 
                 const cn = choice === -1 ? 'unselected' : 'selected';
 
-                reactChoices.push(React.DOM.div({className: 'clearer'}));
-                return React.DOM.div({id: 'choices', className: cn}, reactChoices);
+                reactChoices.push(React.createElement(
+                    'div', {className: 'clearer'}));
+                return React.createElement(
+                    'div', {id: 'choices', className: cn}, reactChoices);
             }
         },
         'prevMove': class extends React.Component<ViewPropsInterface & {prevChoice: number,
@@ -268,7 +276,7 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                 const choices = choiceEnum;
 
                 if (pMove === -1 || opMove === -1) {
-                    return React.DOM.div();
+                    return React.createElement('div');
                 }
 
                 let result = '';
@@ -281,27 +289,31 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                     result = 'Lose!';
                 }
 
-                return React.DOM.div(null,
-                                     React.DOM.div(null, 'You: ' + choices[pMove]),
-                                     React.DOM.div(null, 'Opponent: ' + choices[opMove]),
-                                     React.DOM.div(null, result));
+                return React.createElement(
+                    'div',
+                    null,
+                    React.createElement('div', null, 'You: ' + choices[pMove]),
+                    React.createElement('div', null, 'Opponent: ' + choices[opMove]),
+                    React.createElement('div', null, result));
             }
         },
         'scoreHeader': class extends React.Component<ViewPropsInterface, {}> {
             public render() {
-                return React.DOM.tr(
+                return React.createElement(
+                    'tr',
                     null,
-                    React.DOM.th(null, 'Player'),
-                    React.DOM.th(null, 'Win'),
-                    React.DOM.th(null, 'Draw'),
-                    React.DOM.th(null, 'Lose'));
+                    React.createElement('th', null, 'Player'),
+                    React.createElement('th', null, 'Win'),
+                    React.createElement('th', null, 'Draw'),
+                    React.createElement('th', null, 'Lose'));
             }
         },
         'clientScoreTable': class extends React.Component<ViewPropsInterface, {}> {
             public render() {
-                return React.DOM.table(
+                return React.createElement(
+                    'table',
                     null,
-                    React.DOM.tbody(null,
+                    React.createElement('tbody', null,
                                     React.createElement(RockScissorsPaperRule.views['scoreHeader'], {}),
                                     React.createElement(RockScissorsPaperRule.views['score'], this.props)));
             }
@@ -330,14 +342,19 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                                                 'home': {
                                                     'icon': 'gamepad',
                                                     'label': 'Game',
-                                                    'view': React.DOM.table(
+                                                    'view': React.createElement(
+                                                        'table',
                                                         null,
-                                                        React.DOM.thead(null,
-                                                                        React.createElement(
-                                                                            RockScissorsPaperRule.views['scoreHeader'],
-                                                                            {})),
-                                                        React.DOM.tbody(null,
-                                                                        scores))
+                                                        React.createElement(
+                                                            'thead',
+                                                            null,
+                                                            React.createElement(
+                                                                RockScissorsPaperRule.views['scoreHeader'],
+                                                                {})),
+                                                        React.createElement(
+                                                            'tbody',
+                                                            null,
+                                                            scores))
                                                 },
                                                 'clients': {
                                                     'icon': 'users',
@@ -354,11 +371,13 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                                                                      lose: number,
                                                                      draw: number}, {}> {
             public render() {
-                return React.DOM.tr(null,
-                                    React.DOM.td(null, this.props.name),
-                                    React.DOM.td(null, this.props.win),
-                                    React.DOM.td(null, this.props.draw),
-                                    React.DOM.td(null, this.props.lose));
+                return React.createElement(
+                    'tr',
+                    null,
+                    React.createElement('td', null, this.props.name),
+                    React.createElement('td', null, this.props.win),
+                    React.createElement('td', null, this.props.draw),
+                    React.createElement('td', null, this.props.lose));
             }
         }
     }
