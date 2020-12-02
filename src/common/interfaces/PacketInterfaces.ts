@@ -13,37 +13,37 @@
 //
 
 export interface PacketType {
-    transport?: TransportSubPacketType,
-    session?: SessionSubPacketType
-    room?: RoomSubPacketType,
-    dxc?: DataExchangeSubPacketType
+    transport?: TransportSubPacketType;
+    session?: SessionSubPacketType;
+    room?: RoomSubPacketType;
+    dxc?: DataExchangeSubPacketType;
 }
 
 export interface TransportSubPacketType {
 }
 
 export interface SessionSubPacketType {
-    action: SessionMessageType,
-    roomId?: string,
-    toClientId?: string,
-    fromClientId?: string
+    action: SessionMessageType;
+    roomId?: string;
+    toClientId?: string;
+    fromClientId?: string;
 }
 
 export interface RoomSubPacketType {
-    action: RoomMessageType,
-    clientId: string
+    action: RoomMessageType;
+    clientId: string;
 }
 
 export interface DataExchangeSubPacketType {
-    action: DataExchangeMessageType,
+    action: DataExchangeMessageType;
     execMethodProp?: {
-        method: string,
-        args: any
-    },
+        method: string;
+        args: any;
+    };
     setViewProp?: {
-        displayName: string,
-        props: any
-    }
+        displayName: string;
+        props: any;
+    };
 }
 
 export enum SessionMessageType {
@@ -68,13 +68,13 @@ export enum DataExchangeMessageType {
 }
 
 export interface JoinRoomType {
-    roomId: string,
-    clientId: string
+    roomId: string;
+    clientId: string;
 }
 
 export interface ReconnectPacketType {
-    roomId: string,
-    clientId: string
+    roomId: string;
+    clientId: string;
 }
 
 //
@@ -82,23 +82,23 @@ export interface ReconnectPacketType {
 //
 
 export interface ReturnPacketType {
-    success: boolean,
-    messageType: string,
-    message?: any
+    success: boolean;
+    messageType: string;
+    message?: any;
 }
 
 export interface JoinRoomReturnPacketType extends ReturnPacketType {
-    hostId?: string
+    hostId?: string;
 }
 
 export interface CreateRoomReturnPacketType extends ReturnPacketType {
-    roomId?: string
+    roomId?: string;
 }
 
 export interface GetRuleReturnPacketType extends ReturnPacketType {
-    rule?: string
+    rule?: string;
 }
 
 export interface CallbackType<T> {
-    (res: T): any
+    (res: T): any;
 }

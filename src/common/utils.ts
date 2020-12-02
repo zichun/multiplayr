@@ -39,7 +39,7 @@ export let uniqueId = (
                     return seed.slice(seed.length - reqWidth);
                 }
                 if (reqWidth > seed.length) { // so short we pad
-                    return Array(1 + (reqWidth - seed.length)).join('0') + seed;
+                    return [1 + (reqWidth - seed.length)].join('0') + seed;
                 }
                 return seed;
             };

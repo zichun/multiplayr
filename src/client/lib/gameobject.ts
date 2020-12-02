@@ -326,7 +326,7 @@ export class GameObject {
         }
 
         return this;
-    };
+    }
 
     public clientIsReady(
         clientId: string
@@ -478,7 +478,7 @@ export class GameObject {
         delete this.clientsData[clientId];
 
         return this;
-    };
+    }
 
     private processTick() {
         let changed = false;
@@ -731,7 +731,7 @@ export class GameObject {
                 return this.plugins[namespace].execMethod(fromClientId, splits[1], args);
             }
         }
-    };
+    }
 
     ///
     /// Methods that will be exposed to game rules
@@ -960,7 +960,7 @@ export class GameObject {
         key: string
     ) {
         delete this.reactProps[clientId][key];
-        return this
+        return this;
     }
 
     ///
@@ -1128,7 +1128,7 @@ export class GameObject {
                 forEach(this.rule.playerData, (variable) => {
                     playerStore.dataStore(variable).setValue(clientsStore[clientsMap[dataCount]][variable]);
                 });
-                dataCount = dataCount + 1
+                dataCount = dataCount + 1;
             });
             return;
         }
@@ -1197,7 +1197,7 @@ export class GameObject {
         function hostExposedMethodWrapper(method: string) {
             return function () {
                 return gameObj[method].apply(gameObj, arguments);
-            }
+            };
         }
 
         function clientMethodWrapper(method: string) {

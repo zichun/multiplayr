@@ -72,7 +72,7 @@ export class MultiplayR {
     ) {
         const src = (cssName) => {
             return MultiplayR.gamerulesPath + ruleName + '/' + cssName;
-        }
+        };
 
         if (typeof css === 'string') {
 

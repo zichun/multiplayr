@@ -13,6 +13,6 @@ export const CoupStartGame = (mp: MPType) => {
         mp.newGame();
         mp.setData('lobby_started', true);
     }
-}
+};
 
 export default CoupStartGame;

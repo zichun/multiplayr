@@ -74,7 +74,7 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                 mp.setView(clientId, 'lobby_SetName');
             });
             return true;
-        }
+        };
 
         const flatten = (value: any) => {
             const tr = [];
@@ -82,7 +82,7 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                 tr[i] = value[clientId];
             });
             return tr;
-        }
+        };
 
         const gameLogic = () => {
             if (state === 'play') {
@@ -109,7 +109,7 @@ export const RockScissorsPaperRule: GameRuleInterface = {
 
                 mp.setView(mp.hostId, 'hostScoreTable');
             }
-        }
+        };
 
         if (started) {
             gameLogic();
@@ -169,7 +169,7 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                 const inc = (pid: string, variable: any) => {
                     const value = mp.getPlayerData(pid, variable);
                     mp.setPlayerData(pid, variable, value + 1);
-                }
+                };
 
                 if (choices[pp1] === choices[pp2]) {
                     // draw

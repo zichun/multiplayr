@@ -187,7 +187,7 @@ export class Room {
             });
 
         return returnSuccess(cb, 'Room.broadcast', true);
-    };
+    }
 
     public getClients(): string[] {
         const tr = [];

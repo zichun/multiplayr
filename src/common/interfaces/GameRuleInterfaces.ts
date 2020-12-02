@@ -16,5 +16,5 @@ export interface GameRuleInterface {
 }
 
 export interface ViewPropsInterface {
-    MP: MPType
+    MP: MPType;
 }

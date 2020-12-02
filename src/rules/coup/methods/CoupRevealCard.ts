@@ -157,6 +157,6 @@ export const CoupRevealCard = (
     }
 
     mp.setPlayerData(clientId, 'cards', cards);
-}
+};
 
 export default CoupRevealCard;

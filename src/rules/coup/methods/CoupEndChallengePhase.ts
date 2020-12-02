@@ -161,6 +161,6 @@ export const CoupEndChallengePhase = (
     }
 
     mp.setData('actions', actions);
-}
+};
 
 export default CoupEndChallengePhase;

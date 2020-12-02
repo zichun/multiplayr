@@ -50,7 +50,6 @@ export const AvalonNewGame = (
         throw (new Error('Only host can start a new game'));
     }
 
-    let remotePlay = false;
     if (charactersInPlay) {
         mp.setData('charactersInPlay', charactersInPlay);
         mp.setData('remotePlay', charactersInPlay.remotePlay);
@@ -108,10 +107,8 @@ export const AvalonUpdateQuestMembers = (
     members: number[]
 ) => {
 
-    for (let i = 0; i < members.length; i = i + 1)
-    {
-        if (members[i] < 0 || members[i] >= mp.playersCount() || members[i] === undefined)
-        {
+    for (let i = 0; i < members.length; i = i + 1) {
+        if (members[i] < 0 || members[i] >= mp.playersCount() || members[i] === undefined) {
             throw (new Error('Invalid quest member: ' + members[i]));
         }
     }
@@ -230,7 +227,7 @@ export const AvalonCommitTeamVote = (
                       AvalonQuestStatus.TeamApproved);
         mp.setData('state', AvalonGameState.VoteQuest);
     }
-}
+};
 
 export const AvalonCommitQuestVote = (
     mp: MPType,
@@ -295,7 +292,6 @@ export const AvalonCommitQuestVote = (
                       playersVote,
                       AvalonQuestStatus.QuestFailed);
 
-
     } else {
 
         // Quest succeeded.
@@ -310,7 +306,7 @@ export const AvalonCommitQuestVote = (
     }
 
     mp.setData('state', AvalonGameState.VoteQuestResult);
-}
+};
 
 export const AvalonFinishVoeQuestResult = (
     mp: MPType,

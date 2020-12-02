@@ -10,5 +10,5 @@ export interface DataStoreType {
     (variable: string): {
         getValue: () => any,
         setValue: (value: any) => any
-    }
+    };
 }

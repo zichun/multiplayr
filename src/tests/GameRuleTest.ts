@@ -45,7 +45,7 @@ export class GameRuleTest {
             ruleDef.rule,
             (res: CreateRoomReturnPacketType) => {
 
-                checkReturnMessage(res, 'roomId')
+                checkReturnMessage(res, 'roomId');
                 const roomId = res.roomId;
 
                 //

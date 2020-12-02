@@ -42,6 +42,6 @@ export const CoupNewGame = (mp: MPType) => {
 
     mp.setData('playerTurn', Math.floor(Math.random() * mp.playersCount()));
     mp.setData('gameState', CoupGameState.PlayAction);
-}
+};
 
 export default CoupNewGame;

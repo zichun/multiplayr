@@ -223,7 +223,6 @@ export class Session implements ClientSessionInterface {
         }
     }
 
-
     public getClientId() {
         return this._clientId;
     }

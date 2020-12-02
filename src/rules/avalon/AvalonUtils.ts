@@ -137,7 +137,7 @@ export const IsClientMinion = (
 export const CharacterName = (
     character: any
 ) => {
-    switch(character) {
+    switch (character) {
 
     case AvalonCharacter.LoyalServant:
         return 'Loyal Servant of Arthur';
@@ -158,4 +158,4 @@ export const CharacterName = (
         return 'Morgana (Minion of Mondred)';
 
     }
-}
+};

@@ -125,6 +125,6 @@ export const CoupAmbassadorAction = (
     mp.setData('deck', deck);
     mp.setPlayerData(clientId, 'cards', newCards);
     nextTurn(mp);
-}
+};
 
 export default CoupAmbassadorAction;

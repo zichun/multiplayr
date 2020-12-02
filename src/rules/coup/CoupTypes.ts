@@ -55,42 +55,42 @@ export enum CoupWaitContext {
 }
 
 export interface CoupActionOutcomesInterface {
-    clientId: string,
-    coins?: number,
-    cards?: number
+    clientId: string;
+    coins?: number;
+    cards?: number;
 }
 
 export interface CoupActionInterface {
-    action: CoupAction,
-    clientId: string,
-    targetId?: string,
-    challenge?: string,
-    block?: string,
-    challengeResult?: boolean
-    challengeLoser?: string,
-    challengeWinner?: string,
-    challengeCauseDead?: boolean,
-    coinStolen?: number,
-    complete?: boolean,
-    outcomes?: CoupActionOutcomesInterface[]
+    action: CoupAction;
+    clientId: string;
+    targetId?: string;
+    challenge?: string;
+    block?: string;
+    challengeResult?: boolea;
+    challengeLoser?: string;
+    challengeWinner?: string;
+    challengeCauseDead?: boolean;
+    coinStolen?: number;
+    complete?: boolean;
+    outcomes?: CoupActionOutcomesInterface[];
 }
 
 export interface CoupViewPropsInterface {
-    MP: MPType,
-    actions: CoupActionInterface[],
-    playerTurn: number,
-    playerTurnId: string
-    isDead?: boolean,
-    coins: number,
-    cards: any,
-    alivePlayers: string[],
-    playersCards: any,
-    playersCoins: number[],
-    waitForId?: string,
-    waitContext?: CoupWaitContext,
-    waitAdditionalText?: string,
-    drawCards: any,
-    winner: string,
-    lobby: any,
-    gameobject: any
+    MP: MPType;
+    actions: CoupActionInterface[];
+    playerTurn: number;
+    playerTurnId: strin;
+    isDead?: boolean;
+    coins: number;
+    cards: any;
+    alivePlayers: string[];
+    playersCards: any;
+    playersCoins: number[];
+    waitForId?: string;
+    waitContext?: CoupWaitContext;
+    waitAdditionalText?: string;
+    drawCards: any;
+    winner: string;
+    lobby: any;
+    gameobject: any;
 }

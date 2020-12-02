@@ -68,6 +68,6 @@ export const CoupTakeReaction = (
     }
 
     mp.setData('actions', actions);
-}
+};
 
 export default CoupTakeReaction;

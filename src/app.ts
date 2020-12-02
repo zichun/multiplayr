@@ -59,7 +59,7 @@ dir.subdirs(rootDir + '/rules/', (err, subdirs) => {
             });
 
         });
-    }
+    };
 
     subdirs.forEach((subdir) => {
         const relativeDir = subdir.replace(rootDir, '');

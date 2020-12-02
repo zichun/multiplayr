@@ -8,21 +8,21 @@ declare var _mplib;
 _mplib.MultiplayR.SetGamerulesPath('/gamerules/');
 
 $(() => {
-    $("#res-select").on('change', (evt) => {
+    $('#res-select').on('change', (evt) => {
         const style = $(evt.target).val().toString();
-        $("#clients").attr('class', style);
+        $('#clients').attr('class', style);
     });
 
     const clientsCount = 10;
 
     const setupClients = () => {
         for (let i = 0; i < clientsCount; i = i + 1) {
-            let $client = $('<div id="client' + i + '" class="client"> ' +
+            const $client = $('<div id="client' + i + '" class="client"> ' +
                             'Client ' + i + ':' +
                             '<div id="client' + i + '-container" class="client-container">' +
                             '</div>');
 
-            $("#clients").append($client);
+            $('#clients').append($client);
         }
     };
 
