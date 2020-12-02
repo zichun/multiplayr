@@ -66,7 +66,7 @@ export interface CoupActionInterface {
     targetId?: string;
     challenge?: string;
     block?: string;
-    challengeResult?: boolea;
+    challengeResult?: boolean;
     challengeLoser?: string;
     challengeWinner?: string;
     challengeCauseDead?: boolean;
@@ -79,7 +79,7 @@ export interface CoupViewPropsInterface {
     MP: MPType;
     actions: CoupActionInterface[];
     playerTurn: number;
-    playerTurnId: strin;
+    playerTurnId: string;
     isDead?: boolean;
     coins: number;
     cards: any;
