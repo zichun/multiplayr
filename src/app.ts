@@ -6,7 +6,7 @@ import MPRULES from './rules/rules';
 
 const app = express();
 const server = http.createServer(app);
-const io = socketio.listen(server);
+const io = new socketio.Server(server);
 const rootDir = __dirname;
 
 app.set('port', process.env.PORT || 3000);

@@ -47,8 +47,8 @@ function setupJoinButton(
     $joinButton.show();
 
     $joinButton.click(() => {
-        const roomId = $('#roomId').val().trim();
-        const clientId = $('#clientId').val().trim();
+        const roomId = $('#roomId').val().toString().trim();
+        const clientId = $('#clientId').val().toString().trim();
 
         $joinButton.attr('disabled', 'disabled');
         $joinButton.text('Connecting...');

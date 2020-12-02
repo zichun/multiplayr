@@ -1,73 +1,96 @@
 /*global reload */
+//https://github.com/zichun/multiplayr/commit/9b87d4db666da98151c52c625877a6cb00b7be0b#diff-25789e3ba4c2adf4a68996260eb693a441b4a834c38b76167a120f0b51b969f7
+//https://gulpjs.com/docs/en/getting-started/creating-tasks
 'use strict';
 
-function defaultTask(cb) {
+const { src, dest, series, parallel, watch } = require('gulp');
+const webpack = require('webpack');
+const del = require('del');
+const ts = require('gulp-typescript');
+const tslint = require('gulp-tslint');
+const mocha = require('gulp-mocha');
+const run = require('gulp-run');
+
+function tslintTask(cb)
+{
+    return src('src/**/*.ts')
+        .pipe(tslint({
+            configuration: (process.cwd() + '/tslint.json'),
+            formatter: 'verbose'
+        }))
+        .pipe(tslint.report());
+}
+
+function cleanTask(cb)
+{
+    del(['build']);
+
     cb();
 }
 
-exports.default = defaultTask;
+function typescriptTask(cb)
+{
+    const tsconfig = require(process.cwd() + '/tsconfig.json');
+    const tsProject = ts.createProject('tsconfig.json');
+    const tsResult = tsProject.src().pipe(tsProject());
+    return tsResult.js.pipe(dest(tsconfig.compilerOptions.outDir));
+}
 
-// let build = require('node-web-build');
-// let gulp = require('gulp');
-// let webpack = require('webpack');
+function mochaTask(cb)
+{
+    return src('build/tests/test.js', { read: false })
+        .pipe(mocha({ reporter: 'nyan' }));
+}
 
-// build.webpack.setConfig({ webpack: webpack });
+function webpackTask(cb)
+{
+    const webpackConfig = require(process.cwd() + '/webpack.config');
+    webpack(webpackConfig, (err, stats) => {
+        if (err)
+        {
+            throw err;
+        }
+        cb();
+    });
+}
 
-// build.postCopy.setConfig({
-//   copyTo: {
-//     'build': ['src/**/*.png', 'src/**/*.css'],
-//     'build/client/static': ['src/client/static/*.html'],
-//     'build/rules': ['src/rules/**/*.mp3']
-//   },
-//   shouldFlatten: false
-// });
+const staticTask = (() => {
+    function cssTask(cb) {
+        return src('src/client/**/*.css')
+            .pipe(dest('build/client'));
+    }
+    function htmlTask(cb) {
+        return src('src/client/**/*.html')
+            .pipe(dest('build/client'));
+    }
+    function jsTask(cb) {
+        return src('src/client/**/*.js')
+            .pipe(dest('build/client'));
+    }
+    function rulesTask(cb) {
+        return src('src/rules/gamerules/**/*.js')
+            .pipe(dest('build/rules/gamerules/'));
+    }
+    function rulesCssTask(cb) {
+        return src('src/rules/gamerules/**/*.css')
+            .pipe(dest('build/rules/gamerules/'));
+    }
 
-// build.typescript.setConfig({ 'libDir': 'build' });
-// // build.mocha.setConfig({
-// //   testMatch: 'build/tests/*.js'
-// // });
+    return parallel(cssTask, htmlTask, jsTask, rulesTask, rulesCssTask);
+})();
 
-// var sourceMatch = [
-//   'src/**/*.{ts,tsx,scss,js,txt,html}',
-//   '!src/**/*.scss.ts'
-// ];
 
-// build.setRigConfig({
-//     serveTask: function(config) {
-//         return {
-//             execute: function() {
-//                 return build.serve.execute(config)
-//             },
-//             isEnabled: function() { return false; }
-//         };
-//     }
-// });
+exports.clean = cleanTask;
+exports.check = tslintTask;
+exports.test = series(typescriptTask, mochaTask);
+exports.default = series(cleanTask, tslintTask, typescriptTask, mochaTask, staticTask, webpackTask);
 
-// build.task(
-//     'mp-watch',
-//     build.watch(
-//         sourceMatch,
-//         build.serial(
-//             build.preCopy, build.sass, build.compileTsTasks,
-//             build.postCopy, build.webpack, build.postProcessSourceMapsTask, build.reload)));
+exports.watch = () => {
+    watch('src/**/*.css', staticTask);
+    watch('src/**/*.html', staticTask);
+    watch('src/**/*.ts', { delay: 750 }, series(tslintTask, typescriptTask, mochaTask, webpackTask));
+    watch('src/**/*.tsx', { delay: 750 }, series(tslintTask, typescriptTask, mochaTask, webpackTask));
+    watch('src/**/*.scss', { delay: 750 }, series(tslintTask, typescriptTask, mochaTask, webpackTask));
 
-// // change the port of serve.
-// build.serve.setConfig({
-//   port: 3000,
-//   initialPage: '/'
-// });
-
-// let isProduction = process.argv.indexOf('--production') >= 0;
-// let isNuke = process.argv.indexOf('clean') >= 0;
-
-// if (isProduction || isNuke) {
-//   build.setConfig({
-//     libAMDFolder: 'lib-amd'
-//   });
-// }
-
-// /** @todo: Enable css modules when ready. */
-// // build.sass.setConfig({ useCSSModules: true });
-
-// // initialize tasks.
-// build.initialize(gulp);
+    run('node build/app.js').exec();
+};
