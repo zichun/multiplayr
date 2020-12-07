@@ -31,6 +31,7 @@ function cleanTask(cb)
 function typescriptTask(cb)
 {
     const tsconfig = require(process.cwd() + '/tsconfig.json');
+    tsconfig.exclude.push("src\\client");
     const tsProject = ts.createProject('tsconfig.json');
     const tsResult = tsProject.src().pipe(tsProject());
     return tsResult.js.pipe(dest(tsconfig.compilerOptions.outDir));
