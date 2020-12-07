@@ -131,6 +131,8 @@ export class MultiplayR {
     private static LoadRuleCssDeep(
         rule: any
     ) {
+        console.log("NOT LOADING ANY RULES");
+        /*
         MultiplayR.LoadRuleCss(rule.name, rule.css);
 
         if (rule.plugins) {
@@ -138,6 +140,7 @@ export class MultiplayR {
                 MultiplayR.LoadRuleCssDeep(rule.plugins[plugin]);
             });
         }
+        */
     }
 
     public static ReHost(

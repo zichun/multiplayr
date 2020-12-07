@@ -81,7 +81,10 @@ function createConfig() {
                 $: "jquery",
                 jQuery: "jquery"
             })
-        ]
+        ],
+        optimization: {
+            minimize: false
+        },
     };
 }
 

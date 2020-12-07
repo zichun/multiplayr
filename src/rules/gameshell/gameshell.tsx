@@ -7,7 +7,12 @@ import * as FontAwesome from 'react-fontawesome';
 
 //import { Panel } from 'office-ui-fabric-react/lib/Panel';
 //import { Button } from 'office-ui-fabric-react/lib/Button';
+
+console.log("IMPORTING SHELL.SCSS");
+
 import './shell.scss';
+
+console.log("THIS IS SUPPOSED TO BE IMPORTED ALREADY");
 
 import {
     GameRuleInterface,
@@ -57,6 +62,7 @@ export const Shell: GameRuleInterface = {
             }
 
             public render() {
+                console.log("CAN THIS BE SEEN?");
                 const header = React.createElement(
                     Shell.views['HostShell-Main-Head'],
                     {
