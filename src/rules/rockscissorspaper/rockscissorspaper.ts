@@ -42,8 +42,6 @@ winMap[4][0] = true;
 export const RockScissorsPaperRule: GameRuleInterface = {
 
     name: 'rockscissorspaper',
-    css: ['rcs.css'],
-
     plugins: {
         'lobby': Lobby,
         'gameshell': Shell

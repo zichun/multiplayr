@@ -10,6 +10,7 @@ const ts = require('gulp-typescript');
 const tslint = require('gulp-tslint');
 const mocha = require('gulp-mocha');
 const run = require('gulp-run');
+const gulp = require('gulp');
 
 function tslintTask(cb)
 {
@@ -31,9 +32,8 @@ function cleanTask(cb)
 function typescriptTask(cb)
 {
     const tsconfig = require(process.cwd() + '/tsconfig.json');
-    tsconfig.exclude.push("src\\client");
     const tsProject = ts.createProject('tsconfig.json');
-    const tsResult = tsProject.src().pipe(tsProject());
+    const tsResult = gulp.src(["./src/**/*.ts", "!./src/client/**/*.ts"]).pipe(tsProject());
     return tsResult.js.pipe(dest(tsconfig.compilerOptions.outDir));
 }
 
@@ -45,11 +45,14 @@ function mochaTask(cb)
 
 function webpackTask(cb)
 {
-    const webpackConfig = require(process.cwd() + '/webpack.config');
+    const webpackConfig = require(process.cwd() + '/webpack.config.js');
     webpack(webpackConfig, (err, stats) => {
         if (err)
         {
             throw err;
+        }
+        if (stats.hasErrors()) {
+            throw new Error(stats.compilation.errors.join('\n'));
         }
         cb();
     });
@@ -77,7 +80,7 @@ const staticTask = (() => {
             .pipe(dest('build/rules/gamerules/'));
     }
 
-    return parallel(cssTask, htmlTask, jsTask, rulesTask, rulesCssTask);
+    return parallel(htmlTask, jsTask, rulesTask, rulesCssTask);
 })();
 
 
@@ -85,9 +88,8 @@ exports.clean = cleanTask;
 exports.check = tslintTask;
 exports.test = series(typescriptTask, mochaTask);
 exports.default = series(cleanTask, tslintTask, typescriptTask, mochaTask, staticTask, webpackTask);
-
+exports.webpackTask = webpackTask;
 exports.watch = () => {
-    watch('src/**/*.css', staticTask);
     watch('src/**/*.html', staticTask);
     watch('src/**/*.ts', { delay: 750 }, series(tslintTask, typescriptTask, mochaTask, webpackTask));
     watch('src/**/*.tsx', { delay: 750 }, series(tslintTask, typescriptTask, mochaTask, webpackTask));

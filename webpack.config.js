@@ -1,19 +1,30 @@
 'use strict';
 
 var webpack = require('webpack');
-//var ExtractTextPlugin = require('extract-text-webpack-plugin');
-//var HtmlWebpackPlugin = require('html-webpack-plugin');
 var path = require('path');
 let configs = [
-    createConfig(),
-    //createBackendConfig()
+    createConfigCommon(),
+    createRuleSpecificConfig()
 ];
 
-function createBackendConfig() {
-    
+function createRuleSpecificConfig() {
+    let commonConfig = createConfigCommon();
+
+    // These files run code the moment they are included.
+    // The target variable where the module exports are located
+    // don't matter
+    commonConfig.entry = {
+        host: './client/js/host.ts',
+        join: './client/js/join.ts',
+        "avalon.local": './client/js/avalon.local.ts',
+        "coup.local": './client/js/coup.local.ts',
+        "theoddone.local": './client/js/oddone.local.ts',
+    };
+    commonConfig.output.library = "_unused";
+    return commonConfig;
 }
 
-function createConfig() {
+function createConfigCommon() {
     return {
         context: path.resolve(__dirname, 'src'),
         entry: {
@@ -52,14 +63,7 @@ function createConfig() {
                     test: /test\.js$/,
                     use: 'mocha-loader',
                     exclude: /node_modules/,
-                },
-                /*
-                {
-                    test: /\.js$/,
-                    use: ['source-map-loader'],
-                    enforce: 'pre'
                 }
-                */
             ]
         },
         output: {
@@ -71,10 +75,13 @@ function createConfig() {
         },
         resolve: {
             alias: {
-                jquery: "src/client/js/jquery",
+                jquery: "src/client/js/jquery.js",
                 Q: "src/client/js/q"
             },
             extensions: [ '.tsx', '.ts', '.js' ],
+        },
+        externals: {
+            jquery: "jQuery",
         },
         plugins: [
             new webpack.ProvidePlugin({

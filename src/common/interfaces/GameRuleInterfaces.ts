@@ -6,7 +6,6 @@ export type MPType = any;
 
 export interface GameRuleInterface {
     name: string;
-    css: string[];
     plugins: { [gameName: string]: GameRuleInterface };
     globalData: { [varName: string]: any };
     playerData: { [varName: string]: any };
