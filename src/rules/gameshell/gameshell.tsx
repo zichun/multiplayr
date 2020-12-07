@@ -57,7 +57,6 @@ export const Shell: GameRuleInterface = {
             }
 
             public render() {
-                console.log("CAN THIS BE SEEN?");
                 const header = React.createElement(
                     Shell.views['HostShell-Main-Head'],
                     {
