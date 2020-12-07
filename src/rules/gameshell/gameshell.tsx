@@ -7,8 +7,7 @@ import * as FontAwesome from 'react-fontawesome';
 
 //import { Panel } from 'office-ui-fabric-react/lib/Panel';
 //import { Button } from 'office-ui-fabric-react/lib/Button';
-import style from './shell.scss';
-window['ShellStyles'] = style;
+import './shell.scss';
 
 import {
     GameRuleInterface,
