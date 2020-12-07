@@ -83,12 +83,6 @@ function createConfigCommon() {
         externals: {
             jquery: "jQuery",
         },
-        plugins: [
-            new webpack.ProvidePlugin({
-                $: "jquery",
-                jQuery: "jquery"
-            })
-        ],
         optimization: {
             minimize: false
         },
