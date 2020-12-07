@@ -59,8 +59,8 @@ function webpackTask(cb)
 }
 
 const staticTask = (() => {
-    function cssTask(cb) {
-        return src('src/client/**/*.css')
+    function htmlTask(cb) {
+        return src('src/client/**/*.html')
             .pipe(dest('build/client'));
     }
     function htmlTask(cb) {

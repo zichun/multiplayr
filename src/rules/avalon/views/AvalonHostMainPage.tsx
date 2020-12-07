@@ -4,6 +4,8 @@
 
 import * as React from 'react';
 import * as ReactCSSTransitionGroup from 'react-addons-css-transition-group';
+import FailSound from '../sounds/fail.mp3';
+import PassSound from '../sounds/pass.mp3';
 
 import {
     contains
@@ -40,7 +42,7 @@ import {
 } from 'semantic-ui-react'
 
 import * as FontAwesome from 'react-fontawesome';
-import * as Sound from 'react-sound';
+import Sound from 'react-sound';
 
 const PlayerTeamVote = (
     props: AvalonViewPropsInterface & { playerIndex: number }
@@ -305,8 +307,8 @@ export class VoteQuestResult extends React.Component<
             if (this.state.hiddenCardIndex === 0 && this.state.currentCardIndex - 1 === i) {
                 const result = this.state.currentCardIndex <= pass;
                 sound = (<Sound
-                             url={ 'gamerules/avalon/sounds/' + (result ? 'pass' : 'fail') + '.mp3' }
-                             playStatus={ Sound.status.PLAYING } />);
+                             url={ '/js' + (result ? PassSound : FailSound ) }
+                             playStatus="PLAYING" />);
             }
             votes.push(
                 <Grid.Column key={ 'quest-' + quest.quest + '-vote-' + i }>

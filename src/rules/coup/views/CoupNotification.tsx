@@ -3,7 +3,7 @@
  */
 
 import * as React from 'react';
-import * as Sound from 'react-sound';
+import Sound from 'react-sound';
 
 import {
     CoupViewPropsInterface,
@@ -13,6 +13,18 @@ import {
 import {
     Notification
 } from '../../../client/components/Notification';
+
+import Coin1Sound from '../sounds/coin1.mp3';
+import Coin2Sound from '../sounds/coin2.mp3';
+import Coin3Sound from '../sounds/coin3.mp3';
+import CardSound from '../sounds/card.mp3';
+import AmbassadorSound from '../sounds/ambassador.mp3';
+
+const COIN_SOUNDS = {
+    1: Coin1Sound,
+    2: Coin2Sound,
+    3: Coin3Sound
+};
 
 export function CoupNotification(
     props: CoupViewPropsInterface
@@ -42,8 +54,8 @@ export function CoupNotification(
                 coinsDelta = '+' + coins;
                 sound = (
                     <Sound
-                        url={ 'gamerules/coup/sounds/coin' + coins + '.mp3' }
-                        playStatus={ Sound.status.PLAYING } />);
+                        url={ '/js' + COIN_SOUNDS[coins] }
+                        playStatus="PLAYING" />);
 
 
             } else {
@@ -72,15 +84,15 @@ export function CoupNotification(
 
                 sound = (
                     <Sound
-                        url='gamerules/coup/sounds/ambassador.mp3'
-                        playStatus={ Sound.status.PLAYING } />);
+                        url={ '/js' + AmbassadorSound }
+                        playStatus="PLAYING" />);
             } else {
                 cardsDelta = '-' + (-cards);
 
                 sound = (
                     <Sound
-                        url='gamerules/coup/sounds/card.mp3'
-                        playStatus={ Sound.status.PLAYING } />);
+                        url={ '/js' + CardSound }
+                        playStatus="PLAYING" />);
             }
 
             if (cards > 1 || cards < -1) {
