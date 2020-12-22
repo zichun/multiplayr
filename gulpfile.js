@@ -59,6 +59,12 @@ function webpackTask(cb)
 }
 
 const staticTask = (() => {
+    let staticAssetTasks = ['png', 'jpeg', 'jpg', 'gif', 'mp3', 'wav']
+        .map(el => { return (cb => {
+            return src('src/**/*.' + el)
+                .pipe(dest('build'));
+        });
+    });
     function htmlTask(cb) {
         return src('src/client/**/*.html')
             .pipe(dest('build/client'));
@@ -80,7 +86,8 @@ const staticTask = (() => {
             .pipe(dest('build/rules/gamerules/'));
     }
 
-    return parallel(htmlTask, jsTask, rulesTask, rulesCssTask);
+    return parallel(htmlTask, jsTask, rulesTask, rulesCssTask,
+                    parallel.apply(this, staticAssetTasks));
 })();
 
 

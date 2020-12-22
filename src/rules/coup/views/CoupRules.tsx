@@ -10,7 +10,7 @@ const CoupRuleComponent = class extends React.Component<{}, {}> {
                 </p>
                 <h2>Set up</h2>
                 <p>
-                    Each player starts the game with 2 coinds and 2 character cards (which are unknown to other players). The 2 cards
+                    Each player starts the game with 2 coins and 2 character cards (which are unknown to other players). The 2 cards
                     are chosen from a deck of 15 character cards (comprising 3 copies of 5 different characters, each with a unique
                     set of abilities).
                 </p>

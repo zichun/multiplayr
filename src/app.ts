@@ -12,6 +12,7 @@ const rootDir = __dirname;
 app.set('port', process.env.PORT || 3000);
 app.set('view options', { layout: false, pretty: true });
 app.use(express.static(rootDir + '/client/'));
+app.use(express.static(rootDir + '/client/js'));
 
 /**
  * Routes
