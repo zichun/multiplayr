@@ -37,7 +37,6 @@ interface LobbySetNameViewInterface extends ViewPropsInterface {
 export const Lobby: GameRuleInterface = {
 
     name: 'lobby',
-    css: ['lobby.css'],
 
     plugins: {},
 

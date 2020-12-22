@@ -7,6 +7,7 @@ import * as FontAwesome from 'react-fontawesome';
 
 //import { Panel } from 'office-ui-fabric-react/lib/Panel';
 //import { Button } from 'office-ui-fabric-react/lib/Button';
+
 import './shell.scss';
 
 import {
@@ -32,7 +33,6 @@ interface HostShellMainPanelInterface extends ViewPropsInterface {
 export const Shell: GameRuleInterface = {
 
     name: 'gameshell',
-    css: ['shell.css'],
 
     plugins: {},
     methods: {},

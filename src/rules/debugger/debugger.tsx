@@ -206,8 +206,6 @@ export function NewDebuggerRule(
     return {
 
         name: 'debugger',
-        css: [],
-
         plugins: BaseGameRuleObject,
 
         globalData: {},

@@ -65,35 +65,6 @@ export class MultiplayR {
         }
     }
 
-    private static LoadRuleCss(
-        ruleName: string,
-        css: any,
-        cb?: any
-    ) {
-        const src = (cssName) => {
-            return MultiplayR.gamerulesPath + ruleName + '/' + cssName;
-        };
-
-        if (typeof css === 'string') {
-
-            MultiplayR.LoadCss(src(css), cb);
-
-        } else if (isArray(css)) {
-
-            let cnt = css.length;
-            let i = 0;
-
-            for (i = 0; i < css.length; i = i + 1) {
-                MultiplayR.LoadCss(src(css[i]), () => {
-                    cnt = cnt - 1;
-                    if (cnt === 0 && isFunction(cb)) {
-                        cb();
-                    }
-                });
-            }
-        }
-    }
-
     private static LoadJs(
         src: string,
         cb?: any
@@ -126,18 +97,6 @@ export class MultiplayR {
         //     less.sheets.push(lnk);
         //     less.refresh(true);
         // }
-    }
-
-    private static LoadRuleCssDeep(
-        rule: any
-    ) {
-        MultiplayR.LoadRuleCss(rule.name, rule.css);
-
-        if (rule.plugins) {
-            Object.keys(rule.plugins).forEach((plugin) => {
-                MultiplayR.LoadRuleCssDeep(rule.plugins[plugin]);
-            });
-        }
     }
 
     public static ReHost(

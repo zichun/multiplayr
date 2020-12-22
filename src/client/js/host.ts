@@ -28,7 +28,6 @@ $(() => {
                 const ruleName = sessionStorage.getItem('ruleName');
                 const clientId = sessionStorage.getItem('clientId');
                 const gameState = sessionStorage.getItem('gameState');
-                console.log(gameState);
 
                 if (confirm('An existing game at room ' + roomId + ' (' + ruleName + ') detected. Click OK to resume the game, and cancel to host a new game')) {
                     return rehost(ruleName, roomId, clientId, gameState);

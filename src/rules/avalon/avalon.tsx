@@ -50,7 +50,6 @@ import {
 
 export const AvalonRule: GameRuleInterface = {
     name: 'avalon',
-    css: [],
 
     plugins: {
         'lobby': Lobby,

@@ -80,7 +80,6 @@ import {
 export const CoupRule: GameRuleInterface = {
 
     name: 'coup',
-    css: ['coup.css'],
 
     plugins: {
         'lobby': Lobby,

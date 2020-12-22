@@ -28,8 +28,6 @@ interface TheOddOneHostVoteTableViewInterface extends ViewPropsInterface {
 export const TheOddOneRule: GameRuleInterface = {
 
     name: 'theoddone',
-    css: ['theoddone.css'],
-
     plugins: {
         'lobby': Lobby,
         'gameshell': Shell
