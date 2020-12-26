@@ -8,6 +8,7 @@ import { TheOddOneRule } from './theoddone/theoddone';
 import { CoupRule } from './coup/coup';
 import { NewDebuggerRule } from './debugger/debugger';
 import { AvalonRule } from './avalon/avalon';
+import { DecryptoRule } from './decrypto/decrypto';
 
 const CoupDebugger = NewDebuggerRule(
     'coup',
@@ -28,6 +29,14 @@ const AvalonDebugger = NewDebuggerRule(
 const TheOddOneDebugger = NewDebuggerRule(
     'theoddone',
     TheOddOneRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const DecryptoDebugger = NewDebuggerRule(
+    'decrypto',
+    DecryptoRule,
     {
         HistoryBufferSize: 10,
         HistoryInSessionStorage: true
@@ -61,6 +70,11 @@ export const MPRULES = {
         rules: ['lobby', 'gameshell', 'avalon'],
         rule: AvalonRule
     },
+    'decrypto': {
+        description: 'Decrypto',
+        rules: ['lobby', 'gameshell', 'decrypto'],
+        rule: DecryptoRule
+    },
     'coup-debug': {
         description: 'Coup - Resistance (Debug)',
         debug: true,
@@ -78,6 +92,12 @@ export const MPRULES = {
         debug: true,
         rules: ['lobby', 'gameshell', 'theoddone', 'debugger'],
         rule: TheOddOneDebugger
+    },
+    'decrypto-debug': {
+        description: 'Decrypto (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'decrypto', 'debugger'],
+        rule: DecryptoDebugger
     }
 };
 

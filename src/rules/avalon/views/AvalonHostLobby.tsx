@@ -11,6 +11,8 @@ import {
 
 import { AvalonRules } from './AvalonCommonViews';
 
+import { faHome, faUsers, faBook } from '@fortawesome/free-solid-svg-icons';
+
 export class AvalonHostLobby extends React.Component<ViewPropsInterface, {}> {
     public render() {
         const mp = this.props.MP;
@@ -21,17 +23,17 @@ export class AvalonHostLobby extends React.Component<ViewPropsInterface, {}> {
             {
                 'links': {
                     'home': {
-                        'icon': 'home',
+                        'icon': faHome,
                         'label': 'Home',
                         'view': mp.getPluginView('lobby', 'Lobby')
                     },
                     'clients': {
-                        'icon': 'users',
+                        'icon': faUsers,
                         'label': 'Players',
                         'view': mp.getPluginView('lobby', 'host-roommanagement')
                     },
                     'rules': {
-                        'icon': 'book',
+                        'icon': faBook,
                         'label': 'Rules',
                         'view': <AvalonRules />
                     }

@@ -19,6 +19,7 @@ function createRuleSpecificConfig() {
         "avalon.local": './client/js/avalon.local.ts',
         "coup.local": './client/js/coup.local.ts',
         "theoddone.local": './client/js/theoddone.local.ts',
+        "decrypto.local": './client/js/decrypto.local.ts',
     };
     commonConfig.output.library = "_unused";
     return commonConfig;

@@ -3,7 +3,8 @@
  */
 
 import * as React from 'react';
-import * as FontAwesome from 'react-fontawesome';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDollarSign } from '@fortawesome/free-solid-svg-icons';
 
 import {
     CoupViewPropsInterface
@@ -12,7 +13,7 @@ import {
 export function CoupClientCoins(props: CoupViewPropsInterface) {
     return (
         <div className='coup-client-coin'>
-            <FontAwesome name='usd' />
+            <FontAwesomeIcon icon={ faDollarSign } />
             &nbsp;
             { props.coins }
         </div>

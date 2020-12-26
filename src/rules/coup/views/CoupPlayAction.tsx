@@ -27,6 +27,8 @@ import { CoupClientCoins } from './CoupClientCoins';
 import { CoupPlayersCards } from './CoupCards';
 import { CoupWaitFor } from './CoupWait';
 
+import { faGamepad, faAddressCard, faList, faBook, faHome, faUsers } from '@fortawesome/free-solid-svg-icons';
+
 class CoupClientSelectAction extends React.Component<CoupViewPropsInterface, {
     action: CoupAction,
     player: string
@@ -214,22 +216,22 @@ export class CoupClientPlayAction extends React.Component<CoupViewPropsInterface
             {
                 'links': {
                     'home': {
-                        'icon': 'gamepad',
+                        'icon': faGamepad,
                         'label': 'Coup',
                         'view': (<CoupClientPlayActionPage { ...this.props } />)
                     },
                     'cards': {
-                        'icon': 'address-card',
+                        'icon': faAddressCard,
                         'label': 'Cards',
                         'view': (<CoupPlayersCards { ...this.props } />)
                     },
                     'actionslist': {
-                        'icon': 'list',
+                        'icon': faList,
                         'label': 'Actions History',
                         'view': actionsPage
                     },
                     'rules': {
-                        'icon': 'book',
+                        'icon': faBook,
                         'label': 'Rules',
                         'view': CoupGameRule
                     }
@@ -255,22 +257,22 @@ export class CoupHostPlayAction extends React.Component<CoupViewPropsInterface, 
             {
                 'links': {
                     'home': {
-                        'icon': 'home',
+                        'icon': faHome,
                         'label': 'Home',
                         'view': waitActionPage
                     },
                     'clients': {
-                        'icon': 'users',
+                        'icon': faUsers,
                         'label': 'Players',
                         'view': mp.getPluginView('lobby', 'host-roommanagement')
                     },
                     'actionslist': {
-                        'icon': 'list',
+                        'icon': faList,
                         'label': 'Actions History',
                         'view': actionsPage
                     },
                     'rules': {
-                        'icon': 'book',
+                        'icon': faBook,
                         'label': 'Rules',
                         'view': CoupGameRule
                     }

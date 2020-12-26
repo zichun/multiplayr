@@ -12,6 +12,8 @@ import {GameRuleInterface,
 
 import {forEach} from '../../common/utils';
 
+import { faHome, faUsers, faGamepad } from '@fortawesome/free-solid-svg-icons';
+
 const choiceEnum = {
     0: 'Rock',
     1: 'Scissors',
@@ -204,12 +206,12 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                                         {
                                             'links': {
                                                 'home': {
-                                                    'icon': 'home',
+                                                    'icon': faHome,
                                                     'label': 'Home',
                                                     'view': mp.getPluginView('lobby', 'Lobby')
                                                 },
                                                 'clients': {
-                                                    'icon': 'users',
+                                                    'icon': faUsers,
                                                     'label': 'Players',
                                                     'view': mp.getPluginView('lobby', 'host-roommanagement')
                                                 }
@@ -338,7 +340,7 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                                         {
                                             'links': {
                                                 'home': {
-                                                    'icon': 'gamepad',
+                                                    'icon': faGamepad,
                                                     'label': 'Game',
                                                     'view': React.createElement(
                                                         'table',
@@ -355,7 +357,7 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                                                             scores))
                                                 },
                                                 'clients': {
-                                                    'icon': 'users',
+                                                    'icon': faUsers,
                                                     'label': 'Players',
                                                     'view': mp.getPluginView('lobby', 'host-roommanagement')
                                                 }

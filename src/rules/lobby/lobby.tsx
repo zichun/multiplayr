@@ -3,7 +3,22 @@
  */
 import * as React from 'react';
 import * as Chance from 'chance';
-import * as FontAwesome from 'react-fontawesome';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+    faCar, faIdBadge, faBatteryEmpty, faBatteryFull, faBatteryHalf, faThermometerEmpty, faUserCircle, faAddressCard, faUmbrella, faQuoteLeft,
+    faIdCard, faBath, faDice, faDna, faMicrochip, faAdjust, faChartArea, faFire, faBatteryQuarter,
+    faBicycle, faBook, faBriefcase, faBullhorn, faCalculator, faCircle, faCoffee, faCube, faEnvelope, faFaucet,
+    faFireExtinguisher, faGift, faHandPeace, faHandSpock, faHashtag, faHotel, faHourglass, faHourglassEnd, faHourglassHalf,
+    faMortarPestle, faPen, faPencilAlt, faPhone, faChartPie, faPowerOff, faTrash, faBinoculars, faBug, faCog, faCubes,
+    faFemale, faFlag, faFlask, faChartLine, faSignLanguage, faSitemap, faSpaceShuttle, faTags, faWrench,
+    faTicketAlt, faTree, faUnlock, faStreetView, faPlug, faMoneyBill, faMale, faFighterJet, faCut, faBus, faBirthdayCake,
+    faBed, faBeer, faBomb, faBlind, faCloud, faCookie, faFax, faFutbol, faMap, faMapSigns, faPaw, faShip, faGrin
+} from '@fortawesome/free-solid-svg-icons';
+
+import {
+    faTelegram, faImdb, faEtsy, faApple, faAmazon, faQuora, faWindows, faFacebookSquare, faTwitter, faGoogle, faAndroid, faLinux
+} from '@fortawesome/free-brands-svg-icons';
+
 import './lobby.scss';
 
 import {
@@ -12,18 +27,19 @@ import {
     ViewPropsInterface
 } from '../../common/interfaces';
 
-const icons = ['car', 'id-badge', 'linode', 'thermometer-empty', 'user-circle', 'address-card-o', 'umbrella', 'quote-left',
-               'id-card', 'bath', 'grav', 'microchip', 'telegram', 'imdb', 'adjust', 'area-chart', 'bank', 'battery-quarter',
-               'bicycle', 'book', 'briefcase', 'bullhorn', 'calculator', 'circle', 'coffee', 'cube', 'envelope', 'feed',
-               'fire-extinguisher', 'gift', 'hand-peace-o', 'hand-spock-o', 'hashtag', 'hotel', 'hourglass-3', 'legal',
-               'mortar-board', 'pencil', 'phone', 'pie-chart', 'power-off', 'trash', 'binoculars', 'bug', 'cog', 'cubes',
-               'female', 'flag', 'flask', 'line-chart', 'sign-language', 'sitemap', 'space-shuttle', 'tags', 'wrench',
-               'ticket', 'tree', 'unlock', 'street-view', 'plug', 'money', 'male', 'fighter-jet', 'cutlery', 'bus', 'birthday-cake',
-               'bed', 'beer', 'bomb', 'blind', 'cloud', 'dashboard', 'fax', 'futbol-o', 'map', 'map-signs', 'paw', 'ship',
-               'etsy', 'apple', 'amazon', 'quora', 'windows', 'facebook-square', 'twitter', 'google', 'android', 'linux'];
+const icons = [faCar, faIdBadge, faBatteryEmpty, faBatteryFull, faBatteryHalf, faThermometerEmpty, faUserCircle, faAddressCard, faUmbrella, faQuoteLeft,
+               faIdCard, faBath, faDice, faDna, faMicrochip, faAdjust, faChartArea, faFire, faBatteryQuarter,
+               faBicycle, faBook, faBriefcase, faBullhorn, faCalculator, faCircle, faCoffee, faCube, faEnvelope, faFaucet,
+               faFireExtinguisher, faGift, faHandPeace, faHandSpock, faHashtag, faHotel, faHourglass, faHourglassEnd, faHourglassHalf,
+               faMortarPestle, faPen, faPencilAlt, faPhone, faChartPie, faPowerOff, faTrash, faBinoculars, faBug, faCog, faCubes,
+               faFemale, faFlag, faFlask, faChartLine, faSignLanguage, faSitemap, faSpaceShuttle, faTags, faWrench,
+               faTicketAlt, faTree, faUnlock, faStreetView, faPlug, faMoneyBill, faMale, faFighterJet, faCut, faBus, faBirthdayCake,
+               faBed, faBeer, faBomb, faBlind, faCloud, faCookie, faFax, faFutbol, faMap, faMapSigns, faPaw, faShip, faGrin,
+               faTelegram, faImdb, faEtsy, faApple, faAmazon, faQuora, faWindows, faFacebookSquare, faTwitter, faGoogle, faAndroid, faLinux
+];
 
-const colors = ['#0074D9', '#7FDBFF', '#39CCCC', '#3D9970', '#2ECC40', '#01FF70', '#EEAB00', '#FF851B', '#FF4136',
-                '#F012BE', '#B10DC9', '#AAAAAA'];
+const colors_default = ['#0074D9', '#7FDBFF', '#39CCCC', '#3D9970', '#2ECC40', '#01FF70', '#EEAB00', '#FF851B', '#FF4136',
+                        '#F012BE', '#B10DC9', '#AAAAAA'];
 
 interface LobbyViewInterface extends ViewPropsInterface {
     names: string[],
@@ -31,7 +47,8 @@ interface LobbyViewInterface extends ViewPropsInterface {
     accents: string[]
 };
 interface LobbySetNameViewInterface extends ViewPropsInterface {
-    name: string
+    name: string,
+    colors: string[]
 };
 
 export const Lobby: GameRuleInterface = {
@@ -53,7 +70,7 @@ export const Lobby: GameRuleInterface = {
             return Math.floor(Math.random() * icons.length);
         },
         accent: () => {
-            return colors[Math.floor(Math.random() * colors.length)];
+            return '';
         }
     },
 
@@ -233,7 +250,7 @@ export const Lobby: GameRuleInterface = {
                          style={ outerStyle }>
                         <div className='lobby-player-tag-avatar'
                              style={ style }>
-                            <FontAwesome name={ icons[this.props.icons[i]] }
+                            <FontAwesomeIcon icon={ icons[this.props.icons[i]] }
                                          className='lobby-player-tag-icon' />
                         </div>
                         <div className='lobby-player-tag-name'>
@@ -253,7 +270,7 @@ export const Lobby: GameRuleInterface = {
                 return (
                     <div className='lobby-avatar'
                          style={{ backgroundColor: this.props.accent }}>
-                        <FontAwesome name={ icons[this.props.icon] }
+                        <FontAwesomeIcon icon={ icons[this.props.icon] }
                                      size='4x'
                                      className='lobby-avatar-icon' />
                     </div>
@@ -296,7 +313,6 @@ export const Lobby: GameRuleInterface = {
             public render() {
                 const selectIcon = React.createElement(Lobby.views['select-icon'], this.props);
                 const selectAccent = React.createElement(Lobby.views['select-accent'], this.props);
-
                 return (
                     <div className='lobby-setname-container'>
                         <input className='lobby-setname-input'
@@ -311,10 +327,17 @@ export const Lobby: GameRuleInterface = {
             }
         },
 
-        'select-accent': class extends React.Component<ViewPropsInterface & { accent: string }, { accent: string }> {
+        'select-accent': class extends React.Component<ViewPropsInterface & { accent: string, colors: string[] }, { accent: string }> {
             constructor(props: any) {
                 super(props);
-                this.state = { accent: this.props.accent };
+                const colors = this.props.colors || colors_default;
+                if (!this.props.accent) {
+                    let accent = colors[Math.floor(colors.length * Math.random())];
+                    this.state = { accent: accent };
+                    this._setAccent(accent);
+                } else {
+                    this.state = { accent: this.props.accent };
+                }
             }
 
             private _setAccent(accent: string) {
@@ -325,6 +348,7 @@ export const Lobby: GameRuleInterface = {
 
             public render() {
                 const tr = [];
+                const colors = this.props.colors || colors_default;
 
                 for (let i = 0; i < colors.length; i = i + 1) {
                     let className = 'lobby-select-accent';
@@ -378,7 +402,7 @@ export const Lobby: GameRuleInterface = {
                              key={ 'select-icon-' + i }
                              onClick={ this._setIcon.bind(this, i) }>
 
-                            <FontAwesome name={ icons[i] }
+                            <FontAwesomeIcon icon={ icons[i] }
                                          size='2x'
                                          className={ className }
                                          style={ style }

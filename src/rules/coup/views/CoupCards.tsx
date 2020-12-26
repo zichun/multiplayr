@@ -4,7 +4,8 @@
 
 import * as React from 'react';
 import * as colorsys from 'colorsys';
-import * as FontAwesome from 'react-fontawesome';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDollarSign } from '@fortawesome/free-solid-svg-icons';
 
 import {
     CoupViewPropsInterface,
@@ -76,7 +77,7 @@ export function CoupPlayerCards(props: CoupViewPropsInterface & {
     const coinsEl = (
         <div className='coup-player-coin'
              style={{ backgroundColor: accent }}>
-            <FontAwesome name='usd' />
+            <FontAwesomeIcon icon={ faDollarSign } />
         &nbsp;
         { props.coins }
         </div>

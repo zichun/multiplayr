@@ -3,7 +3,7 @@
  */
 
 import * as React from 'react';
-import * as FontAwesome from 'react-fontawesome';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 //import { Panel } from 'office-ui-fabric-react/lib/Panel';
 //import { Button } from 'office-ui-fabric-react/lib/Button';
@@ -17,6 +17,8 @@ import {
 } from '../../common/interfaces';
 
 import { forEach } from '../../common/utils';
+
+import { faBars } from '@fortawesome/free-solid-svg-icons';
 
 interface HostShellMainInterface extends ViewPropsInterface {
     links: any,
@@ -115,9 +117,9 @@ export const Shell: GameRuleInterface = {
                                  onClick={ this.props.setView.bind(this, linkName) }
                                  key={ 'link-' + linkName }>
 
-                                <FontAwesome name={ linkObj.icon }
+                                <FontAwesomeIcon icon={ linkObj.icon }
                                              className={ className }
-                                             size='2x'
+                                             size='3x'
                                              key={ 'icon-' + linkName } />
                                 <label>{ linkObj.label }</label>
                             </div>
@@ -133,8 +135,8 @@ export const Shell: GameRuleInterface = {
                         <div className='shell-main-panel-link'
                              onClick={ this._togglePanel }>
 
-                            <FontAwesome name='bars'
-                                         size='2x'
+                            <FontAwesomeIcon icon={ faBars }
+                                         size='3x'
                                          className='icon menu' />
                         </div>
                         { icons }

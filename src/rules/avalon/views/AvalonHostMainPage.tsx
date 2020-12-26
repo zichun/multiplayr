@@ -6,6 +6,7 @@ import * as React from 'react';
 import * as ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 import FailSound from '../sounds/fail.mp3';
 import PassSound from '../sounds/pass.mp3';
+import { faGamepad, faHistory, faCog, faBook, faBolt } from '@fortawesome/free-solid-svg-icons';
 
 import {
     contains
@@ -41,7 +42,7 @@ import {
     Loader
 } from 'semantic-ui-react'
 
-import * as FontAwesome from 'react-fontawesome';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Sound from 'react-sound';
 
 const PlayerTeamVote = (
@@ -142,7 +143,7 @@ const PlayersList = (
         let teamIcon = null;
         if (contains(props.currentTeam, i.toString())) {
             teamIcon = (
-                <FontAwesome name="bolt"
+                <FontAwesomeIcon icon={ faBolt }
                              className="player-card-team" />);
 
             if (i !== props.leader) {
@@ -431,22 +432,22 @@ export class AvalonHostMainPage extends React.Component<AvalonViewPropsInterface
             {
                 'links': {
                     'home': {
-                        'icon': 'gamepad',
+                        'icon': faGamepad,
                         'label': 'Avalon',
                         'view': AvalonHostMainPageView(this.props)
                     },
                     'quests': {
-                        'icon': 'history',
+                        'icon': faHistory,
                         'label': 'Quest History',
                         'view': AvalonQuests(this.props)
                     },
                     'newgame': {
-                        'icon': 'cog',
+                        'icon': faCog,
                         'label': 'Settings',
                         'view': (<AvalonSettings { ...this.props } />)
                     },
                     'rules': {
-                        'icon': 'book',
+                        'icon': faBook,
                         'label': 'Rules',
                         'view': <AvalonRules />
                     }

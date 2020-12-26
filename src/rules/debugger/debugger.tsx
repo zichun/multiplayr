@@ -2,7 +2,7 @@
  * debugger.tsx
  */
 import * as React from 'react';
-import * as FontAwesome from 'react-fontawesome';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import './debugger.scss';
 
 import {
@@ -14,6 +14,8 @@ import {
 import {
     forEach
 } from '../../common/utils';
+
+import { faCogs, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 
 interface DebuggerViewPropsInterface extends ViewPropsInterface {
     plugin: string,
@@ -259,6 +261,10 @@ export function NewDebuggerRule(
             },
             'setSerializedState': (mp: MPType, clientId: string, state: string) => {
                 mp.setState(state, true);
+            },
+            'clearSerializedState': (mp: MPType, clientId: string, state: string) => {
+                sessionStorage.clear();
+                location.reload();
             }
         },
 
@@ -303,20 +309,20 @@ export function NewDebuggerRule(
                                                   'debugger-pane';
                     return (
                         <div className='debugger-container'>
-                            <FontAwesome className='debugger-icon'
-                                         name='cogs'
+                            <FontAwesomeIcon className='debugger-icon'
+                                         icon={ faCogs }
                                          onClick={ this._onClick } />
                             <div className={ debuggerPaneClassName }>
                                 <div className='debugger-stepper'>
-                                    <FontAwesome className='debugger-stepper-left'
-                                                 name='chevron-left'
+                                    <FontAwesomeIcon className='debugger-stepper-left'
+                                                 icon={ faChevronLeft }
                                                  size='2x'
                                                  onClick={ this.props.MP.stepLeft } />
                                     <span className='debugger-stepper-count'>
                                         { (this.props.historyPointer + 1) + ' / ' + this.props.historyCount }
                                     </span>
-                                    <FontAwesome className='debugger-stepper-right'
-                                                 name='chevron-right'
+                                    <FontAwesomeIcon className='debugger-stepper-right'
+                                                 icon={ faChevronRight }
                                                  size='2x'
                                                  onClick={ this.props.MP.stepRight } />
                                 </div>
@@ -324,6 +330,7 @@ export function NewDebuggerRule(
                                     <textarea value={ this.state.serializedState }
                                               onChange={ this._updateSerializedState } />
                                     <button onClick={ this.props.MP.setSerializedState.bind(this, this.state.serializedState) }>Set State</button>
+                                    <button onClick={ this.props.MP.clearSerializedState.bind(this) }>Clear State</button>
                                 </div>
                             </div>
                             { hostView }
