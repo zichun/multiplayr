@@ -34,6 +34,7 @@ export const DecryptoStartGame = (mp: MPType) => {
             throw('Invalid Team colors!');
         }
         teams[team].push(client_id);
+        mp.setPlayerData(client_id, 'team', team);
     });
 
     for (const a of Object.keys(accent_cnt)) {
