@@ -8,11 +8,22 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const HtmlWebPackPlugin = require('html-webpack-plugin');
 
 module.exports = (env, argv) => {
-    return [
-        DebuggerPages(),
-        IndividualRules(),
-        MultiplayrLibConfig()
-    ];
+    const mode = (argv.mode === 'production' ? 'production' : 'development');
+    if (mode === 'production') {
+        return [
+            MultiplayrLibConfig(mode),
+            ExpressServerConfig(),
+            HostJoinPages(),
+            AllRulesConfig()
+        ];
+    } else {
+        return [
+            DebuggerPages(),
+            IndividualRules(),
+            MultiplayrLibConfig(mode),
+            ExpressServerConfig()
+        ];
+    }
 };
 
 const localDebugPages = ['avalon', 'coup', 'theoddone', 'decrypto'];
@@ -40,9 +51,9 @@ function DebuggerPages() {
         mode: 'development',
         optimization: { minimize: false },
         resolve: {
-            extensions: [ '.tsx', '.ts', '.js'],
+            extensions: ['.tsx', '.ts', '.js'],
         },
-        module: WebModule,
+        module: WebModule(true),
         plugins: [
             ...plugins,
             ...ForkTsChecker,
@@ -70,36 +81,9 @@ function IndividualRules() {
         devtool: 'source-map',
         mode: 'development',
         optimization: { minimize: false },
-        module: WebModule,
+        module: WebModule(true),
         resolve: {
-            extensions: [ '.tsx', '.ts', '.js'],
-        },
-        plugins: [
-            ...ForkTsChecker
-        ]
-    };
-}
-
-function AllRulesConfig() {
-    return {
-        entry: {
-            rules: './rules/rules.ts',
-            host: './client/js/host.ts',
-            join: './client/js/join.ts',
-        },
-        output: {
-            path: path.resolve(__dirname, './build/client/'),
-            publicPath: path.resolve(__dirname, './build/client/'),
-            pathinfo: true,
-            filename: '[name].bundle.js',
-            libraryTarget: 'var',
-            library: '_rules'
-        },
-        target: 'web',
-        devtool: 'source-map',
-        module: WebModule,
-        resolve: {
-            extensions: [ '.tsx', '.ts', '.js'],
+            extensions: ['.tsx', '.ts', '.js'],
         },
         plugins: [
             ...ForkTsChecker,
@@ -108,7 +92,62 @@ function AllRulesConfig() {
     };
 }
 
-function MultiplayrLibConfig() {
+function HostJoinPages() {
+    return {
+        entry: {
+            host: './src/client/js/host.ts',
+            join: './src/client/js/join.ts',
+        },
+        output: {
+            path: path.resolve(__dirname, './build/client/'),
+            publicPath: path.resolve(__dirname, './build/client/'),
+            pathinfo: false,
+            filename: '[name].bundle.js'
+        },
+        target: 'web',
+        module: WebModule(false),
+        mode: 'production',
+        resolve: {
+            extensions: ['.tsx', '.ts', '.js'],
+        },
+        plugins: [
+            new HtmlWebPackPlugin({
+                template: './src/client/static/host.html',
+                filename: './host.html',
+                inject: false
+            }),
+            new HtmlWebPackPlugin({
+                template: './src/client/static/join.html',
+                filename: './join.html',
+                inject: false
+            }),
+            new webpack.NoEmitOnErrorsPlugin()
+        ]
+    };
+}
+function AllRulesConfig() {
+    return {
+        entry: {
+            rules: './src/rules/rules.ts'
+        },
+        output: {
+            path: path.resolve(__dirname, './build/client/'),
+            publicPath: path.resolve(__dirname, './build/client/'),
+            pathinfo: false,
+            filename: '[name].bundle.js',
+            libraryTarget: 'var',
+            library: '_mprules'
+        },
+        target: 'web',
+        module: WebModule(false),
+        mode: 'production',
+        resolve: {
+            extensions: ['.tsx', '.ts', '.js'],
+        }
+    };
+}
+
+function MultiplayrLibConfig(mode) {
     return {
         entry: {
             lib: './src/client/js/lib.ts',
@@ -123,12 +162,12 @@ function MultiplayrLibConfig() {
             library: '_mplib'
         },
         target: 'web',
-        devtool: 'source-map',
-        mode: 'development',
+        devtool: mode === 'production' ? '' : 'source-map',
+        mode: mode,
         optimization: { minimize: false },
-        module: WebModule,
+        module: WebModule(true),
         resolve: {
-            extensions: [ '.tsx', '.ts', '.js'],
+            extensions: ['.tsx', '.ts', '.js'],
             alias: {
                 jquery: "src/client/js/jquery.js",
                 Q: "src/client/js/q"
@@ -140,6 +179,34 @@ function MultiplayrLibConfig() {
     };
 }
 
+function ExpressServerConfig() {
+    return ({
+        entry: './src/app.ts',
+        output: {
+            path: path.resolve(__dirname, './build'),
+            publicPath: '/',
+            filename: 'app.js'
+        },
+        target: 'node',
+        externals: [require('webpack-node-externals')()],
+        module: {
+            rules: [
+                {
+                    test: /\.tsx?$/,
+                    use: 'ts-loader',
+                    exclude: /node_modules/,
+                }
+            ]
+        },
+        resolve: {
+            extensions: ['.tsx', '.ts', '.js' ]
+        },
+        optimization: {
+            minimize: false
+        }
+    });
+}
+
 const tsconfigPath = path.resolve('./tsconfig.json');
 const ForkTsChecker = [
     new ForkTsCheckerWebpackPlugin({
@@ -148,42 +215,44 @@ const ForkTsChecker = [
     new ForkTsCheckerNotifierWebpackPlugin({ title: 'TypeScript', excludeWarnings: false })
 ];
 
-const WebModule = {
-    rules: [
-        {
-            test: /\.html$/i,
-            loader: 'html-loader',
-            options: {
-                attributes: false
-            }
-        },
-        {
-            test: /\.tsx?$/i,
-            use: {
-                loader: 'ts-loader',
+const WebModule = (transpileOnly) => {
+    return {
+        rules: [
+            {
+                test: /\.html$/i,
+                loader: 'html-loader',
                 options: {
-                    transpileOnly: true,
-                    experimentalWatchApi: true,
+                    attributes: false
                 }
             },
-            exclude: /node_modules/,
-        },
-        {
-            test: /\.(png|jpe?g|gif|mp3)$/i,
-            loader: 'file-loader',
-            options: {
-                publicPath: '/'
+            {
+                test: /\.tsx?$/i,
+                use: {
+                    loader: 'ts-loader',
+                    options: {
+                        transpileOnly: transpileOnly,
+                        experimentalWatchApi: transpileOnly,
+                    }
+                },
+                exclude: /node_modules/,
             },
-            exclude: /node_modules/
-        },
-        {
-            test: /\.scss$/i,
-            use: [
-                "style-loader",
-                "css-loader",
-                "sass-loader",
-            ],
-            exclude: /node_modules/,
-        }
-    ],
+            {
+                test: /\.(png|jpe?g|gif|mp3)$/i,
+                loader: 'file-loader',
+                options: {
+                    publicPath: '/'
+                },
+                exclude: /node_modules/
+            },
+            {
+                test: /\.scss$/i,
+                use: [
+                    "style-loader",
+                    "css-loader",
+                    "sass-loader",
+                ],
+                exclude: /node_modules/,
+            }
+        ],
+    };
 };

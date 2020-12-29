@@ -7,7 +7,9 @@
 
 declare var io;
 declare var _mplib;
+declare var _mprules;
 
+_mplib.MultiplayR.SetGameRules(_mprules.MPRULES);
 _mplib.MultiplayR.SetGamerulesPath('/gamerules/');
 
 $(() => {
@@ -30,15 +32,15 @@ $(() => {
                 const gameState = sessionStorage.getItem('gameState');
 
                 if (confirm('An existing game at room ' + roomId + ' (' + ruleName + ') detected. Click OK to resume the game, and cancel to host a new game')) {
-                    return rehost(_mplib.MPRULES[ruleName], roomId, clientId, gameState);
+                    return rehost(ruleName, roomId, clientId, gameState);
                 }
             }
 
             _mplib.messages.checkReturnMessage(data, 'clientId');
             clientId = data.message;
 
-            Object.keys(_mplib.MPRULES).forEach((ruleName) => {
-                const rule = _mplib.MPRULES[ruleName];
+            Object.keys(_mprules.MPRULES).forEach((ruleName) => {
+                const rule = _mprules.MPRULES[ruleName];
                 if (!rule.debug) {
                     $('#rules').append(makeRule(ruleName, rule));
                 }
@@ -53,7 +55,7 @@ $(() => {
         clientId: string,
         gameState: string
     ) {
-        _mplib.MultiplayR.ReHost(_mplib.MPRULES[ruleName],
+        _mplib.MultiplayR.ReHost(ruleName,
                                  roomId,
                                  clientId,
                                  gameState,
@@ -80,7 +82,7 @@ $(() => {
         ruleName: string
     ) {
         return () => {
-            _mplib.MultiplayR.Host(_mplib.MPRULES[ruleName],
+            _mplib.MultiplayR.Host(ruleName,
                                    transport,
                                    document.getElementById('rules'));
         };

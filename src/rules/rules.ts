@@ -2,6 +2,7 @@
  * rules.ts - define all the rules that the service knows about.
  * This should be deprecated and changed to a json config instead.
  */
+import './fontawesome';
 
 import { RockScissorsPaperRule } from './rockscissorspaper/rockscissorspaper';
 import { TheOddOneRule } from './theoddone/theoddone';

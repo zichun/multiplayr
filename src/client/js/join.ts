@@ -5,7 +5,9 @@
 
 declare var io;
 declare var _mplib;
+declare var _mprules;
 
+_mplib.MultiplayR.SetGameRules(_mprules.MPRULES);
 _mplib.MultiplayR.SetGamerulesPath('/gamerules/');
 
 $(() => {
@@ -54,8 +56,7 @@ function setupJoinButton(
         $joinButton.text('Connecting...');
 
         if (clientId) {
-            _mplib.MultiplayR.ReJoin(_mplib.MPRULES,
-                                     roomId,
+            _mplib.MultiplayR.ReJoin(roomId,
                                      clientId,
                                      transport,
                                      document.getElementById('container'),
@@ -71,8 +72,7 @@ function setupJoinButton(
                                          window.location.hash = 'roomId=' + roomId + '&clientId=' + clientId;
                                      });
         } else {
-            _mplib.MultiplayR.Join(_mplib.MPRULES,
-                                   roomId,
+            _mplib.MultiplayR.Join(roomId,
                                    transport,
                                    document.getElementById('container'),
                                    (res) => {
