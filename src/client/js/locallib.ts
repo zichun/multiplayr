@@ -13,6 +13,6 @@ import * as utils from '../../common/utils';
 import '../css/local.scss';
 import '../css/multiplayr.scss';
 import '../css/mp-components.scss';
-import './fontawesome';
+import '../../rules/fontawesome';
 
 export { MultiplayR, LocalClientTransport, messages, utils };
