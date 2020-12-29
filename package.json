@@ -3,8 +3,9 @@
 	"version": "0.0.1",
 	"description": "A platform to play games",
 	"scripts": {
-		"test": "gulp test",
-		"build": "gulp"
+		"build": "rm -rf build && webpack --mode production",
+		"buildDev": "rm -rf build && webpack --mode development",
+        "start": "node ./build/app"
 	},
 	"dependencies": {
 		"@fluentui/react": "^7.153.2",

@@ -162,7 +162,7 @@ function MultiplayrLibConfig(mode) {
             library: '_mplib'
         },
         target: 'web',
-        devtool: mode === 'production' ? '' : 'source-map',
+        devtool: mode === 'production' ? false : 'source-map',
         mode: mode,
         optimization: { minimize: false },
         module: WebModule(true),
