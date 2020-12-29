@@ -4,20 +4,7 @@
 import * as React from 'react';
 import * as Chance from 'chance';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-    faCar, faIdBadge, faBatteryEmpty, faBatteryFull, faBatteryHalf, faThermometerEmpty, faUserCircle, faAddressCard, faUmbrella, faQuoteLeft,
-    faIdCard, faBath, faDice, faDna, faMicrochip, faAdjust, faChartArea, faFire, faBatteryQuarter,
-    faBicycle, faBook, faBriefcase, faBullhorn, faCalculator, faCircle, faCoffee, faCube, faEnvelope, faFaucet,
-    faFireExtinguisher, faGift, faHandPeace, faHandSpock, faHashtag, faHotel, faHourglass, faHourglassEnd, faHourglassHalf,
-    faMortarPestle, faPen, faPencilAlt, faPhone, faChartPie, faPowerOff, faTrash, faBinoculars, faBug, faCog, faCubes,
-    faFemale, faFlag, faFlask, faChartLine, faSignLanguage, faSitemap, faSpaceShuttle, faTags, faWrench,
-    faTicketAlt, faTree, faUnlock, faStreetView, faPlug, faMoneyBill, faMale, faFighterJet, faCut, faBus, faBirthdayCake,
-    faBed, faBeer, faBomb, faBlind, faCloud, faCookie, faFax, faFutbol, faMap, faMapSigns, faPaw, faShip, faGrin
-} from '@fortawesome/free-solid-svg-icons';
-
-import {
-    faTelegram, faImdb, faEtsy, faApple, faAmazon, faQuora, faWindows, faFacebookSquare, faTwitter, faGoogle, faAndroid, faLinux
-} from '@fortawesome/free-brands-svg-icons';
+import { IconName } from '@fortawesome/fontawesome-common-types';
 
 import './lobby.scss';
 
@@ -27,15 +14,16 @@ import {
     ViewPropsInterface
 } from '../../common/interfaces';
 
-const icons = [faCar, faIdBadge, faBatteryEmpty, faBatteryFull, faBatteryHalf, faThermometerEmpty, faUserCircle, faAddressCard, faUmbrella, faQuoteLeft,
-               faIdCard, faBath, faDice, faDna, faMicrochip, faAdjust, faChartArea, faFire, faBatteryQuarter,
-               faBicycle, faBook, faBriefcase, faBullhorn, faCalculator, faCircle, faCoffee, faCube, faEnvelope, faFaucet,
-               faFireExtinguisher, faGift, faHandPeace, faHandSpock, faHashtag, faHotel, faHourglass, faHourglassEnd, faHourglassHalf,
-               faMortarPestle, faPen, faPencilAlt, faPhone, faChartPie, faPowerOff, faTrash, faBinoculars, faBug, faCog, faCubes,
-               faFemale, faFlag, faFlask, faChartLine, faSignLanguage, faSitemap, faSpaceShuttle, faTags, faWrench,
-               faTicketAlt, faTree, faUnlock, faStreetView, faPlug, faMoneyBill, faMale, faFighterJet, faCut, faBus, faBirthdayCake,
-               faBed, faBeer, faBomb, faBlind, faCloud, faCookie, faFax, faFutbol, faMap, faMapSigns, faPaw, faShip, faGrin,
-               faTelegram, faImdb, faEtsy, faApple, faAmazon, faQuora, faWindows, faFacebookSquare, faTwitter, faGoogle, faAndroid, faLinux
+const icons: IconName[] = [
+    'car', 'id-badge', 'battery-empty', 'battery-full', 'battery-half', 'thermometer-empty', 'user-circle', 'address-card', 'umbrella', 'quote-left',
+    'id-card', 'bath', 'dice', 'dna', 'microchip', 'adjust', 'chart-area', 'fire', 'battery-quarter',
+    'bicycle', 'book', 'briefcase', 'bullhorn', 'calculator', 'circle', 'coffee', 'cube', 'envelope', 'faucet',
+    'fire-extinguisher', 'gift', 'hand-peace', 'hand-spock', 'hashtag', 'hotel', 'hourglass', 'hourglass-end', 'hourglass-half',
+    'mortar-pestle', 'pen', 'pencil-alt', 'phone', 'chart-pie', 'power-off', 'trash', 'binoculars', 'bug', 'cog', 'cubes',
+    'female', 'flag', 'flask', 'chart-line', 'sign-language', 'sitemap', 'space-shuttle', 'tags', 'wrench',
+    'ticket-alt', 'tree', 'unlock', 'street-view', 'plug', 'money-bill', 'male', 'fighter-jet', 'cut', 'bus', 'birthday-cake',
+    'bed', 'beer', 'bomb', 'blind', 'cloud', 'cookie', 'fax', 'futbol', 'map', 'map-signs', 'paw', 'ship', 'grin',
+    'telegram', 'imdb', 'etsy', 'apple', 'amazon', 'quora', 'windows', 'facebook-square', 'twitter', 'google', 'android', 'linux'
 ];
 
 const colors_default = ['#0074D9', '#7FDBFF', '#39CCCC', '#3D9970', '#2ECC40', '#01FF70', '#EEAB00', '#FF851B', '#FF4136',

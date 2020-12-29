@@ -6,7 +6,6 @@ import * as React from 'react';
 import * as ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 import FailSound from '../sounds/fail.mp3';
 import PassSound from '../sounds/pass.mp3';
-import { faGamepad, faHistory, faCog, faBook, faBolt } from '@fortawesome/free-solid-svg-icons';
 
 import {
     contains
@@ -143,7 +142,7 @@ const PlayersList = (
         let teamIcon = null;
         if (contains(props.currentTeam, i.toString())) {
             teamIcon = (
-                <FontAwesomeIcon icon={ faBolt }
+                <FontAwesomeIcon icon="bolt"
                              className="player-card-team" />);
 
             if (i !== props.leader) {
@@ -308,7 +307,7 @@ export class VoteQuestResult extends React.Component<
             if (this.state.hiddenCardIndex === 0 && this.state.currentCardIndex - 1 === i) {
                 const result = this.state.currentCardIndex <= pass;
                 sound = (<Sound
-                             url={ '/js' + (result ? PassSound : FailSound ) }
+                             url={ (result ? PassSound : FailSound ) }
                              playStatus="PLAYING" />);
             }
             votes.push(
@@ -432,22 +431,22 @@ export class AvalonHostMainPage extends React.Component<AvalonViewPropsInterface
             {
                 'links': {
                     'home': {
-                        'icon': faGamepad,
+                        'icon': 'gamepad',
                         'label': 'Avalon',
                         'view': AvalonHostMainPageView(this.props)
                     },
                     'quests': {
-                        'icon': faHistory,
+                        'icon': 'history',
                         'label': 'Quest History',
                         'view': AvalonQuests(this.props)
                     },
                     'newgame': {
-                        'icon': faCog,
+                        'icon': 'cog',
                         'label': 'Settings',
                         'view': (<AvalonSettings { ...this.props } />)
                     },
                     'rules': {
-                        'icon': faBook,
+                        'icon': 'book',
                         'label': 'Rules',
                         'view': <AvalonRules />
                     }

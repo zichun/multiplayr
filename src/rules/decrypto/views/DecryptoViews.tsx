@@ -11,7 +11,6 @@ import {
 
 import { DecryptoViewPropsInterface, DecryptoGameState } from '../DecryptoCommon';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileSignature, faLanguage, faBook, faPlusCircle, faQuestionCircle, faPhoneSlash, faSatelliteDish } from '@fortawesome/free-solid-svg-icons';
 
 import { DecryptoGameRule } from './DecryptoRules';
 import { DecryptoClientInputClues } from './DecryptoInputClues';
@@ -45,12 +44,12 @@ export class DecryptoHostMainPage extends React.Component<DecryptoViewPropsInter
             {
                 'links': {
                     'home': {
-                        'icon': faLanguage,
+                        'icon': 'language',
                         'label': 'History',
                         'view': HostMainPage(this.props)
                     },
                     'rules': {
-                        'icon': faBook,
+                        'icon': 'book',
                         'label': 'Rules',
                         'view': DecryptoGameRule
                     }
@@ -70,9 +69,9 @@ function ClientShowScore(props: DecryptoViewPropsInterface) {
     return(
         <div id="decrypto-score">
             <div className="decrypto-score-inner">
-                <div className={ gen_class('miscommunication', team) }><FontAwesomeIcon icon={ faPhoneSlash } />{ miscommunication }</div>
+                <div className={ gen_class('miscommunication', team) }><FontAwesomeIcon icon="phone-slash" />{ miscommunication }</div>
                 <div className={ gen_class('round', team) }>{ props.round + 1 }</div>
-                <div className={ gen_class('interception', team) }>{ interception }<FontAwesomeIcon icon={ faSatelliteDish } /></div>
+                <div className={ gen_class('interception', team) }>{ interception }<FontAwesomeIcon icon="satellite-dish" /></div>
             </div>
         </div>
 );
@@ -154,22 +153,22 @@ export class DecyptoClientMainPage extends React.Component<DecryptoViewPropsInte
             {
                 'links': {
                     'home': {
-                        'icon': faFileSignature,
+                        'icon': 'file-signature',
                         'label': 'Decrypto',
                         'view': ClientMainPage(this.props)
                     },
                     'ownhistory': {
-                        'icon': faPlusCircle,
+                        'icon': 'plus-circle',
                         'label': 'Team History',
                         'view': HistoryPage(this.props, this.props.team, this.props.words)
                     },
                     'theirhistory': {
-                        'icon': faQuestionCircle,
+                        'icon': 'question-circle',
                         'label': 'Opponent History',
                         'view': HistoryPage(this.props, 1-this.props.team, null)
                     },
                     'rules': {
-                        'icon': faBook,
+                        'icon': 'book',
                         'label': 'Rules',
                         'view': DecryptoGameRule
                     }

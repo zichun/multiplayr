@@ -13,8 +13,6 @@ import { CoupActionsHistory } from './CoupActionsHistory';
 import { CoupPlayersCards } from './CoupCards';
 import { CoupClientCoins } from './CoupClientCoins';
 
-import { faExclamationTriangle, faAddressCard, faList, faBook, faGamepad, faHome, faUsers } from '@fortawesome/free-solid-svg-icons';
-
 function CoupShowWinnerPage(props: CoupViewPropsInterface) {
     const mp = props.MP;
 
@@ -44,22 +42,22 @@ export class CoupClientDead extends React.Component<CoupViewPropsInterface, {}> 
             {
                 'links': {
                     'home': {
-                        'icon': faExclamationTriangle,
+                        'icon': 'exclamation-triangle',
                         'label': 'Coup',
                         'view': 'You Are Dead'
                     },
                     'cards': {
-                        'icon': faAddressCard,
+                        'icon': 'address-card',
                         'label': 'Cards',
                         'view': (<CoupPlayersCards { ...this.props } />)
                     },
                     'actionslist': {
-                        'icon': faList,
+                        'icon': 'list',
                         'label': 'Actions History',
                         'view': (<CoupActionsHistory { ...this.props } />)
                     },
                     'rules': {
-                        'icon': faBook,
+                        'icon': 'book',
                         'label': 'Rules',
                         'view': CoupGameRule
                     }
@@ -79,22 +77,22 @@ export class CoupClientShowWinner extends React.Component<CoupViewPropsInterface
             {
                 'links': {
                     'home': {
-                        'icon': faGamepad,
+                        'icon': 'gamepad',
                         'label': 'Coup',
                         'view': (<CoupShowWinnerPage { ...this.props } />)
                     },
                     'cards': {
-                        'icon': faAddressCard,
+                        'icon': 'address-card',
                         'label': 'Cards',
                         'view': (<CoupPlayersCards { ...this.props } />)
                     },
                     'actionslist': {
-                        'icon': faList,
+                        'icon': 'list',
                         'label': 'Actions History',
                         'view': (<CoupActionsHistory { ...this.props } />)
                     },
                     'rules': {
-                        'icon': faBook,
+                        'icon': 'book',
                         'label': 'Rules',
                         'view': CoupGameRule
                     }
@@ -123,7 +121,7 @@ export class CoupHostShowWinner extends React.Component<CoupViewPropsInterface, 
             {
                 'links': {
                     'home': {
-                        'icon': faHome,
+                        'icon': 'home',
                         'label': 'Home',
                         'view': (
                             <div>
@@ -133,17 +131,17 @@ export class CoupHostShowWinner extends React.Component<CoupViewPropsInterface, 
                         )
                     },
                     'clients': {
-                        'icon': faUsers,
+                        'icon': 'users',
                         'label': 'Players',
                         'view': mp.getPluginView('lobby', 'host-roommanagement')
                     },
                     'actionslist': {
-                        'icon': faList,
+                        'icon': 'list',
                         'label': 'Actions History',
                         'view': (<CoupActionsHistory { ...this.props } />)
                     },
                     'rules': {
-                        'icon': faBook,
+                        'icon': 'book',
                         'label': 'Rules',
                         'view': CoupGameRule
                     }

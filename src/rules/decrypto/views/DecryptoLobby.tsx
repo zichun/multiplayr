@@ -6,7 +6,6 @@ import {
 
 import { DecryptoGameRule } from './DecryptoRules';
 import { TeamColors } from '../DecryptoCommon';
-import { faUsers, faHome, faBook, faIdCard } from '@fortawesome/free-solid-svg-icons';
 
 export class DecryptoHostLobby extends React.Component<ViewPropsInterface, {}> {
     public render() {
@@ -18,17 +17,17 @@ export class DecryptoHostLobby extends React.Component<ViewPropsInterface, {}> {
             {
                 'links': {
                     'home': {
-                        'icon': faHome,
+                        'icon': 'home',
                         'label': 'Lobby',
                         'view': mp.getPluginView('lobby', 'Lobby')
                     },
                     'clients': {
-                        'icon': faUsers,
+                        'icon': 'users',
                         'label': 'Players',
                         'view': mp.getPluginView('lobby', 'host-roommanagement')
                     },
                     'rules': {
-                        'icon': faBook,
+                        'icon': 'book',
                         'label': 'Rules',
                         'view': DecryptoGameRule
                     }
@@ -47,12 +46,12 @@ export class DecryptoClientLobby extends React.Component<ViewPropsInterface, {}>
             {
                 'links': {
                     'home': {
-                        'icon': faIdCard,
+                        'icon': 'id-card',
                         'label': 'Lobby',
                         'view': mp.getPluginView('lobby', 'SetName', { colors: TeamColors })
                     },
                     'rules': {
-                        'icon': faBook,
+                        'icon': 'book',
                         'label': 'Rules',
                         'view': DecryptoGameRule
                     }

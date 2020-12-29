@@ -23,8 +23,6 @@ import { CoupActionsHistory } from './CoupActionsHistory';
 import { CoupClientCoins } from './CoupClientCoins';
 import { CoupPlayersCards, CoupPlayerCard } from './CoupCards';
 
-import { faGamepad, faAddressCard, faList, faBook } from '@fortawesome/free-solid-svg-icons';
-
 class CoupAmbassadorCardChangePage extends React.Component<CoupViewPropsInterface, {
     cards: string[]
 }> {
@@ -136,22 +134,22 @@ export class CoupAmbassadorCardChange extends React.Component<CoupViewPropsInter
             {
                 'links': {
                     'home': {
-                        'icon': faGamepad,
+                        'icon': 'gamepad',
                         'label': 'Coup',
                         'view': (<CoupAmbassadorCardChangePage { ...this.props } />)
                     },
                     'cards': {
-                        'icon': faAddressCard,
+                        'icon': 'address-card',
                         'label': 'Cards',
                         'view': (<CoupPlayersCards { ...this.props } />)
                     },
                     'actionslist': {
-                        'icon': faList,
+                        'icon': 'list',
                         'label': 'Actions History',
                         'view': (<CoupActionsHistory { ...this.props } />)
                     },
                     'rules': {
-                        'icon': faBook,
+                        'icon': 'book',
                         'label': 'Rules',
                         'view': CoupGameRule
                     }

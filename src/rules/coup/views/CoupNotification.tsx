@@ -54,7 +54,7 @@ export function CoupNotification(
                 coinsDelta = '+' + coins;
                 sound = (
                     <Sound
-                        url={ '/js' + COIN_SOUNDS[coins] }
+                        url={ COIN_SOUNDS[coins] }
                         playStatus="PLAYING" />);
 
 
@@ -84,14 +84,14 @@ export function CoupNotification(
 
                 sound = (
                     <Sound
-                        url={ '/js' + AmbassadorSound }
+                        url={ AmbassadorSound }
                         playStatus="PLAYING" />);
             } else {
                 cardsDelta = '-' + (-cards);
 
                 sound = (
                     <Sound
-                        url={ '/js' + CardSound }
+                        url={ CardSound }
                         playStatus="PLAYING" />);
             }
 

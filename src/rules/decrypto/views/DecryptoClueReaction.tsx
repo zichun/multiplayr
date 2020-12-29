@@ -7,7 +7,6 @@ import {
 
 import { DecryptoViewPropsInterface, ValidateGuess } from '../DecryptoCommon';
 import { DecryptoGameRule } from './DecryptoRules';
-import { faFileSignature, faBook } from '@fortawesome/free-solid-svg-icons';
 import { WordListView } from './DecryptoInputClues';
 
 function ClueInput(props: DecryptoViewPropsInterface, team: number) {

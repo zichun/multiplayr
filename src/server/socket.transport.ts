@@ -6,7 +6,7 @@
  *
  */
 
-import Session from './session';
+import { Session } from './session';
 
 import { isFunction } from '../common/utils';
 

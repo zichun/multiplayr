@@ -24,8 +24,6 @@ import { CoupActionsHistory } from './CoupActionsHistory';
 import { CoupClientCoins } from './CoupClientCoins';
 import { CoupPlayersCards, CoupPlayerCard } from './CoupCards';
 
-import { faGamepad, faAddressCard, faList, faBook } from '@fortawesome/free-solid-svg-icons';
-
 class CoupClientChooseLoseInfluencePage extends React.Component<CoupViewPropsInterface & {
     additionalText?: string
 }, {
@@ -102,22 +100,22 @@ export class CoupClientChallengeReaction extends React.Component<CoupViewPropsIn
             {
                 'links': {
                     'home': {
-                        'icon': faGamepad,
+                        'icon': 'gamepad',
                         'label': 'Coup',
                         'view': chooseLoseInfluencePage
                     },
                     'cards': {
-                        'icon': faAddressCard,
+                        'icon': 'address-card',
                         'label': 'Cards',
                         'view': (<CoupPlayersCards { ...this.props } />)
                     },
                     'actionslist': {
-                        'icon': faList,
+                        'icon': 'list',
                         'label': 'Actions History',
                         'view': (<CoupActionsHistory { ...this.props } />)
                     },
                     'rules': {
-                        'icon': faBook,
+                        'icon': 'book',
                         'label': 'Rules',
                         'view': CoupGameRule
                     }
@@ -140,22 +138,22 @@ export class CoupClientLoseInfluence extends React.Component<CoupViewPropsInterf
             {
                 'links': {
                     'home': {
-                        'icon': faGamepad,
+                        'icon': 'gamepad',
                         'label': 'Coup',
                         'view': chooseLoseInfluencePage
                     },
                     'cards': {
-                        'icon': faAddressCard,
+                        'icon': 'address-card',
                         'label': 'Cards',
                         'view': (<CoupPlayersCards { ...this.props } />)
                     },
                     'actionslist': {
-                        'icon': faList,
+                        'icon': 'list',
                         'label': 'Actions History',
                         'view': (<CoupActionsHistory { ...this.props } />)
                     },
                     'rules': {
-                        'icon': faBook,
+                        'icon': 'book',
                         'label': 'Rules',
                         'view': CoupGameRule
                     }

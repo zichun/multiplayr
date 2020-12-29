@@ -1,12 +1,14 @@
 {
     "compilerOptions": {
+        "incremental": true,
+        "tsBuildInfoFile": "./buildcache/front-end",
         "target": "es5",
         "module": "commonjs",
         "outDir": "build",
         "jsx": "react",
         "sourceMap": true
     },
-    "include": ["src/**/*", "node_modules/typescript/lib/lib.es6.d.ts"],
+    "include": ["src", "node_modules/typescript/lib/lib.es6.d.ts"],
     "exclude": [
         "node_modules",
         "out",

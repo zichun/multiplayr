@@ -9,10 +9,10 @@ import MultiplayR from '../lib/multiplayr';
 import LocalClientTransport from '../lib/local.transport';
 import * as messages from '../../common/messages';
 import * as utils from '../../common/utils';
-import MPRULES from '../../rules/rules';
 
 import '../css/local.scss';
 import '../css/multiplayr.scss';
 import '../css/mp-components.scss';
+import './fontawesome';
 
-export { MultiplayR, LocalClientTransport, messages, utils, MPRULES };
+export { MultiplayR, LocalClientTransport, messages, utils };

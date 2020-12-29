@@ -30,7 +30,7 @@ $(() => {
                 const gameState = sessionStorage.getItem('gameState');
 
                 if (confirm('An existing game at room ' + roomId + ' (' + ruleName + ') detected. Click OK to resume the game, and cancel to host a new game')) {
-                    return rehost(ruleName, roomId, clientId, gameState);
+                    return rehost(_mplib.MPRULES[ruleName], roomId, clientId, gameState);
                 }
             }
 
@@ -53,7 +53,7 @@ $(() => {
         clientId: string,
         gameState: string
     ) {
-        _mplib.MultiplayR.ReHost(ruleName,
+        _mplib.MultiplayR.ReHost(_mplib.MPRULES[ruleName],
                                  roomId,
                                  clientId,
                                  gameState,
@@ -80,7 +80,7 @@ $(() => {
         ruleName: string
     ) {
         return () => {
-            _mplib.MultiplayR.Host(ruleName,
+            _mplib.MultiplayR.Host(_mplib.MPRULES[ruleName],
                                    transport,
                                    document.getElementById('rules'));
         };

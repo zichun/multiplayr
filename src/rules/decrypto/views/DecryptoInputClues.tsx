@@ -7,7 +7,6 @@ import {
 
 import { DecryptoViewPropsInterface, DecryptoNotification } from '../DecryptoCommon';
 import { DecryptoGameRule } from './DecryptoRules';
-import { faFileSignature, faBook } from '@fortawesome/free-solid-svg-icons';
 
 import { Notification } from '../../../client/components/Notification';
 import Sound from 'react-sound';
@@ -34,14 +33,14 @@ function DecryptoClientNotification(props: DecryptoViewPropsInterface) {
     if (props.notifications.indexOf(DecryptoNotification.Miscommunication) !== -1) {
         notifications.push(<h1>Miscommunication!</h1>);
         sounds.push(<Sound
-            url={ '/js' + FailSound }
+            url={ FailSound }
             playStatus="PLAYING" />);
     }
 
     if (props.notifications.indexOf(DecryptoNotification.Interception) !== -1) {
         notifications.push(<h1>Interception!</h1>);
         sounds.push(<Sound
-            url={ '/js' + PassSound }
+            url={ PassSound }
             playStatus="PLAYING" />);
     }
 

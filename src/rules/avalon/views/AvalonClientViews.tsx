@@ -27,8 +27,6 @@ import {
     Grid
 } from 'semantic-ui-react';
 
-import { faHistory, faDesktop, faGamepad, faAddressCard, faBook } from '@fortawesome/free-solid-svg-icons';
-
 function ClientView(
     props: AvalonViewPropsInterface,
     view: any) {
@@ -36,29 +34,29 @@ function ClientView(
     const links = {};
     if (props.remotePlay) {
         links['action'] = {
-            'icon': faDesktop,
+            'icon': 'desktop',
             'label': 'Board',
             'view': AvalonHostMainPageView(props)
         };
     }
 
     links['home'] = {
-        'icon': faGamepad,
+        'icon': 'gamepad',
         'label': 'Avalon',
         'view': view,
     };
     links['profile'] = {
-        'icon': faAddressCard,
+        'icon': 'address-card',
         'label': 'Profile',
         'view': AvalonPlayerProfile(props)
     };
     links['quests'] = {
-        'icon': faHistory,
+        'icon': 'history',
         'label': 'Quest History',
         'view': AvalonQuests(props)
     };
     links['rules'] = {
-        'icon': faBook,
+        'icon': 'book',
         'label': 'Rules',
         'view': <AvalonRules />
     };

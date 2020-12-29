@@ -18,8 +18,6 @@ import {
 
 import { forEach } from '../../common/utils';
 
-import { faBars } from '@fortawesome/free-solid-svg-icons';
-
 interface HostShellMainInterface extends ViewPropsInterface {
     links: any,
     currentView?: string,
@@ -135,7 +133,7 @@ export const Shell: GameRuleInterface = {
                         <div className='shell-main-panel-link'
                              onClick={ this._togglePanel }>
 
-                            <FontAwesomeIcon icon={ faBars }
+                            <FontAwesomeIcon icon="bars"
                                          size='3x'
                                          className='icon menu' />
                         </div>

@@ -6,8 +6,6 @@ import { ClientTransportInterface } from '../../common/interfaces';
 import Session from './session';
 import GameObject from './gameobject';
 
-import MPRULES from '../../rules/rules';
-
 import { isArray, isFunction } from '../../common/utils';
 
 import {
@@ -17,17 +15,23 @@ import {
 
 import {
     CallbackType,
-    ReturnPacketType
+    ReturnPacketType,
+    GameRuleWrapperInterface
 } from '../../common/interfaces';
 
 declare var MPGameObject;
 
 export class MultiplayR {
+    protected static gameRules: GameRuleWrapperInterface[] = [];
     protected static gamerulesPath: string = '';
 
     /**
      * Modular gamerules functions
      */
+
+    public static SetGameRules(rules: GameRuleWrapperInterface[]) {
+        MultiplayR.gameRules = rules;
+    }
 
     public static SetGamerulesPath(path: string) {
         MultiplayR.gamerulesPath = path;
@@ -108,7 +112,7 @@ export class MultiplayR {
         container: any,
         cb?: CallbackType<ReturnPacketType>
     ) {
-        const ruleDef = MPRULES[ruleName];
+        const ruleDef = MultiplayR.gameRules[ruleName];
 
         const gameObj = new GameObject(transport,
                                        container);
@@ -127,7 +131,7 @@ export class MultiplayR {
         container: any,
         cb?: CallbackType<ReturnPacketType>
     ) {
-        const ruleDef = MPRULES[ruleName];
+        const ruleDef = MultiplayR.gameRules[ruleName];
 
         const gameObj = new GameObject(transport,
                                        container);
@@ -151,7 +155,7 @@ export class MultiplayR {
                            }
 
                            const rule = res.message;
-                           const ruleDef = MPRULES[rule];
+                           const ruleDef = MultiplayR.gameRules[rule];
 
                            gameObj.setupRule(ruleDef.rule);
 
@@ -174,7 +178,7 @@ export class MultiplayR {
             }
 
             const rule = res.message;
-            const ruleDef = MPRULES[rule];
+            const ruleDef = MultiplayR.gameRules[rule];
 
             gameObj.setupRule(ruleDef.rule);
 

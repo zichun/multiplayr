@@ -16,8 +16,6 @@ import { CoupGameRule } from './CoupRules';
 import { CoupActionsHistory } from './CoupActionsHistory';
 import { CoupPlayersCards } from './CoupCards';
 
-import { faGamepad, faAddressCard, faList, faBook } from '@fortawesome/free-solid-svg-icons';
-
 export function CoupWaitFor(props: CoupViewPropsInterface) {
     const mp = props.MP;
 
@@ -73,22 +71,22 @@ export class CoupClientWaitForAction extends React.Component<CoupViewPropsInterf
             {
                 'links': {
                     'home': {
-                        'icon': faGamepad,
+                        'icon': 'gamepad',
                         'label': 'Coup',
                         'view': (<CoupWaitFor { ...this.props } />)
                     },
                     'cards': {
-                        'icon': faAddressCard,
+                        'icon': 'address-card',
                         'label': 'Cards',
                         'view': (<CoupPlayersCards { ...this.props } />)
                     },
                     'actionslist': {
-                        'icon': faList,
+                        'icon': 'list',
                         'label': 'Actions History',
                         'view': actionsPage
                     },
                     'rules': {
-                        'icon': faBook,
+                        'icon': 'book',
                         'label': 'Rules',
                         'view': CoupGameRule
                     }

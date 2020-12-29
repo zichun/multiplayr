@@ -42,7 +42,7 @@ export const DecryptoRule: GameRuleInterface = {
         miscommunication: [], // Number of miscommunications
         interception: [],    // Number of interceptions
         history: [],
-        notifications: [],   // Notifications for each team
+        notifications: []    // Notifications for each team
     },
     playerData: {
         words: [],

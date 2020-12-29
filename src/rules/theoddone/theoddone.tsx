@@ -7,8 +7,6 @@ import Lobby from '../lobby/lobby';
 import Shell from '../gameshell/gameshell';
 import './theoddone.scss';
 
-import { faHome, faUsers, faGamepad, faCog } from '@fortawesome/free-solid-svg-icons';
-
 import {
     GameRuleInterface,
     MPType,
@@ -311,12 +309,12 @@ export const TheOddOneRule: GameRuleInterface = {
                                         {
                                             'links': {
                                                 'home': {
-                                                    'icon': faHome,
+                                                    'icon': 'home',
                                                     'label': 'Home',
                                                     'view': mp.getPluginView('lobby', 'Lobby')
                                                 },
                                                 'clients': {
-                                                    'icon': faUsers,
+                                                    'icon': 'users',
                                                     'label': 'Players',
                                                     'view': mp.getPluginView('lobby', 'host-roommanagement')
                                                 }
@@ -425,7 +423,7 @@ export const TheOddOneRule: GameRuleInterface = {
                                         {
                                             'links': {
                                                 'home': {
-                                                    'icon': faGamepad,
+                                                    'icon': 'gamepad',
                                                     'label': 'Game',
                                                     'view': React.createElement(
                                                         'div',
@@ -439,12 +437,12 @@ export const TheOddOneRule: GameRuleInterface = {
                                                         submitButton)
                                                 },
                                                 'clients': {
-                                                    'icon': faUsers,
+                                                    'icon': 'users',
                                                     'label': 'Players',
                                                     'view': mp.getPluginView('lobby', 'host-roommanagement')
                                                 },
                                                 'newgame': {
-                                                    'icon': faCog,
+                                                    'icon': 'cog',
                                                     'label': 'Game Type',
                                                     'view': React.createElement(
                                                         'div',
@@ -473,7 +471,7 @@ export const TheOddOneRule: GameRuleInterface = {
                                         {
                                             'links': {
                                                 'home': {
-                                                    'icon': faGamepad,
+                                                    'icon': 'gamepad',
                                                     'label': 'Game',
                                                     'view': React.createElement(
                                                         'div',
@@ -483,7 +481,7 @@ export const TheOddOneRule: GameRuleInterface = {
                                                         button)
                                                 },
                                                 'clients': {
-                                                    'icon': faUsers,
+                                                    'icon': 'users',
                                                     'label': 'Players',
                                                     'view': mp.getPluginView('lobby', 'host-roommanagement')
                                                 }

@@ -15,8 +15,6 @@ import {
     forEach
 } from '../../common/utils';
 
-import { faCogs, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
-
 interface DebuggerViewPropsInterface extends ViewPropsInterface {
     plugin: string,
     historyCount: number,
@@ -310,19 +308,19 @@ export function NewDebuggerRule(
                     return (
                         <div className='debugger-container'>
                             <FontAwesomeIcon className='debugger-icon'
-                                         icon={ faCogs }
+                                         icon="cogs"
                                          onClick={ this._onClick } />
                             <div className={ debuggerPaneClassName }>
                                 <div className='debugger-stepper'>
                                     <FontAwesomeIcon className='debugger-stepper-left'
-                                                 icon={ faChevronLeft }
+                                                 icon="chevron-left"
                                                  size='2x'
                                                  onClick={ this.props.MP.stepLeft } />
                                     <span className='debugger-stepper-count'>
                                         { (this.props.historyPointer + 1) + ' / ' + this.props.historyCount }
                                     </span>
                                     <FontAwesomeIcon className='debugger-stepper-right'
-                                                 icon={ faChevronRight }
+                                                 icon="chevron-right"
                                                  size='2x'
                                                  onClick={ this.props.MP.stepRight } />
                                 </div>

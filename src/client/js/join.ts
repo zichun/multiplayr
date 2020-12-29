@@ -54,7 +54,8 @@ function setupJoinButton(
         $joinButton.text('Connecting...');
 
         if (clientId) {
-            _mplib.MultiplayR.ReJoin(roomId,
+            _mplib.MultiplayR.ReJoin(_mplib.MPRULES,
+                                     roomId,
                                      clientId,
                                      transport,
                                      document.getElementById('container'),
@@ -70,7 +71,8 @@ function setupJoinButton(
                                          window.location.hash = 'roomId=' + roomId + '&clientId=' + clientId;
                                      });
         } else {
-            _mplib.MultiplayR.Join(roomId,
+            _mplib.MultiplayR.Join(_mplib.MPRULES,
+                                   roomId,
                                    transport,
                                    document.getElementById('container'),
                                    (res) => {

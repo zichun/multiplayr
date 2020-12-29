@@ -10,7 +10,6 @@ import {
 } from '../../../common/interfaces';
 
 import { CoupGameRule } from './CoupRules';
-import { faHome, faUsers, faBook } from '@fortawesome/free-solid-svg-icons';
 
 export class CoupHostLobby extends React.Component<ViewPropsInterface, {}> {
     public render() {
@@ -22,17 +21,17 @@ export class CoupHostLobby extends React.Component<ViewPropsInterface, {}> {
             {
                 'links': {
                     'home': {
-                        'icon': faHome,
+                        'icon': 'home',
                         'label': 'Home',
                         'view': mp.getPluginView('lobby', 'Lobby')
                     },
                     'clients': {
-                        'icon': faUsers,
+                        'icon': 'users',
                         'label': 'Players',
                         'view': mp.getPluginView('lobby', 'host-roommanagement')
                     },
                     'rules': {
-                        'icon': faBook,
+                        'icon': 'book',
                         'label': 'Rules',
                         'view': CoupGameRule
                     }

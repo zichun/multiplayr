@@ -14,6 +14,13 @@ export interface GameRuleInterface {
     views: { [viewName: string]: any };
 }
 
+export interface GameRuleWrapperInterface {
+    description: string;
+    debug: boolean;
+    rules: string[];
+    rule: GameRuleInterface;
+}
+
 export interface ViewPropsInterface {
     MP: MPType;
 }
