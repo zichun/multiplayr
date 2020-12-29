@@ -23,7 +23,7 @@ interface TheOddOneHostVoteTableViewInterface extends ViewPropsInterface {
     votes: any,
     lobby: any,
     startPlayer: any
-};
+}
 
 export const TheOddOneRule: GameRuleInterface = {
 

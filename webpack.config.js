@@ -219,6 +219,17 @@ const WebModule = (transpileOnly) => {
     return {
         rules: [
             {
+                enforce: "pre",
+                test: /\.(js|ts|tsx)$/,
+                exclude: /node_modules/,
+                loader: "eslint-loader",
+                options: {
+                    emitWarning: true,
+                    failOnError: true,
+                    failOnWarning: false
+                }
+            },
+            {
                 test: /\.html$/i,
                 loader: 'html-loader',
                 options: {

@@ -19,11 +19,11 @@ import {
     GameRuleWrapperInterface
 } from '../../common/interfaces';
 
-declare var MPGameObject;
+declare let MPGameObject;
 
 export class MultiplayR {
     protected static gameRules: GameRuleWrapperInterface[] = [];
-    protected static gamerulesPath: string = '';
+    protected static gamerulesPath = '';
 
     /**
      * Modular gamerules functions

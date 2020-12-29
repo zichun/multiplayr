@@ -47,7 +47,7 @@ export function newDeck() {
 export function nextTurn(
     mp: MPType
 ) {
-    let currentPlayerTurn = mp.getData('playerTurn');
+    const currentPlayerTurn = mp.getData('playerTurn');
     const initPlayerTurn = currentPlayerTurn;
     const playersCount = mp.playersCount();
     let nextPlayerTurn = null;
@@ -106,7 +106,7 @@ export function addActions(
     mp: MPType,
     action: CoupActionInterface,
     actionsEl: any[],
-    index: number = 0
+    index = 0
 ) {
     const { clientId, targetId, challenge, block, challengeLoser, challengeResult, challengeWinner, challengeCauseDead, complete } = action;
     const playerTag = mp.getPluginView(
@@ -312,8 +312,8 @@ export function replaceChallengedCard(
 ) {
     const cards = mp.getPlayerData(clientId, 'cards');
     const deck = mp.getData('deck');
-    let found = false;
-    let i = 0;
+    const found = false;
+    const i = 0;
 
     if (cards[cardNum].state !== CoupCardState.Active) {
         throw(new Error('Challenge should have failed - ' + cardNum + ' is not active'));

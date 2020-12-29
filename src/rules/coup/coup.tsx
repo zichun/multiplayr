@@ -304,31 +304,33 @@ export const CoupRule: GameRuleInterface = {
             }
 
             case CoupGameState.GameOver:
-                let aliveCount = 0;
-                let winnerId = null;
+                {
+                    let aliveCount = 0;
+                    let winnerId = null;
 
-                mp.playersForEach(
-                    (clientId, index) => {
-                        if (!mp.getPlayerData(clientId, 'isDead')) {
-                            aliveCount++;
-                            winnerId = clientId;
-                        }
+                    mp.playersForEach(
+                        (clientId, index) => {
+                            if (!mp.getPlayerData(clientId, 'isDead')) {
+                                aliveCount++;
+                                winnerId = clientId;
+                            }
                     });
 
-                if (aliveCount !== 1) {
-                    throw (new Error('Game should not be over with non-1 alive players'));
+                    if (aliveCount !== 1) {
+                        throw (new Error('Game should not be over with non-1 alive players'));
+                    }
+
+                    mp.playersForEach(
+                        (clientId, index) => {
+                            mp.setViewProps(clientId, 'winner', winnerId);
+                            mp.setView(clientId, 'client-showWinner');
+                    });
+
+                    mp.setViewProps(mp.hostId, 'winner', winnerId);
+                    mp.setView(mp.hostId, 'host-showWinner');
+
+                    break;
                 }
-
-                mp.playersForEach(
-                    (clientId, index) => {
-                        mp.setViewProps(clientId, 'winner', winnerId);
-                        mp.setView(clientId, 'client-showWinner');
-                    });
-
-                mp.setViewProps(mp.hostId, 'winner', winnerId);
-                mp.setView(mp.hostId, 'host-showWinner');
-
-                break;
         }
 
         mp.playersForEach((clientId, index) => {

@@ -116,7 +116,7 @@ export const AvalonRule: GameRuleInterface = {
         mp.setViewProps(mp.hostId, 'voteQuest', voteQuest);
         mp.setViewProps(mp.hostId, 'remotePlay', mp.getData('remotePlay'));
 
-        let charactersInPlay = {};
+        const charactersInPlay = {};
 
         const objValues = Object.keys(AvalonCharacter).map(k => AvalonCharacter[k]);
         const characters = objValues.filter(v => typeof v === "string") as string[];
@@ -145,7 +145,7 @@ export const AvalonRule: GameRuleInterface = {
             mp.setViewProps(clientId, 'minions', null);
             mp.setViewProps(clientId, 'merlins', null);
             if (character === AvalonCharacter.Merlin) {
-                let minions = [];
+                const minions = [];
                 mp.playersForEach((clientId, index) => {
                     if (mp.getPlayerData(clientId, 'character') === AvalonCharacter.Minion || mp.getPlayerData(clientId, 'character') === AvalonCharacter.Morgana) {
                         minions.push(index);
@@ -155,7 +155,7 @@ export const AvalonRule: GameRuleInterface = {
                 mp.setViewProps(clientId, 'minions', minions);
             } else if (IsClientMinion(mp, clientId)) {
 
-                let minions = [];
+                const minions = [];
                 mp.playersForEach((clientId, index) => {
                     if (IsClientMinion(mp, clientId)) {
 
@@ -165,7 +165,7 @@ export const AvalonRule: GameRuleInterface = {
 
                 mp.setViewProps(clientId, 'minions', minions);
             } else if (character === AvalonCharacter.Percival) {
-                let merlins = [];
+                const merlins = [];
 
                 mp.playersForEach((clientId, index) => {
                     if (mp.getPlayerData(clientId, 'character') === AvalonCharacter.Merlin || mp.getPlayerData(clientId, 'character') === AvalonCharacter.Morgana) {

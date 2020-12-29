@@ -42,7 +42,7 @@ export function AvalonPlayerProfile(props: AvalonViewPropsInterface) {
 
     if (props.minions) {
 
-        let minions = [];
+        const minions = [];
 
         for (let i = 0; i < props.minions.length; i = i + 1) {
 
@@ -74,7 +74,7 @@ export function AvalonPlayerProfile(props: AvalonViewPropsInterface) {
 
     if (props.merlins) {
 
-        let merlins = [];
+        const merlins = [];
 
         for (let i = 0; i < props.merlins.length; i = i + 1) {
 
@@ -106,7 +106,7 @@ export function AvalonPlayerProfile(props: AvalonViewPropsInterface) {
 
     character = CharacterName(props.character);
 
-    let cardsInPlay = [];
+    const cardsInPlay = [];
     for (const character in props.cardsInPlay) {
 
         if (props.cardsInPlay[character] === 0) {
@@ -425,20 +425,20 @@ export function AvalonRules() {
             </Container>
             <Container text><Header size="small">Rounds</Header></Container>
             <Container text textAlign="justified">
-                At the start of the game, a player is randomly selected to be the quest leader. Subsequently, the next player will become the new leader of the round. The Leader selects a certain number of players to send out on a quest (the Leader may choose to go out on the mission himself/herself), starting with Quest 1. All of the players then discuss the Leader's choice and, simultaneous and in public, vote on whether to accept the team make-up or not. If a majority of players votes no to the proposal or if it's a tie, leadership passes on to the next player to the left, who proposes their own quest members. This continues until a majority of players agrees with the current Leader's mission assignment. After four rejected quest proposals in a row, the next proposed quest will <strong>automatically be accepted</strong>.
+                At the start of the game, a player is randomly selected to be the quest leader. Subsequently, the next player will become the new leader of the round. The Leader selects a certain number of players to send out on a quest (the Leader may choose to go out on the mission himself/herself), starting with Quest 1. All of the players then discuss the Leader&apos;s choice and, simultaneous and in public, vote on whether to accept the team make-up or not. If a majority of players votes no to the proposal or if it&apos;s a tie, leadership passes on to the next player to the left, who proposes their own quest members. This continues until a majority of players agrees with the current Leader&apos;s mission assignment. After four rejected quest proposals in a row, the next proposed quest will <strong>automatically be accepted</strong>.
             </Container>
             <Container text textAlign="justified">
-                Once a mission team is agreed on, the players then "go" on the quest. To "go" on a quest, players on the quest are given a set of Quest choice, one for indicating Success, the other indicating Fail. Player may either secretly submit a Sucess or Fail card. The cards are shuffled and then revealed. If all cards show Success, the loyal servants of Arthur earns one point. If even one card shows Fail, the quest has been sabotaged and the minions of Mondred earn one point (except for the an exceptions on Mission 4 with 7 or more players, where it may be necessary for 2 Fail cards to be played in order for the mission to fail).
+                Once a mission team is agreed on, the players then &quot;go&quot; on the quest. To &quot;go&quot; on a quest, players on the quest are given a set of Quest choice, one for indicating Success, the other indicating Fail. Player may either secretly submit a Sucess or Fail card. The cards are shuffled and then revealed. If all cards show Success, the loyal servants of Arthur earns one point. If even one card shows Fail, the quest has been sabotaged and the minions of Mondred earn one point (except for the an exceptions on Mission 4 with 7 or more players, where it may be necessary for 2 Fail cards to be played in order for the mission to fail).
             </Container>
             <Container text textAlign="justified">
                 The game continues until one team accumulates 3 points.
             </Container>
             <Container text><Header size="medium">Special Characters</Header></Container>
             <Container text textAlign="justified">
-                There are 4 special roles that may be configured to be included in the game or not. <strong>Merlin</strong>, playing on the side of Arthur, is told at the beginning of the game which player plays on the side of Mondred. If the minons of Mondred lose the game, however, they have one last chance of winning by correctly guessing Merlin's identity. If they can do this, they win.
+                There are 4 special roles that may be configured to be included in the game or not. <strong>Merlin</strong>, playing on the side of Arthur, is told at the beginning of the game which player plays on the side of Mondred. If the minons of Mondred lose the game, however, they have one last chance of winning by correctly guessing Merlin&apos;s identity. If they can do this, they win.
             </Container>
             <Container text textAlign="justified">
-                <strong>Percival</strong>, also on the side of Arthur, knows the identity of Merlin at the start of the game and is in a position to help protect Merlin's identity.
+                <strong>Percival</strong>, also on the side of Arthur, knows the identity of Merlin at the start of the game and is in a position to help protect Merlin&apos;s identity.
             </Container>
             <Container text textAlign="justified">
                 <strong>Mondred</strong> (playing on his own side of course), does not reveal their identity to Merlin at the start of the game, leaving Merlin in the dark.

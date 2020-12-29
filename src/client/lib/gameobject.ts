@@ -354,7 +354,7 @@ export class GameObject {
 
     public addNewClient(
         clientId: string,
-        ready: boolean = false
+        ready = false
     ) {
         if (!this.isHost) {
             throw (new Error('Only host can call addNewClient'));
@@ -1087,7 +1087,7 @@ export class GameObject {
 
     private setPluginsStore(
         pluginStore: any,
-        mapPlayers: boolean = false
+        mapPlayers = false
     ) {
         if (!this.isHost) {
             throw (new Error('Invalid call: only host can set plugin state'));
@@ -1100,7 +1100,7 @@ export class GameObject {
 
     private setClientsStore(
         clientsStore: any,
-        mapPlayers: boolean = false
+        mapPlayers = false
     ) {
         if (!this.isHost) {
             throw (new Error('Invalid call: only host can set clients\' store'));
@@ -1155,7 +1155,7 @@ export class GameObject {
 
     public setState(
         stateString: string,
-        mapPlayers: boolean = false
+        mapPlayers = false
     ) {
         if (!this.isHost) {
             throw (new Error('Invalid call: only host can set state'));

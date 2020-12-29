@@ -2,7 +2,7 @@
  * decrypto.local.ts
  */
 
-declare var io;
+/* eslint-disable no-var */
 declare var _mplib;
 declare var _mprules;
 

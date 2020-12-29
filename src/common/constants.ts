@@ -5,5 +5,5 @@
  * Export constants for the service.
  */
 
-export let SERVICENAME = 'Multiplayr';
-export let ROOMINACTIVELIFESPAN = 60 * 60 * 1000;
+export const SERVICENAME = 'Multiplayr';
+export const ROOMINACTIVELIFESPAN = 60 * 60 * 1000;

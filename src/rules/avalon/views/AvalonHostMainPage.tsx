@@ -206,7 +206,7 @@ const VoteQuestResultCard = (
 
     return (
         <div className={ className.join(' ') }>
-		    <div className="flipper">
+            <div className="flipper">
                 <div className="front">
                     &nbsp;
                 </div>
@@ -343,7 +343,7 @@ export function AvalonHostMainPageView(props: AvalonViewPropsInterface) {
     // Quest outcome popup.
     //
 
-    let questOutcome = null;
+    const questOutcome = null;
     /* if (quests.length && props.notification === true) {
      *     if (quests[quests.length - 1].questStatus === AvalonQuestStatus.TeamRejected) {
      *         questOutcome = (

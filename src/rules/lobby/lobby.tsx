@@ -33,11 +33,11 @@ interface LobbyViewInterface extends ViewPropsInterface {
     names: string[],
     icons: number[],
     accents: string[]
-};
+}
 interface LobbySetNameViewInterface extends ViewPropsInterface {
     name: string,
     colors: string[]
-};
+}
 
 export const Lobby: GameRuleInterface = {
 
@@ -208,7 +208,7 @@ export const Lobby: GameRuleInterface = {
                 }
 
                 let style = { color: this.props.accents[i] };
-                let outerStyle = {
+                const outerStyle = {
                     borderColor: this.props.accents[i],
                     backgroundColor: 'transparent'
                 };
@@ -320,7 +320,7 @@ export const Lobby: GameRuleInterface = {
                 super(props);
                 const colors = this.props.colors || colors_default;
                 if (!this.props.accent) {
-                    let accent = colors[Math.floor(colors.length * Math.random())];
+                    const accent = colors[Math.floor(colors.length * Math.random())];
                     this.state = { accent: accent };
                     this._setAccent(accent);
                 } else {

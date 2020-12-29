@@ -53,7 +53,7 @@ export class ChoiceList extends React.Component<{
 
             this.state.selectedKeys.push(key);
         } else {
-	    this.setState({ selectedKeys: [key]});
+        this.setState({ selectedKeys: [key]});
 //            this.state.selectedKeys = [key];
         }
     }

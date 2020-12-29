@@ -18,7 +18,7 @@ export interface DecryptoViewPropsInterface extends ViewPropsInterface {
     lobby: any;
     state: DecryptoGameState;
     words: string[];
-    clueSet: Number[];
+    clueSet: number[];
     guessing: boolean;
     clues: string[][];
     guesses: number[][];

@@ -10,14 +10,14 @@ export function randomRoomId(): string {
     return Math.floor((Math.random() * 899999 + 100000)).toString();
 }
 
-export let uniqueId = (
+export const uniqueId = (
     () => {
 
         let uniqidSeed: number = Math.floor(Math.random() * 0x75bcd15);
 
         function uniqueId(
             prefix?: string,
-            moreEntropy: boolean = false
+            moreEntropy = false
         ): string {
             // +   original by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
             // +    revised by: Kankrelune (http://www.webfaktory.info/)

@@ -68,7 +68,7 @@ class GameStates {
 
     constructor(
         Size: number,
-        HistoryInLocalStorage: boolean = false,
+        HistoryInLocalStorage = false,
         MP: MPType
     ) {
         this.bufferSize = Size;
@@ -292,7 +292,7 @@ export function NewDebuggerRule(
                         serializedState: this.state.serializedState
                     });
                 }
-                public componentWillReceiveProps(nextProps) {
+                public UNSAFE_componentWillReceiveProps(nextProps) {
                     if (nextProps.serializedState !== this.state.serializedState) {
                         this.setState({
                             serializedState: nextProps.serializedState,

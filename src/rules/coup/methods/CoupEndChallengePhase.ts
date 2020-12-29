@@ -120,27 +120,28 @@ export const CoupEndChallengePhase = (
         break;
 
     case CoupAction.Captain:
+            {
+                const targetCoins = mp.getPlayerData(targetId, 'coins');
+                const stealCoin = Math.min(targetCoins, 2);
 
-        const targetCoins = mp.getPlayerData(targetId, 'coins');
-        const stealCoin = Math.min(targetCoins, 2);
+                lastAction.coinStolen = stealCoin;
 
-        lastAction.coinStolen = stealCoin;
+                lastAction.outcomes.push({
+                    clientId: targetId,
+                    coins: -stealCoin
+                });
 
-        lastAction.outcomes.push({
-            clientId: targetId,
-            coins: -stealCoin
-        });
+                lastAction.outcomes.push({
+                    clientId: lastAction.clientId,
+                    coins: stealCoin
+                });
 
-        lastAction.outcomes.push({
-            clientId: lastAction.clientId,
-            coins: stealCoin
-        });
+                mp.setPlayerData(targetId, 'coins', targetCoins - stealCoin);
+                mp.setPlayerData(lastAction.clientId, 'coins', coins + stealCoin);
+                nextTurn(mp);
 
-        mp.setPlayerData(targetId, 'coins', targetCoins - stealCoin);
-        mp.setPlayerData(lastAction.clientId, 'coins', coins + stealCoin);
-        nextTurn(mp);
-
-        break;
+                break;
+            }
 
     case CoupAction.ForeignAid:
 

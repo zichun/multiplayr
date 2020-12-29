@@ -56,9 +56,9 @@ function ClueReactionGuess(props: DecryptoViewPropsInterface) {
     const guessing = props.guessing && props.guesses[props.team] === null;
     const submitCluesBtn = (<button onClick={ submitGuess } >Submit Guess</button>);
     return [
-        <h1>Your team's clues:</h1>,
+        <h1>Your team&apos;s clues:</h1>,
         ClueInput(props, props.team),
-        <h1>Opponent team's clues:</h1>,
+        <h1>Opponent team&apos;s clues:</h1>,
         ClueInput(props, 1 - props.team),
         guessing ? submitCluesBtn : null
     ];

@@ -49,11 +49,11 @@ export class Session implements ClientSessionInterface {
             throw 'Session constructed with an invalid transport object';
         }
 
-        this._onMessage = (packet, cb) => {};
-        this._onJoinRoom = (clientId) => {};
-        this._onRejoinRoom = (clientId) => {};
-        this._onLeaveRoom = (clientId) => {};
-        this._onReconnect = () => {};
+        this._onMessage = (packet, cb) => { return null; };
+        this._onJoinRoom = (clientId) => { return null; };
+        this._onRejoinRoom = (clientId) => { return null; };
+        this._onLeaveRoom = (clientId) => { return null; };
+        this._onReconnect = () => { return null; };
     }
 
     /**

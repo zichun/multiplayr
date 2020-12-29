@@ -120,7 +120,7 @@ function HistoryPage(props: DecryptoViewPropsInterface, team: number, words: str
         }
         for (let j = 0; j < entry.clueSet.length; ++j)
         {
-            let c = entry.clueSet[j] - 1;
+            const c = entry.clueSet[j] - 1;
             word_history[c][i] = entry.clues[j];
         }
     }

@@ -91,7 +91,7 @@ export class AvalonClientChooseQuestMembers extends React.Component<AvalonViewPr
     }
 
     private _selectMember(choice: string, index: Number) {
-        let members = this.state.members;
+        const members = this.state.members;
 
         for (let i = 0; i < members.length; i++) {
             if (members[i] === choice) {

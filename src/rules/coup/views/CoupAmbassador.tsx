@@ -34,7 +34,7 @@ class CoupAmbassadorCardChangePage extends React.Component<CoupViewPropsInterfac
     }
 
     private _selectCard(choice: string, index: Number) {
-        let cards = this.state.cards;
+        const cards = this.state.cards;
         for (let i = 0; i < cards.length; i++) {
             if (cards[i] === choice) {
                 return;

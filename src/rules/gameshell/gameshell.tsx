@@ -22,13 +22,13 @@ interface HostShellMainInterface extends ViewPropsInterface {
     links: any,
     currentView?: string,
     topBarContent?: any
-};
+}
 
 interface HostShellMainPanelInterface extends ViewPropsInterface {
     links: any,
     setView: any,
     currentView: string
-};
+}
 
 export const Shell: GameRuleInterface = {
 

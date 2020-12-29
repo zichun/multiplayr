@@ -195,7 +195,7 @@ export const RockScissorsPaperRule: GameRuleInterface = {
     },
 
     views: {
-        'host-lobby': class extends React.Component<ViewPropsInterface, {}> {
+        'host-lobby': class extends React.Component<ViewPropsInterface, unknown> {
             public render() {
                 const mp = this.props.MP;
 
@@ -217,7 +217,7 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                                         });
             }
         },
-        'chooseMove': class extends React.Component<ViewPropsInterface, {}> {
+        'chooseMove': class extends React.Component<ViewPropsInterface, unknown> {
             public render() {
                 return React.createElement(
                     'div',
@@ -227,7 +227,7 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                     React.createElement(RockScissorsPaperRule.views['clientScoreTable'], this.props));
             }
         },
-        'choices': class extends React.Component<ViewPropsInterface & {choice: number}, {}> {
+        'choices': class extends React.Component<ViewPropsInterface & {choice: number}, unknown> {
             public render() {
                 const mp = this.props.MP;
                 const choice = this.props.choice;
@@ -267,7 +267,7 @@ export const RockScissorsPaperRule: GameRuleInterface = {
             }
         },
         'prevMove': class extends React.Component<ViewPropsInterface & {prevChoice: number,
-                                                                        opPrevChoice: number}, {}> {
+                                                                        opPrevChoice: number}, unknown> {
             public render() {
                 const pMove = this.props.prevChoice;
                 const opMove = this.props.opPrevChoice;
@@ -295,7 +295,7 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                     React.createElement('div', null, result));
             }
         },
-        'scoreHeader': class extends React.Component<ViewPropsInterface, {}> {
+        'scoreHeader': class extends React.Component<ViewPropsInterface, unknown> {
             public render() {
                 return React.createElement(
                     'tr',
@@ -306,7 +306,7 @@ export const RockScissorsPaperRule: GameRuleInterface = {
                     React.createElement('th', null, 'Lose'));
             }
         },
-        'clientScoreTable': class extends React.Component<ViewPropsInterface, {}> {
+        'clientScoreTable': class extends React.Component<ViewPropsInterface, unknown> {
             public render() {
                 return React.createElement(
                     'table',
@@ -319,7 +319,7 @@ export const RockScissorsPaperRule: GameRuleInterface = {
         'hostScoreTable': class extends React.Component<ViewPropsInterface & {lobby: any,
                                                                               win: number[],
                                                                               lose: number[],
-                                                                              draw: number[]}, {}> {
+                                                                              draw: number[]}, unknown> {
             public render() {
                 const mp = this.props.MP;
                 const scores = [];
@@ -367,7 +367,7 @@ export const RockScissorsPaperRule: GameRuleInterface = {
         'score': class extends React.Component<ViewPropsInterface & {name: string,
                                                                      win: number,
                                                                      lose: number,
-                                                                     draw: number}, {}> {
+                                                                     draw: number}, unknown> {
             public render() {
                 return React.createElement(
                     'tr',
