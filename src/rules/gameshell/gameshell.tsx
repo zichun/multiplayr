@@ -22,6 +22,7 @@ interface HostShellMainInterface extends ViewPropsInterface {
     links: any,
     currentView?: string,
     topBarContent?: any
+    gameName?: string,
 }
 
 interface HostShellMainPanelInterface extends ViewPropsInterface {
@@ -60,7 +61,8 @@ export const Shell: GameRuleInterface = {
                 const header = React.createElement(
                     Shell.views['HostShell-Main-Head'],
                     {
-                        topBarContent: this.props.topBarContent ? this.props.topBarContent : this.props.MP.roomId
+                        topBarContent: this.props.topBarContent ? this.props.topBarContent : this.props.MP.roomId,
+                        gameName: this.props.gameName ?? '',
                     });
 
                 const body = React.createElement(Shell.views['HostShell-Main-Body'], {
@@ -143,12 +145,18 @@ export const Shell: GameRuleInterface = {
             }
         },
 
-        'HostShell-Main-Head': class extends React.Component<ViewPropsInterface & { topBarContent: any }, {}> {
+        'HostShell-Main-Head': class extends React.Component<
+            ViewPropsInterface & { topBarContent: any, gameName: string},
+            {}
+        > {
             public render() {
                 return (
                     <div className='shell-header'>
                         <div className='shell-room'>
                             { this.props.topBarContent }
+                        </div>
+                        <div className='shell-title'>
+                            { this.props.gameName }
                         </div>
                     </div>
                 );
