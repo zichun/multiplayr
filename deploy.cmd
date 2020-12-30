@@ -107,10 +107,8 @@ IF EXIST "%DEPLOYMENT_TARGET%\package.json" (
 
 :: 4. Build project
 pushd "%DEPLOYMENT_TARGET%"
-echo Running clean in %DEPLOYMENT_TARGET%...
-call :ExecuteCmd "!NODE_EXE!" "%DEPLOYMENT_TARGET%\node_modules\gulp\bin\gulp.js" clean
 echo Building Project in %DEPLOYMENT_TARGET%...
-call :ExecuteCmd "!NODE_EXE!" "%DEPLOYMENT_TARGET%\node_modules\gulp\bin\gulp.js"
+call :ExecuteCmd "npm run build"
 popd
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
