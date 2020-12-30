@@ -84,3 +84,58 @@ h1.notification {
 .clearer {
     clear: both;
 }
+
+.new-game-btn {
+    float: right;
+}
+
+.single-round {
+    width: 250px;
+    border: 1px solid grey;
+
+    .round-title {
+        font-size: 0.8em;
+        background-color: lightgrey;
+
+        .round-number {
+            margin-left: 1em;
+        }
+
+        .round-header {
+            float: right;
+    
+            .round-header-icon {
+                margin-right: 15px;
+            }
+        }
+    }
+
+    
+    .single-row {
+        height: 25px;
+        padding: 2px;
+
+        input {
+            float: right;
+            width: 20px;
+            margin-right: 5px;
+        }
+
+        /* Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+    }
+
+    .second {
+        background-color: lightgrey;
+    }
+}

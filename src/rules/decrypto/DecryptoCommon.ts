@@ -31,6 +31,29 @@ export interface DecryptoViewPropsInterface extends ViewPropsInterface {
     notifications: DecryptoNotification[];
 }
 
+export interface DecryptoSingleRowInfoInterface {
+    phrase: string;
+    otherGuess: number;
+    ownGuess: number;
+    actual: number;
+}
+
+export interface DecryptoSingleRoundInfoInterface {
+    roundNumber: number;
+    info: DecryptoSingleRowInfoInterface[];
+}
+
+export interface DecryptoGuessesInterface {
+    [index: number]: string[];
+}
+
+export interface DecryptoScoreInterface {
+    team: number;
+    miscommunication: number[];
+    interception: number[];
+    round: number;
+}
+
 function NewClueSet() {
     const words = [1, 2, 3, 4];
     shuffle(words);
