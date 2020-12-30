@@ -3,22 +3,34 @@ import * as http from 'http';
 import * as socketio from 'socket.io';
 import * as fs from 'fs';
 
+import * as webpackDevMiddleware from 'webpack-dev-middleware';
+import * as webpack from 'webpack';
+import * as config from '../webpack.config.js';
+
 const app = express();
 const server = http.createServer(app);
 const io = new socketio.Server(server);
 const rootDir = __dirname;
 
+const compiler = webpack(config());
+app.use(
+    webpackDevMiddleware(compiler, {
+        publicPath: '/client/'
+    })
+);
+
 app.set('port', process.env.PORT || 3000);
 app.set('view options', { layout: false, pretty: true });
-app.use(express.static(rootDir + '/client/'));
 
 /**
  * Routes
  */
 
-app.get('/', (req, res) => {
+/*app.get('/', (req, res) => {
     res.redirect('/host');
-});
+});*/
+
+/*app.use(express.static(rootDir + '/client/'));
 
 const paths = {
     'host': 'host.html',
@@ -40,7 +52,7 @@ for (const key of Object.keys(paths)) {
         });
     }
 }
-
+*/
 //
 // Set up socket.io connections
 //

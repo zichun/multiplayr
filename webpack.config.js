@@ -8,7 +8,7 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const HtmlWebPackPlugin = require('html-webpack-plugin');
 
 module.exports = (env, argv) => {
-    const mode = (argv.mode === 'production' ? 'production' : 'development');
+    const mode = (argv && argv.mode === 'production' ? 'production' : 'development');
     if (mode === 'production') {
         return [
             MultiplayrLibConfig(mode),
@@ -43,7 +43,7 @@ function DebuggerPages() {
         entry: entry,
         output: {
             path: path.resolve(__dirname, './build/client/'),
-            publicPath: path.resolve(__dirname, './build/client/'),
+            publicPath: '/',
             pathinfo: true,
             filename: '[name].js'
         },
@@ -72,7 +72,7 @@ function IndividualRules() {
         entry: entry,
         output: {
             path: path.resolve(__dirname, './build/client/'),
-            publicPath: path.resolve(__dirname, './build/client/'),
+            publicPath: '/',
             pathinfo: true,
             filename: '[name].js',
             libraryTarget: 'var',
@@ -101,7 +101,7 @@ function HostJoinPages() {
         },
         output: {
             path: path.resolve(__dirname, './build/client/'),
-            publicPath: path.resolve(__dirname, './build/client/'),
+            publicPath: '/',
             pathinfo: false,
             filename: '[name].bundle.js'
         },
@@ -133,7 +133,7 @@ function AllRulesConfig() {
         },
         output: {
             path: path.resolve(__dirname, './build/client/'),
-            publicPath: path.resolve(__dirname, './build/client/'),
+            publicPath: '/',
             pathinfo: false,
             filename: '[name].bundle.js',
             libraryTarget: 'var',
@@ -156,7 +156,7 @@ function MultiplayrLibConfig(mode) {
         },
         output: {
             path: path.resolve(__dirname, './build/client/'),
-            publicPath: path.resolve(__dirname, './build/client/'),
+            publicPath: '/',
             pathinfo: true,
             filename: '[name].bundle.js',
             libraryTarget: 'var',
