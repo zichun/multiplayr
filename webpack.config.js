@@ -14,7 +14,8 @@ module.exports = (env, argv) => {
             MultiplayrLibConfig(mode),
             ExpressServerConfig(),
             HostJoinPages(),
-            AllRulesConfig()
+            AllRulesConfig(),
+            TestConfig()
         ];
     } else {
         return [
@@ -203,6 +204,25 @@ function ExpressServerConfig() {
         },
         optimization: {
             minimize: false
+        }
+    });
+}
+
+function TestConfig() {
+    return ({
+        entry: './src/tests/test.ts',
+        module: {
+            rules: [
+                {
+                    test: /\.tsx?$/i,
+                    use: ['mocha-loader', 'ts-loader'],
+                    exclude: /node_modules/,
+                    exclude: /\.(png|jpe?g|gif|mp3)$/i,
+                }
+            ]
+        },
+        resolve: {
+            extensions: ['.tsx', '.ts', '.js' ]
         }
     });
 }
