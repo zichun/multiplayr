@@ -108,7 +108,7 @@ IF EXIST "%DEPLOYMENT_TARGET%\package.json" (
 :: 4. Build project
 pushd "%DEPLOYMENT_TARGET%"
 echo Building Project in %DEPLOYMENT_TARGET%...
-call :ExecuteCmd "npm run build"
+call :ExecuteCmd !NPM_CMD! run build
 popd
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
