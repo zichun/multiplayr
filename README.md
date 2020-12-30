@@ -14,10 +14,25 @@ accordingly.
 
 ## Building and running
 
+Building for local development:
+
 ```
 npm install
-gulp
-node build\app
+npm run buildDev
+npm start
+```
+
+Building for production:
+
+```
+npm run build
+npm start
+```
+
+Rebuild on changes:
+
+```
+npx webpack --watch
 ```
 
 ## Rules Definition
