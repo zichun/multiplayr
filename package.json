@@ -5,6 +5,7 @@
 	"scripts": {
 		"build": "rm -rf build && webpack --mode production",
 		"buildDev": "rm -rf build && webpack --mode development",
+		"deploy": "rmdir build /S /Q && webpack --mode development",
 		"start": "node ./build/app"
 	},
 	"dependencies": {
