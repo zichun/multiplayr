@@ -1,8 +1,8 @@
 import {
     MinesweeperFlagsGameState,
     MinesweeperFlagsGameStatus,
-    MinesweeperBoard,
-    BoardEl } from '../../rules/minesweeperflags/minesweeper';
+    MinesweeperBoard
+} from '../../rules/minesweeperflags/minesweeper';
 import * as assert from 'assert';
 
 describe('minesweeper_gamestate', () => {
@@ -26,14 +26,12 @@ describe('minesweeper_gamestate', () => {
         });
 
         it('non-bomb tile reveal', () => {
-            const revealed = state.get_revealed();
-
-            assert.strictEqual(revealed[0][0], true);
-            assert.strictEqual(revealed[0][1], true);
-            assert.strictEqual(revealed[1][0], true);
-            assert.strictEqual(revealed[1][1], true);
-            assert.strictEqual(revealed[2][1], false);
-            assert.strictEqual(revealed[2][0], false);
+            assert.strictEqual(state.is_revealed(0, 0), turn + 1);
+            assert.strictEqual(state.is_revealed(0, 1), turn + 1);
+            assert.strictEqual(state.is_revealed(1, 0), turn + 1);
+            assert.strictEqual(state.is_revealed(1, 1), turn + 1);
+            assert.strictEqual(state.is_revealed(2, 1), 0);
+            assert.strictEqual(state.is_revealed(2, 0), 0);
         });
     });
 
@@ -52,14 +50,12 @@ describe('minesweeper_gamestate', () => {
         });
 
         it('non-bomb tile reveal', () => {
-            const revealed = state.get_revealed();
-
-            assert.strictEqual(revealed[0][0], false);
-            assert.strictEqual(revealed[0][1], false);
-            assert.strictEqual(revealed[1][0], false);
-            assert.strictEqual(revealed[1][1], true);
-            assert.strictEqual(revealed[2][1], false);
-            assert.strictEqual(revealed[2][0], false);
+            assert.strictEqual(state.is_revealed(0, 0), 0);
+            assert.strictEqual(state.is_revealed(0, 1), 0);
+            assert.strictEqual(state.is_revealed(1, 0), 0);
+            assert.strictEqual(state.is_revealed(1, 1), turn + 1);
+            assert.strictEqual(state.is_revealed(2, 1), 0);
+            assert.strictEqual(state.is_revealed(2, 0), 0);
         });
     });
 
@@ -82,13 +78,12 @@ describe('minesweeper_gamestate', () => {
         });
 
         it('bomb tile reveal', () => {
-            const revealed = state.get_revealed();
-            assert.strictEqual(revealed[0][0], false);
-            assert.strictEqual(revealed[0][1], false);
-            assert.strictEqual(revealed[1][0], false);
-            assert.strictEqual(revealed[1][1], false);
-            assert.strictEqual(revealed[2][0], true);
-            assert.strictEqual(revealed[2][1], false);
+            assert.strictEqual(state.is_revealed(0, 0), 0);
+            assert.strictEqual(state.is_revealed(0, 1), 0);
+            assert.strictEqual(state.is_revealed(1, 0), 0);
+            assert.strictEqual(state.is_revealed(1, 1), 0);
+            assert.strictEqual(state.is_revealed(2, 0), turn + 1);
+            assert.strictEqual(state.is_revealed(2, 1), 0);
         });
     });
 });

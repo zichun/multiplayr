@@ -25,11 +25,33 @@ export class MinesweeperFlagsGameState {
     private turn: number;
     private score: number[];
     private status: MinesweeperFlagsGameStatus;
-    private revealed: boolean[][];
+    public revealed: number[][];
+    private last_moves: number[][];
 
     constructor(board: MinesweeperBoard) {
         this.board = board;
         this.new_game();
+    }
+
+    static from_object(obj: MinesweeperFlagsGameState): MinesweeperFlagsGameState {
+        const board = MinesweeperBoard.from_object(obj.board);
+        const state = new MinesweeperFlagsGameState(board);
+
+        state.turn = obj.turn;
+        state.score = obj.score;
+        state.status = obj.status;
+        state.revealed = obj.revealed;
+        state.last_moves = obj.last_moves;
+
+        return state;
+    }
+
+    public get_height() {
+        return this.board.get_height();
+    }
+
+    public get_width() {
+        return this.board.get_width();
     }
 
     public get_turn() {
@@ -44,8 +66,16 @@ export class MinesweeperFlagsGameState {
         return this.score[player];
     }
 
-    public get_revealed() {
-        return this.revealed;
+    public get_last_moves() {
+        return this.last_moves;
+    }
+
+    public is_revealed(r: number, c: number) {
+        return this.revealed[r][c];
+    }
+
+    public get_board(r: number, c: number) {
+        return this.board.get_board(r, c);
     }
 
     public new_game() {
@@ -53,9 +83,10 @@ export class MinesweeperFlagsGameState {
             throw new Error("Cannot create a game that has even number of mines");
         }
 
+        this.status = MinesweeperFlagsGameStatus.Playing;
         this.turn = Math.round(Math.random());
         this.score = [0, 0];
-        this.status = MinesweeperFlagsGameStatus.Playing;
+        this.last_moves = [null, null];
 
         const rows = this.board.get_height();
         const cols = this.board.get_width();
@@ -64,7 +95,7 @@ export class MinesweeperFlagsGameState {
         for (let i = 0; i < rows; ++i) {
             this.revealed[i] = new Array(cols);
             for (let j = 0; j < cols; ++j) {
-                this.revealed[i][j] = false;
+                this.revealed[i][j] = 0;
             }
         }
     }
@@ -82,30 +113,33 @@ export class MinesweeperFlagsGameState {
             throw new Error("Cannot make a move on revealed tile");
         }
 
+        this.last_moves[this.turn] = [row, col];
+
         if (this.board.get_board(row, col) === BoardEl.Mine) {
-            this.revealed[row][col] = true;
+            this.revealed[row][col] = this.turn + 1;
             this.score[this.turn] += 1;
 
             if (this.score[this.turn] * 2 > this.board.get_mines()) {
                 this.status = MinesweeperFlagsGameStatus.Gameover;
-                console.log("OPEN bomb - game is over");
             }
 
             return true;
         }
 
-        const delta = [[-1, 0], [1, 0], [0, -1], [0, 1]];
         const floodfill = (r: number, c: number) => {
             if (r < 0 || r >= rows || c < 0 || c >= cols ||
                 this.board.get_board(r, c) === BoardEl.Mine ||
                 this.revealed[r][c]) {
                 return;
             }
-            this.revealed[r][c] = true;
+            this.revealed[r][c] = this.turn + 1;
 
             if (this.board.get_board(r, c) === BoardEl.Empty) {
-                for (const d of delta) {
-                    floodfill(r + d[0], c + d[1]);
+                for (let dr = -1; dr <= 1; ++dr) {
+                    for (let dc = -1; dc <= 1; ++dc) {
+                        if (dr === 0 && dc === 0) continue;
+                        floodfill(r + dr, c + dc);
+                    }
                 }
             }
         };
@@ -135,6 +169,15 @@ export class MinesweeperBoard {
 
     get_mines(): number {
         return this.mines;
+    }
+
+    static from_object(obj: MinesweeperBoard): MinesweeperBoard {
+        const board = new MinesweeperBoard([[]]);
+        board.board = obj.board;
+        board.width = obj.width;
+        board.height = obj.height;
+        board.mines = obj.mines;
+        return board;
     }
 
     private constructor(mines_board: boolean[][]) {
