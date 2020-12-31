@@ -84,6 +84,9 @@ export const DecryptoRule: GameRuleInterface = {
         const notifications = mp.getData('notifications');
 
         mp.setViewProps(mp.clientId, 'history', mp.getData('history'));
+        mp.setViewProps(mp.clientId, 'interception', mp.getData('interception'));
+        mp.setViewProps(mp.clientId, 'miscommunication', mp.getData('miscommunication'));
+        mp.setViewProps(mp.clientId, 'round', mp.getData('round'));
 
         for (let i = 0; i < teams.length; ++i) {
             for (let j = 0; j < teams[i].length; ++j) {

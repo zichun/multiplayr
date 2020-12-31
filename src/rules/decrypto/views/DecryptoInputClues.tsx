@@ -65,7 +65,7 @@ function ClientInputClues(props: DecryptoViewPropsInterface) {
     const cluesInput = (clueSet.map((c, ind) => {
         return (
             <div>
-                Word { c }: <input type="text" id={clientId + '-clue-' + ind} />
+                Clue for word { c }: <input type="text" id={clientId + '-clue-' + ind} />
             </div>
         );
     }));

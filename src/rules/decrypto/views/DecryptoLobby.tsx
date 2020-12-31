@@ -32,7 +32,8 @@ export class DecryptoHostLobby extends React.Component<ViewPropsInterface, {}> {
                         'view': DecryptoGameRule
                     }
                 }
-        });
+            }
+        );
     }
 }
 

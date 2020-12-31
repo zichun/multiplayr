@@ -10,12 +10,17 @@ $panelExtendWidth: 180px;
     .shell-header {
         background: #353535;
         color: white;
-        text-align: right;
         height: $headerHeight;
     }
 
+    .shell-title {
+        margin-left: 2em;
+        padding-top: 10px;
+        font-size: 2em;
+    }
+
     .shell-room {
-        display: inline-block;
+        float: right;
         background: #555;
         padding: 0px 16px 0px 16px;
         color: white;
@@ -23,6 +28,13 @@ $panelExtendWidth: 180px;
         height: $headerHeight;
         line-height: $headerHeight;
         box-sizing: border-box;
+    }
+
+    .shell-newgame {
+        float: right;
+        margin-right: 1em;
+        padding-top: 3px;
+        color: black;
     }
 
     .shell-main-panel.show {

@@ -9,29 +9,145 @@ import {
     ViewPropsInterface
 } from '../../../common/interfaces';
 
-import { DecryptoViewPropsInterface, DecryptoGameState } from '../DecryptoCommon';
+import {
+    DecryptoViewPropsInterface,
+    DecryptoGameState,
+    DecryptoSingleRoundInfoInterface,
+    DecryptoGuessesInterface,
+    DecryptoScoreInterface
+} from '../DecryptoCommon';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { DecryptoGameRule } from './DecryptoRules';
 import { DecryptoClientInputClues } from './DecryptoInputClues';
 import { DecryptoClientClueReaction } from './DecryptoClueReaction';
 
+function SingleRoundView(roundInfo: DecryptoSingleRoundInfoInterface) {
+    return (
+        <div className='single-round'>
+            <div className='round-title'>
+                <div className='round-header'>
+                    <span className='round-header-icon'>T</span>
+                    <span className='round-header-icon'>U</span>
+                    <span className='round-header-icon'>A</span>
+                </div>
+                <div className='round-number'># {roundInfo.roundNumber}</div>
+            </div>
+            {roundInfo.info.map((info, idx) => (
+                <div className={idx % 2 ? 'single-row second' : 'single-row'}>
+                    <span style={{
+                        display:'inline-block',
+                        overflow:'hidden',
+                        width:'140px',
+                        whiteSpace: 'nowrap',
+                        textOverflow:'ellipsis'
+                    }}>
+                        {info.phrase}
+                    </span>
+                    <input type="number" value={info.actual === 0 ? undefined : info.actual}/>
+                    <input type="number" value={info.ownGuess === 0 ? undefined : info.ownGuess}/>
+                    <input type="number" value={info.otherGuess === 0 ? undefined : info.otherGuess}/>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function GuessesView(guesses: DecryptoGuessesInterface) {
+    return (
+        <div style={{
+            float: 'left',
+            border: '1px solid grey',
+        }}>
+            {[1,2,3,4].map(number => (
+                <div style={{
+                    width: '125px',
+                    height: '400px',
+                    backgroundColor: number % 2 ? 'white' : 'lightgrey',
+                    float: 'left',
+                    textAlign: 'center',
+                }}>
+                    {number}
+                    {guesses[number-1].map(guess => (<div>{guess}</div>))}
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function ParseData(props: DecryptoViewPropsInterface) {
+    const guesses = [[[],[],[],[]], [[],[],[],[]]];
+    const roundData = [[1,2,3,4,5,6,7,8].map(roundNumber => ({
+        roundNumber,
+        info: [1,2,3].map(number => ({
+            phrase: '',
+            actual: 0,
+            otherGuess: 0,
+            ownGuess: 0,
+        })),
+    }))];
+    roundData.push(JSON.parse(JSON.stringify(roundData[0])));
+    const roundInfos = props.history;
+    for (let i = 0; i < roundInfos.length; ++i) {
+        const roundInfo = roundInfos[i];
+        for (let j = 0; j < 3; ++j) {
+            for (let k = 0; k < 2; ++k) {
+                guesses[k][roundInfo[k].clueSet[j] - 1].push(roundInfo[k].clues[j]);
+                roundData[k][i].info[j].phrase = roundInfo[k].clues[j]
+                roundData[k][i].info[j].actual = roundInfo[k].clueSet[j]
+                roundData[k][i].info[j].ownGuess = roundInfo[k].ownGuess[j]
+                roundData[k][i].info[j].otherGuess = roundInfo[k].otherGuess[j]
+            }
+        }
+    }
+    const scoreInfo = Array(2).fill({
+        miscommunication: props.miscommunication,
+        interception: props.interception,
+        round: props.round,
+    });
+    return {
+        scoreInfo,
+        guesses,
+        roundData,
+    };
+}
+
+function PaperView(
+    scoreData: DecryptoScoreInterface[],
+    roundData: DecryptoSingleRoundInfoInterface[][],
+    guesses: DecryptoGuessesInterface[],
+) {
+    return (
+        <div>
+            {[0, 1].map(player => {
+                return (<div style={{width: '552px', float:'left'}}>
+                    <div style={{float: 'left', width: '50px', height: '850px'}} />
+                    <div style={{width: '500px', float:'left'}}>
+                        {ClientShowScore({team: player, ...scoreData[player]})}
+                    </div>
+                    <div style={{float:'left'}}>
+                        {[0,1,2,3].map((number) => SingleRoundView(roundData[player][number]))}
+                    </div>
+                    <div style={{float:'left'}}>
+                        {[4,5,6,7].map((number) => SingleRoundView(roundData[player][number]))}
+                    </div>
+                    {GuessesView(guesses[player])}
+                </div>);
+            })}
+        </div>
+    );
+}
 
 function HostMainPage(props: DecryptoViewPropsInterface) {
     function newGame() {
         return props.MP.newGame();
     }
-    let history = [<div>Waiting for first move</div>];
-    if (props.history.length > 0) {
-        history = [
-            HistoryPage(props, 0, null),
-            HistoryPage(props, 1, null)
-        ];
-    }
+    const data = ParseData(props);
+
     return (<div>
-        { history }
+        <button className='new-game-btn' onClick={ newGame }>New Game</button>
+        <div>{PaperView(data.scoreInfo, data.roundData, data.guesses)}</div>
         <div className="clearer">&nbsp;</div>
-        <button onClick={ newGame }>New Game</button>
     </div>);
 }
 export class DecryptoHostMainPage extends React.Component<DecryptoViewPropsInterface, {}> {
@@ -53,12 +169,13 @@ export class DecryptoHostMainPage extends React.Component<DecryptoViewPropsInter
                         'label': 'Rules',
                         'view': DecryptoGameRule
                     }
-                }
+                },
+                'gameName': 'Decrypto',
         });
     }
 }
 
-function ClientShowScore(props: DecryptoViewPropsInterface) {
+function ClientShowScore(props: DecryptoScoreInterface) {
     const team = props.team;
     const miscommunication = props.miscommunication[team];
     const interception = props.interception[team];
@@ -172,7 +289,8 @@ export class DecyptoClientMainPage extends React.Component<DecryptoViewPropsInte
                         'label': 'Rules',
                         'view': DecryptoGameRule
                     }
-                }
+                },
+                'gameName': 'Decrypto',
         });
     }
 }
