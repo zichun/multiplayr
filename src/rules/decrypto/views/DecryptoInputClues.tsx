@@ -15,10 +15,11 @@ import FailSound from '../sounds/fail.mp3';
 
 export function WordListView(props: DecryptoViewPropsInterface) {
     return [
-        <h1 className="notification">Word List:</h1>,
+        <h1 className="notification">Team Words:</h1>,
         props.words.map(word => {
-            return (<div>{ word }</div>);
-        })
+            return (<div style={{textAlign:'center'}}>{ word }</div>);
+        }),
+        <div style={{height: '1em'}} />
     ];
 }
 
@@ -58,14 +59,19 @@ function ClientInputClues(props: DecryptoViewPropsInterface) {
     if (clueSet.length === 0) {
         return (<div>
             { DecryptoClientNotification(props) }
-            Waiting for clues to be written
+            <h4>Waiting for all clues to be written...</h4>
         </div>);
     }
 
+    console.log(props);
+
     const cluesInput = (clueSet.map((c, ind) => {
         return (
-            <div>
-                Clue for word { c }: <input type="text" id={clientId + '-clue-' + ind} />
+            <div style={{lineHeight:'25px'}}>
+                Clue for { props.words[c-1] }: 
+                <div>
+                    <input style={{ width: '100%'}} type="text" id={clientId + '-clue-' + ind} />
+                </div>
             </div>
         );
     }));
@@ -92,10 +98,13 @@ function ClientInputClues(props: DecryptoViewPropsInterface) {
         }
     }
 
-    const submitCluesBtn = (<button onClick={ submitClues } >Submit Clues</button>);
+    const submitCluesBtn = (<button style={{float:'right'}} onClick={ submitClues } >Submit Clues</button>);
     return [
         DecryptoClientNotification(props),
+        <h4>Please enter clues for your words. </h4>,
+        <div style={{height: '1em'}} />,
         cluesInput,
+        <div style={{height: '1em'}} />,
         submitCluesBtn
     ];
 }

@@ -11,25 +11,15 @@ import { WordListView } from './DecryptoInputClues';
 
 function ClueInput(props: DecryptoViewPropsInterface, team: number) {
     const clientId = props.MP.clientId;
+    return props.clues[team].map((word, ind) => {
+        const inputField = props.guessing ? <input style={{float:'right'}} type="number" min="1" max="4" id={clientId + '-cluereaction-' + team + '-' + ind} /> : null;
+        return (<div style={{lineHeight:'25px'}}>
+            { inputField }
+            &nbsp;&nbsp;
+            { word }
+        </div>);
+    });
 
-    if (props.guesses[props.team] === null) {
-        return props.clues[team].map((word, ind) => {
-            const inputField = props.guessing ? <input type="number" min="1" max="4" id={clientId + '-cluereaction-' + team + '-' + ind} /> : null;
-            return (<div>
-                { word }
-                &nbsp;&nbsp;
-                { inputField }
-            </div>);
-        });
-    } else {
-        return props.clues[team].map((word, ind) => {
-            return (<div>
-                { word }
-                &nbsp;-&nbsp;
-                Guess: { props.guesses[props.team][team][ind] }
-            </div>);
-        });
-    }
 }
 
 function ClueReactionGuess(props: DecryptoViewPropsInterface) {
@@ -53,14 +43,33 @@ function ClueReactionGuess(props: DecryptoViewPropsInterface) {
         }
     }
 
+    if (!props.guessing) {
+        return [
+            <div style={{height: '1em'}} />,
+            <h4>Finished submitting clues, go help your team guess the opponents clues!</h4>
+        ];
+    }
+
+    if (props.guesses[props.team] !== null) {
+        return [
+            <div style={{height: '1em'}} />,
+            <h4>Finished guessing, waiting for other team to guess..</h4>
+        ];
+    }
+
+
     const guessing = props.guessing && props.guesses[props.team] === null;
-    const submitCluesBtn = (<button onClick={ submitGuess } >Submit Guess</button>);
+    const submitCluesBtn = (<button style={{float:'right'}} onClick={ submitGuess } >Submit Guess</button>);
     return [
-        <h1>Your team&apos;s clues:</h1>,
+        <div style={{height: '1em'}} />,
+        <h4>Make guess for your own words and opponents words.</h4>,
+        <div style={{height: '1em'}} />,
+        <h3>Your team&apos;s clues:</h3>,
         ClueInput(props, props.team),
-        <h1>Opponent team&apos;s clues:</h1>,
+        <h3>Opponent team&apos;s clues:</h3>,
         ClueInput(props, 1 - props.team),
-        guessing ? submitCluesBtn : null
+        <div style={{height: '1em'}} />,
+        submitCluesBtn
     ];
 }
 
