@@ -108,7 +108,8 @@ IF EXIST "%DEPLOYMENT_TARGET%\package.json" (
 :: 4. Build project
 pushd "%DEPLOYMENT_TARGET%"
 echo Building Project in %DEPLOYMENT_TARGET%...
-call :ExecuteCmd !NPM_CMD! run deploy
+call :ExecuteCmd !NODE_EXE! node_modules/webpack/bin/webpack.js
+call :ExecuteCmd !NODE_EXE! node_modules/webpack/bin/webpack.js --mode production
 popd
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
