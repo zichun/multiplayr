@@ -12,7 +12,7 @@ module.exports = (env, argv) => {
     if (mode === 'production') {
         return [
             MultiplayrLibConfig(mode),
-            ExpressServerConfig(),
+            ExpressServerConfig(mode),
             HostJoinPages(),
             AllRulesConfig(),
             TestConfig()
@@ -22,7 +22,7 @@ module.exports = (env, argv) => {
             DebuggerPages(),
             IndividualRules(),
             MultiplayrLibConfig(mode),
-            ExpressServerConfig()
+            ExpressServerConfig(mode)
         ];
     }
 };
@@ -66,7 +66,8 @@ function DebuggerPages() {
 function IndividualRules() {
     const entry = {};
     localDebugPages.forEach(debug => {
-        entry[debug] = './src/rules/' + debug + '.ts';
+        entry[debug] = ['webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000',
+                        './src/rules/' + debug + '.ts'];
     });
     return {
         entry: entry,
@@ -88,6 +89,7 @@ function IndividualRules() {
         },
         plugins: [
             ...ForkTsChecker,
+            new webpack.HotModuleReplacementPlugin(),
             new webpack.NoEmitOnErrorsPlugin()
         ]
     };
@@ -180,9 +182,10 @@ function MultiplayrLibConfig(mode) {
     };
 }
 
-function ExpressServerConfig() {
+function ExpressServerConfig(mode) {
+    const entry = mode === 'production' ? 'app.ts' : 'app_dev.ts';
     return ({
-        entry: './src/app.ts',
+        entry: './src/' + entry,
         output: {
             path: path.resolve(__dirname, './build'),
             publicPath: '/',
