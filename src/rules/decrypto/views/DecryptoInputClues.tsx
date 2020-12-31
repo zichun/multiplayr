@@ -70,7 +70,7 @@ function ClientInputClues(props: DecryptoViewPropsInterface) {
             <div style={{lineHeight:'25px'}}>
                 Clue for { props.words[c-1] }: 
                 <div>
-                    <input style={{ width: '300px'}} type="text" id={clientId + '-clue-' + ind} />
+                    <input style={{ width: '100%'}} type="text" id={clientId + '-clue-' + ind} />
                 </div>
             </div>
         );
