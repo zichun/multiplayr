@@ -15,7 +15,7 @@ export enum BoardEl {
     Unknown
 }
 
-enum MinesweeperFlagsGameStatus {
+export enum MinesweeperFlagsGameStatus {
     Playing,
     Gameover
 }
@@ -27,16 +27,28 @@ export class MinesweeperFlagsGameState {
     private status: MinesweeperFlagsGameStatus;
     private revealed: boolean[][];
 
-    constructor(width: number, height: number, mines: number) {
-        this.new_game(width, height, mines);
+    constructor(board: MinesweeperBoard) {
+        this.board = board;
+        this.new_game();
     }
 
-    public new_game(width: number, height: number, mines: number) {
-        this.board = MinesweeperBoard.from_parameters(width, height, mines);
-        this.new_game_internal();
+    public get_turn() {
+        return this.turn;
     }
 
-    private new_game_internal() {
+    public get_status() {
+        return this.status;
+    }
+
+    public get_score(player: number) {
+        return this.score[player];
+    }
+
+    public get_revealed() {
+        return this.revealed;
+    }
+
+    public new_game() {
         if (this.board.get_mines() % 2 !== 1) {
             throw new Error("Cannot create a game that has even number of mines");
         }
@@ -47,8 +59,8 @@ export class MinesweeperFlagsGameState {
 
         const rows = this.board.get_height();
         const cols = this.board.get_width();
-        this.revealed = new Array(rows);
 
+        this.revealed = new Array(rows);
         for (let i = 0; i < rows; ++i) {
             this.revealed[i] = new Array(cols);
             for (let j = 0; j < cols; ++j) {
@@ -76,19 +88,25 @@ export class MinesweeperFlagsGameState {
 
             if (this.score[this.turn] * 2 > this.board.get_mines()) {
                 this.status = MinesweeperFlagsGameStatus.Gameover;
+                console.log("OPEN bomb - game is over");
             }
+
             return true;
         }
 
         const delta = [[-1, 0], [1, 0], [0, -1], [0, 1]];
         const floodfill = (r: number, c: number) => {
             if (r < 0 || r >= rows || c < 0 || c >= cols ||
+                this.board.get_board(r, c) === BoardEl.Mine ||
                 this.revealed[r][c]) {
                 return;
             }
             this.revealed[r][c] = true;
-            for (const d of delta) {
-                floodfill(r + d[0], c + d[1]);
+
+            if (this.board.get_board(r, c) === BoardEl.Empty) {
+                for (const d of delta) {
+                    floodfill(r + d[0], c + d[1]);
+                }
             }
         };
 
