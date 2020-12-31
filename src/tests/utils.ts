@@ -5,10 +5,7 @@
  **/
 
 import * as utils from '../common/utils';
-import * as chai from 'chai';
 import * as assert from 'assert';
-
-const expect = chai.expect;
 
 describe('utils', () => {
 

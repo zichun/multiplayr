@@ -1,0 +1,90 @@
+$cellUnknownColor: #687;
+$cellWidth: 28px;
+
+.minesweeperflags-board {
+    .cell {
+        display: inline-block;
+        float: left;
+        width: $cellWidth;
+        height: $cellWidth;
+        margin: 0 0 -1px -1px;
+
+        text-align: center;
+        line-height: $cellWidth;
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    .cell.reveal-0 {
+        background-color: #ddf;
+    }
+    .cell.reveal-1 {
+        background-color: #fdd;
+    }
+    .mine.reveal-0 {
+        color: blue;
+    }
+    .mine.reveal-1 {
+        color: red;
+    }
+    .cell.last-move-0 {
+        background-color: #cce;
+    }
+    .cell.last-move-1 {
+        background-color: #ecc;
+    }
+
+    .cell.unknown {
+        background-color: $cellUnknownColor;
+        border: 1px solid #8a9;
+    }
+    .empty {
+        border: 1px solid #ccc;
+    }
+    .number-1:before {
+        content: "1";
+        color: blue;
+    }
+    .number-2:before {
+        content: "2";
+        color: green;
+    }
+    .number-3:before {
+        content: "3";
+        color: red;
+    }
+    .number-4:before {
+        content: "4";
+        color: navy;
+    }
+    .number-5:before {
+        content: "5";
+        color: maroon;
+    }
+    .number-6:before {
+        content: "6";
+        color: #00B9B9;
+    }
+    .number-7:before {
+        content: "7";
+        color: #000000;
+    }
+    .number-8:before {
+        content: "8";
+        color: #808080;
+    }
+
+    .clearer {
+        clear: both;
+    }
+}
+
+.minesweeperflags-board.turn {
+    .cell.unknown {
+        cursor: pointer;
+    }
+
+    .cell.unknown:hover {
+        background-color: scale-color($cellUnknownColor, $lightness: -35%);
+    }
+}
