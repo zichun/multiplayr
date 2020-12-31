@@ -4,7 +4,6 @@
  * Unit Test for Coup game rule
  **/
 
-import * as chai from 'chai';
 import * as assert from 'assert';
 
 import { GameRuleTest } from '../GameRuleTest';
