@@ -1,5 +1,9 @@
 import * as React from 'react';
 
+import Sound from 'react-sound';
+import MineSound from './mine.mp3';
+import GridSound from './grid.mp3';
+
 import { ViewPropsInterface } from '../../common/interfaces';
 import { BoardEl } from './minesweeper';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -16,6 +20,7 @@ export interface MinesweeperflagsViewPropsInterface extends ViewPropsInterface {
     scores: number[];
     last_moves: number[][];
     winner: number;
+    mines: number;
 }
 
 export class MinesweeperflagsView extends React.Component<MinesweeperflagsViewPropsInterface, {}> {
@@ -41,8 +46,35 @@ export class MinesweeperflagsView extends React.Component<MinesweeperflagsViewPr
 
 class MinesweeperflagsScore extends React.Component<MinesweeperflagsViewPropsInterface, {}> {
     public render() {
+        const score_class = player => {
+            let className = "score-" + player;
+            if (player === this.props.turn) {
+                className = className + ' turn';
+            } else if (player === this.props.winner) {
+                className = className + ' winner';
+            }
+            return className;
+        };
         return (<div className="minesweeperflags-score">
-            Score: {this.props.scores[0] + ' | ' + this.props.scores[1]}
+            <div className={ score_class(0) }>
+                <div className="text">
+                    { this.props.scores[0] }
+                </div>
+                <FontAwesomeIcon icon="flag" />
+            </div>
+            <div className="bombs-left">
+                <div className="text">
+                    { this.props.mines - this.props.scores[0] - this.props.scores[1] }
+                </div>
+                <FontAwesomeIcon icon="bomb" />
+            </div>
+            <div className={ score_class(1) }>
+                <div className="text">
+                    { this.props.scores[1] }
+                </div>
+                <FontAwesomeIcon icon="flag" />
+            </div>
+            <div className="clearer"></div>
         </div>);
     }
 }
@@ -60,6 +92,11 @@ class MinesweeperflagsCell extends React.Component<CellInterface, {}> {
     }
 
     public render() {
+        const row = this.props.row;
+        const col = this.props.col;
+        const is_last_move_0 = this.props.last_moves && this.props.last_moves[0] && row === this.props.last_moves[0][0] && col === this.props.last_moves[0][1];
+        const is_last_move_1 = this.props.last_moves && this.props.last_moves[1] && row === this.props.last_moves[1][0] && col === this.props.last_moves[1][1];
+
         const gen_class = (cell: BoardEl, reveal: number) => {
             let c = '';
             let r = 'reveal-' + reveal;
@@ -75,12 +112,10 @@ class MinesweeperflagsCell extends React.Component<CellInterface, {}> {
                 c = 'empty ' + 'number-' + cell;
             }
 
-            const row = this.props.row;
-            const col = this.props.col;
             let lm = '';
-            if (this.props.last_moves && this.props.last_moves[0] && row === this.props.last_moves[0][0] && col === this.props.last_moves[0][1]) {
+            if (is_last_move_0) {
                 lm = 'last-move-0';
-            } else if (this.props.last_moves && this.props.last_moves[1] && row === this.props.last_moves[1][0] && col === this.props.last_moves[1][1]) {
+            } else if (is_last_move_1) {
                 lm = 'last-move-1';
             }
 
@@ -95,8 +130,7 @@ class MinesweeperflagsCell extends React.Component<CellInterface, {}> {
         if (cell === BoardEl.Mine) {
             flag = (<FontAwesomeIcon icon="flag" />);
         }
-
-        return (<div onClick={ cell === BoardEl.Unknown ? this._click.bind(this) : null } className={ gen_class(cell, reveal) }>{ flag }</div>);
+        return (<div onClick={ cell === BoardEl.Unknown ? this._click.bind(this) : null } className={ gen_class(cell, reveal) }><div className="inner">{ flag }</div></div>);
     }
 }
 
@@ -117,8 +151,43 @@ class MinesweeperflagsBoard extends React.Component<MinesweeperflagsViewPropsInt
         if (this.props.player === this.props.turn) {
             boardClass += ' turn';
         }
+
+
+        let sound = null;
+        const last_cells = [null, null];
+        if (this.props.last_moves && this.props.last_moves[0]) {
+            last_cells[0] = this.props.board[this.props.last_moves[0][0]][this.props.last_moves[0][1]];
+        }
+        if (this.props.last_moves && this.props.last_moves[1]) {
+            last_cells[1] = this.props.board[this.props.last_moves[1][0]][this.props.last_moves[1][1]];
+        }
+        let cell = null;
+        if (last_cells[0] === null && last_cells[1] === null) {
+            cell = null;
+        } else if (last_cells[0] === null) {
+            cell = last_cells[1];
+        } else if (last_cells[1] === null) {
+            cell = last_cells[0];
+        } else {
+            if (last_cells[0].el === BoardEl.Mine) {
+                cell = last_cells[0];
+            } else if (last_cells[1].el === BoardEl.Mine) {
+                cell = last_cells[1];
+            } else {
+                cell = last_cells[1 - this.props.turn];
+            }
+        }
+        if (cell === null) {
+            sound = null;
+        } else if (cell.el === BoardEl.Mine) {
+            sound = (<Sound url={ MineSound } playStatus="PLAYING" />);
+        } else {
+            sound = (<Sound url={ GridSound } playStatus="PLAYING" />);
+        }
+
         return (<div className={ boardClass }>
             { cells }
+            { sound }
         </div>);
     }
 }

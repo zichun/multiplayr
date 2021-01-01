@@ -12,7 +12,7 @@ import { BoardEl, MinesweeperBoard, MinesweeperFlagsGameState, MinesweeperFlagsG
 
 const HEIGHT = 16;
 const WIDTH = 16;
-const BOMBS = 50;
+const BOMBS = 51;
 
 function get_gamestate(mp: MPType) {
     let state = mp.getData('gamestate');
@@ -56,7 +56,7 @@ export const MinesweeperFlagsRule: GameRuleInterface = {
     onDataChange: (mp: MPType) => {
         let otherId = null;
 
-        mp.setView(mp.hostId, 'main');
+        mp.setView(mp.clientId, 'main');
         mp.playersForEach((clientId) => {
             otherId = clientId;
             mp.setView(clientId, 'main');
@@ -64,7 +64,7 @@ export const MinesweeperFlagsRule: GameRuleInterface = {
 
         if (mp.playersCount() === 0) {
             mp.setViewProps(mp.hostId, 'waiting', true);
-            return;
+            return true;
         }
 
         mp.setViewProps(mp.hostId, 'waiting', false);
@@ -112,6 +112,7 @@ export const MinesweeperFlagsRule: GameRuleInterface = {
             mp.setViewProps(clientId, 'last_moves', state.get_last_moves());
             mp.setViewProps(clientId, 'player', idx);
             mp.setViewProps(clientId, 'board', visibleBoard);
+            mp.setViewProps(clientId, 'mines', state.get_mines());
         });
 
         return true;

@@ -46,6 +46,10 @@ export class MinesweeperFlagsGameState {
         return state;
     }
 
+    public get_mines() {
+        return this.board.get_mines();
+    }
+
     public get_height() {
         return this.board.get_height();
     }
