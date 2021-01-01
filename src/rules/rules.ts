@@ -10,6 +10,7 @@ import { CoupRule } from './coup/coup';
 import { NewDebuggerRule } from './debugger/debugger';
 import { AvalonRule } from './avalon/avalon';
 import { DecryptoRule } from './decrypto/decrypto';
+import { MinesweeperFlagsRule } from './minesweeperflags/minesweeperflags';
 
 const CoupDebugger = NewDebuggerRule(
     'coup',
@@ -76,6 +77,11 @@ export const MPRULES = {
         rules: ['lobby', 'gameshell', 'decrypto'],
         rule: DecryptoRule
     },
+    'minesweeperflags': {
+        description: 'Minesweeper Flags',
+        rules: ['gameshell', 'minesweeperflags'],
+        rule: MinesweeperFlagsRule
+    },
     'coup-debug': {
         description: 'Coup - Resistance (Debug)',
         debug: true,
@@ -103,3 +109,4 @@ export const MPRULES = {
 };
 
 export default MPRULES;
+
