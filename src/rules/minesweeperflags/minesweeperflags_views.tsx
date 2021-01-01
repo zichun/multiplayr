@@ -20,6 +20,7 @@ export interface MinesweeperflagsViewPropsInterface extends ViewPropsInterface {
     scores: number[];
     last_moves: number[][];
     winner: number;
+    mines: number;
 }
 
 export class MinesweeperflagsView extends React.Component<MinesweeperflagsViewPropsInterface, {}> {
@@ -45,8 +46,35 @@ export class MinesweeperflagsView extends React.Component<MinesweeperflagsViewPr
 
 class MinesweeperflagsScore extends React.Component<MinesweeperflagsViewPropsInterface, {}> {
     public render() {
+        const score_class = player => {
+            let className = "score-" + player;
+            if (player === this.props.turn) {
+                className = className + ' turn';
+            } else if (player === this.props.winner) {
+                className = className + ' winner';
+            }
+            return className;
+        };
         return (<div className="minesweeperflags-score">
-            Score: {this.props.scores[0] + ' | ' + this.props.scores[1]}
+            <div className={ score_class(0) }>
+                <div className="text">
+                    { this.props.scores[0] }
+                </div>
+                <FontAwesomeIcon icon="flag" />
+            </div>
+            <div className="bombs-left">
+                <div className="text">
+                    { this.props.mines - this.props.scores[0] - this.props.scores[1] }
+                </div>
+                <FontAwesomeIcon icon="bomb" />
+            </div>
+            <div className={ score_class(1) }>
+                <div className="text">
+                    { this.props.scores[1] }
+                </div>
+                <FontAwesomeIcon icon="flag" />
+            </div>
+            <div className="clearer"></div>
         </div>);
     }
 }
@@ -102,7 +130,7 @@ class MinesweeperflagsCell extends React.Component<CellInterface, {}> {
         if (cell === BoardEl.Mine) {
             flag = (<FontAwesomeIcon icon="flag" />);
         }
-        return (<div onClick={ cell === BoardEl.Unknown ? this._click.bind(this) : null } className={ gen_class(cell, reveal) }>{ flag }</div>);
+        return (<div onClick={ cell === BoardEl.Unknown ? this._click.bind(this) : null } className={ gen_class(cell, reveal) }><div className="inner">{ flag }</div></div>);
     }
 }
 

@@ -1,9 +1,10 @@
 $cellUnknownColor: #687;
-$cellWidth: 28px;
+$cellWidth: 30px;
 
 .minesweeperflags-board {
     .cell {
         display: inline-block;
+        position: relative;
         float: left;
         width: $cellWidth;
         height: $cellWidth;
@@ -13,7 +14,16 @@ $cellWidth: 28px;
         line-height: $cellWidth;
         font-weight: bold;
         font-size: 16px;
-        transition: 300ms linear;
+        transition: 400ms ease-in;
+
+        .inner {
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            left: 0px;
+            bottom: 0px;
+            z-index: 10;
+        }
     }
 
     .cell.reveal-0 {
@@ -29,17 +39,21 @@ $cellWidth: 28px;
         color: red;
     }
     .cell.last-move-0 {
-        background-color: #cce;
+        .inner {
+            border: 2px solid blue;
+        }
     }
     .cell.last-move-1 {
-        background-color: #ecc;
+        .inner {
+            border: 2px solid red;
+        }
     }
 
     .cell.unknown {
         background-color: $cellUnknownColor;
         border: 1px solid #8a9;
     }
-    .empty {
+    .mine,.empty {
         border: 1px solid #ccc;
     }
     .number-1:before {
@@ -74,10 +88,6 @@ $cellWidth: 28px;
         content: "8";
         color: #808080;
     }
-
-    .clearer {
-        clear: both;
-    }
 }
 
 .minesweeperflags-board.turn {
@@ -89,3 +99,50 @@ $cellWidth: 28px;
         background-color: scale-color($cellUnknownColor, $lightness: -35%);
     }
 }
+
+.minesweeperflags-score {
+    margin: 6px 0 12px 0;
+
+    .text {
+        display: inline-block;
+        margin-right: 4px;
+    }
+
+    .score-0, .bombs-left, .score-1 {
+        float: left;
+        font-size: 20px;
+        margin: 0 8px 0 8px;
+        padding: 2px;
+        transition: 600ms ease-in;
+        box-sizing: border-box;
+        border-bottom: 2px solid transparent;
+    }
+    .score-0 {
+        color: blue;
+    }
+    .score-1 {
+        color: red;
+    }
+
+    .score-0.turn {
+        border-bottom: 2px solid blue;
+    }
+    .score-1.turn {
+        border-bottom: 2px solid red;
+    }
+
+    .winner {
+        font-size: 28px !important;
+    }
+}
+
+.minesweeperflags-gameover {
+    margin: 8px 0 8px 0;
+    font-size: 1.2em;
+    line-height: 28px;
+}
+
+.clearer {
+    clear: both;
+}
+

@@ -112,6 +112,7 @@ export const MinesweeperFlagsRule: GameRuleInterface = {
             mp.setViewProps(clientId, 'last_moves', state.get_last_moves());
             mp.setViewProps(clientId, 'player', idx);
             mp.setViewProps(clientId, 'board', visibleBoard);
+            mp.setViewProps(clientId, 'mines', state.get_mines());
         });
 
         return true;
