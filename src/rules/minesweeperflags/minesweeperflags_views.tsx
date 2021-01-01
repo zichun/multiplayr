@@ -129,6 +129,8 @@ class MinesweeperflagsCell extends React.Component<CellInterface, {}> {
         let flag = null;
         if (cell === BoardEl.Mine) {
             flag = (<FontAwesomeIcon icon="flag" />);
+        } else if (cell !== BoardEl.Unknown && cell !== BoardEl.Empty) {
+            flag = cell;
         }
         return (<div onClick={ cell === BoardEl.Unknown ? this._click.bind(this) : null } className={ gen_class(cell, reveal) }><div className="inner">{ flag }</div></div>);
     }
@@ -142,10 +144,13 @@ class MinesweeperflagsBoard extends React.Component<MinesweeperflagsViewPropsInt
         const cells = [];
         let index = 0;
         for (let r = 0; r < rows; ++r) {
+            const row = [];
             for (let c = 0; c < cols; ++c) {
-                cells.push(<MinesweeperflagsCell key={ index++ } row={ r } col={ c } {...this.props} />);
+                row.push(<MinesweeperflagsCell key={ index++ } row={ r } col={ c } {...this.props} />);
             }
-            cells.push(<div key={ index++ } className="clearer"></div>);
+            cells.push(<div key={ index++ } className="row">
+                { row }
+            </div>);
         }
         let boardClass = 'minesweeperflags-board';
         if (this.props.player === this.props.turn) {
