@@ -27,6 +27,7 @@ export class MinesweeperFlagsGameState {
     private status: MinesweeperFlagsGameStatus;
     public revealed: number[][];
     private last_moves: number[][];
+    private bombs_left: number[];
 
     constructor(board: MinesweeperBoard) {
         this.board = board;
@@ -91,6 +92,7 @@ export class MinesweeperFlagsGameState {
         this.turn = Math.round(Math.random());
         this.score = [0, 0];
         this.last_moves = [null, null];
+        this.bombs_left = [1, 1];
 
         const rows = this.board.get_height();
         const cols = this.board.get_width();
@@ -100,6 +102,70 @@ export class MinesweeperFlagsGameState {
             this.revealed[i] = new Array(cols);
             for (let j = 0; j < cols; ++j) {
                 this.revealed[i][j] = 0;
+            }
+        }
+    }
+
+    public bomb(row: number, col: number) {
+        const rows = this.board.get_height();
+        const cols = this.board.get_width();
+
+        if (this.status === MinesweeperFlagsGameStatus.Gameover) {
+            throw new Error("Game is over");
+        } else if (row < 0 || row >= rows ||
+            col < 0 || col >= cols) {
+            throw new Error("Invalid row/col");
+        } else if (this.bombs_left[this.turn] === 0) {
+            throw new Error("No bombs left to use");
+        } else if (this.score[this.turn] >= this.score[1 - this.turn]) {
+            throw new Error("Cannot use bomb now");
+        } else if (this.revealed[row][col] !== 0) {
+            throw new Error("Cannot use bomb on unused tile");
+        }
+
+        const min_row = Math.max(0, row - 2);
+        const max_row = Math.max(rows - 1, row + 2);
+        const min_col = Math.max(0, col - 2);
+        const max_col = Math.max(cols - 1, col + 2);
+
+        for (let r = min_row; r <= max_row; ++r) {
+            for (let c = min_col; c <= max_col; ++c) {
+                if (this.revealed[r][c] === 0) {
+                    if (this.board.get_board(r, c) === BoardEl.Mine) {
+                        this.revealed[r][c] = this.turn + 1;
+                        this.score[this.turn] += 1;
+                    } else {
+                        this.floodfill_open(r, c);
+                    }
+                }
+            }
+        }
+
+        this.bombs_left[this.turn] -= 0;
+        if (this.score[this.turn] * 2 > this.board.get_mines()) {
+            this.status = MinesweeperFlagsGameStatus.Gameover;
+        }
+
+        this.turn = 1 - this.turn;
+    }
+
+    private floodfill_open(r: number, c: number) {
+        const rows = this.board.get_height();
+        const cols = this.board.get_width();
+
+        if (r < 0 || r >= rows || c < 0 || c >= cols ||
+            this.board.get_board(r, c) === BoardEl.Mine ||
+            this.revealed[r][c]) {
+            return;
+        }
+        this.revealed[r][c] = this.turn + 1;
+
+        if (this.board.get_board(r, c) === BoardEl.Empty) {
+            for (let dr = -1; dr <= 1; ++dr) {
+                for (let dc = -1; dc <= 1; ++dc) {
+                    if (dr === 0 && dc === 0) continue;
+                    this.floodfill_open(r + dr, c + dc);
+                }
             }
         }
     }
@@ -130,25 +196,7 @@ export class MinesweeperFlagsGameState {
             return true;
         }
 
-        const floodfill = (r: number, c: number) => {
-            if (r < 0 || r >= rows || c < 0 || c >= cols ||
-                this.board.get_board(r, c) === BoardEl.Mine ||
-                this.revealed[r][c]) {
-                return;
-            }
-            this.revealed[r][c] = this.turn + 1;
-
-            if (this.board.get_board(r, c) === BoardEl.Empty) {
-                for (let dr = -1; dr <= 1; ++dr) {
-                    for (let dc = -1; dc <= 1; ++dc) {
-                        if (dr === 0 && dc === 0) continue;
-                        floodfill(r + dr, c + dc);
-                    }
-                }
-            }
-        };
-
-        floodfill(row, col);
+        this.floodfill_open(row, col);
 
         this.turn = 1 - this.turn;
         return false;
