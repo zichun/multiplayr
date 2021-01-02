@@ -89,6 +89,17 @@ h1.notification {
     float: right;
 }
 
+.guess-view {
+    .word-header {
+        border-bottom: 1px solid #888;
+    }
+    .guess {
+        margin: 8px 0 8px 0;
+        word-wrap: break-word;
+        padding: 1px;
+    }
+}
+
 .single-round {
     width: 250px;
     border: 1px solid grey;
@@ -103,14 +114,13 @@ h1.notification {
 
         .round-header {
             float: right;
-    
             .round-header-icon {
                 margin-right: 15px;
             }
         }
     }
 
-    
+
     .single-row {
         height: 25px;
         padding: 2px;
@@ -119,6 +129,7 @@ h1.notification {
             float: right;
             width: 20px;
             margin-right: 5px;
+            text-align: center;
         }
 
         /* Chrome, Safari, Edge, Opera */
@@ -138,4 +149,8 @@ h1.notification {
     .second {
         background-color: lightgrey;
     }
+}
+
+.decrypto-opponent-clues {
+    margin-top: 10px;
 }

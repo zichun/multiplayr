@@ -16,8 +16,8 @@ import FailSound from '../sounds/fail.mp3';
 export function WordListView(props: DecryptoViewPropsInterface) {
     return [
         <h1 className="notification">Team Words:</h1>,
-        props.words.map(word => {
-            return (<div style={{textAlign:'center'}}>{ word }</div>);
+        props.words.map((word, index) => {
+            return (<div style={{textAlign:'center'}}>{ (index + 1) + ': ' + word }</div>);
         }),
         <div style={{height: '1em'}} />
     ];

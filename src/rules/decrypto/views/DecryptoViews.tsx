@@ -22,7 +22,7 @@ import { DecryptoGameRule } from './DecryptoRules';
 import { DecryptoClientInputClues } from './DecryptoInputClues';
 import { DecryptoClientClueReaction } from './DecryptoClueReaction';
 
-function SingleRoundView(roundInfo: DecryptoSingleRoundInfoInterface) {
+function SingleRoundView(roundInfo: DecryptoSingleRoundInfoInterface, skipOtherGuess: boolean) {
     return (
         <div className='single-round'>
             <div className='round-title'>
@@ -42,20 +42,23 @@ function SingleRoundView(roundInfo: DecryptoSingleRoundInfoInterface) {
                         whiteSpace: 'nowrap',
                         textOverflow:'ellipsis'
                     }}>
-                        {info.phrase}
+                {info.phrase}
+                {skipOtherGuess}
                     </span>
-                    <input type="number" value={info.actual === 0 ? undefined : info.actual}/>
-                    <input type="number" value={info.ownGuess === 0 ? undefined : info.ownGuess}/>
-                    <input type="number" value={info.otherGuess === 0 ? undefined : info.otherGuess}/>
+                    <input type="number" readOnly value={info.actual === 0 ? undefined : info.actual}/>
+                    <input type="number" readOnly value={info.ownGuess === 0 ? undefined : info.ownGuess}/>
+                    <input type="text" readOnly value={
+                    skipOtherGuess ? '-' : (info.otherGuess === 0 ? undefined : info.otherGuess)
+                    }/>
                 </div>
             ))}
         </div>
     );
 }
 
-function GuessesView(guesses: DecryptoGuessesInterface) {
+function GuessesView(guesses: DecryptoGuessesInterface, words: string[]) {
     return (
-        <div style={{
+        <div className="guess-view" style={{
             float: 'left',
             border: '1px solid grey',
         }}>
@@ -67,13 +70,49 @@ function GuessesView(guesses: DecryptoGuessesInterface) {
                     float: 'left',
                     textAlign: 'center',
                 }}>
-                    {number}
-                    {guesses[number-1].map(guess => (<div>{guess}</div>))}
+                    <div className="word-header">{ words ? words[number - 1] : number}</div>
+                    {guesses[number-1].map(guess => (<div className="guess">{guess}</div>))}
                 </div>
             ))}
         </div>
     );
 }
+
+function HostPapersView(
+    scoreData: DecryptoScoreInterface[],
+    roundData: DecryptoSingleRoundInfoInterface[][],
+    guesses: DecryptoGuessesInterface[],
+) {
+    return (
+        <div>
+            { PaperView(scoreData, roundData, guesses, 0, null) },
+            { PaperView(scoreData, roundData, guesses, 1, null) },
+        </div>
+    );
+}
+
+function PaperView(
+    scoreData: DecryptoScoreInterface[],
+    roundData: DecryptoSingleRoundInfoInterface[][],
+    guesses: DecryptoGuessesInterface[],
+    team: number,
+    words: string[]
+) {
+    return (<div style={{width: '552px', float:'left'}}>
+        <div style={{float: 'left', width: '50px', height: '850px'}} />
+        <div style={{width: '500px', float:'left'}}>
+            {ClientShowScore({team: team, ...scoreData[team]})}
+        </div>
+        <div style={{float:'left'}}>
+            {[0,1,2,3].map((number) => SingleRoundView(roundData[team][number], number === 0))}
+        </div>
+        <div style={{float:'left'}}>
+            {[4,5,6,7].map((number) => SingleRoundView(roundData[team][number], false))}
+        </div>
+        {GuessesView(guesses[team], words)}
+    </div>);
+}
+
 
 function ParseData(props: DecryptoViewPropsInterface) {
     const guesses = [[[],[],[],[]], [[],[],[],[]]];
@@ -96,7 +135,7 @@ function ParseData(props: DecryptoViewPropsInterface) {
                 roundData[k][i].info[j].phrase = roundInfo[k].clues[j]
                 roundData[k][i].info[j].actual = roundInfo[k].clueSet[j]
                 roundData[k][i].info[j].ownGuess = roundInfo[k].ownGuess[j]
-                roundData[k][i].info[j].otherGuess = roundInfo[k].otherGuess[j]
+                roundData[k][i].info[j].otherGuess = roundInfo[k].otherGuess && roundInfo[k].otherGuess[j]
             }
         }
     }
@@ -112,32 +151,6 @@ function ParseData(props: DecryptoViewPropsInterface) {
     };
 }
 
-function PaperView(
-    scoreData: DecryptoScoreInterface[],
-    roundData: DecryptoSingleRoundInfoInterface[][],
-    guesses: DecryptoGuessesInterface[],
-) {
-    return (
-        <div>
-            {[0, 1].map(player => {
-                return (<div style={{width: '552px', float:'left'}}>
-                    <div style={{float: 'left', width: '50px', height: '850px'}} />
-                    <div style={{width: '500px', float:'left'}}>
-                        {ClientShowScore({team: player, ...scoreData[player]})}
-                    </div>
-                    <div style={{float:'left'}}>
-                        {[0,1,2,3].map((number) => SingleRoundView(roundData[player][number]))}
-                    </div>
-                    <div style={{float:'left'}}>
-                        {[4,5,6,7].map((number) => SingleRoundView(roundData[player][number]))}
-                    </div>
-                    {GuessesView(guesses[player])}
-                </div>);
-            })}
-        </div>
-    );
-}
-
 function HostMainPage(props: DecryptoViewPropsInterface) {
     function newGame() {
         return props.MP.newGame();
@@ -146,7 +159,7 @@ function HostMainPage(props: DecryptoViewPropsInterface) {
 
     return (<div>
         <button className='new-game-btn' onClick={ newGame }>New Game</button>
-        <div>{PaperView(data.scoreInfo, data.roundData, data.guesses)}</div>
+        <div>{HostPapersView(data.scoreInfo, data.roundData, data.guesses)}</div>
         <div className="clearer">&nbsp;</div>
     </div>);
 }
@@ -217,52 +230,15 @@ function ClientMainPage(props: DecryptoViewPropsInterface) {
     return render;
 }
 
-function HistoryPage(props: DecryptoViewPropsInterface, team: number, words: string[]) {
-    if (props.history.length === 0)
-    {
-        return (<div>No history available</div>);
-    }
-
-    const word_history = [];
-    for (let i = 0; i < 4; ++i) {
-        word_history.push([]);
-    }
-
-    const history = props.history;
-    for (let i = 0; i < history.length; ++i) {
-        const entry = history[i][team];
-        for (let j = 0; j < 4; ++j)
-        {
-            word_history[j].push(null);
-        }
-        for (let j = 0; j < entry.clueSet.length; ++j)
-        {
-            const c = entry.clueSet[j] - 1;
-            word_history[c][i] = entry.clues[j];
-        }
-    }
-
-    const gen_class = (team: number) => { return 'decrypto-history-word-header bg-team-' + team; }
-    const words_div = [];
-    for (let i = 0; i < 4; ++i) {
-        const clues = [];
-        for (let j = 0; j < word_history[i].length; ++j) {
-            clues.push(<div className="decrypto-history-word-clue">{ word_history[i][j] }</div>);
-        }
-        words_div.push(<div className="decrypto-history-word">
-            <div className={ gen_class(team) }>{ words ? words[i] : '???'}</div>
-            { clues }
-        </div>);
-    }
-    return (<div className="decrypto-history">
-        { words_div }
-        <div className="clearer">&nbsp;</div>
-    </div>);
+function HistoryPage(data: any, team: number, words: string[]) {
+    return PaperView(data.scoreInfo, data.roundData, data.guesses, team, words);
 }
 
 export class DecyptoClientMainPage extends React.Component<DecryptoViewPropsInterface, {}> {
     public render() {
         const mp = this.props.MP;
+
+        const data = ParseData(this.props);
 
         return mp.getPluginView(
             'gameshell',
@@ -277,12 +253,12 @@ export class DecyptoClientMainPage extends React.Component<DecryptoViewPropsInte
                     'ownhistory': {
                         'icon': 'plus-circle',
                         'label': 'Team History',
-                        'view': HistoryPage(this.props, this.props.team, this.props.words)
+                        'view': HistoryPage(data, this.props.team, this.props.words)
                     },
                     'theirhistory': {
                         'icon': 'question-circle',
                         'label': 'Opponent History',
-                        'view': HistoryPage(this.props, 1-this.props.team, null)
+                        'view': HistoryPage(data, 1-this.props.team, null)
                     },
                     'rules': {
                         'icon': 'book',

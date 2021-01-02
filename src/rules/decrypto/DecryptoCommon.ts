@@ -107,6 +107,7 @@ export function ValidateGuess(guess: number[]) {
 export function EvaluateGuesses(mp: MPType) {
     const guesses = mp.getData('guesses');
     const clueSet = mp.getData('clueSet');
+    const round = mp.getData('round');
     const teams = mp.getData('teams');
     const notifications = [];
 
@@ -137,30 +138,32 @@ export function EvaluateGuesses(mp: MPType) {
     }
     mp.setData('miscommunication', miscommunication);
 
-    // evaluate interceptions
     const interception = mp.getData('interception');
-    for (let i = 0; i < teams.length; ++i) {
-        let intercepted = true;
+    if (round > 0) {
+        // evaluate interceptions
+        for (let i = 0; i < teams.length; ++i) {
+            let intercepted = true;
 
-        // compare guesses[i][1 - i] against clueSet[1 - i]
-        // the code below assumes 2 teams. it'd need to be modified if it's generalized to
-        // more than 2 teams.
-        if (guesses[i][1 - i].length !== clueSet[1 - i].length) {
-            throw('Unexpected - guesses and clueSet length don\'t match');
-        }
-        for (let j = 0; j < guesses[i].length; ++j) {
-            if (guesses[i][1 - i][j] !== clueSet[1 - i][j]) {
-                intercepted = false;
-                break;
+            // compare guesses[i][1 - i] against clueSet[1 - i]
+            // the code below assumes 2 teams. it'd need to be modified if it's generalized to
+            // more than 2 teams.
+            if (guesses[i][1 - i].length !== clueSet[1 - i].length) {
+                throw('Unexpected - guesses and clueSet length don\'t match');
+            }
+            for (let j = 0; j < guesses[i].length; ++j) {
+                if (guesses[i][1 - i][j] !== clueSet[1 - i][j]) {
+                    intercepted = false;
+                    break;
+                }
+            }
+
+            if (intercepted) {
+                interception[i] += 1;
+                notifications[i].push(DecryptoNotification.Interception);
             }
         }
-
-        if (intercepted) {
-            interception[i] += 1;
-            notifications[i].push(DecryptoNotification.Interception);
-        }
+        mp.setData('interception', interception);
     }
-    mp.setData('interception', interception);
 
     // commit clues and guesses to history
     const clues = mp.getData('clues');
@@ -170,7 +173,7 @@ export function EvaluateGuesses(mp: MPType) {
             clues: clues[i].slice(),
             clueSet: clueSet[i].slice(),
             ownGuess: guesses[i][i].slice(),
-            otherGuess: guesses[1 - i][i].slice()
+            otherGuess: guesses[1 - i][i] && guesses[1 - i][i].slice()
         });
     }
     const history = mp.getData('history');

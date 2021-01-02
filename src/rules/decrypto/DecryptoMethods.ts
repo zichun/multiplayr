@@ -138,15 +138,18 @@ export const DecryptoSubmitGuess = (mp: MPType, clientId: string, guess: number[
     const state = mp.getData('gameState');
     const global_guesses = mp.getData('guesses');
     const team = mp.getPlayerData(clientId, 'team');
+    const round = mp.getData('round');
 
     if (state !== DecryptoGameState.ClueReaction) {
         throw(new Error('State is not in clue reaction'));
     } else if (guess.length !== 2) {
         throw(new Error('Length of submitted guesses is incorrect'));
-    } else if (!ValidateGuess(guess[0]) || !ValidateGuess(guess[1])) {
-        throw(new Error('Guesses are of incorrect format'));
     } else if (global_guesses[team] !== null) {
         throw(new Error('Guesses for team has already been submitted'));
+    } else if (!ValidateGuess(guess[team])) {
+        throw(new Error('Guesses are of incorrect format'));
+    } else if (round > 0 && !ValidateGuess(guess[1 - team])) {
+        throw(new Error('Guesses for opponent of incorrect format'));
     }
 
     global_guesses[team] = guess;
