@@ -29,10 +29,10 @@ npm run build
 npm start
 ```
 
-Rebuild on changes:
+Run test
 
 ```
-npx webpack --watch
+npm test
 ```
 
 ## Rules Definition
