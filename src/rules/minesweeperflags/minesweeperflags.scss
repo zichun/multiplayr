@@ -1,5 +1,9 @@
-$cellUnknownColor: #687;
+$cellUnknownColor: #9ba;
+$cellImpossibleColor: #999;
 $cellWidth: 28px;
+
+$redTeamColor: #c33;
+$blueTeamColor: #33c;
 
 .minesweeperflags-board {
     .row {
@@ -29,16 +33,20 @@ $cellWidth: 28px;
         }
 
         .cell.reveal-0 {
-            background-color: #ddf;
+            $backgroundColor: scale-color($blueTeamColor, $lightness: +85%);
+            background-color: $backgroundColor;
+            background-image: linear-gradient(135deg, $backgroundColor 0%, $backgroundColor 50%, scale-color($backgroundColor, $lightness: -15%) 100%);
         }
         .cell.reveal-1 {
-            background-color: #fdd;
+            $backgroundColor: scale-color($redTeamColor, $lightness: +85%);
+            background-color: $backgroundColor;
+            background-image: linear-gradient(135deg, $backgroundColor 0%, $backgroundColor 50%, scale-color($backgroundColor, $lightness: -15%) 100%);
         }
         .mine.reveal-0 {
-            color: blue;
+            color: $blueTeamColor;
         }
         .mine.reveal-1 {
-            color: red;
+            color: $redTeamColor;
         }
         .cell.last-move-0 {
             .inner {
@@ -57,7 +65,13 @@ $cellWidth: 28px;
 
         .cell.unknown {
             background-color: $cellUnknownColor;
-            border: 1px solid #8a9;
+            background-image: linear-gradient(135deg, $cellUnknownColor 0%, $cellUnknownColor 30%, scale-color($cellUnknownColor, $lightness: -40%) 100%);
+            background-size: $cellWidth ($cellWidth * 2);
+            border: 1px solid scale-color($cellUnknownColor, $lightness: +25%);
+        }
+        .cell.unknown.impossible {
+            background-color: $cellImpossibleColor;
+            background-image: linear-gradient(135deg, $cellImpossibleColor 0%, $cellImpossibleColor 30%, scale-color($cellImpossibleColor, $lightness: -60%) 100%);
         }
         .mine,.empty {
             border: 1px solid #ccc;
@@ -95,7 +109,10 @@ $cellWidth: 28px;
     }
 
     .cell.unknown:hover {
-        background-color: scale-color($cellUnknownColor, $lightness: -35%);
+        background-position: 0 (-$cellWidth);
+/*        $newBackgroundColor: scale-color($cellUnknownColor, $lightness: -23%);
+        background: $newBackgroundColor;
+        background: linear-gradient(135deg, $newBackgroundColor 0%, $newBackgroundColor 60%, scale-color($newBackgroundColor, $lightness: -40%) 100%);*/
     }
 }
 
@@ -117,10 +134,10 @@ $cellWidth: 28px;
         border-bottom: 2px solid transparent;
     }
     .score-0 {
-        color: blue;
+        color: $blueTeamColor;
     }
     .score-1 {
-        color: red;
+        color: $redTeamColor;
     }
 
     .score-0.turn {

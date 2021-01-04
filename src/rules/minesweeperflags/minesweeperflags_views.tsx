@@ -21,6 +21,7 @@ export interface MinesweeperflagsViewPropsInterface extends ViewPropsInterface {
     last_moves: number[][];
     winner: number;
     mines: number;
+    help_enabled: boolean;
 }
 
 export class MinesweeperflagsView extends React.Component<MinesweeperflagsViewPropsInterface, {}> {
@@ -82,6 +83,7 @@ class MinesweeperflagsScore extends React.Component<MinesweeperflagsViewPropsInt
 interface CellInterface extends MinesweeperflagsViewPropsInterface {
     row: number;
     col: number;
+    impossible: boolean[][];
 }
 class MinesweeperflagsCell extends React.Component<CellInterface, {}> {
     private _click() {
@@ -103,7 +105,11 @@ class MinesweeperflagsCell extends React.Component<CellInterface, {}> {
 
             if (cell === BoardEl.Unknown) {
                 c = 'unknown';
-                r = '';
+                if (this.props.impossible[row][col]) {
+                    r = 'impossible';
+                } else {
+                    r = '';
+                }
             } else if (cell === BoardEl.Mine) {
                 c = 'mine';
             } else if (cell === BoardEl.Empty) {
@@ -132,31 +138,85 @@ class MinesweeperflagsCell extends React.Component<CellInterface, {}> {
         } else if (cell !== BoardEl.Unknown && cell !== BoardEl.Empty) {
             flag = cell;
         }
+
         return (<div onClick={ cell === BoardEl.Unknown ? this._click.bind(this) : null } className={ gen_class(cell, reveal) }><div className="inner">{ flag }</div></div>);
     }
 }
 
 class MinesweeperflagsBoard extends React.Component<MinesweeperflagsViewPropsInterface, {}> {
+    private calculate_impossible() {
+        const rows = this.props.board.length;
+        const cols = this.props.board[0].length;
+
+        const help = this.props.help_enabled;
+        const impossible = Array.from(Array(rows), () => Array.from(Array(cols), () => false));
+
+        if (!help) {
+            return impossible;
+        }
+
+        const fulfilled = (row: number, col: number, cnt: number) => {
+            let mine = 0;
+            for (let rd = -1; rd <= 1; ++rd) {
+                for (let cd = -1; cd <= 1; ++cd) {
+                    if (row + rd < 0 || row + rd >= rows ||
+                        col + cd <= 0 || col + cd >= cols) {
+                        continue;
+                    }
+                    if (this.props.board[row + rd][col + cd].el === BoardEl.Mine) {
+                        ++mine;
+                    }
+                }
+            }
+            return mine === cnt;
+        };
+
+        const mark_impossible = (row: number, col: number) => {
+            for (let rd = -1; rd <= 1; ++rd) {
+                for (let cd = -1; cd <= 1; ++cd) {
+                    if (row + rd < 0 || row + rd >= rows ||
+                        col + cd <= 0 || col + cd >= cols) {
+                        continue;
+                    }
+                    impossible[row + rd][col + cd] = true;
+                }
+            }
+        };
+
+        for (let r = 0; r < rows; ++r) {
+            for (let c = 0; c < cols; ++c) {
+                if (this.props.board[r][c].el !== BoardEl.Unknown && this.props.board[r][c].el !== BoardEl.Empty && this.props.board[r][c].el !== BoardEl.Mine)
+                {
+                    const cnt = this.props.board[r][c].el as number;
+                    if (fulfilled(r, c, cnt)) {
+                        mark_impossible(r, c);
+                    }
+                }
+            }
+        }
+        return impossible;
+    }
     public render() {
         const rows = this.props.board.length;
         const cols = this.props.board[0].length;
+        const impossible = this.calculate_impossible();
 
         const cells = [];
         let index = 0;
         for (let r = 0; r < rows; ++r) {
             const row = [];
             for (let c = 0; c < cols; ++c) {
-                row.push(<MinesweeperflagsCell key={ index++ } row={ r } col={ c } {...this.props} />);
+                row.push(<MinesweeperflagsCell impossible={ impossible } key={ index++ } row={ r } col={ c } {...this.props} />);
             }
             cells.push(<div key={ index++ } className="row">
                 { row }
             </div>);
         }
+
         let boardClass = 'minesweeperflags-board';
         if (this.props.player === this.props.turn) {
             boardClass += ' turn';
         }
-
 
         let sound = null;
         const last_cells = [null, null];
@@ -227,11 +287,26 @@ class MinesweeperflagsShowWinner extends React.Component<MinesweeperflagsViewPro
     }
 }
 
-class MinesweeperflagsMainView extends React.Component<MinesweeperflagsViewPropsInterface, {}> {
+interface MinesweeperflagsState {
+    help_enabled: boolean;
+}
+class MinesweeperflagsMainView extends React.Component<MinesweeperflagsViewPropsInterface, MinesweeperflagsState> {
+    constructor(props: MinesweeperflagsViewPropsInterface) {
+        super(props);
+        this.state = { help_enabled: false };
+    }
+    private enableHelp(e) {
+        this.setState({ help_enabled: e.target.checked });
+        return true;
+    }
     public render() {
+        const help_mode = (<div className="minesweeperflags-help">
+            <input type="checkbox" onChange={ this.enableHelp.bind(this) } /> Enable Assist
+            </div>);
         return (<div className="minesweeperflags-main">
             <MinesweeperflagsScore {...this.props} />
-            <MinesweeperflagsBoard {...this.props} />
+            <MinesweeperflagsBoard help_enabled={ this.state.help_enabled } {...this.props} />
+            { help_mode }
             <MinesweeperflagsShowWinner {...this.props} />
         </div>);
     }
