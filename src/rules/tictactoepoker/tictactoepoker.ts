@@ -100,11 +100,11 @@ export class Card {
         return this.value;
     }
 
-    // Like get_value, but treats Aces as 13 instead of 1
+    // Like get_value, but treats Aces as 14 instead of 1
     public get_rank_value(): number {
         assert(this.is_normal());
         if (this.value == Card.AceValue) {
-            return 13;
+            return 14;
         }
         return this.value;
     }
@@ -117,9 +117,10 @@ function new_deck(): Deck {
     // Normal cards
     let result = [];
     for (let suit in Suit) {
-        for (let value = 1; value <= 12; value++) {
+        for (let value = 2; value <= 13; value++) {
             result.push(Card.create_normal(suit, value));
         }
+        result.push(Card.create_normal(suit, Card.AceValue));
     }
     result.push(Card.create_special(CardType.Joker));
     result.push(Card.create_special(CardType.Joker));
@@ -206,7 +207,7 @@ function compute_score(a: Card, b: Card, c: Card): ScoreType {
     if (c.is_normal()) { cards.push(c); }
 
     // Compute score for an array of cards, where the Aces have been resolved to
-    // either 1 or 13
+    // either 1 or 14
     const compute_no_ace = ((cards) => {
 
         if (cards.length == 3) {
@@ -290,15 +291,15 @@ function compute_score(a: Card, b: Card, c: Card): ScoreType {
         }
     };
 
-    // Since Aces can be 1 or 13, we have to try all combinations.
+    // Since Aces can be 1 or 14, we have to try all combinations.
     //
     // Note the same Ace on the board can be treated differently
     // for the different directions (rows, columns, diagonals)
     let score = {combination_type: CombinationType.None};
     let ace_state = [1, 1, 1];
-    for (ace_state[0] of [1, 13]) {
-        for (ace_state[1] of [1, 13]) {
-            for (ace_state[2] of [1, 13]) {
+    for (ace_state[0] of [1, 14]) {
+        for (ace_state[1] of [1, 14]) {
+            for (ace_state[2] of [1, 14]) {
                 let cards_copy = [];
                 let add_card = ((i) => {
                     if (cards.length < i + 1) {

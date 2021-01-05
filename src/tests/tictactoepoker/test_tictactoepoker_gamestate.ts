@@ -192,7 +192,7 @@ describe('ticatctoepoker_gamestate', () => {
             // Check table card is empty (no more cards in deck)
             assert.deepEqual(state.get_table_cards()[3], Card.EMPTY);
             // Player 0 has a pair now: hA hA at (0, 0) and (1, 1)
-            assert.equal(state.get_score(0), 113);
+            assert.equal(state.get_score(0), 114);
         });
 
         it('no more table cards means game over', () => {
@@ -372,10 +372,10 @@ describe('tictactoepoker_board', () => {
         let board = Board.create_empty();
 
         board.place_card(0, 0, Card.create_normal(Suit.Diamonds, Card.AceValue));
-        board.place_card(1, 0, Card.create_normal(Suit.Diamonds, 12));
-        board.place_card(2, 0, Card.create_normal(Suit.Diamonds, 11));
+        board.place_card(1, 0, Card.create_normal(Suit.Diamonds, 13));
+        board.place_card(2, 0, Card.create_normal(Suit.Diamonds, 12));
         assert.equal(board.compute_score_with_explanations().explanations.length, 1);
-        assert.strictEqual(board.compute_score(), 1390);
+        assert.strictEqual(board.compute_score(), 1420);
     });
 
     it('compute_score flush', () => {
@@ -420,10 +420,10 @@ describe('tictactoepoker_board', () => {
         assert.strictEqual(board.compute_score(), 530);
 
         // Another straight: AKQ down the column
-        board.place_card(1, 0, Card.create_normal(Suit.Spades, 12));
-        board.place_card(2, 0, Card.create_normal(Suit.Diamonds, 11));
+        board.place_card(1, 0, Card.create_normal(Suit.Spades, 13));
+        board.place_card(2, 0, Card.create_normal(Suit.Diamonds, 12));
         assert.equal(board.compute_score_with_explanations().explanations.length, 2);
-        assert.strictEqual(board.compute_score(), 530 + 630);
+        assert.strictEqual(board.compute_score(), 530 + 640);
 
         // Another straight: A23 across the diagonal
         // This also makes two pairs.
@@ -433,7 +433,7 @@ describe('tictactoepoker_board', () => {
         board.place_card(1, 1, Card.create_normal(Suit.Hearts, 2));
         board.place_card(2, 2, Card.create_normal(Suit.Clubs, 3));
         assert.equal(board.compute_score_with_explanations().explanations.length, 5);
-        assert.strictEqual(board.compute_score(), 530 + 630 + 530 + 102 + 103);
+        assert.strictEqual(board.compute_score(), 530 + 640 + 530 + 102 + 103);
     });
 
 });
