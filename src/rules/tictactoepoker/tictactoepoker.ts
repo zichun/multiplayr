@@ -1,0 +1,634 @@
+import { shuffle } from '../../common/utils';
+
+export enum TicTacToePokerGameStatus {
+    Playing,
+    GameOver,
+}
+
+// Returns random integer in low..high, inclusive
+function randInt(low: number, high: number): number {
+    return Math.floor(Math.random() * (high - low + 1)) + low;
+}
+
+function assert(cond: boolean, message?: string) {
+    if (!cond) {
+        const error = new Error();
+        throw("assertion failed: " + (message ? message : "") + " call stack: " + error.stack);
+    }
+}
+
+export enum CardType {
+    Normal,
+    Empty,
+    Joker,
+    Thief,
+}
+
+export enum Suit {
+	Diamonds,
+	Clubs,
+	Hearts,
+	Spades,
+}
+
+export class Card {
+    static const EMPTY = Card.create_special(CardType.Empty);
+    static const AceValue: number = 1;
+
+    private type: CardType;
+    private suit?: Suit;
+    private value?: number;
+
+    private constructor(type: CardType, suit?: Suit, value?: number) {
+        this.type = type;
+        this.suit = suit;
+        this.value = value;
+    }
+
+    public static from_object(obj: Card): Card {
+        return new Card(obj.type, obj.suit, obj.value);
+    }
+
+    public static create_special(type: CardType): Card {
+        assert(type != CardType.Normal);
+        return new Card(type);
+    }
+
+    public static create_normal(suit: Suit, value: number): Card {
+        return new Card(CardType.Normal, suit, value);
+    }
+
+    public clone(): Card {
+        return new Card(this.type, this.suit, this.value);
+    }
+
+    public is_normal(): boolean {
+        return this.type == CardType.Normal;
+    }
+
+    public is_empty(): boolean {
+        return this.type == CardType.Empty;
+    }
+
+    public get_type(): CardType {
+        return this.type;
+    }
+
+    public get_suit(): Suit {
+        assert(this.is_normal());
+        return this.suit;
+    }
+
+    public get_value(): number {
+        assert(this.is_normal());
+        return this.value;
+    }
+}
+
+type Deck = Card[];
+
+// Returns a shuffled standard deck with special cards.
+function new_deck(): Deck {
+    // Normal cards
+    let result = [];
+    for (let suit in Suit) {
+        for (let value = 1; value <= 12; value++) {
+            result.push(Card.create_normal(suit, value));
+        }
+    }
+    result.push(Card.create_special(CardType.Joker));
+    result.push(Card.create_special(CardType.Joker));
+    result.push(Card.create_special(CardType.Thief));
+    shuffle(result);
+    return result;
+}
+
+// Score types. The values should be such that a higher value represents a better combination.
+enum ScoreType {
+    None = 0,
+    Pair = 1,
+    Straight = 2,
+}
+
+// Score values for each of the combinations.
+const SCORE_VALUES = {
+    [ScoreType.None]: 0,
+    [ScoreType.Pair]: 250,
+    [ScoreType.Straight]: 500
+};
+
+export interface ScoreWithExplanations {
+    score: number,
+    explanations: string[]
+}
+
+// Return score type for the given three cards (some of all of which may be empty cards)
+// TODO(chuanyu): Add all other applicable scoring rules.
+function compute_score(a: Card, b: Card, c: Card): ScoreType {
+    // Get all normal cards
+    let cards = [];
+    if (a.is_normal()) { cards.push(a); }
+    if (b.is_normal()) { cards.push(b); }
+    if (c.is_normal()) { cards.push(c); }
+
+    // Compute score for an array of cards, where the Aces have been resolved to
+    // either 1 or 13
+    const compute_no_ace = ((cards) => {
+
+        // Straight
+        const is_straight: boolean = (() => {
+            // Must have 3 cards
+            if (cards.length != 3) {
+                return false;
+            }
+
+            // At least 2 suits
+            let suits = {};
+            for (let card of cards) {
+                suits[card.get_suit()] = true;
+            }
+            if (Object.keys(suits).length <= 1) {
+                return false;
+            }
+
+            // In ascending or descending order
+            if (cards[0].get_value() + 1 == cards[1].get_value() &&
+                cards[1].get_value() + 1 == cards[2].get_value()) {
+                    return true;
+            }
+            if (cards[0].get_value() - 1 == cards[1].get_value() &&
+                cards[1].get_value() - 1 == cards[2].get_value()) {
+                    return true;
+            }
+        })();
+        if (is_straight) {
+            return ScoreType.Straight;
+        }
+
+        // Pair
+        const is_pair: boolean = (() => {
+            for (let i = 0; i < cards.length; i++) {
+                for (let j = i + 1; j < cards.length; j++) {
+                    if (cards[i].get_value() == cards[j].get_value()) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        })();
+
+        if (is_pair) {
+            return ScoreType.Pair;
+        }
+
+        return ScoreType.None;
+    });
+
+
+    // Since Aces can be 1 or 13, we have to try all combinations.
+    // Note the same Ace on the board can be treated differently
+    // for the different directions (rows, columns, diagonals)
+    let score = 0;
+    let ace_state = [1, 1, 1];
+    for (ace_state[0] of [1, 13]) {
+        for (ace_state[1] of [1, 13]) {
+            for (ace_state[2] of [1, 13]) {
+                let cards_copy = [];
+                let add_card = ((i) => {
+                    if (cards.length < i + 1) {
+                        return;
+                    }
+                    if (cards[i].get_value() == Card.AceValue) {
+                        cards_copy.push(Card.create_normal(cards[i].get_suit(), ace_state[i]));
+                    } else {
+                        cards_copy.push(cards[i].clone());
+                    }
+                });
+                add_card(0);
+                add_card(1);
+                add_card(2);
+                score = Math.max(score, compute_no_ace(cards_copy));
+            }
+        }
+    }
+
+    return score;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Board
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export class Board {
+    private raw_board: Card[][];
+
+    private constructor(raw_board: Card[][]) {
+        assert(raw_board.length == 3);
+        for (let row = 0; row < 3; row++) {
+            assert(raw_board[row].length == 3);
+        }
+        this.raw_board = raw_board;
+    }
+
+    public static from_object(obj: Board): Board {
+        let raw_board = [];
+        for (let row of obj) {
+            let raw_row = [];
+            for (let cell of row) {
+                raw_row.push(Card.from_object(cell));
+            }
+            raw_board.push(raw_row);
+        }
+        return new Board(raw_board);
+    }
+
+    // Creates an empty board.
+    public static create_empty(): Board {
+        let raw_board = [];
+        for (let row = 0; row < 3; row++) {
+            let board_row = [];
+            for (let col = 0; col < 3; col++) {
+                board_row.push(Card.EMPTY);
+            }
+            raw_board.push(board_row);
+        }
+        return new Board(raw_board);
+    }
+
+    // Computes the score for the current board.
+    public compute_score_with_explanations(): ScoreWithExplanations {
+        let total_score = 0;
+        let explanations = [];
+
+        const add_score = (where, score_type) => {
+            if (score_type == ScoreType.None) {
+                return;
+            }
+
+            total_score += SCORE_VALUES[score_type];
+            explanations.push(ScoreType[score_type] + " in " + where);
+        };
+
+        for (let row = 0; row < 3; row++) {
+            add_score(`row ${row}`, compute_score(
+                this.raw_board[row][0], this.raw_board[row][1], this.raw_board[row][2]));
+        }
+
+        for (let col = 0; col < 3; col++) {
+            add_score(`column ${col}`, compute_score(
+                this.raw_board[0][col], this.raw_board[1][col], this.raw_board[2][col]));
+        }
+
+        add_score("diagonal left to right", compute_score(
+            this.raw_board[0][0], this.raw_board[1][1], this.raw_board[2][2]));
+        add_score("diagonal right to left", compute_score(
+            this.raw_board[0][2], this.raw_board[1][1], this.raw_board[2][0]));
+
+        return {score: total_score, explanations: explanations};
+    }
+
+    public compute_score(): number {
+        return this.compute_score_with_explanations().score;
+    }
+
+    // Place card at (row, col). Returns true if it succeeded and false if the cell was already
+    // occupied.
+    public place_card(row: number, col: number, card: Card): boolean {
+        let existing_card = this.get_card(row, col);
+        if (!existing_card.is_empty()) {
+            return false;
+        }
+        this.raw_board[row][col] = card;
+        return true;
+    }
+
+    // Remove card from (row, col), and return it. Returns the empty card if the cell was
+    // already empty to begin with.
+    public remove_card(row: number, col: number): Card {
+        let existing_card = this.get_card(row, col);
+        if (existing_card.is_empty()) {
+            return Card.EMPTY;
+        }
+        this.raw_board[row][col] = Card.EMPTY;
+        return existing_card;
+    }
+
+    // Returns card at (row, col).
+    public get_card(row: number, col: number): Card {
+        assert(0 <= row);
+        assert(row < 3);
+        assert(0 <= col);
+        assert(col < 3);
+        return this.raw_board[row][col];
+    }
+
+    // Returns the number of empty cells.
+    public count_empty(): number {
+        let empty = 0;
+        for (let row = 0; row < 3; row++) {
+            for (let col = 0; col < 3; col++) {
+                if (this.raw_board[row][col].is_empty()) {
+                    empty++;
+                }
+            }
+        }
+
+        return empty;
+    }
+
+    public is_full(): boolean {
+        return this.count_empty() == 0;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Moves
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Represents a move.
+// All moves have a player playing the move.
+class Move {
+    // The player who is playing this move.
+    protected readonly current_player: number;
+
+    constructor(current_player: number) {
+        this.current_player = current_player;
+    }
+
+    public get_current_player(): number {
+        return this.current_player;
+    }
+
+    // Returns the empty string if the move was successfully applied,
+    // and a string describing why the move was invalid otherwise.
+    protected apply(deck: Deck, table_cards: Deck, boards: Board[]): string {
+        assert(0 <= this.current_player);
+        assert(this.current_player < boards.length);
+        return "";
+    }
+}
+
+export class SkipMove extends Move {
+    protected apply(deck: Deck, table_cards: Deck, boards: Board[]): string {
+        assert(0 <= this.current_player);
+        assert(this.current_player < boards.length);
+        return "";
+    }
+}
+
+// Represents a move that involves a table card.
+// All TableCardMoves have:
+// - The table card that's being played
+// - A row and column on the current player's board the move is played to
+class TableCardMove extends Move {
+    // The table card that is being played.
+    protected readonly table_card_index: number;
+    protected readonly row: number;
+    protected readonly col: number;
+
+    constructor(current_player: number, table_card_index: number, row: number, col: number) {
+        super(current_player);
+        this.table_card_index = table_card_index;
+        this.row = row;
+        this.col = col;
+    }
+
+    // Child classes implement this method: this method will be called with the selected
+    // table card.
+    //
+    // This method should return the empty string if the move was succesfully applied,
+    // and a string describing why the move was invalid otherwise.
+    //
+    // If the move was invalid, then the state of the boards should not be changed.
+    //
+    // The default implementation plays the given table_card at (row, col) of the current player's
+    // board.
+    protected apply_card(card: Card, boards: Board[]): string {
+        if (!boards[this.current_player].place_card(this.row, this.col, card)) {
+            return `cell (${this.row}, ${this.col}) already occupied`;
+        }
+        return "";
+    }
+
+    protected apply(deck: Deck, table_cards: Deck, boards: Board[]): string {
+        assert(0 <= this.current_player);
+        assert(this.current_player < boards.length);
+
+        assert(0 <= this.table_card_index);
+        assert(this.table_card_index < table_cards.length);
+        if (table_cards[this.table_card_index].is_empty()) {
+            return "selected table card was empty";
+        }
+
+        let table_card = table_cards[this.table_card_index];
+        // Defer drawing a new table card to later, in case the move is illegal.
+        let result = this.apply_card(table_card, boards);
+        if (result != "") {
+            return result;
+        }
+
+        // Replace table card
+        if (deck.length > 0) {
+            table_cards[this.table_card_index] = deck.shift();
+        } else {
+            table_cards[this.table_card_index] = Card.EMPTY;
+        }
+
+        return "";
+    }
+}
+
+export class PlayNormalCard extends TableCardMove {
+    protected apply_card(table_card: Card, boards: Board[]): string {
+        assert(table_card.is_normal());
+        return super.apply_card(table_card, boards);
+    }
+}
+
+export class PlayJoker extends TableCardMove {
+    private readonly play_as: Card;
+
+    constructor(current_player: number, table_card_index: table_card_index,
+                row: number, col: number, play_as: Card) {
+        super(current_player, table_card_index, row, col);
+        this.play_as = play_as;
+    }
+
+    protected apply_card(table_card: Card, boards: Board[]): string {
+        assert(table_card.get_type() == CardType.Joker);
+        assert(this.play_as.is_normal());
+        return super.apply_card(this.play_as, boards);
+    }
+}
+
+export class PlayThief extends TableCardMove {
+    private readonly steal_player: number;
+    private readonly steal_row: number;
+    private readonly steal_col: number;
+
+    constructor(current_player: number, table_card_index: table_card_index,
+                row: number, col: number,
+                steal_player: number, steal_row: number, steal_col: number) {
+        super(current_player, table_card_index, row, col);
+        this.steal_player = steal_player;
+        this.steal_row = steal_row;
+        this.steal_col = steal_col;
+    }
+
+    protected apply_card(table_card: Card, boards: Board[]): string {
+        assert(table_card.get_type() == CardType.Thief);
+        assert(this.current_player != this.steal_player);
+        assert(0 <= this.steal_player);
+        assert(this.steal_player < boards.length);
+        assert(0 <= this.steal_row);
+        assert(this.steal_row < 3);
+        assert(0 <= this.steal_col);
+        assert(this.steal_col < 3);
+
+        let stolen_card = boards[this.steal_player].remove_card(this.steal_row, this.steal_col);
+        if (stolen_card.is_empty()) {
+            return `there is no card at (${this.steal_row}, ${this.steal_col}) on player ` +
+                   `${this.steal_player}'s board`;
+        }
+
+        let result = super.apply_card(stolen_card, boards);
+        if (result != "") {
+            // Reverse the stealing if the move was illegal.
+            assert(boards[this.steal_player].place_card(
+                this.steal_row, this.steal_col, stolen_card));
+            return result;
+        }
+
+        return "";
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Game state
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export class TicTacToePokerGameState {
+    static readonly NUM_TABLE_CARDS = 5;
+
+    private deck: Deck;
+    private table_cards: Card[];  // Cards showing on the table
+    private current_player: number;
+    private boards: Board[];
+    private readonly num_players: number;
+
+    constructor(num_players: number) {
+        this.num_players = num_players;
+    }
+
+    public static from_object(obj: TicTacToePokerGameState): TicTacToePokerGameState {
+        let state = new TicTacToePokerGameState(obj.num_players);
+        state.deck = [];
+        for (let card of obj.deck) {
+            state.deck.push(Card.from_object(card));
+        }
+        state.table_cards = [];
+        for (let card of obj.table_cards) {
+            state.table_cards.push(Card.from_object(card));
+        }
+        state.current_player = obj.current_player;
+        state.boards = [];
+        for (let board of obj.boards) {
+            state.boards.push(Board.from_object(board));
+        }
+        return state;
+
+    }
+
+    // Starts a new game, resetting the state.
+    public start_new_game() {
+        this.status = TicTacToePokerGameStatus.Playing;
+        this.current_player = randInt(0, this.num_players - 1);
+        this.deck = new_deck();
+        this.table_cards = [];
+
+        for (let i = 0; i < TicTacToePokerGameState.NUM_TABLE_CARDS; i++) {
+            this.table_cards.push(this.deck.shift());
+        }
+
+        this.boards = []
+        for (let i = 0; i < this.num_players; i++) {
+            this.boards.push(Board.create_empty());
+        }
+    }
+
+    // Apply the given move.
+    // If it was succesfully applied, returns the empty string and updates the current player.
+    // Otherwise, returns a message describing why the move was illegal.
+    public apply_move(move: Move): string {
+        if (this.status == TicTacToePokerGameStatus.GameOver) {
+            return "the game is over";
+        }
+
+        if (move.get_current_player() != this.current_player) {
+            return `it is player ${this.current_player}'s turn, but the move was for player ` +
+                   `${move.get_current_player()}`;
+        }
+
+        let result = move.apply(this.deck, this.table_cards, this.boards);
+        if (result != "") {
+            return result;
+        }
+        this.current_player = (this.current_player + 1) % (this.num_players);
+
+        if (!this.does_any_player_have_a_valid_move()) {
+            // No more valid moves, game over.
+            this.status = TicTacToePokerGameStatus.GameOver;
+        }
+
+        return "";
+    }
+
+    // Returns the number of non-empty table cards.
+    private count_table_cards(): number {
+        let result = 0;
+        for (let i = 0; i < TicTacToePokerGameState.NUM_TABLE_CARDS; i++) {
+            if (!this.table_cards[i].is_empty()) {
+                result++;
+            }
+        }
+        return result;
+    }
+
+    // Returns true if at least one player has a valid move.
+    private does_any_player_have_a_valid_move(): boolean {
+        // If there are no table cards left then there are no valid moves left.
+        if (this.count_table_cards() == 0) {
+            return false;
+        }
+
+        // Otherwise, if at least one board is not full, then that player has a valid move.
+        for (let i = 0; i < this.num_players; i++) {
+            if (!this.get_board(i).is_full()) {
+                return true;
+            }
+        }
+
+        // All boards are full.
+        return false;
+    }
+
+    public get_board(player_num: number): Board {
+        assert(0 <= player_num);
+        assert(player_num < this.boards.length);
+        return this.boards[player_num];
+    }
+
+    public get_current_player() { return this.current_player; }
+
+    public get_table_cards() { return this.table_cards; }
+
+    public get_score(player_num: number): number {
+        return this.get_board(player_num).compute_score();
+    }
+
+    public get_score_with_explanations(player_num: number): ScoreWithExplanations {
+        return this.get_board(player_num).compute_score_with_explanations();
+    }
+
+    public get_status() { return this.status; }
+}
