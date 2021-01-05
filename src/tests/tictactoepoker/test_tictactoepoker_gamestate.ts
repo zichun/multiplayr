@@ -97,7 +97,7 @@ describe('ticatctoepoker_gamestate', () => {
             assert.equal(state.get_score(1), 0);
 
             // Player 0
-            // Deck: (empty)
+            // Deck: ()
             // Table: () c3 h9 h5 dA
             // Move: play c3 from the table onto (0, 1)
             assert.equal(state.get_current_player(), 0);
@@ -107,10 +107,10 @@ describe('ticatctoepoker_gamestate', () => {
             // Check table card is empty (no more cards in deck)
             assert.deepEqual(state.get_table_cards()[1], Card.EMPTY);
             // Player 0 now has a straight: d2 c3 h4
-            assert.equal(state.get_score(0), 500);
+            assert.equal(state.get_score(0), 540);
 
             // Player 1
-            // Deck: (empty)
+            // Deck: ()
             // Table: () () h9 h5 dA
             // Illegal move: attempt to play h9 from the table onto (0, 1)
             assert.equal(state.get_current_player(), 1);
@@ -122,9 +122,8 @@ describe('ticatctoepoker_gamestate', () => {
                              Card.create_normal(Suit.Hearts, 9));
             // Check table card is empty (no more cards in deck)
             assert.deepEqual(state.get_table_cards()[2], Card.EMPTY);
-            // Player 1 doesn't have a straight, since all the cards are of a single suit (Hearts):
-            // h7 h8 h9
-            assert.equal(state.get_score(1), 0);
+            // Player 1 has a straight flush: h7 h8 h9
+            assert.equal(state.get_score(1), 1270);
 
         });
 
@@ -193,7 +192,7 @@ describe('ticatctoepoker_gamestate', () => {
             // Check table card is empty (no more cards in deck)
             assert.deepEqual(state.get_table_cards()[3], Card.EMPTY);
             // Player 0 has a pair now: hA hA at (0, 0) and (1, 1)
-            assert.equal(state.get_score(0), 250);
+            assert.equal(state.get_score(0), 113);
         });
 
         it('no more table cards means game over', () => {
@@ -322,11 +321,13 @@ describe('tictactoepoker_board', () => {
         board.place_card(0, 0, Card.create_normal(Suit.Diamonds, 2));
         assert.strictEqual(board.compute_score(), 0);
 
+        // Pair
         board.place_card(0, 1, Card.create_normal(Suit.Hearts, 2));
-        assert.strictEqual(board.compute_score(), 250);
+        assert.strictEqual(board.compute_score(), 102);
 
+        // Three of a kind
         board.place_card(0, 2, Card.create_normal(Suit.Clubs, 2));
-        assert.strictEqual(board.compute_score(), 250);
+        assert.strictEqual(board.compute_score(), 260);
     });
 
     it('compute_score column', () => {
@@ -335,11 +336,13 @@ describe('tictactoepoker_board', () => {
         board.place_card(0, 0, Card.create_normal(Suit.Diamonds, 2));
         assert.strictEqual(board.compute_score(), 0);
 
+        // Pair
         board.place_card(1, 0, Card.create_normal(Suit.Hearts, 2));
-        assert.strictEqual(board.compute_score(), 250);
+        assert.strictEqual(board.compute_score(), 102);
 
+        // Three of a kind
         board.place_card(2, 0, Card.create_normal(Suit.Clubs, 2));
-        assert.strictEqual(board.compute_score(), 250);
+        assert.strictEqual(board.compute_score(), 260);
     });
 
     it('compute_score four corners', () => {
@@ -351,28 +354,38 @@ describe('tictactoepoker_board', () => {
 
         // One pair: diagonal
         board.place_card(2, 2, Card.create_normal(Suit.Spades, 2));
-        assert.strictEqual(board.compute_score(), 250);
+        assert.strictEqual(board.compute_score(), 102);
         assert.equal(board.compute_score_with_explanations().explanations.length, 1);
 
         // 3 pairs: row, column, diagonal
         board.place_card(0, 2, Card.create_normal(Suit.Clubs, 2));
-        assert.strictEqual(board.compute_score(), 750);
+        assert.strictEqual(board.compute_score(), 306);
         assert.equal(board.compute_score_with_explanations().explanations.length, 3);
 
         // 6 pairs: top and bottom row, left and right column, both diagonals
         board.place_card(2, 0, Card.create_normal(Suit.Hearts, 2));
-        assert.strictEqual(board.compute_score(), 1500);
+        assert.strictEqual(board.compute_score(), 612);
         assert.equal(board.compute_score_with_explanations().explanations.length, 6);
     });
 
-    it('compute_score not straight if same suit', () => {
+    it('compute_score straight flush', () => {
         let board = Board.create_empty();
 
-        board.place_card(0, 0, Card.create_normal(Suit.Diamonds, 2));
-        board.place_card(1, 0, Card.create_normal(Suit.Diamonds, 3));
-        board.place_card(2, 0, Card.create_normal(Suit.Diamonds, 4));
-        assert.equal(board.compute_score_with_explanations().explanations.length, 0);
-        assert.strictEqual(board.compute_score(), 0);
+        board.place_card(0, 0, Card.create_normal(Suit.Diamonds, Card.AceValue));
+        board.place_card(1, 0, Card.create_normal(Suit.Diamonds, 12));
+        board.place_card(2, 0, Card.create_normal(Suit.Diamonds, 11));
+        assert.equal(board.compute_score_with_explanations().explanations.length, 1);
+        assert.strictEqual(board.compute_score(), 1390);
+    });
+
+    it('compute_score flush', () => {
+        let board = Board.create_empty();
+
+        board.place_card(0, 0, Card.create_normal(Suit.Diamonds, 3));
+        board.place_card(1, 0, Card.create_normal(Suit.Diamonds, 10));
+        board.place_card(2, 0, Card.create_normal(Suit.Diamonds, 7));
+        assert.equal(board.compute_score_with_explanations().explanations.length, 1);
+        assert.strictEqual(board.compute_score(), 900);
     });
 
     it('compute_score straight ascending', () => {
@@ -382,7 +395,7 @@ describe('tictactoepoker_board', () => {
         board.place_card(1, 0, Card.create_normal(Suit.Spades, 3));
         board.place_card(2, 0, Card.create_normal(Suit.Diamonds, 4));
         assert.equal(board.compute_score_with_explanations().explanations.length, 1);
-        assert.strictEqual(board.compute_score(), 500);
+        assert.strictEqual(board.compute_score(), 540);
     });
 
     it('compute_score straight descending', () => {
@@ -392,7 +405,7 @@ describe('tictactoepoker_board', () => {
         board.place_card(1, 0, Card.create_normal(Suit.Spades, 3));
         board.place_card(2, 0, Card.create_normal(Suit.Diamonds, 2));
         assert.equal(board.compute_score_with_explanations().explanations.length, 1);
-        assert.strictEqual(board.compute_score(), 500);
+        assert.strictEqual(board.compute_score(), 540);
     });
 
 
@@ -404,13 +417,13 @@ describe('tictactoepoker_board', () => {
         board.place_card(0, 1, Card.create_normal(Suit.Spades, 2));
         board.place_card(0, 2, Card.create_normal(Suit.Diamonds, 3));
         assert.equal(board.compute_score_with_explanations().explanations.length, 1);
-        assert.strictEqual(board.compute_score(), 500);
+        assert.strictEqual(board.compute_score(), 530);
 
         // Another straight: AKQ down the column
         board.place_card(1, 0, Card.create_normal(Suit.Spades, 12));
         board.place_card(2, 0, Card.create_normal(Suit.Diamonds, 11));
         assert.equal(board.compute_score_with_explanations().explanations.length, 2);
-        assert.strictEqual(board.compute_score(), 1000);
+        assert.strictEqual(board.compute_score(), 530 + 630);
 
         // Another straight: A23 across the diagonal
         // This also makes two pairs.
@@ -420,7 +433,7 @@ describe('tictactoepoker_board', () => {
         board.place_card(1, 1, Card.create_normal(Suit.Hearts, 2));
         board.place_card(2, 2, Card.create_normal(Suit.Clubs, 3));
         assert.equal(board.compute_score_with_explanations().explanations.length, 5);
-        assert.strictEqual(board.compute_score(), 2000);
+        assert.strictEqual(board.compute_score(), 530 + 630 + 530 + 102 + 103);
     });
 
 });

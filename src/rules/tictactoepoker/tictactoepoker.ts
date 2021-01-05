@@ -62,6 +62,22 @@ export class Card {
         return new Card(this.type, this.suit, this.value);
     }
 
+    // Returns a string representation of this card,
+    // e.g. "Joker", "Thief", "5 of Hearts", "Ace of Spades"
+    public toString(): string {
+        if (!this.is_normal()) {
+            return CardType[this.type];
+        }
+        let value_str = "";
+        if (this.value == Card.AceValue) {
+            value_str = "Ace";
+        } else {
+            value_str = this.value.toString();
+        }
+
+        return value_str + " of " + Suit[this.suit];
+    }
+
     public is_normal(): boolean {
         return this.type == CardType.Normal;
     }
@@ -81,6 +97,15 @@ export class Card {
 
     public get_value(): number {
         assert(this.is_normal());
+        return this.value;
+    }
+
+    // Like get_value, but treats Aces as 13 instead of 1
+    public get_rank_value(): number {
+        assert(this.is_normal());
+        if (this.value == Card.AceValue) {
+            return 13;
+        }
         return this.value;
     }
 }
@@ -103,27 +128,76 @@ function new_deck(): Deck {
     return result;
 }
 
-// Score types. The values should be such that a higher value represents a better combination.
-enum ScoreType {
+// Combination types. The values should be such that a higher value represents a better combination.
+enum CombinationType {
     None = 0,
     Pair = 1,
-    Straight = 2,
+    ThreeOfAKind = 2,
+    Straight = 3,
+    Flush = 4,
+    StraightFlush = 5,
 }
 
-// Score values for each of the combinations.
-const SCORE_VALUES = {
-    [ScoreType.None]: 0,
-    [ScoreType.Pair]: 250,
-    [ScoreType.Straight]: 500
-};
+// Score type.
+interface ScoreType {
+    combination_type: CombinationType,
+    rank_card?: Card,
+}
+
+// Returns the score value for the given score type.
+function compute_score_value(score_type: ScoreType): number {
+    let rank_value = 0;
+    if (score_type.rank_card) {
+        rank_value = score_type.rank_card.get_rank_value();
+    }
+
+    switch(score_type.combination_type) {
+        case CombinationType.StraightFlush:
+            return 1000 + 30 * rank_value;
+        case CombinationType.Flush:
+            return 750 + 15 * rank_value;
+        case CombinationType.Straight:
+            return 500 + 10 * rank_value;
+        case CombinationType.ThreeOfAKind:
+            return 250 + 5 * rank_value;
+        case CombinationType.Pair:
+            return 100 + rank_value;
+        case CombinationType.none:
+            return 0;
+    }
+
+    throw("should not get here");
+}
+
+// Represents an explanation for how a single scoring line (row, column, or diagonal)
+export class ScoreExplanation {
+    private readonly score_type: ScoreType
+    private readonly where: string
+    private readonly score_value: number;
+
+    constructor(score_type: ScoreType, where: string) {
+        this.score_type = score_type;
+        this.where = where;
+        this.score_value = compute_score_value(score_type);
+    }
+
+    public get_score_value(): number {
+        return this.score_value;
+    }
+
+    public toString(): string {
+        return CombinationType[this.score_type.combination_type] + " in " + this.where + " " +
+            "with ranking card " + this.score_type.rank_card.toString() + " worth " +
+            this.score_value + " points";
+    }
+}
 
 export interface ScoreWithExplanations {
     score: number,
-    explanations: string[]
+    explanations: ScoreExplanation[]
 }
 
 // Return score type for the given three cards (some of all of which may be empty cards)
-// TODO(chuanyu): Add all other applicable scoring rules.
 function compute_score(a: Card, b: Card, c: Card): ScoreType {
     // Get all normal cards
     let cards = [];
@@ -135,60 +209,92 @@ function compute_score(a: Card, b: Card, c: Card): ScoreType {
     // either 1 or 13
     const compute_no_ace = ((cards) => {
 
-        // Straight
-        const is_straight: boolean = (() => {
-            // Must have 3 cards
-            if (cards.length != 3) {
-                return false;
+        if (cards.length == 3) {
+
+            // Flush (all same suit)
+            const is_flush: boolean = (() => {
+                // All the same suit.
+                let suits = {};
+                for (let card of cards) {
+                    suits[card.get_suit()] = true;
+                }
+                if (Object.keys(suits).length != 1) {
+                    return false;
+                }
+
+                return true;
+            })();
+
+
+            // Straight (just three consecutive cards)
+            const is_straight: boolean = (() => {
+                if (cards[0].get_value() + 1 == cards[1].get_value() &&
+                    cards[1].get_value() + 1 == cards[2].get_value()) {
+                        return true;
+                }
+            })();
+
+            if (is_straight && is_flush) {
+                return {combination_type: CombinationType.StraightFlush, rank_card: cards[2]};
+            }
+            if (is_flush) {
+                // Find the card with the highest rank value - it can be anywhere in the three.
+                let best_rank_value = 0;
+                let best_card = Card.EMPTY;
+                for (let card of cards) {
+                    if (card.get_rank_value() > best_rank_value) {
+                        best_rank_value = card.get_rank_value();
+                        best_card = card;
+                    }
+                }
+                return {combination_type: CombinationType.Flush, rank_card: best_card};
+            }
+            if (is_straight) {
+                return {combination_type: CombinationType.Straight, rank_card: cards[2]};
             }
 
-            // At least 2 suits
-            let suits = {};
-            for (let card of cards) {
-                suits[card.get_suit()] = true;
+            // Three of a kind
+            if (cards[0].get_value() == cards[1].get_value() &&
+                cards[1].get_value() == cards[2].get_value()) {
+                return {combination_type: CombinationType.ThreeOfAKind, rank_card: cards[0]};
             }
-            if (Object.keys(suits).length <= 1) {
-                return false;
-            }
-
-            // In ascending or descending order
-            if (cards[0].get_value() + 1 == cards[1].get_value() &&
-                cards[1].get_value() + 1 == cards[2].get_value()) {
-                    return true;
-            }
-            if (cards[0].get_value() - 1 == cards[1].get_value() &&
-                cards[1].get_value() - 1 == cards[2].get_value()) {
-                    return true;
-            }
-        })();
-        if (is_straight) {
-            return ScoreType.Straight;
         }
 
         // Pair
-        const is_pair: boolean = (() => {
+        const pair_card: Card = (() => {
             for (let i = 0; i < cards.length; i++) {
                 for (let j = i + 1; j < cards.length; j++) {
                     if (cards[i].get_value() == cards[j].get_value()) {
-                        return true;
+                        return cards[i];
                     }
                 }
             }
-            return false;
+            return Card.EMPTY;
         })();
 
-        if (is_pair) {
-            return ScoreType.Pair;
+        if (pair_card != Card.EMPTY) {
+            return {combination_type: CombinationType.Pair, rank_card: pair_card};
         }
 
-        return ScoreType.None;
+        return {combination_type: CombinationType.None};
     });
 
+    const is_better = (score_a, score_b) => {
+        if (score_a.combination_type == score_b.combination_type) {
+            if (score_a.combination_type == CombinationType.None) {
+                return true;
+            }
+            return score_a.rank_card.get_rank_value() >= score_b.rank_card.get_rank_value();
+        } else {
+            return score_a.combination_type > score_b.combination_type;
+        }
+    };
 
     // Since Aces can be 1 or 13, we have to try all combinations.
+    //
     // Note the same Ace on the board can be treated differently
     // for the different directions (rows, columns, diagonals)
-    let score = 0;
+    let score = {combination_type: CombinationType.None};
     let ace_state = [1, 1, 1];
     for (ace_state[0] of [1, 13]) {
         for (ace_state[1] of [1, 13]) {
@@ -207,7 +313,17 @@ function compute_score(a: Card, b: Card, c: Card): ScoreType {
                 add_card(0);
                 add_card(1);
                 add_card(2);
-                score = Math.max(score, compute_no_ace(cards_copy));
+                // Check cards in both forward and reverse order, so we only have to check
+                // for increasing sequences for straights.
+                const forward_score = compute_no_ace(cards_copy);
+                if (is_better(forward_score, score)) {
+                    score = forward_score;
+                }
+                cards_copy.reverse();
+                const reverse_score = compute_no_ace(cards_copy);
+                if (is_better(reverse_score, score)) {
+                    score = reverse_score;
+                }
             }
         }
     }
@@ -261,12 +377,13 @@ export class Board {
         let explanations = [];
 
         const add_score = (where, score_type) => {
-            if (score_type == ScoreType.None) {
+            if (score_type.combination_type == CombinationType.None) {
                 return;
             }
 
-            total_score += SCORE_VALUES[score_type];
-            explanations.push(ScoreType[score_type] + " in " + where);
+            const explanation = new ScoreExplanation(score_type, where);
+            explanations.push(explanation);
+            total_score += explanation.get_score_value();
         };
 
         for (let row = 0; row < 3; row++) {
@@ -401,7 +518,7 @@ class TableCardMove extends Move {
     //
     // If the move was invalid, then the state of the boards should not be changed.
     //
-    // The default implementation plays the given table_card at (row, col) of the current player's
+    // The default implementation plays the given card at (row, col) of the current player's
     // board.
     protected apply_card(card: Card, boards: Board[]): string {
         if (!boards[this.current_player].place_card(this.row, this.col, card)) {
