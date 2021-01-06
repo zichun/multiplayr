@@ -2,13 +2,6 @@
  * GameRuleTest.ts - class wrapper to test a game rule.
  */
 
-import { configureLoadStyles } from '@microsoft/load-themed-styles';
-
-configureLoadStyles((styles) => { return null; });
-// global['window'] = {document: {}, location: {href: '', protocol: ''}, addEventListener: () => {}, removeEventListener: () => {}};
-// global['document'] = {createElement: () => { return {}; }, location: { protocol: ''}, getElementById: () => {}};
-// global['navigator'] = {userAgent: ''};
-
 import {
     CreateRoomReturnPacketType,
     GetRuleReturnPacketType
