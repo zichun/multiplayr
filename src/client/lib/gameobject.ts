@@ -631,11 +631,11 @@ export class GameObject {
         if (clientId === null || clientId === this.clientId) {
             // this means that clientId matches request. we'll go ahead to render the view
 
-            if (this.viewCallback !== undefined) {
-                this.viewCallback(displayName, props);
-            }
-
             if (this.views[displayName] !== undefined) {
+                if (this.viewCallback !== undefined) {
+                    this.viewCallback(displayName, props);
+                }
+
                 // we have this view
                 const view = this.runReactView(displayName, props);
                 if (container) {

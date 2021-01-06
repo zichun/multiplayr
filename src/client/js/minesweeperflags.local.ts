@@ -2,6 +2,13 @@
  * minesweeperflags.local.ts
  */
 
+import { GetRuleReturnPacketType, ViewPropsInterface } from '../../common/interfaces';
+import { checkReturnMessage, forwardReturnMessage } from '../../common/messages';
+import { GameObject } from '../lib/gameobject';
+
+import { MinesweeperflagsViewPropsInterface } from '../../rules/minesweeperflags/minesweeperflags_views';
+import { MinesweeperflagsAI } from '../../rules/minesweeperflags/minesweeperflags_ai';
+
 /* eslint-disable no-var */
 declare var _mplib;
 declare var _mprules;
@@ -31,6 +38,36 @@ $(() => {
         });
 
         $(container).append($button);
+
+        const $buttonAI = $('<button>Connect AI</button>').click(() => {
+            const transport = new _mplib.LocalClientTransport();
+            const gameObj = new GameObject(transport,
+                                           container);
+
+            const ai = new MinesweeperflagsAI();
+
+            gameObj.setViewCallback(
+                (_display: string, props: ViewPropsInterface) => {
+                    const inside = (props as any).minesweeperflags;
+                    setTimeout(() => {
+                        ai.onPropsChange(inside as MinesweeperflagsViewPropsInterface)
+                    }, 500);
+                });
+
+            gameObj.join(
+                roomId,
+                (res: GetRuleReturnPacketType) => {
+                    checkReturnMessage(res, 'rule');
+                    gameObj.setupRule(_mprules.MPRULES[res.message].rule);
+
+                    return forwardReturnMessage(res);
+                });
+
+            $button.text('Connecting...');
+            $button.attr('disabled', 'disabled');
+        });
+
+        $(container).append($buttonAI);
     };
 
     const transport = new _mplib.LocalClientTransport(

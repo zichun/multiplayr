@@ -4,8 +4,6 @@ import { BoardEl } from './minesweeper';
 import { MultiplayrAI } from '../../common/interfaces';
 
 export class MinesweeperflagsAI implements MultiplayrAI {
-    constructor() {
-    }
 
     public onPropsChange(props: MinesweeperflagsViewPropsInterface) {
         if (props.turn === props.player &&

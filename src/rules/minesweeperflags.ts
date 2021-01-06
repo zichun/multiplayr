@@ -12,13 +12,11 @@ const MinesweeperFlagsDebugger = NewDebuggerRule(
 export const MPRULES = {
     'minesweeperflags': {
         description: 'Minesweeperflags',
-        rules: ['lobby','gameshell', 'minesweeperflags'],
         rule: MinesweeperFlagsRule
     },
     'minesweeperflags-debug': {
         description: 'Minesweeperflags (Debug)',
         debug: true,
-        rules: ['lobby','gameshell', 'minesweeperflags', 'debugger'],
         rule: MinesweeperFlagsDebugger
     }
 };
