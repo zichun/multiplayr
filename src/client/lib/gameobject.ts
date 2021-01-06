@@ -34,7 +34,8 @@ import {
     CallbackType,
     DataStoreType,
     ReturnPacketType,
-    GameRuleInterface
+    GameRuleInterface,
+    ViewCallbackType
 } from '../../common/interfaces';
 
 export class GameObject {
@@ -603,6 +604,13 @@ export class GameObject {
         });
     }
 
+    private viewCallback: ViewCallbackType;
+    public setViewCallback(
+        callback: ViewCallbackType
+    ) {
+        this.viewCallback = callback;
+    }
+
     public hostSetView(
         clientId: string,
         displayName: string,
@@ -622,6 +630,11 @@ export class GameObject {
 
         if (clientId === null || clientId === this.clientId) {
             // this means that clientId matches request. we'll go ahead to render the view
+
+            if (this.viewCallback !== undefined) {
+                this.viewCallback(displayName, props);
+            }
+
             if (this.views[displayName] !== undefined) {
                 // we have this view
                 const view = this.runReactView(displayName, props);

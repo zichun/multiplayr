@@ -6,9 +6,13 @@
  *
  */
 
+import { ViewPropsInterface } from './GameRuleInterfaces';
+
 export interface DataStoreType {
     (variable: string): {
         getValue: () => any,
         setValue: (value: any) => any
     };
 }
+
+export type ViewCallbackType = (displayName: string, props: ViewPropsInterface) => void;

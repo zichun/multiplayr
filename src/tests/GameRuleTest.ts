@@ -4,7 +4,10 @@
 
 import {
     CreateRoomReturnPacketType,
-    GetRuleReturnPacketType
+    GetRuleReturnPacketType,
+    GameRuleInterface,
+    ViewPropsInterface,
+    MultiplayrAI
 } from '../common/interfaces';
 
 import { checkReturnMessage } from '../common/messages';
@@ -15,6 +18,7 @@ import { GameObject } from '../client/lib/gameobject';
 export class GameRuleTest {
     private hostGameObject: GameObject;
     private clientsGameObjects: GameObject[];
+    private gameRule: GameRuleInterface;
 
     constructor(
         ruleName: string,
@@ -22,6 +26,8 @@ export class GameRuleTest {
         initialState?: string
     ) {
         const ruleDef = MPRULES[ruleName];
+
+        this.gameRule = ruleDef.rule;
 
         if (!ruleDef) {
             throw (new Error('Rule ' + ruleName + ' does not exists.'));
@@ -63,6 +69,28 @@ export class GameRuleTest {
         if (initialState) {
             this.setState(initialState);
         }
+    }
+
+    public setAIPlayer(
+        player: number,
+        ai: MultiplayrAI,
+        override: any
+    ) {
+        override = override || {};
+
+        this.clientsGameObjects[player].setViewCallback(
+            (_display: string, props: ViewPropsInterface) => {
+                for (const method of Object.keys(override)) {
+                    if (props.MP[method] && props.MP[method].name !== 'gameruletest_cb') {
+                        const original_method = props.MP[method];
+                        const gameruletest_cb = (...args: any[]) => {
+                            override[method](props.MP, original_method, ...args);
+                        };
+                        props.MP[method] = gameruletest_cb;
+                    }
+                }
+                ai.onPropsChange(props);
+            });
     }
 
     public getClientData(

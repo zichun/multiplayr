@@ -24,3 +24,7 @@ export interface GameRuleWrapperInterface {
 export interface ViewPropsInterface {
     MP: MPType;
 }
+
+export interface MultiplayrAI {
+    onPropsChange(props: ViewPropsInterface): void;
+}
