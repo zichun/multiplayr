@@ -18,10 +18,8 @@ export class MinesweeperflagsAI implements MultiplayrAI {
             let c = 0;
 
             do {
-                console.log("randoming with " + rows + " " + cols);
                 r = Math.floor(Math.random() * rows);
                 c = Math.floor(Math.random() * cols);
-                console.log(r + " " + c);
             } while (props.board[r][c].el !== BoardEl.Unknown)
 
             props.MP.make_move(r, c);
