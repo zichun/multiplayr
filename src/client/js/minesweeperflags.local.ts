@@ -7,7 +7,7 @@ import { checkReturnMessage, forwardReturnMessage } from '../../common/messages'
 import { GameObject } from '../lib/gameobject';
 
 import { MinesweeperflagsViewPropsInterface } from '../../rules/minesweeperflags/minesweeperflags_views';
-import { MinesweeperflagsAI } from '../../rules/minesweeperflags/minesweeperflags_ai';
+import { MinesweeperflagsAIBasic } from '../../rules/minesweeperflags/minesweeperflags_ai';
 
 /* eslint-disable no-var */
 declare var _mplib;
@@ -44,7 +44,7 @@ $(() => {
             const gameObj = new GameObject(transport,
                                            container);
 
-            const ai = new MinesweeperflagsAI();
+            const ai = new MinesweeperflagsAIBasic();
 
             gameObj.setViewCallback(
                 (_display: string, props: ViewPropsInterface) => {
