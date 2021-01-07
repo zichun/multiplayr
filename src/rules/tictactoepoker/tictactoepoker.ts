@@ -1,6 +1,6 @@
-import { shuffle } from '../../common/utils';
+import { shuffle, cartesianProduct } from '../../common/utils';
 
-export enum TicTacToePokerGameStatus {
+export enum GameStatus {
     Playing,
     GameOver,
 }
@@ -31,9 +31,15 @@ export enum Suit {
 	Spades,
 }
 
+export interface CardObject {
+    type: CardType,
+    suit?: Suit,
+    value?: number,
+}
+
 export class Card {
-    static const EMPTY = Card.create_special(CardType.Empty);
-    static const AceValue: number = 1;
+    static readonly EMPTY = Card.create_special(CardType.Empty);
+    static readonly AceValue: number = 1;
 
     private type: CardType;
     private suit?: Suit;
@@ -45,7 +51,7 @@ export class Card {
         this.value = value;
     }
 
-    public static from_object(obj: Card): Card {
+    public static from_object(obj: CardObject): Card {
         return new Card(obj.type, obj.suit, obj.value);
     }
 
@@ -112,21 +118,16 @@ export class Card {
 
 type Deck = Card[];
 
-// Returns a shuffled standard deck with special cards.
-function new_deck(): Deck {
+// Add the 52 standard cards to the given deck.
+function add_standard_cards(deck: Deck){
     // Normal cards
-    let result = [];
-    for (let suit in Suit) {
+    for (let suit of Object.values(Suit).filter(v => typeof v == "number")) {
         for (let value = 2; value <= 13; value++) {
-            result.push(Card.create_normal(suit, value));
+            deck.push(Card.create_normal(suit as Suit, value));
         }
-        result.push(Card.create_normal(suit, Card.AceValue));
+        deck.push(Card.create_normal(suit as Suit, Card.AceValue));
     }
-    result.push(Card.create_special(CardType.Joker));
-    result.push(Card.create_special(CardType.Joker));
-    result.push(Card.create_special(CardType.Thief));
-    shuffle(result);
-    return result;
+    return deck;
 }
 
 // Combination types. The values should be such that a higher value represents a better combination.
@@ -163,7 +164,7 @@ function compute_score_value(score_type: ScoreType): number {
             return 250 + 5 * rank_value;
         case CombinationType.Pair:
             return 100 + rank_value;
-        case CombinationType.none:
+        case CombinationType.None:
             return 0;
     }
 
@@ -211,6 +212,11 @@ function compute_score(a: Card, b: Card, c: Card): ScoreType {
     const compute_no_ace = ((cards) => {
 
         if (cards.length == 3) {
+            // Sort cards in ascending order of value
+            let sorted_cards = [cards[0], cards[1], cards[2]]
+            // Note that the Aces have been resolved to 1 or 14, so we don't need to use
+            // get_rank_value
+            sorted_cards.sort((a, b) => a.get_value() - b.get_value());
 
             // Flush (all same suit)
             const is_flush: boolean = (() => {
@@ -222,42 +228,34 @@ function compute_score(a: Card, b: Card, c: Card): ScoreType {
                 if (Object.keys(suits).length != 1) {
                     return false;
                 }
-
                 return true;
             })();
 
-
-            // Straight (just three consecutive cards)
+            // Straight (just three consecutive cards, in any order: 4 6 5 is also considered a
+            // straight)
             const is_straight: boolean = (() => {
-                if (cards[0].get_value() + 1 == cards[1].get_value() &&
-                    cards[1].get_value() + 1 == cards[2].get_value()) {
-                        return true;
+                if (sorted_cards[0].get_value() + 1 == sorted_cards[1].get_value() &&
+                    sorted_cards[1].get_value() + 1 == sorted_cards[2].get_value()) {
+                    return true;
                 }
+                return false;
             })();
 
             if (is_straight && is_flush) {
-                return {combination_type: CombinationType.StraightFlush, rank_card: cards[2]};
+                return {combination_type: CombinationType.StraightFlush,
+                        rank_card: sorted_cards[2]};
             }
             if (is_flush) {
-                // Find the card with the highest rank value - it can be anywhere in the three.
-                let best_rank_value = 0;
-                let best_card = Card.EMPTY;
-                for (let card of cards) {
-                    if (card.get_rank_value() > best_rank_value) {
-                        best_rank_value = card.get_rank_value();
-                        best_card = card;
-                    }
-                }
-                return {combination_type: CombinationType.Flush, rank_card: best_card};
+                return {combination_type: CombinationType.Flush, rank_card: sorted_cards[2]};
             }
             if (is_straight) {
-                return {combination_type: CombinationType.Straight, rank_card: cards[2]};
+                return {combination_type: CombinationType.Straight, rank_card: sorted_cards[2]};
             }
 
             // Three of a kind
             if (cards[0].get_value() == cards[1].get_value() &&
                 cards[1].get_value() == cards[2].get_value()) {
-                return {combination_type: CombinationType.ThreeOfAKind, rank_card: cards[0]};
+                return {combination_type: CombinationType.ThreeOfAKind, rank_card: sorted_cards[0]};
             }
         }
 
@@ -296,36 +294,23 @@ function compute_score(a: Card, b: Card, c: Card): ScoreType {
     // Note the same Ace on the board can be treated differently
     // for the different directions (rows, columns, diagonals)
     let score = {combination_type: CombinationType.None};
-    let ace_state = [1, 1, 1];
-    for (ace_state[0] of [1, 14]) {
-        for (ace_state[1] of [1, 14]) {
-            for (ace_state[2] of [1, 14]) {
-                let cards_copy = [];
-                let add_card = ((i) => {
-                    if (cards.length < i + 1) {
-                        return;
-                    }
-                    if (cards[i].get_value() == Card.AceValue) {
-                        cards_copy.push(Card.create_normal(cards[i].get_suit(), ace_state[i]));
-                    } else {
-                        cards_copy.push(cards[i].clone());
-                    }
-                });
-                add_card(0);
-                add_card(1);
-                add_card(2);
-                // Check cards in both forward and reverse order, so we only have to check
-                // for increasing sequences for straights.
-                const forward_score = compute_no_ace(cards_copy);
-                if (is_better(forward_score, score)) {
-                    score = forward_score;
-                }
-                cards_copy.reverse();
-                const reverse_score = compute_no_ace(cards_copy);
-                if (is_better(reverse_score, score)) {
-                    score = reverse_score;
-                }
-            }
+    let possibilities = [];
+    for (let i = 0; i < cards.length; i++) {
+        if (cards[i].get_value() == Card.AceValue) {
+            possibilities.push([1, 14]);
+        } else {
+            possibilities.push([cards[i].get_value()]);
+        }
+    }
+    const all_combinations = cartesianProduct(possibilities);
+    for (let combination of all_combinations) {
+        let cards_copy = [];
+        for (let i = 0; i < combination.length; i++) {
+            cards_copy.push(Card.create_normal(cards[i].get_suit(), combination[i]));
+        }
+        const forward_score = compute_no_ace(cards_copy);
+        if (is_better(forward_score, score)) {
+            score = forward_score;
         }
     }
 
@@ -335,6 +320,8 @@ function compute_score(a: Card, b: Card, c: Card): ScoreType {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Board
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export type BoardObject = CardObject[][];
 
 export class Board {
     private raw_board: Card[][];
@@ -347,7 +334,7 @@ export class Board {
         this.raw_board = raw_board;
     }
 
-    public static from_object(obj: Board): Board {
+    public static from_object(obj: BoardObject): Board {
         let raw_board = [];
         for (let row of obj) {
             let raw_row = [];
@@ -479,7 +466,7 @@ class Move {
 
     // Returns the empty string if the move was successfully applied,
     // and a string describing why the move was invalid otherwise.
-    protected apply(deck: Deck, table_cards: Deck, boards: Board[]): string {
+    public apply(deck: Deck, table_cards: Deck, boards: Board[]): string {
         assert(0 <= this.current_player);
         assert(this.current_player < boards.length);
         return "";
@@ -487,7 +474,7 @@ class Move {
 }
 
 export class SkipMove extends Move {
-    protected apply(deck: Deck, table_cards: Deck, boards: Board[]): string {
+    public apply(deck: Deck, table_cards: Deck, boards: Board[]): string {
         assert(0 <= this.current_player);
         assert(this.current_player < boards.length);
         return "";
@@ -528,7 +515,7 @@ class TableCardMove extends Move {
         return "";
     }
 
-    protected apply(deck: Deck, table_cards: Deck, boards: Board[]): string {
+    public apply(deck: Deck, table_cards: Deck, boards: Board[]): string {
         assert(0 <= this.current_player);
         assert(this.current_player < boards.length);
 
@@ -566,8 +553,8 @@ export class PlayNormalCard extends TableCardMove {
 export class PlayJoker extends TableCardMove {
     private readonly play_as: Card;
 
-    constructor(current_player: number, table_card_index: table_card_index,
-                row: number, col: number, play_as: Card) {
+    constructor(current_player: number, table_card_index: number, row: number, col: number,
+                play_as: Card) {
         super(current_player, table_card_index, row, col);
         this.play_as = play_as;
     }
@@ -584,8 +571,7 @@ export class PlayThief extends TableCardMove {
     private readonly steal_row: number;
     private readonly steal_col: number;
 
-    constructor(current_player: number, table_card_index: table_card_index,
-                row: number, col: number,
+    constructor(current_player: number, table_card_index: number, row: number, col: number,
                 steal_player: number, steal_row: number, steal_col: number) {
         super(current_player, table_card_index, row, col);
         this.steal_player = steal_player;
@@ -625,21 +611,40 @@ export class PlayThief extends TableCardMove {
 // Game state
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export class TicTacToePokerGameState {
+export interface GameOptions {
+    enable_special_cards: boolean,
+}
+
+export interface GameStateObject {
+    status: GameStatus,
+    deck: CardObject[],
+    table_cards: CardObject[],
+    current_player: number,
+    boards: BoardObject[],
+    num_players: number,
+    game_options: GameOptions
+}
+
+export class GameState {
     static readonly NUM_TABLE_CARDS = 5;
 
+    private status: GameStatus;
     private deck: Deck;
     private table_cards: Card[];  // Cards showing on the table
     private current_player: number;
     private boards: Board[];
     private readonly num_players: number;
+    private readonly game_options: GameOptions;
 
-    constructor(num_players: number) {
+    constructor(num_players: number, game_options: GameOptions) {
+        this.status = GameStatus.GameOver;
         this.num_players = num_players;
+        this.game_options = game_options
     }
 
-    public static from_object(obj: TicTacToePokerGameState): TicTacToePokerGameState {
-        let state = new TicTacToePokerGameState(obj.num_players);
+    public static from_object(obj: GameStateObject): GameState {
+        let state = new GameState(obj.num_players, obj.game_options);
+        state.status = obj.status;
         state.deck = [];
         for (let card of obj.deck) {
             state.deck.push(Card.from_object(card));
@@ -659,12 +664,19 @@ export class TicTacToePokerGameState {
 
     // Starts a new game, resetting the state.
     public start_new_game() {
-        this.status = TicTacToePokerGameStatus.Playing;
+        this.status = GameStatus.Playing;
         this.current_player = randInt(0, this.num_players - 1);
-        this.deck = new_deck();
+        this.deck = [];
+        add_standard_cards(this.deck);
+        if (this.game_options.enable_special_cards) {
+            this.deck.push(Card.create_special(CardType.Joker));
+            this.deck.push(Card.create_special(CardType.Joker));
+            this.deck.push(Card.create_special(CardType.Thief));
+        }
+        shuffle(this.deck);
         this.table_cards = [];
 
-        for (let i = 0; i < TicTacToePokerGameState.NUM_TABLE_CARDS; i++) {
+        for (let i = 0; i < GameState.NUM_TABLE_CARDS; i++) {
             this.table_cards.push(this.deck.shift());
         }
 
@@ -678,7 +690,7 @@ export class TicTacToePokerGameState {
     // If it was succesfully applied, returns the empty string and updates the current player.
     // Otherwise, returns a message describing why the move was illegal.
     public apply_move(move: Move): string {
-        if (this.status == TicTacToePokerGameStatus.GameOver) {
+        if (this.status == GameStatus.GameOver) {
             return "the game is over";
         }
 
@@ -695,7 +707,7 @@ export class TicTacToePokerGameState {
 
         if (!this.does_any_player_have_a_valid_move()) {
             // No more valid moves, game over.
-            this.status = TicTacToePokerGameStatus.GameOver;
+            this.status = GameStatus.GameOver;
         }
 
         return "";
@@ -704,7 +716,7 @@ export class TicTacToePokerGameState {
     // Returns the number of non-empty table cards.
     private count_table_cards(): number {
         let result = 0;
-        for (let i = 0; i < TicTacToePokerGameState.NUM_TABLE_CARDS; i++) {
+        for (let i = 0; i < GameState.NUM_TABLE_CARDS; i++) {
             if (!this.table_cards[i].is_empty()) {
                 result++;
             }

@@ -148,3 +148,20 @@ export function shuffle(
         [a[i - 1], a[j]] = [a[j], a[i - 1]];
     }
 }
+
+// Returns cartesian product of arrays, e.g.
+// cartesianProduct([[1, 2], ["x, "y", "z"]]) =
+// [[1, "x"], [1, "y"], [1, "z"], [2, "x"], [2, "y"], [2, "z"]]
+// cartesianProduct([[1, 2]]) = [[1], [2]]
+export function cartesianProduct(possibilities: any[][]): any[][] {
+    if (possibilities.length == 0) {
+        return [];
+    }
+    const acc = possibilities[0].map((e) => [e]);
+    const rest = possibilities.slice(1);
+    return rest.reduce((cur_tuples, next_possibilities) =>
+        cur_tuples.map((cur_tuple) =>
+            next_possibilities.map((possibility) => [...cur_tuple, possibility])
+        ).reduce((a, v) => a.concat(v)), acc
+    );
+}

@@ -1,6 +1,6 @@
 import {
-    TicTacToePokerGameState,
-    TicTacToePokerGameStatus,
+    GameState,
+    GameStatus,
     Board,
     Card,
     CardType,
@@ -23,6 +23,7 @@ describe('ticatctoepoker_gamestate', () => {
 
         it('play normal cards', () => {
             const obj = {
+                status: GameStatus.Playing,
                 deck: [
                     {type: CardType.Normal, suit: Suit.Hearts, value: 7},
                     {type: CardType.Normal, suit: Suit.Hearts, value: 8},
@@ -38,8 +39,9 @@ describe('ticatctoepoker_gamestate', () => {
                 current_player: 0,
                 boards: empty_boards,
                 num_players: 2,
+                game_options: {enable_special_cards: true},
             };
-            let state = TicTacToePokerGameState.from_object(obj);
+            let state = GameState.from_object(obj);
 
             // Player 0
             // Deck: h7 h8 h9
@@ -129,6 +131,7 @@ describe('ticatctoepoker_gamestate', () => {
 
         it('play special cards', () => {
             const obj = {
+                status: GameStatus.Playing,
                 deck: [
                     {type: CardType.Joker},
                     {type: CardType.Thief},
@@ -143,8 +146,9 @@ describe('ticatctoepoker_gamestate', () => {
                 current_player: 0,
                 boards: empty_boards,
                 num_players: 2,
+                game_options: {enable_special_cards: true},
             };
-            let state = TicTacToePokerGameState.from_object(obj);
+            let state = GameState.from_object(obj);
 
             // Player 0
             // Deck: J T
@@ -197,6 +201,7 @@ describe('ticatctoepoker_gamestate', () => {
 
         it('no more table cards means game over', () => {
             const obj = {
+                status: GameStatus.Playing,
                 deck: [],
                 table_cards: [
                     {type: CardType.Normal, suit: Suit.Diamonds, value: 3},
@@ -208,8 +213,9 @@ describe('ticatctoepoker_gamestate', () => {
                 current_player: 0,
                 boards: empty_boards,
                 num_players: 2,
+                game_options: {enable_special_cards: true},
             };
-            let state = TicTacToePokerGameState.from_object(obj);
+            let state = GameState.from_object(obj);
 
             // Play all the cards
             for (let i = 0; i < 5; i++) {
@@ -220,11 +226,11 @@ describe('ticatctoepoker_gamestate', () => {
             }
 
             // Check that the game is over.
-            assert.equal(state.get_status(), TicTacToePokerGameStatus.GameOver);
+            assert.equal(state.get_status(), GameStatus.GameOver);
         });
 
         it('play normal cards until boards full', () => {
-            let state = new TicTacToePokerGameState(2);
+            let state = new GameState(2, {enable_special_cards: false});
             state.start_new_game();
 
             for (let i = 0; i < 9; i++) {
@@ -232,25 +238,21 @@ describe('ticatctoepoker_gamestate', () => {
                     const row = Math.floor(i / 3);
                     const col = i % 3;
 
-                    // Find a normal card to play
-                    for (let t = 0; t < state.get_table_cards().length; t++) {
-                        if (!state.get_table_cards()[t].is_normal()) {
-                            continue;
-                        }
-                        assert.equal(state.apply_move(
-                            new PlayNormalCard(state.get_current_player(), t, row, col)), "");
-                        break;
-                    }
+                    // Since we disabled special cards, all table cards should be normal cards.
+                    assert.equal(state.get_table_cards()[0].is_normal(), true);
+                    assert.equal(state.apply_move(
+                        new PlayNormalCard(state.get_current_player(), 0, row, col)), "");
                 }
             }
 
             // Check that the game is over.
-            assert.equal(state.get_status(), TicTacToePokerGameStatus.GameOver);
+            assert.equal(state.get_status(), GameStatus.GameOver);
         });
 
         it('skip move', () => {
             const d2 = {type: CardType.Normal, suit: Suit.Diamonds, value: 2};
             const obj = {
+                status: GameStatus.Playing,
                 deck: [],
                 table_cards: [d2, d2, d2, d2, d2],
                 current_player: 0,
@@ -259,8 +261,9 @@ describe('ticatctoepoker_gamestate', () => {
                     [[d2, d2, d2], [d2, d2, d2], [d2, d2, d2]]
                 ],
                 num_players: 2,
+                game_options: {enable_special_cards: true},
             };
-            let state = TicTacToePokerGameState.from_object(obj);
+            let state = GameState.from_object(obj);
 
             // Player 0
             assert.equal(state.get_current_player(), 0);
@@ -283,7 +286,7 @@ describe('ticatctoepoker_gamestate', () => {
             assert.equal(state.apply_move(new PlayNormalCard(0, 1, 2, 2)), "");
 
             // Game should be over now.
-            assert.equal(state.get_status(), TicTacToePokerGameStatus.GameOver);
+            assert.equal(state.get_status(), GameStatus.GameOver);
         });
 
 
@@ -398,12 +401,12 @@ describe('tictactoepoker_board', () => {
         assert.strictEqual(board.compute_score(), 540);
     });
 
-    it('compute_score straight descending', () => {
+    it('compute_score straight any order will do', () => {
         let board = Board.create_empty();
 
         board.place_card(0, 0, Card.create_normal(Suit.Diamonds, 4));
-        board.place_card(1, 0, Card.create_normal(Suit.Spades, 3));
-        board.place_card(2, 0, Card.create_normal(Suit.Diamonds, 2));
+        board.place_card(1, 0, Card.create_normal(Suit.Spades, 2));
+        board.place_card(2, 0, Card.create_normal(Suit.Diamonds, 3));
         assert.equal(board.compute_score_with_explanations().explanations.length, 1);
         assert.strictEqual(board.compute_score(), 540);
     });
