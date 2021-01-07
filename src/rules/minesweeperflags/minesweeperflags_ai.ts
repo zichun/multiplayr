@@ -25,7 +25,6 @@ export class MinesweeperflagsAI implements MultiplayrAI {
     }
 }
 
-
 export class MinesweeperflagsAIBasic implements MultiplayrAI {
 
     public onPropsChange(props: MinesweeperflagsViewPropsInterface) {
@@ -36,76 +35,119 @@ export class MinesweeperflagsAIBasic implements MultiplayrAI {
             const rows = board.length;
             const cols = board[0].length;
 
+            let total_empty = 0;
+            for (let r = 0; r < rows; ++r) {
+                for (let c = 0; c < cols; ++c) {
+                    if (board[r][c].el === BoardEl.Unknown) {
+                        total_empty += 1;
+                    }
+                }
+            }
+            const mines_left = props.mines - props.scores[0] - props.scores[1];
+            const base_probability = total_empty === 0 ? 2 * rows * cols : mines_left / total_empty;
+            const probability = Array.from(Array(rows), () => Array.from(Array(cols), () => base_probability));
+
             const cnt_around = (row: number, col: number) => {
                 let mines = 0;
-                let empty = 0;
+                const empties = [];
                 for (let rd = -1; rd <= 1; ++rd) {
                     for (let cd = -1; cd <= 1; ++cd) {
-                        if (row + rd < 0 || row + rd >= rows ||
-                            col + cd <= 0 || col + cd >= cols) {
+                        const r = row + rd;
+                        const c = col + cd;
+
+                        if (r < 0 || r >= rows ||
+                            c < 0 || c >= cols) {
                             continue;
                         }
-                        if (board[row + rd][col + cd].el === BoardEl.Mine) {
+                        if (board[r][c].el === BoardEl.Mine) {
                             ++mines;
-                        } else if (board[row + rd][col + cd].el === BoardEl.Unknown) {
-                            ++empty;
+                        } else if (board[r][c].el === BoardEl.Unknown && probability[r][c] > 0) {
+                            empties.push([r, c]);
                         }
                     }
                 }
-                return [mines, empty];
+                return {
+                    mines: mines,
+                    empties: empties
+                };
             };
+
             const mark_around = (row: number, col: number, new_prob: number) => {
                 for (let rd = -1; rd <= 1; ++rd) {
                     for (let cd = -1; cd <= 1; ++cd) {
                         if (row + rd < 0 || row + rd >= rows ||
-                            col + cd <= 0 || col + cd >= cols) {
+                            col + cd < 0 || col + cd >= cols) {
                             continue;
                         }
                         if (rd === 0 && cd === 0) {
                             continue;
                         }
-                        probability[row + rd][col + cd] = Math.min(new_prob, probability[row + rd][col + cd]);
+                        if (new_prob === 0 || probability[row + rd][col + cd] === 0) {
+                            probability[row + rd][col + cd] = 0;
+                        } else {
+                            probability[row + rd][col + cd] = Math.max(new_prob, probability[row + rd][col + cd]);
+                        }
                     }
                 }
             };
-
-
-            const probability = Array.from(Array(rows), () => Array.from(Array(cols), () => 9));
 
             for (let r = 0; r < rows; ++r) {
                 for (let c = 0; c < cols; ++c) {
                     if (board[r][c].el !== BoardEl.Unknown && board[r][c].el !== BoardEl.Empty &&
                         board[r][c].el !== BoardEl.Mine)
                     {
-                        const [mines_around, empty] = cnt_around(r, c);
+                        const around = cnt_around(r, c);
+                        const mines_around = around.mines;
+                        const empties = around.empties;
+
                         const left = (board[r][c].el as number) - mines_around;
-                        let probability = 9;
-                        if (left > 0) {
-                            probability = empty - left;
-                            mark_around(r, c, probability);
+                        let prob = base_probability;
+                        if (empties.length === 0) {
+                            prob = 0;
+                        } else {
+                            prob = left / empties.length;
                         }
-                        if (r === 3 && c === 12) {
-                            console.log(board[r][c].el, mines_around, empty);
-                        }
+                        mark_around(r, c, prob);
                     }
                 }
             }
-            console.log(probability);
+
+            // recount
+            for (let r = 0; r < rows; ++r) {
+                for (let c = 0; c < cols; ++c) {
+                    if (board[r][c].el !== BoardEl.Unknown && board[r][c].el !== BoardEl.Empty &&
+                        board[r][c].el !== BoardEl.Mine)
+                    {
+                        const around = cnt_around(r, c);
+                        const mines_around = around.mines;
+                        const empties = around.empties;
+
+                        const left = (board[r][c].el as number) - mines_around;
+                        let probability = base_probability;
+                        if (empties.length === 0) {
+                            probability = 0;
+                        } else {
+                            probability = left / empties.length;
+                        }
+                        mark_around(r, c, probability);
+                    }
+                }
+            }
 
             // find best probability square
-            let best_probability = 10;
+            let best_probability = 0;
             let br = 0;
             let bc = 0;
 
             for (let r = 0; r < rows; ++r) {
                 for (let c = 0; c < cols; ++c) {
                     if (board[r][c].el === BoardEl.Unknown) {
-                        if (probability[r][c] <= best_probability) {
-                            if (best_probability === probability[r][c]) {
+                        if (probability[r][c] >= best_probability) {
+/*                            if (best_probability === probability[r][c]) {
                                 if (Math.floor(Math.random() * 4) > 0) {
                                     continue;
                                 }
-                            }
+                            }*/
 
                             best_probability = probability[r][c];
                             br = r;

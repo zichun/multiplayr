@@ -160,7 +160,7 @@ class MinesweeperflagsBoard extends React.Component<MinesweeperflagsViewPropsInt
             for (let rd = -1; rd <= 1; ++rd) {
                 for (let cd = -1; cd <= 1; ++cd) {
                     if (row + rd < 0 || row + rd >= rows ||
-                        col + cd <= 0 || col + cd >= cols) {
+                        col + cd < 0 || col + cd >= cols) {
                         continue;
                     }
                     if (this.props.board[row + rd][col + cd].el === BoardEl.Mine) {
@@ -175,7 +175,7 @@ class MinesweeperflagsBoard extends React.Component<MinesweeperflagsViewPropsInt
             for (let rd = -1; rd <= 1; ++rd) {
                 for (let cd = -1; cd <= 1; ++cd) {
                     if (row + rd < 0 || row + rd >= rows ||
-                        col + cd <= 0 || col + cd >= cols) {
+                        col + cd < 0 || col + cd >= cols) {
                         continue;
                     }
                     impossible[row + rd][col + cd] = true;
@@ -189,6 +189,7 @@ class MinesweeperflagsBoard extends React.Component<MinesweeperflagsViewPropsInt
                 {
                     const cnt = this.props.board[r][c].el as number;
                     if (fulfilled(r, c, cnt)) {
+                        console.log("fulfilled " + r + " " + c);
                         mark_impossible(r, c);
                     }
                 }
@@ -196,6 +197,7 @@ class MinesweeperflagsBoard extends React.Component<MinesweeperflagsViewPropsInt
         }
         return impossible;
     }
+
     public render() {
         const rows = this.props.board.length;
         const cols = this.props.board[0].length;
