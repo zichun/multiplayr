@@ -1,20 +1,8 @@
-import { shuffle, cartesianProduct } from '../../common/utils';
+import { assert, cartesianProduct, shuffle, randInt } from '../../common/utils';
 
 export enum GameStatus {
     Playing,
     GameOver,
-}
-
-// Returns random integer in low..high, inclusive
-function randInt(low: number, high: number): number {
-    return Math.floor(Math.random() * (high - low + 1)) + low;
-}
-
-function assert(cond: boolean, message?: string) {
-    if (!cond) {
-        const error = new Error();
-        throw("assertion failed: " + (message ? message : "") + " call stack: " + error.stack);
-    }
 }
 
 export enum CardType {
@@ -271,7 +259,7 @@ function compute_score(a: Card, b: Card, c: Card): ScoreType {
             return Card.EMPTY;
         })();
 
-        if (pair_card != Card.EMPTY) {
+        if (!pair_card.is_empty()) {
             return {combination_type: CombinationType.Pair, rank_card: pair_card};
         }
 
@@ -357,6 +345,19 @@ export class Board {
             raw_board.push(board_row);
         }
         return new Board(raw_board);
+    }
+
+    public clone(): Board {
+        let result = Board.create_empty();
+        for (let row = 0; row < 3; row++) {
+            for (let col = 0; col < 3; col++) {
+                let card = this.get_card(row, col);
+                if (!card.is_empty()) {
+                    result.place_card(row, col, card.clone());
+                }
+            }
+        }
+        return result;
     }
 
     // Computes the score for the current board.

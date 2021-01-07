@@ -165,3 +165,16 @@ export function cartesianProduct(possibilities: any[][]): any[][] {
         ).reduce((a, v) => a.concat(v)), acc
     );
 }
+
+// Returns random integer in low..high, inclusive
+export function randInt(low: number, high: number): number {
+    return Math.floor(Math.random() * (high - low + 1)) + low;
+}
+
+// Assert given condition is true, throw exception with stack trace if not.
+export function assert(cond: boolean, message?: string) {
+    if (!cond) {
+        const error = new Error();
+        throw("assertion failed: " + (message ? message : "") + " call stack: " + error.stack);
+    }
+}
