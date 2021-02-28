@@ -109,7 +109,7 @@ type Deck = Card[];
 // Add the 52 standard cards to the given deck.
 function add_standard_cards(deck: Deck){
     // Normal cards
-    for (let suit of Object.values(Suit).filter(v => typeof v == "number")) {
+    for (const suit of Object.values(Suit).filter(v => typeof v == "number")) {
         for (let value = 2; value <= 13; value++) {
             deck.push(Card.create_normal(suit as Suit, value));
         }
@@ -190,7 +190,7 @@ export interface ScoreWithExplanations {
 // Return score type for the given three cards (some of all of which may be empty cards)
 function compute_score(a: Card, b: Card, c: Card): ScoreType {
     // Get all normal cards
-    let cards = [];
+    const cards = [];
     if (a.is_normal()) { cards.push(a); }
     if (b.is_normal()) { cards.push(b); }
     if (c.is_normal()) { cards.push(c); }
@@ -201,7 +201,7 @@ function compute_score(a: Card, b: Card, c: Card): ScoreType {
 
         if (cards.length == 3) {
             // Sort cards in ascending order of value
-            let sorted_cards = [cards[0], cards[1], cards[2]]
+            const sorted_cards = [cards[0], cards[1], cards[2]]
             // Note that the Aces have been resolved to 1 or 14, so we don't need to use
             // get_rank_value
             sorted_cards.sort((a, b) => a.get_value() - b.get_value());
@@ -209,8 +209,8 @@ function compute_score(a: Card, b: Card, c: Card): ScoreType {
             // Flush (all same suit)
             const is_flush: boolean = (() => {
                 // All the same suit.
-                let suits = {};
-                for (let card of cards) {
+                const suits = {};
+                for (const card of cards) {
                     suits[card.get_suit()] = true;
                 }
                 if (Object.keys(suits).length != 1) {
@@ -282,7 +282,7 @@ function compute_score(a: Card, b: Card, c: Card): ScoreType {
     // Note the same Ace on the board can be treated differently
     // for the different directions (rows, columns, diagonals)
     let score = {combination_type: CombinationType.None};
-    let possibilities = [];
+    const possibilities = [];
     for (let i = 0; i < cards.length; i++) {
         if (cards[i].get_value() == Card.AceValue) {
             possibilities.push([1, 14]);
@@ -291,8 +291,8 @@ function compute_score(a: Card, b: Card, c: Card): ScoreType {
         }
     }
     const all_combinations = cartesianProduct(possibilities);
-    for (let combination of all_combinations) {
-        let cards_copy = [];
+    for (const combination of all_combinations) {
+        const cards_copy = [];
         for (let i = 0; i < combination.length; i++) {
             cards_copy.push(Card.create_normal(cards[i].get_suit(), combination[i]));
         }
@@ -323,10 +323,10 @@ export class Board {
     }
 
     public static from_object(obj: BoardObject): Board {
-        let raw_board = [];
-        for (let row of obj) {
-            let raw_row = [];
-            for (let cell of row) {
+        const raw_board = [];
+        for (const row of obj) {
+            const raw_row = [];
+            for (const cell of row) {
                 raw_row.push(Card.from_object(cell));
             }
             raw_board.push(raw_row);
@@ -336,9 +336,9 @@ export class Board {
 
     // Creates an empty board.
     public static create_empty(): Board {
-        let raw_board = [];
+        const raw_board = [];
         for (let row = 0; row < 3; row++) {
-            let board_row = [];
+            const board_row = [];
             for (let col = 0; col < 3; col++) {
                 board_row.push(Card.EMPTY);
             }
@@ -348,10 +348,10 @@ export class Board {
     }
 
     public clone(): Board {
-        let result = Board.create_empty();
+        const result = Board.create_empty();
         for (let row = 0; row < 3; row++) {
             for (let col = 0; col < 3; col++) {
-                let card = this.get_card(row, col);
+                const card = this.get_card(row, col);
                 if (!card.is_empty()) {
                     result.place_card(row, col, card.clone());
                 }
@@ -363,7 +363,7 @@ export class Board {
     // Computes the score for the current board.
     public compute_score_with_explanations(): ScoreWithExplanations {
         let total_score = 0;
-        let explanations = [];
+        const explanations = [];
 
         const add_score = (where, score_type) => {
             if (score_type.combination_type == CombinationType.None) {
@@ -400,7 +400,7 @@ export class Board {
     // Place card at (row, col). Returns true if it succeeded and false if the cell was already
     // occupied.
     public place_card(row: number, col: number, card: Card): boolean {
-        let existing_card = this.get_card(row, col);
+        const existing_card = this.get_card(row, col);
         if (!existing_card.is_empty()) {
             return false;
         }
@@ -411,7 +411,7 @@ export class Board {
     // Remove card from (row, col), and return it. Returns the empty card if the cell was
     // already empty to begin with.
     public remove_card(row: number, col: number): Card {
-        let existing_card = this.get_card(row, col);
+        const existing_card = this.get_card(row, col);
         if (existing_card.is_empty()) {
             return Card.EMPTY;
         }
@@ -526,9 +526,9 @@ class TableCardMove extends Move {
             return "selected table card was empty";
         }
 
-        let table_card = table_cards[this.table_card_index];
+        const table_card = table_cards[this.table_card_index];
         // Defer drawing a new table card to later, in case the move is illegal.
-        let result = this.apply_card(table_card, boards);
+        const  result = this.apply_card(table_card, boards);
         if (result != "") {
             return result;
         }
@@ -590,13 +590,13 @@ export class PlayThief extends TableCardMove {
         assert(0 <= this.steal_col);
         assert(this.steal_col < 3);
 
-        let stolen_card = boards[this.steal_player].remove_card(this.steal_row, this.steal_col);
+        const stolen_card = boards[this.steal_player].remove_card(this.steal_row, this.steal_col);
         if (stolen_card.is_empty()) {
             return `there is no card at (${this.steal_row}, ${this.steal_col}) on player ` +
                    `${this.steal_player}'s board`;
         }
 
-        let result = super.apply_card(stolen_card, boards);
+        const result = super.apply_card(stolen_card, boards);
         if (result != "") {
             // Reverse the stealing if the move was illegal.
             assert(boards[this.steal_player].place_card(
@@ -644,19 +644,19 @@ export class GameState {
     }
 
     public static from_object(obj: GameStateObject): GameState {
-        let state = new GameState(obj.num_players, obj.game_options);
+        const state = new GameState(obj.num_players, obj.game_options);
         state.status = obj.status;
         state.deck = [];
-        for (let card of obj.deck) {
+        for (const card of obj.deck) {
             state.deck.push(Card.from_object(card));
         }
         state.table_cards = [];
-        for (let card of obj.table_cards) {
+        for (const card of obj.table_cards) {
             state.table_cards.push(Card.from_object(card));
         }
         state.current_player = obj.current_player;
         state.boards = [];
-        for (let board of obj.boards) {
+        for (const board of obj.boards) {
             state.boards.push(Board.from_object(board));
         }
         return state;
@@ -700,7 +700,7 @@ export class GameState {
                    `${move.get_current_player()}`;
         }
 
-        let result = move.apply(this.deck, this.table_cards, this.boards);
+        const result = move.apply(this.deck, this.table_cards, this.boards);
         if (result != "") {
             return result;
         }
