@@ -15,8 +15,8 @@ import * as assert from 'assert';
 describe('ticatctoepoker_gamestate', () => {
     const ec = {type: CardType.Empty};
     const empty_boards = [
-        [[ec, ec, ec], [ec, ec, ec], [ec, ec, ec]],
-        [[ec, ec, ec], [ec, ec, ec], [ec, ec, ec]]
+        {raw_board: [[ec, ec, ec], [ec, ec, ec], [ec, ec, ec]]},
+        {raw_board: [[ec, ec, ec], [ec, ec, ec], [ec, ec, ec]]},
     ];
 
     describe('tictactoepoker play cards', () => {
@@ -257,8 +257,8 @@ describe('ticatctoepoker_gamestate', () => {
                 table_cards: [d2, d2, d2, d2, d2],
                 current_player: 0,
                 boards: [
-                    [[d2, d2, d2], [d2, d2, d2], [d2, ec, ec]],
-                    [[d2, d2, d2], [d2, d2, d2], [d2, d2, d2]]
+                    {raw_board: [[d2, d2, d2], [d2, d2, d2], [d2, ec, ec]]},
+                    {raw_board: [[d2, d2, d2], [d2, d2, d2], [d2, d2, d2]]},
                 ],
                 num_players: 2,
                 game_options: {enable_special_cards: true},

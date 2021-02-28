@@ -309,7 +309,9 @@ function compute_score(a: Card, b: Card, c: Card): ScoreType {
 // Board
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export type BoardObject = CardObject[][];
+export interface BoardObject {
+    raw_board: CardObject[][];
+}
 
 export class Board {
     private raw_board: Card[][];
@@ -324,7 +326,7 @@ export class Board {
 
     public static from_object(obj: BoardObject): Board {
         const raw_board = [];
-        for (const row of obj) {
+        for (const row of obj.raw_board) {
             const raw_row = [];
             for (const cell of row) {
                 raw_row.push(Card.from_object(cell));
@@ -453,7 +455,7 @@ export class Board {
 
 // Represents a move.
 // All moves have a player playing the move.
-class Move {
+export class Move {
     // The player who is playing this move.
     protected readonly current_player: number;
 
@@ -675,6 +677,11 @@ export class GameState {
             this.deck.push(Card.create_special(CardType.Thief));
         }
         shuffle(this.deck);
+        // HACK FOR DEBUGGING
+        this.deck.unshift(Card.create_special(CardType.Joker));
+        this.deck.unshift(Card.create_special(CardType.Joker));
+        this.deck.unshift(Card.create_special(CardType.Thief));
+
         this.table_cards = [];
 
         for (let i = 0; i < GameState.NUM_TABLE_CARDS; i++) {
@@ -748,6 +755,8 @@ export class GameState {
         assert(player_num < this.boards.length);
         return this.boards[player_num];
     }
+
+    public get_num_players() { return this.num_players; }
 
     public get_current_player() { return this.current_player; }
 

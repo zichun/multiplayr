@@ -26,7 +26,7 @@ module.exports = (env, argv) => {
     }
 };
 
-const localDebugPages = ['avalon', 'coup', 'theoddone', 'decrypto', 'minesweeperflags'];
+const localDebugPages = ['avalon', 'coup', 'theoddone', 'decrypto', 'minesweeperflags', 'tictactoepoker'];
 function DebuggerPages() {
     const entry = {};
     const plugins = localDebugPages.map(debug => {
