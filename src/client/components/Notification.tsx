@@ -6,7 +6,7 @@
  * todo: allow non-modal views, and timer to auto hide.
  */
 
-import * as ReactCSSTransitionGroup from 'react-addons-css-transition-group';
+import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import * as React from 'react';
 
 export class Notification extends React.Component<{
@@ -68,15 +68,17 @@ export class Notification extends React.Component<{
         return (
             <div>
                 { overlay }
-                <ReactCSSTransitionGroup
-                    transitionName='mp-notification'
-                    transitionAppear={ true }
-                    transitionAppearTimeout={ 500 }
-                    transitionLeaveTimeout={ 500 }
-                    transitionLeave={ true }
-                    transitionEnter={ false }>
-                    { children }
-                </ReactCSSTransitionGroup>
+                <TransitionGroup>
+                    {children && (
+                        <CSSTransition
+                            key="mp-notification-content"
+                            classNames="mp-notification"
+                            timeout={{ enter: 500, exit: 500 }}
+                            appear={true}>
+                            {children}
+                        </CSSTransition>
+                    )}
+                </TransitionGroup>
             </div>
         );
     }
