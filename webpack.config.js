@@ -6,6 +6,7 @@ const path = require('path');
 const ForkTsCheckerNotifierWebpackPlugin = require('fork-ts-checker-notifier-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const HtmlWebPackPlugin = require('html-webpack-plugin');
+const ESLintPlugin = require('eslint-webpack-plugin');
 
 module.exports = (env, argv) => {
     const mode = (argv && argv.mode === 'production' ? 'production' : 'development');
@@ -57,6 +58,7 @@ function DebuggerPages() {
         plugins: [
             ...plugins,
             ...ForkTsChecker,
+            ESLintPluginConfig(),
             new webpack.NoEmitOnErrorsPlugin()
         ]
     };
@@ -88,6 +90,7 @@ function IndividualRules() {
         },
         plugins: [
             ...ForkTsChecker,
+            ESLintPluginConfig(),
             new webpack.HotModuleReplacementPlugin(),
             new webpack.NoEmitOnErrorsPlugin()
         ]
@@ -123,6 +126,7 @@ function HostJoinPages() {
                 filename: './join.html',
                 inject: false
             }),
+            ESLintPluginConfig(),
             new webpack.NoEmitOnErrorsPlugin()
         ]
     };
@@ -145,7 +149,10 @@ function AllRulesConfig() {
         mode: 'production',
         resolve: {
             extensions: ['.tsx', '.ts', '.js'],
-        }
+        },
+        plugins: [
+            ESLintPluginConfig()
+        ]
     };
 }
 
@@ -176,7 +183,8 @@ function MultiplayrLibConfig(mode) {
             }
         },
         plugins: [
-            ...ForkTsChecker
+            ...ForkTsChecker,
+            ESLintPluginConfig()
         ]
     };
 }
@@ -218,20 +226,19 @@ const ForkTsChecker = [
     new ForkTsCheckerNotifierWebpackPlugin({ title: 'TypeScript', excludeWarnings: false })
 ];
 
+const ESLintPluginConfig = () => {
+    return new ESLintPlugin({
+        extensions: ['js', 'ts', 'tsx'],
+        exclude: 'node_modules',
+        emitWarning: true,
+        failOnError: true,
+        failOnWarning: false
+    });
+};
+
 const WebModule = (transpileOnly) => {
     return {
         rules: [
-            {
-                enforce: "pre",
-                test: /\.(js|ts|tsx)$/,
-                exclude: /node_modules/,
-                loader: "eslint-loader",
-                options: {
-                    emitWarning: true,
-                    failOnError: true,
-                    failOnWarning: false
-                }
-            },
             {
                 test: /\.html$/i,
                 loader: 'html-loader',
