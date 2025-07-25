@@ -3,7 +3,7 @@
  */
 
 import * as React from 'react';
-import * as ReactCSSTransitionGroup from 'react-addons-css-transition-group';
+import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import FailSound from '../sounds/fail.mp3';
 import PassSound from '../sounds/pass.mp3';
 
@@ -76,17 +76,17 @@ const PlayerTeamVote = (
     className.push(vote ? 'accept' : 'reject');
 
     return (
-        <ReactCSSTransitionGroup
-        transitionName='teamvote'
-        transitionAppear={ true }
-        transitionAppearTimeout={ 1000 }
-        transitionLeaveTimeout={ 0 }
-        transitionLeave={ false }
-        transitionEnter={ false }>
-            <div className={ className.join(' ') }>
-                { vote ? 'Accepted' : 'Rejected' }
-            </div>
-        </ReactCSSTransitionGroup>
+        <TransitionGroup>
+            <CSSTransition
+                key="teamvote"
+                classNames="teamvote"
+                timeout={{ enter: 1000, exit: 0 }}
+                appear={true}>
+                <div className={ className.join(' ') }>
+                    { vote ? 'Accepted' : 'Rejected' }
+                </div>
+            </CSSTransition>
+        </TransitionGroup>
     );
 }
 
