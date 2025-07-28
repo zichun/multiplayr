@@ -24,8 +24,6 @@ import {
     ItoStartGame,
     ItoSubmitClue,
     ItoLockClue,
-    ItoUpdateSort,
-    ItoLockSort,
     ItoNextRound,
     ItoRestartGame
 } from './ItoMethods';
@@ -44,8 +42,9 @@ export const ItoRule: GameRuleInterface = {
         playerNumbers: {},
         clues: {},
         cluesLocked: {},
-        sortOrder: [],
-        sortLocked: false
+        currentTurnPlayer: undefined,
+        lockedPlayers: [],
+        livesLostThisRound: 0
     },
     playerData: {
         secretNumber: 0,
@@ -75,8 +74,9 @@ export const ItoRule: GameRuleInterface = {
         const category = mp.getData('category');
         const clues = mp.getData('clues');
         const cluesLocked = mp.getData('cluesLocked');
-        const sortOrder = mp.getData('sortOrder');
-        const sortLocked = mp.getData('sortLocked');
+        const currentTurnPlayer = mp.getData('currentTurnPlayer');
+        const lockedPlayers = mp.getData('lockedPlayers');
+        const livesLostThisRound = mp.getData('livesLostThisRound');
         const playerNumbers = mp.getData('playerNumbers');
 
         // Get player names and client IDs
@@ -94,8 +94,9 @@ export const ItoRule: GameRuleInterface = {
             mp.setViewProps(clientId, 'category', category);
             mp.setViewProps(clientId, 'clues', clues);
             mp.setViewProps(clientId, 'cluesLocked', cluesLocked);
-            mp.setViewProps(clientId, 'sortOrder', sortOrder);
-            mp.setViewProps(clientId, 'sortLocked', sortLocked);
+            mp.setViewProps(clientId, 'currentTurnPlayer', currentTurnPlayer);
+            mp.setViewProps(clientId, 'lockedPlayers', lockedPlayers);
+            mp.setViewProps(clientId, 'livesLostThisRound', livesLostThisRound);
             mp.setViewProps(clientId, 'names', names);
             mp.setViewProps(clientId, 'clientIds', clientIds);
             
@@ -121,8 +122,6 @@ export const ItoRule: GameRuleInterface = {
         'startGame': ItoStartGame,
         'submitClue': ItoSubmitClue,
         'lockClue': ItoLockClue,
-        'updateSort': ItoUpdateSort,
-        'lockSort': ItoLockSort,
         'nextRound': ItoNextRound,
         'restartGame': ItoRestartGame
     },

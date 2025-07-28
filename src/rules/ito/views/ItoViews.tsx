@@ -66,8 +66,9 @@ interface ItoMainViewProps extends ViewPropsInterface {
     hasLockedClue?: boolean;
     clues: { [clientId: string]: string };
     cluesLocked: { [clientId: string]: boolean };
-    sortOrder: string[];
-    sortLocked: boolean;
+    currentTurnPlayer?: string;
+    lockedPlayers: string[];
+    livesLostThisRound: number;
     names: string[];
     clientIds: string[];
     playerNumbers?: { [clientId: string]: number };
@@ -93,8 +94,6 @@ export class ItoHostMainPage extends React.Component<ItoMainViewProps, {}> {
         switch (this.props.gameState) {
             case ItoGameState.InputClues:
                 return this.renderInputCluesState();
-            case ItoGameState.Sorting:
-                return this.renderSortingState();
             case ItoGameState.Scoring:
                 return this.renderScoringState();
             case ItoGameState.Victory:
@@ -110,77 +109,68 @@ export class ItoHostMainPage extends React.Component<ItoMainViewProps, {}> {
         return (
             <div className="ito-input-clues">
                 <h2>Category: {this.props.category}</h2>
-                <p>Players are entering their clues...</p>
+                <p>Players lock in their clues one by one...</p>
+                {this.props.currentTurnPlayer && (
+                    <div className="ito-current-turn">
+                        <strong>Current Turn: {this.props.names[this.props.clientIds.indexOf(this.props.currentTurnPlayer)]}</strong>
+                    </div>
+                )}
                 <div className="ito-progress">
-                    {Object.keys(this.props.cluesLocked).map(clientId => {
-                        const playerIndex = this.props.clientIds.indexOf(clientId);
-                        const name = this.props.names[playerIndex];
-                        const locked = this.props.cluesLocked[clientId];
-                        return (
-                            <div key={clientId} className={`ito-player-status ${locked ? 'locked' : 'waiting'}`}>
-                                {name}: {locked ? '✓ Locked' : 'Thinking...'}
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        );
-    }
-    
-    private renderSortingState() {
-        return (
-            <div className="ito-sorting">
-                <h2>Sorting Phase</h2>
-                <p>Players are arranging clues from lowest to highest...</p>
-                <div className="ito-clues-display">
-                    {this.props.sortOrder.map((clientId, index) => {
+                    {this.props.lockedPlayers.map((clientId, index) => {
                         const playerIndex = this.props.clientIds.indexOf(clientId);
                         const name = this.props.names[playerIndex];
                         const clue = this.props.clues[clientId];
+                        const number = this.props.playerNumbers![clientId];
                         return (
-                            <div key={clientId} className="ito-clue-item">
-                                <strong>{name}:</strong> {clue}
+                            <div key={clientId} className="ito-locked-player">
+                                <strong>#{index + 1} {name}:</strong> &quot;{clue}&quot; (was {number})
                             </div>
                         );
                     })}
                 </div>
-                {this.props.sortLocked && <div className="ito-sort-locked">✓ Sort Locked In</div>}
+                <div className="ito-waiting-players">
+                    {Object.keys(this.props.cluesLocked).map(clientId => {
+                        if (this.props.cluesLocked[clientId]) return null;
+                        const playerIndex = this.props.clientIds.indexOf(clientId);
+                        const name = this.props.names[playerIndex];
+                        const isCurrentTurn = clientId === this.props.currentTurnPlayer;
+                        return (
+                            <div key={clientId} className={`ito-player-status ${isCurrentTurn ? 'current-turn' : 'waiting'}`}>
+                                {name}: {isCurrentTurn ? 'Thinking...' : 'Waiting for turn'}
+                            </div>
+                        );
+                    })}
+                </div>
+                {this.props.livesLostThisRound > 0 && (
+                    <div className="ito-lives-lost">
+                        <strong>Lives lost this round: {this.props.livesLostThisRound}</strong>
+                    </div>
+                )}
             </div>
         );
     }
     
+    
     private renderScoringState() {
-        const correctOrder = [...this.props.sortOrder].sort((a, b) => 
-            this.props.playerNumbers![a] - this.props.playerNumbers![b]
-        );
-        
-        let errors = 0;
-        for (let i = 0; i < this.props.sortOrder.length - 1; i++) {
-            const currentNum = this.props.playerNumbers![this.props.sortOrder[i]];
-            const nextNum = this.props.playerNumbers![this.props.sortOrder[i + 1]];
-            if (currentNum > nextNum) errors++;
-        }
-        
         return (
             <div className="ito-scoring">
                 <h2>Scoring</h2>
                 <div className="ito-results">
-                    <h3>Your Order:</h3>
-                    {this.props.sortOrder.map((clientId, index) => {
+                    <h3>Final Order:</h3>
+                    {this.props.lockedPlayers.map((clientId, index) => {
                         const playerIndex = this.props.clientIds.indexOf(clientId);
                         const name = this.props.names[playerIndex];
                         const clue = this.props.clues[clientId];
                         const number = this.props.playerNumbers![clientId];
                         return (
                             <div key={clientId} className="ito-result-item">
-                                <strong>{name}:</strong> &quot;{clue}&quot; (was {number})
+                                <strong>#{index + 1} {name}:</strong> &quot;{clue}&quot; (was {number})
                             </div>
                         );
                     })}
                     
                     <div className="ito-score-summary">
-                        <p>Errors: {errors}</p>
-                        <p>Lives Lost: {errors}</p>
+                        <p>Lives Lost This Round: {this.props.livesLostThisRound}</p>
                         <p>Lives Remaining: {this.props.lives}</p>
                     </div>
                 </div>
@@ -213,18 +203,15 @@ export class ItoHostMainPage extends React.Component<ItoMainViewProps, {}> {
 
 export class ItoClientMainPage extends React.Component<ItoMainViewProps, { 
     currentClue: string;
-    draggedIndex: number | null;
 }> {
     constructor(props: ItoMainViewProps) {
         super(props);
         this.state = {
-            currentClue: this.props.clue || '',
-            draggedIndex: null
+            currentClue: this.props.clue || ''
         };
         
         this.handleClueChange = this.handleClueChange.bind(this);
         this.handleLockClue = this.handleLockClue.bind(this);
-        this.handleLockSort = this.handleLockSort.bind(this);
     }
     
     componentDidUpdate(prevProps: ItoMainViewProps) {
@@ -243,10 +230,6 @@ export class ItoClientMainPage extends React.Component<ItoMainViewProps, {
         if (this.state.currentClue.trim()) {
             this.props.MP.lockClue();
         }
-    }
-    
-    private handleLockSort() {
-        this.props.MP.lockSort();
     }
     
     public render() {
@@ -268,8 +251,6 @@ export class ItoClientMainPage extends React.Component<ItoMainViewProps, {
         switch (this.props.gameState) {
             case ItoGameState.InputClues:
                 return this.renderInputCluesState();
-            case ItoGameState.Sorting:
-                return this.renderSortingState();
             case ItoGameState.Scoring:
                 return this.renderScoringState();
             case ItoGameState.Victory:
@@ -282,6 +263,9 @@ export class ItoClientMainPage extends React.Component<ItoMainViewProps, {
     }
     
     private renderInputCluesState() {
+        const isMyTurn = this.props.currentTurnPlayer === this.props.MP.clientId;
+        const canEdit = !this.props.hasLockedClue && isMyTurn;
+        
         return (
             <div className="ito-input-clues">
                 <h2>Category: {this.props.category}</h2>
@@ -289,16 +273,26 @@ export class ItoClientMainPage extends React.Component<ItoMainViewProps, {
                     <strong>Your Secret Number: {this.props.secretNumber}</strong>
                 </div>
                 
+                {this.props.currentTurnPlayer && (
+                    <div className="ito-turn-info">
+                        {isMyTurn ? (
+                            <strong className="ito-my-turn">It&apos;s your turn to lock in your clue!</strong>
+                        ) : (
+                            <span>Waiting for {this.props.names[this.props.clientIds.indexOf(this.props.currentTurnPlayer)]} to lock their clue...</span>
+                        )}
+                    </div>
+                )}
+                
                 <div className="ito-clue-input">
-                    <label>Enter your clue:</label>
+                    <label>Your clue:</label>
                     <input
                         type="text"
                         value={this.state.currentClue}
                         onChange={this.handleClueChange}
-                        disabled={this.props.hasLockedClue}
-                        placeholder="e.g., for animal sizes: &apos;mouse&apos; or &apos;elephant&apos;"
+                        disabled={this.props.hasLockedClue || !isMyTurn}
+                        placeholder="e.g., for animal sizes: 'mouse' or 'elephant'"
                     />
-                    {!this.props.hasLockedClue && (
+                    {canEdit && (
                         <button 
                             onClick={this.handleLockClue}
                             disabled={!this.state.currentClue.trim()}
@@ -311,93 +305,52 @@ export class ItoClientMainPage extends React.Component<ItoMainViewProps, {
                     )}
                 </div>
                 
-                <div className="ito-other-clues">
-                    <h3>Other Players&apos; Clues:</h3>
-                    {Object.keys(this.props.clues).map(clientId => {
-                        if (clientId === this.props.MP.clientId) return null;
-                        
+                <div className="ito-locked-clues">
+                    <h3>Locked Clues (in order):</h3>
+                    {this.props.lockedPlayers.map((clientId, index) => {
                         const playerIndex = this.props.clientIds.indexOf(clientId);
                         const name = this.props.names[playerIndex];
                         const clue = this.props.clues[clientId];
-                        const locked = this.props.cluesLocked[clientId];
-                        
                         return (
-                            <div key={clientId} className="ito-other-clue">
-                                <strong>{name}:</strong> {locked ? clue : '...'}
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        );
-    }
-    
-    private renderSortingState() {
-        return (
-            <div className="ito-sorting">
-                <h2>Sorting Phase</h2>
-                <p>Drag and drop to arrange clues from lowest to highest:</p>
-                
-                <div className="ito-sortable-list">
-                    {this.props.sortOrder.map((clientId, index) => {
-                        const playerIndex = this.props.clientIds.indexOf(clientId);
-                        const name = this.props.names[playerIndex];
-                        const clue = this.props.clues[clientId];
-                        
-                        return (
-                            <div
-                                key={clientId}
-                                className="ito-sortable-item"
-                                draggable={!this.props.sortLocked}
-                                onDragStart={() => this.setState({ draggedIndex: index })}
-                                onDragOver={this.handleDragOver}
-                                onDrop={(e) => this.handleDrop(e, index)}
-                            >
-                                <span className="ito-drag-handle">≡</span>
-                                <strong>{name}:</strong> {clue}
+                            <div key={clientId} className="ito-locked-clue">
+                                <strong>#{index + 1} {name}:</strong> &quot;{clue}&quot;
                             </div>
                         );
                     })}
                 </div>
                 
-                {!this.props.sortLocked && this.props.sortOrder.length > 0 && (
-                    <button onClick={this.handleLockSort} className="ito-lock-sort">
-                        Lock In This Order
-                    </button>
-                )}
-                
-                {this.props.sortLocked && (
-                    <div className="ito-sort-locked">✓ Order Locked In</div>
+                {this.props.livesLostThisRound > 0 && (
+                    <div className="ito-lives-lost">
+                        <strong>Lives lost this round: {this.props.livesLostThisRound}</strong>
+                    </div>
                 )}
             </div>
         );
     }
-    
-    private handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-    };
-    
-    private handleDrop = (e: React.DragEvent, dropIndex: number) => {
-        e.preventDefault();
-        
-        if (this.state.draggedIndex === null || this.props.sortLocked) return;
-        
-        const newOrder = [...this.props.sortOrder];
-        const draggedItem = newOrder[this.state.draggedIndex];
-        
-        newOrder.splice(this.state.draggedIndex, 1);
-        newOrder.splice(dropIndex, 0, draggedItem);
-        
-        this.props.MP.updateSort(newOrder);
-        this.setState({ draggedIndex: null });
-    };
     
     private renderScoringState() {
-        // Same as host view but for client
         return (
             <div className="ito-scoring">
                 <h2>Scoring</h2>
-                <p>Waiting for next round or game end...</p>
+                <p>Round complete! Checking results...</p>
+                <div className="ito-results">
+                    <h3>Final Order:</h3>
+                    {this.props.lockedPlayers.map((clientId, index) => {
+                        const playerIndex = this.props.clientIds.indexOf(clientId);
+                        const name = this.props.names[playerIndex];
+                        const clue = this.props.clues[clientId];
+                        return (
+                            <div key={clientId} className="ito-result-item">
+                                <strong>#{index + 1} {name}:</strong> &quot;{clue}&quot;
+                            </div>
+                        );
+                    })}
+                    
+                    <div className="ito-score-summary">
+                        <p>Lives Lost This Round: {this.props.livesLostThisRound}</p>
+                        <p>Lives Remaining: {this.props.lives}</p>
+                    </div>
+                </div>
             </div>
         );
     }

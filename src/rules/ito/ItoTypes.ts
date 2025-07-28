@@ -5,7 +5,6 @@
 export enum ItoGameState {
     Lobby = 'lobby',
     InputClues = 'input_clues',
-    Sorting = 'sorting',
     Scoring = 'scoring',
     Victory = 'victory',
     Defeat = 'defeat'
@@ -25,8 +24,9 @@ export interface ItoGlobalData {
     playerNumbers: { [clientId: string]: number };
     clues: { [clientId: string]: string };
     cluesLocked: { [clientId: string]: boolean };
-    sortOrder: string[]; // array of clientIds in sorted order
-    sortLocked: boolean;
+    currentTurnPlayer?: string; // Player whose turn it is to lock
+    lockedPlayers: string[]; // Array of clientIds in lock order
+    livesLostThisRound: number;
 }
 
 export interface ItoClueEntry {
