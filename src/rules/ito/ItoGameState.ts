@@ -1,6 +1,6 @@
 /**
  * ItoGameState.ts - Standalone game state management for Ito
- * 
+ *
  * This class represents the complete game state and logic for Ito,
  * independent of the multiplayr framework to enable comprehensive testing.
  */
@@ -27,15 +27,13 @@ export interface GameStateData {
     lives: number;
     category: string;
     players: { [playerId: string]: PlayerState };
-    currentTurnPlayer?: string; // Player whose turn it is to lock
     lockedPlayers: string[]; // Array of player IDs in lock order
-    livesLostThisRound: number;
 }
 
 // Categories for the game
 export const Categories = [
     "Animal sizes (smallest to largest)",
-    "Temperature (coldest to hottest)", 
+    "Temperature (coldest to hottest)",
     "Speed (slowest to fastest)",
     "Height of things (shortest to tallest)",
     "Age of things (youngest to oldest)",
@@ -54,7 +52,7 @@ export class ItoGameState {
         if (playerIds.length < 2 || playerIds.length > 8) {
             throw new Error('Ito requires 2-8 players');
         }
-        
+
         this.playerIds = [...playerIds];
         this.data = {
             status: GameStatus.Lobby,
@@ -63,7 +61,6 @@ export class ItoGameState {
             category: '',
             players: {},
             lockedPlayers: [],
-            livesLostThisRound: 0
         };
 
         // Initialize players
@@ -91,7 +88,7 @@ export class ItoGameState {
         if (this.data.status !== GameStatus.Lobby) {
             throw new Error('Game can only be started from lobby');
         }
-        
+
         this.data.status = GameStatus.InputClues;
         this.data.round = 0;
         this.start_new_round();
@@ -115,8 +112,6 @@ export class ItoGameState {
 
         this.data.category = category;
         this.data.lockedPlayers = [];
-        this.data.currentTurnPlayer = this.playerIds[0]; // First player starts
-        this.data.livesLostThisRound = 0;
         this.data.status = GameStatus.InputClues;
     }
 
@@ -131,10 +126,6 @@ export class ItoGameState {
 
         if (this.data.players[playerId].hasLockedClue) {
             throw new Error('Player has already locked their clue');
-        }
-
-        if (this.data.currentTurnPlayer !== playerId) {
-            throw new Error(`It's not ${playerId}'s turn to submit`);
         }
 
         if (clue === null || clue === undefined) {
@@ -158,10 +149,6 @@ export class ItoGameState {
             throw new Error('Player has already locked their clue');
         }
 
-        if (this.data.currentTurnPlayer !== playerId) {
-            throw new Error(`It's not ${playerId}'s turn to lock`);
-        }
-
         if (!player.clue || player.clue.trim() === '') {
             throw new Error('Cannot lock empty clue');
         }
@@ -173,9 +160,6 @@ export class ItoGameState {
 
         // Check for immediate scoring
         this.check_immediate_scoring();
-
-        // Move to next player's turn
-        this.advance_turn();
 
         // Check if round is complete
         if (this.data.lockedPlayers.length === this.playerIds.length) {
@@ -197,32 +181,11 @@ export class ItoGameState {
 
         if (currentNumber < previousNumber) {
             this.data.lives--;
-            this.data.livesLostThisRound++;
-        }
-    }
-
-    private advance_turn(): void {
-        const unlockedPlayers = this.playerIds.filter(id => !this.data.players[id].hasLockedClue);
-        
-        if (unlockedPlayers.length > 0) {
-            // Find next player in turn order
-            const currentIndex = this.playerIds.indexOf(this.data.currentTurnPlayer!);
-            let nextIndex = (currentIndex + 1) % this.playerIds.length;
-            
-            // Skip already locked players
-            while (this.data.players[this.playerIds[nextIndex]].hasLockedClue) {
-                nextIndex = (nextIndex + 1) % this.playerIds.length;
-            }
-            
-            this.data.currentTurnPlayer = this.playerIds[nextIndex];
-        } else {
-            this.data.currentTurnPlayer = undefined;
         }
     }
 
     private complete_round(): void {
         this.data.status = GameStatus.Scoring;
-        
         // Don't automatically process round completion - let tests/UI control timing
     }
 
@@ -230,7 +193,7 @@ export class ItoGameState {
         if (this.data.lives <= 0) {
             this.data.status = GameStatus.Defeat;
         } else if (this.data.round >= 2) { // Completed 3 rounds (0, 1, 2)
-            this.data.status = GameStatus.Victory;  
+            this.data.status = GameStatus.Victory;
         } else {
             this.data.round++;
             this.start_new_round();
@@ -254,8 +217,6 @@ export class ItoGameState {
         this.data.lives = this.playerIds.length;
         this.data.category = '';
         this.data.lockedPlayers = [];
-        this.data.currentTurnPlayer = undefined;
-        this.data.livesLostThisRound = 0;
 
         // Reset all player states
         for (const playerId of this.playerIds) {
@@ -271,7 +232,7 @@ export class ItoGameState {
     private generate_unique_numbers(count: number): number[] {
         const numbers = [];
         const used = new Set<number>();
-        
+
         while (numbers.length < count) {
             const num = Math.floor(Math.random() * 100) + 1; // 1-100
             if (!used.has(num)) {
@@ -279,7 +240,7 @@ export class ItoGameState {
                 numbers.push(num);
             }
         }
-        
+
         return numbers;
     }
 
@@ -304,10 +265,6 @@ export class ItoGameState {
         return this.data.category;
     }
 
-    public get_current_turn_player(): string | undefined {
-        return this.data.currentTurnPlayer;
-    }
-
     public get_player_data(playerId: string): PlayerState | undefined {
         return this.data.players[playerId];
     }
@@ -318,14 +275,6 @@ export class ItoGameState {
 
     public get_locked_players(): string[] {
         return [...this.data.lockedPlayers];
-    }
-
-    public get_lives_lost_this_round(): number {
-        return this.data.livesLostThisRound;
-    }
-
-    public is_player_turn(playerId: string): boolean {
-        return this.data.currentTurnPlayer === playerId;
     }
 
     public get_player_ids(): string[] {
