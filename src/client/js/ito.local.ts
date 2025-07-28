@@ -59,7 +59,7 @@ $(() => {
     const statesS = sessionStorage.getItem('debuggerGameStates');
 
     _mplib.MultiplayR.Host(
-        'ito',
+        'ito-debug',
         transport,
         document.getElementById('host-container'),
         (res) => {
