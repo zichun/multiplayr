@@ -12,6 +12,7 @@ import { AvalonRule } from './avalon/avalon';
 import { DecryptoRule } from './decrypto/decrypto';
 import { MinesweeperFlagsRule } from './minesweeperflags/minesweeperflags';
 import { TicTacToePokerRule } from './tictactoepoker/tictactoepoker_rule';
+import { ItoRule } from './ito/ito';
 
 const CoupDebugger = NewDebuggerRule(
     'coup',
@@ -87,6 +88,11 @@ export const MPRULES = {
         description: 'Tic-tac-toe Poker',
         rules: ['gameshell', 'tictactoepoker'],
         rule: TicTacToePokerRule
+    },
+    'ito': {
+        description: 'Ito - Cooperative Number Game',
+        rules: ['lobby', 'gameshell', 'ito'],
+        rule: ItoRule
     },    
     'coup-debug': {
         description: 'Coup - Resistance (Debug)',
