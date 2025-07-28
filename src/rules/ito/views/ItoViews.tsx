@@ -173,7 +173,7 @@ export class ItoHostMainPage extends React.Component<ItoMainViewProps, {}> {
                         const number = this.props.playerNumbers![clientId];
                         return (
                             <div key={clientId} className="ito-result-item">
-                                <strong>{name}:</strong> "{clue}" (was {number})
+                                <strong>{name}:</strong> &quot;{clue}&quot; (was {number})
                             </div>
                         );
                     })}
@@ -296,7 +296,7 @@ export class ItoClientMainPage extends React.Component<ItoMainViewProps, {
                         value={this.state.currentClue}
                         onChange={this.handleClueChange}
                         disabled={this.props.hasLockedClue}
-                        placeholder="e.g., for animal sizes: 'mouse' or 'elephant'"
+                        placeholder="e.g., for animal sizes: &apos;mouse&apos; or &apos;elephant&apos;"
                     />
                     {!this.props.hasLockedClue && (
                         <button 
@@ -312,7 +312,7 @@ export class ItoClientMainPage extends React.Component<ItoMainViewProps, {
                 </div>
                 
                 <div className="ito-other-clues">
-                    <h3>Other Players' Clues:</h3>
+                    <h3>Other Players&apos; Clues:</h3>
                     {Object.keys(this.props.clues).map(clientId => {
                         if (clientId === this.props.MP.clientId) return null;
                         
