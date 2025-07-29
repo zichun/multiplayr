@@ -44,20 +44,12 @@ export const ItoStartGame = (mp: MPType) => {
 };
 
 export const ItoSubmitClue = (mp: MPType, clientId: string, clue: string) => {
-    if (clientId === mp.hostId) {
-        throw new Error('Host cannot submit a clue');
-    }
-
     const gameState = getGameState(mp);
     gameState.submit_clue(clientId, clue);
     syncGameStateToMP(mp, gameState);
 };
 
 export const ItoLockClue = (mp: MPType, clientId: string) => {
-    if (clientId === mp.hostId) {
-        throw new Error('Host cannot lock a clue');
-    }
-
     const gameState = getGameState(mp);
     gameState.lock_clue(clientId);
     syncGameStateToMP(mp, gameState);
@@ -74,7 +66,7 @@ export const ItoNextRound = (mp: MPType, clientId: string) => {
     if (data.status !== GameStatus.Scoring) {
         throw new Error('Cannot start next round in current state');
     }
-
+    gameState.next_round();
     // This is handled automatically by the GameState class
     // Just sync the current state
     syncGameStateToMP(mp, gameState);
@@ -88,6 +80,12 @@ export const ItoRestartGame = (mp: MPType, clientId: string) => {
     const gameState = getGameState(mp);
     gameState.restart_game();
     syncGameStateToMP(mp, gameState);
+};
+
+export const ItoBackToLobby = (mp: MPType, clientId: string) => {
+   if (clientId !== mp.hostId) {
+        throw new Error('Only host can return to lobby');
+    }
 
     mp.setData('lobby_started', false);
-};
+}

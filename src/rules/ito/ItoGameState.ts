@@ -5,6 +5,8 @@
  * independent of the multiplayr framework to enable comprehensive testing.
  */
 
+import { Categories } from './ItoCategories';
+
 export enum GameStatus {
     Lobby,
     InputClues,
@@ -30,19 +32,9 @@ export interface GameStateData {
     lockedPlayers: string[]; // Array of player IDs in lock order
 }
 
-// Categories for the game
-export const Categories = [
-    "Animal sizes (smallest to largest)",
-    "Temperature (coldest to hottest)",
-    "Speed (slowest to fastest)",
-    "Height of things (shortest to tallest)",
-    "Age of things (youngest to oldest)",
-    "Brightness (dimmest to brightest)",
-    "Loudness (quietest to loudest)",
-    "Weight (lightest to heaviest)",
-    "Distance from Earth (closest to farthest)",
-    "Popularity (least to most popular)"
-];
+function get_lives_from_players(player_cnt: number): number {
+    return 3 + Math.ceil((player_cnt - 3) * .5);
+}
 
 export class ItoGameState {
     private data: GameStateData;
@@ -57,7 +49,7 @@ export class ItoGameState {
         this.data = {
             status: GameStatus.Lobby,
             round: 0,
-            lives: playerIds.length,
+            lives: get_lives_from_players(playerIds.length),
             category: '',
             players: {},
             lockedPlayers: [],
@@ -132,7 +124,6 @@ export class ItoGameState {
             throw new Error('Clue cannot be null or undefined');
         }
 
-        console.log(this.data.players[playerId].clue);
         this.data.players[playerId].clue = clue.trim();
     }
 
@@ -148,10 +139,6 @@ export class ItoGameState {
         const player = this.data.players[playerId];
         if (player.hasLockedClue) {
             throw new Error('Player has already locked their clue');
-        }
-
-        if (!player.clue || player.clue.trim() === '') {
-            throw new Error('Cannot lock empty clue');
         }
 
         // Lock the clue
@@ -183,6 +170,10 @@ export class ItoGameState {
         if (currentNumber < previousNumber) {
             this.data.lives--;
         }
+
+        if (this.data.lives <= 0) {
+            this.data.status = GameStatus.Scoring;
+        }
     }
 
     private complete_round(): void {
@@ -201,6 +192,13 @@ export class ItoGameState {
         }
     }
 
+    public next_round(): void {
+        if (this.data.lives > 0) {
+            this.data.round++;
+            this.start_new_round();
+        }
+    }
+
     // Method to force round completion processing (for UI layer timing)
     public force_round_completion(): void {
         if (this.data.status === GameStatus.Scoring) {
@@ -209,25 +207,10 @@ export class ItoGameState {
     }
 
     public restart_game(): void {
-        if (this.data.status !== GameStatus.Victory && this.data.status !== GameStatus.Defeat) {
-            throw new Error('Can only restart from victory or defeat state');
-        }
-
-        this.data.status = GameStatus.Lobby;
+        this.data.status = GameStatus.InputClues;
         this.data.round = 0;
-        this.data.lives = this.playerIds.length;
-        this.data.category = '';
-        this.data.lockedPlayers = [];
-
-        // Reset all player states
-        for (const playerId of this.playerIds) {
-            this.data.players[playerId] = {
-                id: playerId,
-                secretNumber: 0,
-                clue: '',
-                hasLockedClue: false
-            };
-        }
+        this.data.lives = get_lives_from_players(this.playerIds.length);
+        this.start_new_round();
     }
 
     private generate_unique_numbers(count: number): number[] {

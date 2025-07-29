@@ -331,3 +331,128 @@
         }
     }
 }
+.ito-input-clues-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    font-family: sans-serif;
+
+    h2, h3 {
+        border-bottom: 4px solid #000;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+
+    .ito-your-info {
+        text-align: center;
+        .category-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4a90e2;
+            margin-bottom: 10px;
+        }
+        .secret-number-display {
+            display: inline-block;
+            background: #f5c342;
+            color: #000;
+            font-size: 2.5em;
+            font-weight: bold;
+            padding: 20px 30px;
+            border: 4px solid #000;
+            margin-top: 10px;
+        }
+    }
+
+    .player-row {
+        gap: 15px;
+        padding: 10px;
+        border: 2px solid #000;
+        margin-bottom: 10px;
+
+        &.locked {
+            background-color: #eee;
+            &.out-of-order {
+                .player-number {
+                    color: #e5783f; // Red for penalty
+                    text-decoration: line-through;
+                }
+            }
+        }
+
+        &.current-user {
+            border-left: 8px solid #457fc4; // Blue for current user
+        }
+
+        .player-tag-container {
+            // Styling for the player tag will be inherited from the lobby plugin
+        }
+
+        .player-clue-number {
+            position: relative;
+
+            .player-tag-clue {
+                margin-right: 15px;
+            }
+            .player-clue {
+                font-style: italic;
+            }
+
+            .player-number {
+                position: absolute;
+                display: block;
+                height: 20px;
+                margin-top: -10px;
+                top: 50%;
+                right: 0px;
+                font-weight: bold;
+                font-size: 1.5em;
+                text-align: center;
+            }
+
+            .ito-enterclue {
+                height: 100%;
+                display: flex;
+                width: 100%;
+                flex-direction: column;
+            }
+        }
+    }
+
+    .lock-in-button {
+        background: #48b975; // Green
+        color: white;
+        border: 4px solid #000;
+        padding: 15px 25px;
+        font-size: 1.2em;
+        font-weight: bold;
+        cursor: pointer;
+        align-self: center;
+        margin-top: 20px;
+        transition: background-color 0.2s;
+
+        &:hover {
+            background-color: darken(#48b975, 10%);
+        }
+    }
+
+    hr {
+        border: none;
+        border-top: 4px solid #000;
+        margin: 20px 0;
+    }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+    .ito-input-clues-container {
+        .player-row {
+            grid-template-columns: 1fr;
+            text-align: center;
+
+            .player-tag-container {
+                margin-bottom: 10px;
+            }
+        }
+    }
+}

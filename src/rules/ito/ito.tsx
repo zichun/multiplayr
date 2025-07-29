@@ -22,14 +22,15 @@ import {
     ItoSubmitClue,
     ItoLockClue,
     ItoNextRound,
-    ItoRestartGame
+    ItoRestartGame,
+    ItoBackToLobby
 } from './ItoMethods';
 
 import { ItoGameState } from './ItoGameState';
 
 export const ItoRule: GameRuleInterface = {
-        name: 'ito',
-        plugins: {
+    name: 'ito',
+    plugins: {
         'lobby': Lobby,
         'gameshell': Shell
     },
@@ -70,6 +71,7 @@ export const ItoRule: GameRuleInterface = {
             mp.setViewProps(clientId, 'round', gameState.get_round());
             mp.setViewProps(clientId, 'lives', gameState.get_lives());
             mp.setViewProps(clientId, 'locked', gameState.get_locked_data());
+            mp.setViewProps(clientId, 'isHost', clientId === mp.hostId);
             if (player_data) { // temp hack
                 mp.setViewProps(clientId, 'clue', player_data.clue);
                 mp.setViewProps(clientId, 'secretNumber', player_data.secretNumber);
@@ -97,7 +99,8 @@ export const ItoRule: GameRuleInterface = {
         'submitClue': ItoSubmitClue,
         'lockClue': ItoLockClue,
         'nextRound': ItoNextRound,
-        'restartGame': ItoRestartGame
+        'restartGame': ItoRestartGame,
+        'backToLobby': ItoBackToLobby,
     },
 
     views: {
