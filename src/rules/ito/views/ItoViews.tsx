@@ -20,7 +20,7 @@ export class ItoHostLobby extends React.Component<ViewPropsInterface, {}> {
                     'home': {
                         'icon': 'home',
                         'label': 'Lobby',
-                        'view': mp.getPluginView('lobby', 'Lobby')
+                        'view': mp.getPluginView('lobby', 'LobbyWithHostName')
                     },
                     'clients': {
                         'icon': 'users',
