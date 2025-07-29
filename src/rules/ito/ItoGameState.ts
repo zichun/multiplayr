@@ -132,6 +132,7 @@ export class ItoGameState {
             throw new Error('Clue cannot be null or undefined');
         }
 
+        console.log(this.data.players[playerId].clue);
         this.data.players[playerId].clue = clue.trim();
     }
 
@@ -271,6 +272,23 @@ export class ItoGameState {
 
     public get_all_players(): PlayerState[] {
         return this.playerIds.map(id => this.data.players[id]);
+    }
+
+    public get_clues(): { [playerId: string]: string } {
+        return Object.fromEntries(
+            this.playerIds.map(id => [id, this.data.players[id].clue]));
+    }
+
+    public get_locked_data(): object[] {
+        const self = this;
+        return self.data.lockedPlayers.map(id => {
+            const data = self.get_player_data(id);
+            return {
+                "clientId": id,
+                "clue": data.clue,
+                "secretNumber": data.secretNumber
+            };
+        });
     }
 
     public get_locked_players(): string[] {

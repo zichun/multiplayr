@@ -11,13 +11,10 @@ import {
     MPType
 } from '../../common/interfaces';
 
-import { ItoGameState } from './ItoTypes';
-
 import {
     ItoHostLobby,
     ItoClientLobby,
-    ItoHostMainPage,
-    ItoClientMainPage
+    ItoMainPage,
 } from './views/ItoViews';
 
 import {
@@ -28,9 +25,11 @@ import {
     ItoRestartGame
 } from './ItoMethods';
 
+import { ItoGameState } from './ItoGameState';
+
 export const ItoRule: GameRuleInterface = {
-    name: 'ito',
-    plugins: {
+        name: 'ito',
+        plugins: {
         'lobby': Lobby,
         'gameshell': Shell
     },
@@ -55,27 +54,39 @@ export const ItoRule: GameRuleInterface = {
         }
 
         // Game has started, set up main game views
-        const gameState = mp.getData('gameState');
+        let gameState = mp.getData('gameState');
+        if (!gameState.get_player_data) {
+            gameState = ItoGameState.from_data(gameState.data, gameState.playerIds);
+            mp.setData('gameState', gameState);
+        }
 
-        // Get player names and client IDs
-        const names = mp.getPlayersData('lobby_name');
-        const clientIds = [];
-        mp.playersForEach((clientId) => {
-            clientIds.push(clientId);
-        });
+        function setViewProps(mp: MPType, clientId: string) {
+            const player_data = gameState.get_player_data(clientId);
+
+            // Set individual player data
+            mp.setViewProps(clientId, 'clues', gameState.get_clues());
+            mp.setViewProps(clientId, 'gameStatus', gameState.get_status());
+            mp.setViewProps(clientId, 'category', gameState.get_category());
+            mp.setViewProps(clientId, 'round', gameState.get_round());
+            mp.setViewProps(clientId, 'lives', gameState.get_lives());
+            mp.setViewProps(clientId, 'locked', gameState.get_locked_data());
+            if (player_data) { // temp hack
+                mp.setViewProps(clientId, 'clue', player_data.clue);
+                mp.setViewProps(clientId, 'secretNumber', player_data.secretNumber);
+                mp.setViewProps(clientId, 'hasLockedClue', player_data.hasLockedClue);
+            }
+        }
 
         // Set common props for all players
         mp.playersForEach((clientId) => {
-            // Set individual player data
-            mp.setViewProps(clientId, 'secretNumber', mp.getPlayerData(clientId, gameState.get_player_number(clientId)));
-            mp.setViewProps(clientId, 'category', mp.getPlayerData(clientId, gameState.get_category()));
-            mp.setViewProps(clientId, 'hasLockedClue', mp.getPlayerData(clientId, 'hasLockedClue'));
+            setViewProps(mp, clientId);
         });
+        setViewProps(mp, mp.hostId);
 
         // Set views
-        mp.setView(mp.hostId, 'host-mainpage');
+        mp.setView(mp.hostId, 'mainpage');
         mp.playersForEach((clientId) => {
-            mp.setView(clientId, 'client-mainpage');
+            mp.setView(clientId, 'mainpage');
         });
 
         return true;
@@ -92,8 +103,7 @@ export const ItoRule: GameRuleInterface = {
     views: {
         'host-lobby': ItoHostLobby,
         'client-lobby': ItoClientLobby,
-        'host-mainpage': ItoHostMainPage,
-        'client-mainpage': ItoClientMainPage
+        'mainpage': ItoMainPage,
     }
 };
 

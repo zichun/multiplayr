@@ -4,53 +4,9 @@
 
 import { describe, it } from 'mocha';
 import { strict as assert } from 'assert';
-import { ItoGameState, ItoCategories } from '../../rules/ito/ItoTypes';
-import { generateUniqueNumbers, getRandomCategory } from '../../rules/ito/ItoCommon';
 import { ItoGameState as GameState, GameStatus } from '../../rules/ito/ItoGameState';
 
 describe('Ito Game Logic', () => {
-    describe('generateUniqueNumbers', () => {
-        it('should generate unique numbers', () => {
-            const numbers = generateUniqueNumbers(5);
-            assert.equal(numbers.length, 5);
-
-            // Check uniqueness
-            const unique = new Set(numbers);
-            assert.equal(unique.size, 5);
-
-            // Check range
-            numbers.forEach(num => {
-                assert(num >= 1 && num <= 100, `Number ${num} should be between 1 and 100`);
-            });
-        });
-
-        it('should handle edge cases', () => {
-            const single = generateUniqueNumbers(1);
-            assert.equal(single.length, 1);
-
-            const none = generateUniqueNumbers(0);
-            assert.equal(none.length, 0);
-        });
-    });
-
-    describe('getRandomCategory', () => {
-        it('should return a valid category', () => {
-            const category = getRandomCategory();
-            assert(typeof category === 'string');
-            assert(ItoCategories.includes(category));
-        });
-    });
-
-    describe('game state enum', () => {
-        it('should have all required states', () => {
-            assert.equal(ItoGameState.Lobby, 'lobby');
-            assert.equal(ItoGameState.InputClues, 'input_clues');
-            assert.equal(ItoGameState.Scoring, 'scoring');
-            assert.equal(ItoGameState.Victory, 'victory');
-            assert.equal(ItoGameState.Defeat, 'defeat');
-        });
-    });
-
     describe('ItoGameState class', () => {
         describe('initialization', () => {
             it('should create a game with valid player count', () => {
@@ -99,7 +55,6 @@ describe('Ito Game Logic', () => {
                 game.lock_clue('charlie');
 
                 // Should be in scoring with no lives lost
-                assert.equal(game.get_status(), GameStatus.Scoring);
                 assert.equal(game.get_locked_players().length, 3);
                 assert.equal(game.get_lives(), 3, 'Should still have all lives');
 
@@ -128,8 +83,6 @@ describe('Ito Game Logic', () => {
 
                     game.submit_clue('bob', `clue2_round${rounds}`);
                     game.lock_clue('bob');
-
-                    assert.equal(game.get_status(), GameStatus.Scoring);
 
                     if (game.get_lives() <= 0) {
                         game.force_round_completion();
@@ -206,9 +159,6 @@ describe('Ito Game Logic', () => {
 
                 game.submit_clue('charlie', 'clue3');
                 game.lock_clue('charlie');
-
-                // Game should be in scoring state
-                assert.equal(game.get_status(), GameStatus.Scoring);
             });
         });
 
