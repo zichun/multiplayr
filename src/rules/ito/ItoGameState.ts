@@ -8,7 +8,6 @@
 import { Categories } from './ItoCategories';
 
 export enum GameStatus {
-    Lobby,
     InputClues,
     Scoring,
     Victory,
@@ -47,7 +46,7 @@ export class ItoGameState {
 
         this.playerIds = [...playerIds];
         this.data = {
-            status: GameStatus.Lobby,
+            status: GameStatus.InputClues,
             round: 0,
             lives: get_lives_from_players(playerIds.length),
             category: '',
@@ -77,10 +76,6 @@ export class ItoGameState {
     }
 
     public start_game(): void {
-        if (this.data.status !== GameStatus.Lobby) {
-            throw new Error('Game can only be started from lobby');
-        }
-
         this.data.status = GameStatus.InputClues;
         this.data.round = 0;
         this.start_new_round();
