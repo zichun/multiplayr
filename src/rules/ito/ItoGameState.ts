@@ -258,9 +258,8 @@ export class ItoGameState {
     }
 
     public get_locked_data(): object[] {
-        const self = this;
-        return self.data.lockedPlayers.map(id => {
-            const data = self.get_player_data(id);
+        return this.data.lockedPlayers.map(id => {
+            const data = this.get_player_data(id);
             return {
                 "clientId": id,
                 "clue": data.clue,

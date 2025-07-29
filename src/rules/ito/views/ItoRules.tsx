@@ -10,7 +10,7 @@ const ItoRuleComponent = class extends React.Component<{}, {}> {
                     <p>You have 3 rounds and lives that scales with the number of players.</p>
                     <p>Lose a life for each number locked in that is out of order.</p>
                     <p>You can communicate and change your input clues before locking in to add specificity.</p>
-                    <p>Your clues should ideally be a noun, but can include qualifying adjectives, e.g. "Supermarket tuna rice ball on sale".</p>
+                    <p>Your clues should ideally be a noun, but can include qualifying adjectives, e.g. &quot;Supermarket tuna rice ball on sale&quot;.</p>
                     <p>However, clues and communications should never mention, reference, or hint at, numerical values.</p>
                 </div>
             </div>

@@ -79,10 +79,6 @@ interface ItoMainViewProps extends ViewPropsInterface {
 
 function MainPage(props: ItoMainViewProps) {
     switch (props.gameStatus) {
-        case GameStatus.Lobby: {
-            console.error("Invalid state");
-            break;
-        }
         case GameStatus.Scoring:
         case GameStatus.InputClues: {
             return React.createElement(ItoInputClues, props);
@@ -249,7 +245,7 @@ export class ItoMainPage extends React.Component<ItoMainViewProps, {}> {
     public render() {
         const mp = this.props.MP;
 
-        let links = {
+        const links = {
             'home': {
                 'icon': 'gamepad',
                 'label': 'Ito',

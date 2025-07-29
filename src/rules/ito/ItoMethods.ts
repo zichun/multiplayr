@@ -34,7 +34,7 @@ export const ItoStartGame = (mp: MPType) => {
         return;
     }
 
-    let players = [];
+    const players = [];
     mp.playersForEach((clientId) => players.push(clientId));
     const gameState = new GameState(players);
     gameState.start_game();

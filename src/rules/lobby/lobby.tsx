@@ -46,14 +46,23 @@ export const Lobby: GameRuleInterface = {
     plugins: {},
 
     globalData: {
-        started: false
+        started: false,
+        hostName: "Host",
+        icon: () => {
+            return Math.floor(Math.random() * icons.length);
+        },
+        accent: () => {
+            return '';
+        }
     },
 
     playerData: {
-        name: () => {
-            const chance = new Chance();
-            return chance.name({ nationality: 'en' });
-        },
+        name: ""
+        // () => {
+        //    const chance = new Chance();
+        //    return chance.name({ nationality: 'en' });
+        //}
+        ,
         icon: () => {
             return Math.floor(Math.random() * icons.length);
         },
@@ -134,6 +143,20 @@ export const Lobby: GameRuleInterface = {
 
             public startGame() {
                 const mp = this.props.MP;
+                const names = this.props.names;
+                let allFilled = true;
+
+                for (let i = 0; i < names.length; i++) {
+                    if (names[i].trim().length < 1) {
+                        allFilled = false;
+                        break;
+                    }
+                }
+                if (!allFilled) {
+                    mp.showError('Please fill in all player names before starting the game.');
+                    return;
+                }
+
                 mp.parent.startGame();
             }
 
