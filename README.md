@@ -138,10 +138,3 @@ An example packet from a host gameobj setting a view on a client may look someth
 ```
 
 ![Packet Example](/images/packet_example.png)
-
-## Todo
-
-1. Document the layers of multiplayr
-2. Complete typing for gamerules
-3. Fix reconnect logic (move clientId to session instead of transport)
-4. Write Unit Tests
