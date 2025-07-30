@@ -22,7 +22,7 @@ const syncGameStateToMP = (mp: MPType, gameState: GameState) => {
 };
 
 export const ItoStartGame = (mp: MPType) => {
-    const playerCount = mp.playersCount();
+    const playerCount = mp.playersCount() + 1; // Host is a player
 
     if (playerCount < 3) {
         alert('We need at least 3 players to play Ito');

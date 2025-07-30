@@ -94,7 +94,7 @@ export class LobbyView extends React.Component<LobbyViewInterface, {}> {
         const createHello = (names, icons, accents) => {
             const tr = [];
 
-            for (let i = 0; i < names.length; i = i + 1) {
+            for (let i = 0; i < names.length - 1; i = i + 1) {
                 tr.push(
                     React.createElement(
                         LobbyHelloView,
