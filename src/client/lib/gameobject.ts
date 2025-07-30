@@ -1275,7 +1275,7 @@ export class GameObject {
          * Exposes local variable store as synchronous operations
          */
         return (variable: string) => {
-            if (store[variable] === undefined) {
+            if (!store.hasOwnProperty(variable)) {
                 throw (new Error('Variable ' + variable + ' is not declared'));
             }
 
