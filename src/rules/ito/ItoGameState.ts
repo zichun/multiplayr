@@ -40,10 +40,6 @@ export class ItoGameState {
     private readonly playerIds: string[];
 
     constructor(playerIds: string[]) {
-        if (playerIds.length < 2 || playerIds.length > 8) {
-            throw new Error('Ito requires 2-8 players');
-        }
-
         this.playerIds = [...playerIds];
         this.data = {
             status: GameStatus.InputClues,
