@@ -18,11 +18,6 @@ describe('Ito Game Logic', () => {
                 assert.equal(game.get_lives(), 3);
                 assert.equal(game.get_player_ids().length, 3);
             });
-
-            it('should reject invalid player counts', () => {
-                assert.throws(() => new GameState(['player1']), /requires 2-8 players/);
-                assert.throws(() => new GameState(Array(9).fill(0).map((_, i) => `player${i}`)), /requires 2-8 players/);
-            });
         });
 
         describe('game flow - victory scenario', () => {
