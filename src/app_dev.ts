@@ -43,7 +43,8 @@ const paths = {
     'decrypto': 'decrypto.html',
     'coup': 'coup.html',
     'avalon': 'avalon.html',
-    'ito': 'ito.html'
+    'ito': 'ito.html',
+    'drawing': 'drawing.html'
 };
 
 for (const key of Object.keys(paths)) {

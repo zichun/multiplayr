@@ -13,6 +13,7 @@ import { DecryptoRule } from './decrypto/decrypto';
 import { MinesweeperFlagsRule } from './minesweeperflags/minesweeperflags';
 import { TicTacToePokerRule } from './tictactoepoker/tictactoepoker_rule';
 import { ItoRule } from './ito/ito';
+import DrawingRule from './drawing/drawing';
 
 const CoupDebugger = NewDebuggerRule(
     'coup',
@@ -93,6 +94,11 @@ export const MPRULES = {
         description: 'Ito - Cooperative Number Game',
         rules: ['lobby', 'gameshell', 'ito'],
         rule: ItoRule
+    },
+    'drawing': {
+        description: 'Drawing Canvas - Collaborative Drawing Tool',
+        rules: ['drawing'],
+        rule: DrawingRule
     },    
     'coup-debug': {
         description: 'Coup - Resistance (Debug)',
