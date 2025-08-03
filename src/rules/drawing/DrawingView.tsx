@@ -3,6 +3,7 @@
  */
 
 import * as React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ViewPropsInterface } from '../../common/interfaces';
 import { Canvas, COLOR_PALETTE, DrawingAction } from './Canvas';
 
@@ -171,81 +172,85 @@ export class DrawingView extends React.Component<DrawingViewProps, DrawingViewSt
 
         return (
             <div className="drawing-view">
-                {/* Toolbar */}
-                <div className="drawing-toolbar">
-                    {/* Tool selection */}
-                    <div className="tool-section">
-                        <h4>Tool:</h4>
-                        <button 
-                            className={this.state.tool === 'p' ? 'active' : ''}
-                            onClick={() => this.selectTool('p')}
-                        >
-                            Pen
-                        </button>
-                        <button 
-                            className={this.state.tool === 'e' ? 'active' : ''}
-                            onClick={() => this.selectTool('e')}
-                        >
-                            Eraser
-                        </button>
-                    </div>
-
-                    {/* Color palette (only for pen) */}
-                    {this.state.tool === 'p' && (
-                        <div className="color-section">
-                            <h4>Color:</h4>
-                            <div className="color-palette">
-                                {COLOR_PALETTE.map((color, index) => (
-                                    <button
-                                        key={index}
-                                        className={`color-button ${this.state.color === index ? 'active' : ''}`}
-                                        style={{ backgroundColor: color }}
-                                        onClick={() => this.selectColor(index)}
-                                        title={color}
-                                    />
-                                ))}
-                            </div>
+                {/* Canvas with attached toolbar */}
+                <div className="canvas-with-toolbar">
+                    {/* Toolbar attached to top of canvas */}
+                    <div className="drawing-toolbar" style={{ width: width }}>
+                        {/* Tool selection */}
+                        <div className="tool-section">
+                            <h4>Tool:</h4>
+                            <button 
+                                className={this.state.tool === 'p' ? 'active' : ''}
+                                onClick={() => this.selectTool('p')}
+                                title="Pen"
+                            >
+                                <FontAwesomeIcon icon="pen" />
+                            </button>
+                            <button 
+                                className={this.state.tool === 'e' ? 'active' : ''}
+                                onClick={() => this.selectTool('e')}
+                                title="Eraser"
+                            >
+                                <FontAwesomeIcon icon="eraser" />
+                            </button>
                         </div>
-                    )}
 
-                    {/* Thickness */}
-                    <div className="thickness-section">
-                        <h4>Thickness:</h4>
-                        <input
-                            type="range"
-                            min="1"
-                            max="20"
-                            value={this.state.thickness}
-                            onChange={(e) => this.setThickness(parseInt(e.target.value))}
+                        {/* Color palette (only for pen) */}
+                        {this.state.tool === 'p' && (
+                            <div className="color-section">
+                                <h4>Color:</h4>
+                                <div className="color-palette">
+                                    {COLOR_PALETTE.map((color, index) => (
+                                        <button
+                                            key={index}
+                                            className={`color-button ${this.state.color === index ? 'active' : ''}`}
+                                            style={{ backgroundColor: color }}
+                                            onClick={() => this.selectColor(index)}
+                                            title={color}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Thickness */}
+                        <div className="thickness-section">
+                            <h4>Thickness:</h4>
+                            <input
+                                type="range"
+                                min="1"
+                                max="20"
+                                value={this.state.thickness}
+                                onChange={(e) => this.setThickness(parseInt(e.target.value))}
+                            />
+                            <span>{this.state.thickness}px</span>
+                        </div>
+
+                        {/* Erase all */}
+                        <div className="erase-section">
+                            <button onClick={this.eraseAll} className="erase-all-button">
+                                Erase All
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Drawing canvas */}
+                    <div className="canvas-container">
+                        <canvas
+                            ref={this.canvasRef}
+                            width={width}
+                            height={height}
+                            className="drawing-canvas"
+                            style={{
+                                backgroundColor: '#fff',
+                                cursor: this.state.tool === 'p' ? 'crosshair' : 'grab'
+                            }}
+                            onMouseDown={this.onMouseDown}
+                            onMouseMove={this.onMouseMove}
+                            onMouseUp={this.onMouseUp}
+                            onMouseLeave={this.onMouseUp}
                         />
-                        <span>{this.state.thickness}px</span>
                     </div>
-
-                    {/* Erase all */}
-                    <div className="erase-section">
-                        <button onClick={this.eraseAll} className="erase-all-button">
-                            Erase All
-                        </button>
-                    </div>
-                </div>
-
-                {/* Drawing canvas */}
-                <div className="canvas-container">
-                    <canvas
-                        ref={this.canvasRef}
-                        width={width}
-                        height={height}
-                        className="drawing-canvas"
-                        style={{
-                            border: '2px solid #333',
-                            backgroundColor: '#fff',
-                            cursor: this.state.tool === 'p' ? 'crosshair' : 'grab'
-                        }}
-                        onMouseDown={this.onMouseDown}
-                        onMouseMove={this.onMouseMove}
-                        onMouseUp={this.onMouseUp}
-                        onMouseLeave={this.onMouseUp}
-                    />
                 </div>
             </div>
         );
