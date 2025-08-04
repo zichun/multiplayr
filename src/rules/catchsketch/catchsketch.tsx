@@ -89,6 +89,16 @@ export const CatchSketchRule: GameRuleInterface = {
             mp.setViewProps(clientId, 'isGuessingPhase', gameState.is_guessing_phase());
             mp.setViewProps(clientId, 'isReviewPhase', gameState.is_review_phase());
 
+            // Token ownership information
+            const tokenOwnership: { [token: number]: string | null } = { 1: null, 2: null };
+            for (const playerId of gameState.get_player_ids()) {
+                const player = gameState.get_player_data(playerId);
+                if (player?.tokenNumber) {
+                    tokenOwnership[player.tokenNumber] = playerId;
+                }
+            }
+            mp.setViewProps(clientId, 'tokenOwnership', tokenOwnership);
+
             // Player-specific data
             if (playerData) {
                 mp.setViewProps(clientId, 'playerData', playerData);

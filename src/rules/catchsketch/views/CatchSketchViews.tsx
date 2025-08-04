@@ -43,6 +43,7 @@ interface CatchSketchMainPageProps extends ViewPropsInterface {
     hostCanvas: any;
     allCanvases: { [playerId: string]: any };
     currentCanvas: any;
+    tokenOwnership: { [token: number]: string | null };
 }
 
 export class CatchSketchMainPage extends React.Component<CatchSketchMainPageProps, { guessInput: string }> {
@@ -93,7 +94,7 @@ export class CatchSketchMainPage extends React.Component<CatchSketchMainPageProp
                         {token1Claimed ? (
                             <div>
                                 <div>1</div>
-                                <div className="player-name">{this.getPlayerName(token1Claimed)}</div>
+                                <div className="player-name">{this.renderPlayerTag(token1Claimed)}</div>
                             </div>
                         ) : '1'}
                     </div>
@@ -104,7 +105,7 @@ export class CatchSketchMainPage extends React.Component<CatchSketchMainPageProp
                         {token2Claimed ? (
                             <div>
                                 <div>2</div>
-                                <div className="player-name">{this.getPlayerName(token2Claimed)}</div>
+                                <div className="player-name">{this.renderPlayerTag(token2Claimed)}</div>
                             </div>
                         ) : '2'}
                     </div>
@@ -114,13 +115,16 @@ export class CatchSketchMainPage extends React.Component<CatchSketchMainPageProp
     }
 
     private getTokenOwner(tokenNumber: number): string | null {
-        // This would need access to all player data - simplified for now
-        return null; // Will be implemented when we have access to all player states
+        return this.props.tokenOwnership[tokenNumber] || null;
     }
 
     private getPlayerName(playerId: string): string {
-        // Simplified - would get from lobby data
-        return playerId.substring(0, 8);
+        // Use player-tag component from lobby plugin
+        return playerId.substring(0, 8); // Fallback
+    }
+
+    private renderPlayerTag(playerId: string) {
+        return this.props.MP.getPluginView('lobby', 'player-tag', { clientId: playerId });
     }
 
     private renderDrawingArea() {
@@ -159,7 +163,8 @@ export class CatchSketchMainPage extends React.Component<CatchSketchMainPageProp
                                 key={playerId} 
                                 className={`player-item ${isCurrent ? 'current-player' : ''} ${isCompleted ? 'completed' : ''}`}
                             >
-                                {this.getPlayerName(playerId)} (#{index + 1})
+                                <div className="player-tag-container">{this.renderPlayerTag(playerId)}</div>
+                                <div className="turn-number">#{index + 1}</div>
                             </div>
                         );
                     })}
@@ -179,7 +184,8 @@ export class CatchSketchMainPage extends React.Component<CatchSketchMainPageProp
         
         return (
             <div className="current-drawing">
-                <h3>Current Drawing: {this.getPlayerName(currentDrawingPlayer)}</h3>
+                <h3>Current Drawing</h3>
+                <div className="current-player">{this.renderPlayerTag(currentDrawingPlayer)}</div>
                 <div className="drawing-display">
                     {React.createElement(CanvasDisplay, {
                         canvas: allCanvases[currentDrawingPlayer],
@@ -251,8 +257,10 @@ export class CatchSketchMainPage extends React.Component<CatchSketchMainPageProp
                 <div className="drawings-grid">
                     {turnOrder.map((playerId, index) => (
                         <div key={playerId} className="drawing-item">
-                            <h4>{this.getPlayerName(playerId)}</h4>
-                            <div className="order-info">Turn #{index + 1}</div>
+                            <div className="player-header">
+                                <div className="player-tag-container">{this.renderPlayerTag(playerId)}</div>
+                                <div className="order-info">Turn #{index + 1}</div>
+                            </div>
                             {allCanvases[playerId] && React.createElement(CanvasDisplay, {
                                 canvas: allCanvases[playerId],
                                 width: 250,
@@ -274,7 +282,7 @@ export class CatchSketchMainPage extends React.Component<CatchSketchMainPageProp
                 <div className="scores-list">
                     {Object.entries(scores).map(([playerId, score]) => (
                         <div key={playerId} className="score-item">
-                            <div className="player-name">{this.getPlayerName(playerId)}</div>
+                            <div className="player-name">{this.renderPlayerTag(playerId)}</div>
                             <div className="player-score">{score}</div>
                         </div>
                     ))}
