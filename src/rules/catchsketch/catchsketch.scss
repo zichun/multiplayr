@@ -1,0 +1,373 @@
+/**
+ * catchsketch.scss - Styling for Catch Sketch game
+ */
+
+.catch-sketch {
+    padding: 20px;
+    
+    .game-header {
+        text-align: center;
+        margin-bottom: 20px;
+        
+        h2 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .round-info {
+            margin-top: 10px;
+            font-size: 18px;
+            color: #666;
+        }
+        
+        .secret-word {
+            margin-top: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            display: inline-block;
+        }
+    }
+    
+    .drawing-phase {
+        .tokens-section {
+            text-align: center;
+            margin-bottom: 20px;
+            
+            h3 {
+                margin-bottom: 15px;
+                color: #333;
+            }
+            
+            .tokens {
+                display: flex;
+                justify-content: center;
+                gap: 20px;
+                
+                .token {
+                    width: 80px;
+                    height: 80px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: white;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    
+                    &.token-1 {
+                        background-color: #28a745;
+                        
+                        &:hover:not(.claimed) {
+                            background-color: #218838;
+                            transform: scale(1.1);
+                        }
+                    }
+                    
+                    &.token-2 {
+                        background-color: #dc3545;
+                        
+                        &:hover:not(.claimed) {
+                            background-color: #c82333;
+                            transform: scale(1.1);
+                        }
+                    }
+                    
+                    &.claimed {
+                        opacity: 0.6;
+                        cursor: not-allowed;
+                        
+                        .player-name {
+                            font-size: 12px;
+                            margin-top: 5px;
+                        }
+                    }
+                    
+                    &.disabled {
+                        opacity: 0.3;
+                        cursor: not-allowed;
+                    }
+                }
+            }
+        }
+        
+        .drawing-area {
+            text-align: center;
+            
+            h3 {
+                margin-bottom: 15px;
+                color: #333;
+            }
+        }
+    }
+    
+    .guessing-phase {
+        .turn-order {
+            margin-bottom: 20px;
+            
+            h3 {
+                margin-bottom: 15px;
+                color: #333;
+                text-align: center;
+            }
+            
+            .players-list {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                flex-wrap: wrap;
+                
+                .player-item {
+                    padding: 8px 12px;
+                    border-radius: 20px;
+                    background-color: #f8f9fa;
+                    border: 2px solid #dee2e6;
+                    
+                    &.current-player {
+                        background-color: #007bff;
+                        color: white;
+                        border-color: #0056b3;
+                    }
+                    
+                    &.completed {
+                        background-color: #28a745;
+                        color: white;
+                        border-color: #1e7e34;
+                    }
+                }
+            }
+        }
+        
+        .current-drawing {
+            text-align: center;
+            margin-bottom: 20px;
+            
+            h3 {
+                margin-bottom: 15px;
+                color: #333;
+            }
+            
+            .drawing-display {
+                margin: 0 auto;
+                border: 2px solid #dee2e6;
+                border-radius: 8px;
+            }
+        }
+        
+        .guess-input {
+            text-align: center;
+            margin-bottom: 20px;
+            
+            h3 {
+                margin-bottom: 15px;
+                color: #333;
+            }
+            
+            .input-group {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                
+                input {
+                    padding: 10px;
+                    font-size: 16px;
+                    border: 2px solid #dee2e6;
+                    border-radius: 4px;
+                    width: 200px;
+                    
+                    &:focus {
+                        outline: none;
+                        border-color: #007bff;
+                    }
+                }
+                
+                button {
+                    padding: 10px 20px;
+                    font-size: 16px;
+                    background-color: #007bff;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    
+                    &:hover {
+                        background-color: #0056b3;
+                    }
+                    
+                    &:disabled {
+                        background-color: #6c757d;
+                        cursor: not-allowed;
+                    }
+                }
+            }
+        }
+        
+        .previous-guesses {
+            margin-top: 20px;
+            
+            h4 {
+                margin-bottom: 10px;
+                color: #333;
+            }
+            
+            .guess-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 8px;
+                margin-bottom: 5px;
+                border-radius: 4px;
+                
+                &.correct {
+                    background-color: #d4edda;
+                    color: #155724;
+                }
+                
+                &.incorrect {
+                    background-color: #f8d7da;
+                    color: #721c24;
+                }
+                
+                .guess-icon {
+                    font-weight: bold;
+                    font-size: 18px;
+                }
+                
+                .guess-text {
+                    flex: 1;
+                }
+            }
+        }
+    }
+    
+    .review-phase {
+        .all-drawings {
+            margin-bottom: 20px;
+            
+            h3 {
+                margin-bottom: 15px;
+                color: #333;
+                text-align: center;
+            }
+            
+            .drawings-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 20px;
+                
+                .drawing-item {
+                    text-align: center;
+                    padding: 15px;
+                    border: 2px solid #dee2e6;
+                    border-radius: 8px;
+                    background-color: #f8f9fa;
+                    
+                    h4 {
+                        margin-bottom: 10px;
+                        color: #333;
+                    }
+                    
+                    .drawing-canvas {
+                        margin: 0 auto 10px;
+                        border: 1px solid #dee2e6;
+                        border-radius: 4px;
+                    }
+                    
+                    .order-info {
+                        font-size: 14px;
+                        color: #666;
+                        margin-bottom: 10px;
+                    }
+                }
+            }
+        }
+        
+        .all-guesses {
+            margin-bottom: 20px;
+            text-align: center;
+            
+            h3 {
+                margin-bottom: 15px;
+                color: #333;
+            }
+            
+            .guesses-list {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+        }
+        
+        .next-round {
+            text-align: center;
+            
+            button {
+                padding: 12px 30px;
+                font-size: 18px;
+                background-color: #28a745;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                
+                &:hover {
+                    background-color: #218838;
+                }
+            }
+        }
+    }
+    
+    .scores {
+        margin-top: 20px;
+        text-align: center;
+        
+        h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .scores-list {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            
+            .score-item {
+                padding: 10px 15px;
+                background-color: #f8f9fa;
+                border: 2px solid #dee2e6;
+                border-radius: 8px;
+                
+                .player-name {
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                }
+                
+                .player-score {
+                    font-size: 18px;
+                    color: #007bff;
+                }
+            }
+        }
+    }
+    
+    .guesser-info {
+        text-align: center;
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #fff3cd;
+        border: 2px solid #ffeaa7;
+        border-radius: 8px;
+        
+        h3 {
+            margin: 0;
+            color: #856404;
+        }
+    }
+}

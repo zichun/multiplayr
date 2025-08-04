@@ -14,6 +14,7 @@ import { MinesweeperFlagsRule } from './minesweeperflags/minesweeperflags';
 import { TicTacToePokerRule } from './tictactoepoker/tictactoepoker_rule';
 import { ItoRule } from './ito/ito';
 import DrawingRule from './drawing/drawing';
+import CatchSketchRule from './catchsketch';
 
 const CoupDebugger = NewDebuggerRule(
     'coup',
@@ -42,6 +43,14 @@ const TheOddOneDebugger = NewDebuggerRule(
 const DecryptoDebugger = NewDebuggerRule(
     'decrypto',
     DecryptoRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const CatchSketchDebugger = NewDebuggerRule(
+    'catchsketch',
+    CatchSketchRule,
     {
         HistoryBufferSize: 10,
         HistoryInSessionStorage: true
@@ -99,6 +108,11 @@ export const MPRULES = {
         description: 'Drawing Canvas - Collaborative Drawing Tool',
         rules: ['drawing'],
         rule: DrawingRule
+    },
+    'catchsketch': {
+        description: 'Catch Sketch - Speed Drawing Guessing Game',
+        rules: ['lobby', 'gameshell', 'drawing', 'catchsketch'],
+        rule: CatchSketchRule
     },    
     'coup-debug': {
         description: 'Coup - Resistance (Debug)',
@@ -123,6 +137,12 @@ export const MPRULES = {
         debug: true,
         rules: ['lobby', 'gameshell', 'decrypto', 'debugger'],
         rule: DecryptoDebugger
+    },
+    'catchsketch-debug': {
+        description: 'Catch Sketch (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'drawing', 'catchsketch', 'debugger'],
+        rule: CatchSketchDebugger
     }
 };
 
