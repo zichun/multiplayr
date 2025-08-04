@@ -14,7 +14,7 @@ import { MinesweeperFlagsRule } from './minesweeperflags/minesweeperflags';
 import { TicTacToePokerRule } from './tictactoepoker/tictactoepoker_rule';
 import { ItoRule } from './ito/ito';
 import DrawingRule from './drawing/drawing';
-import CatchSketchRule from './catchsketch';
+import { CatchSketchRule } from './catchsketch/catchsketch';
 
 const CoupDebugger = NewDebuggerRule(
     'coup',
@@ -113,7 +113,7 @@ export const MPRULES = {
         description: 'Catch Sketch - Speed Drawing Guessing Game',
         rules: ['lobby', 'gameshell', 'drawing', 'catchsketch'],
         rule: CatchSketchRule
-    },    
+    },
     'coup-debug': {
         description: 'Coup - Resistance (Debug)',
         debug: true,

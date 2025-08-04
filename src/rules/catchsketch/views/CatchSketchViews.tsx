@@ -8,20 +8,55 @@ import { ViewPropsInterface, MPType } from '../../../common/interfaces';
 // Use lobby views for now, we'll import the proper components later
 export class CatchSketchHostLobby extends React.Component<ViewPropsInterface, {}> {
     public render() {
-        const LobbyView = this.props.MP.getPluginView('lobby', 'LobbyView');
-        return React.createElement(LobbyView, {
-            ...this.props,
-            gameName: 'Catch Sketch',
-            minPlayers: 3,
-            startGameMethod: 'startGame'
-        });
+        const mp = this.props.MP;
+
+        return mp.getPluginView(
+            'gameshell',
+            'HostShell-Main',
+            {
+                'links': {
+                    'home': {
+                        'icon': 'home',
+                        'label': 'Lobby',
+                        'view': mp.getPluginView('lobby', 'LobbyWithHostName')
+                    },
+                    'clients': {
+                        'icon': 'users',
+                        'label': 'Players',
+                        'view': mp.getPluginView('lobby', 'host-roommanagement')
+                    },
+                    /* 'rules': {
+                     *     'icon': 'book',
+                     *     'label': 'Rules',
+                     *     'view': ItoGameRules
+                     * } */
+                }
+            }
+        );
     }
 }
 
 export class CatchSketchClientLobby extends React.Component<ViewPropsInterface, {}> {
     public render() {
-        const LobbySetNameView = this.props.MP.getPluginView('lobby', 'LobbySetNameView');
-        return React.createElement(LobbySetNameView, this.props);
+        const mp = this.props.MP;
+
+        return mp.getPluginView(
+            'gameshell',
+            'HostShell-Main',
+            {
+                'links': {
+                    'home': {
+                        'icon': 'id-card',
+                        'label': 'Lobby',
+                        'view': mp.getPluginView('lobby', 'SetName')
+                    }/* ,
+                        'rules': {
+                      *    'icon': 'book',
+                      *    'label': 'Rules',
+                      *    'view': ItoGameRules
+                        } */
+                }
+        });
     }
 }
 
