@@ -1,5 +1,5 @@
 /**
- * ito.local.ts
+ * catchsketch.local.ts
  */
 
 /* eslint-disable no-var */
@@ -51,6 +51,7 @@ $(() => {
         }
     };
 
+
     const statesS = sessionStorage.getItem('debuggerGameStates');
 
     let hostId = '';
@@ -63,10 +64,10 @@ $(() => {
     const transport = new _mplib.LocalClientTransport(
         (data) => {
             _mplib.messages.checkReturnMessage(data, 'clientId');
-        }, hostId);
+    }, hostId);
 
     _mplib.MultiplayR.Host(
-        'ito-debug',
+        'catchsketch-debug',
         transport,
         document.getElementById('host-container'),
         (res) => {
