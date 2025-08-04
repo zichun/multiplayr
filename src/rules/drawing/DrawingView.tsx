@@ -57,7 +57,7 @@ export class DrawingView extends React.Component<DrawingViewProps, DrawingViewSt
 
         // Render existing actions from the canvas
         if (this.props.canvas) {
-            const actions = this.props.canvas.getActions();
+            const actions = this.props.canvas.actions;
             for (const action of actions) {
                 this.renderAction(ctx, action);
             }
@@ -176,17 +176,32 @@ export class DrawingView extends React.Component<DrawingViewProps, DrawingViewSt
                 <div className="canvas-with-toolbar">
                     {/* Toolbar attached to top of canvas */}
                     <div className="drawing-toolbar" style={{ width: width }}>
+
+                        {/* Color palette (only for pen) */}
+                        <div className="color-section">
+                            <div className="color-palette">
+                                {COLOR_PALETTE.map((color, index) => (
+                                    <button
+                                        key={index}
+                                        className={`color-button ${this.state.color === index ? 'active' : ''}`}
+                                        style={{ backgroundColor: color }}
+                                        onClick={() => this.selectColor(index)}
+                                        title={color}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
                         {/* Tool selection */}
                         <div className="tool-section">
-                            <h4>Tool:</h4>
-                            <button 
+                            <button
                                 className={this.state.tool === 'p' ? 'active' : ''}
                                 onClick={() => this.selectTool('p')}
                                 title="Pen"
                             >
                                 <FontAwesomeIcon icon="pen" />
                             </button>
-                            <button 
+                            <button
                                 className={this.state.tool === 'e' ? 'active' : ''}
                                 onClick={() => this.selectTool('e')}
                                 title="Eraser"
@@ -194,28 +209,8 @@ export class DrawingView extends React.Component<DrawingViewProps, DrawingViewSt
                                 <FontAwesomeIcon icon="eraser" />
                             </button>
                         </div>
-
-                        {/* Color palette (only for pen) */}
-                        {this.state.tool === 'p' && (
-                            <div className="color-section">
-                                <h4>Color:</h4>
-                                <div className="color-palette">
-                                    {COLOR_PALETTE.map((color, index) => (
-                                        <button
-                                            key={index}
-                                            className={`color-button ${this.state.color === index ? 'active' : ''}`}
-                                            style={{ backgroundColor: color }}
-                                            onClick={() => this.selectColor(index)}
-                                            title={color}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
                         {/* Thickness */}
                         <div className="thickness-section">
-                            <h4>Thickness:</h4>
                             <input
                                 type="range"
                                 min="1"

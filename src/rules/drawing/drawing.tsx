@@ -41,7 +41,7 @@ export const Drawing: GameRuleInterface = {
     onDataChange: (mp: MPType) => {
         // Get canvas data for global (host) and all players
         const globalCanvas = mp.getData('canvas');
-        
+
         // Set view props for host
         mp.setViewProps(mp.hostId, 'canvas', globalCanvas);
         mp.setView(mp.hostId, 'DrawingDemo');
@@ -62,15 +62,15 @@ export const Drawing: GameRuleInterface = {
          */
         updateCanvas: (mp: MPType, clientId: string, action: DrawingAction) => {
             let canvas: Canvas;
-            
+
             if (clientId === mp.hostId) {
                 // Update global canvas for host
-                canvas = mp.getData('canvas') || new Canvas();
+                canvas = Canvas.from(mp.getData('canvas')) || new Canvas();
                 canvas.addAction(action);
                 mp.setData('canvas', canvas);
             } else {
                 // Update player canvas
-                canvas = mp.getPlayerData(clientId, 'canvas') || new Canvas();
+                canvas = Canvas.from(mp.getPlayerData(clientId, 'canvas')) || new Canvas();
                 canvas.addAction(action);
                 mp.setPlayerData(clientId, 'canvas', canvas);
             }
@@ -81,7 +81,7 @@ export const Drawing: GameRuleInterface = {
          */
         clearCanvas: (mp: MPType, clientId: string) => {
             const canvas = new Canvas(); // Create new empty canvas
-            
+
             if (clientId === mp.hostId) {
                 mp.setData('canvas', canvas);
             } else {
@@ -212,7 +212,7 @@ export const Drawing: GameRuleInterface = {
                                 height: 350
                             })}
                         </div>
-                        
+
                         {otherCanvases.length > 0 && (
                             <div className="other-canvases">
                                 <h3>Other Players</h3>
@@ -250,7 +250,7 @@ export const Drawing: GameRuleInterface = {
                             width: 500,
                             height: 350
                         })}
-                        
+
                         <div style={{ marginTop: '20px' }}>
                             <h3>Actions Available:</h3>
                             <ul>

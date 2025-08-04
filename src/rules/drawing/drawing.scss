@@ -14,7 +14,6 @@
     background-color: #fff;
     border-radius: 5px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    overflow: hidden;
 }
 
 .drawing-toolbar {
@@ -48,17 +47,22 @@
     text-transform: uppercase;
 }
 
+.tool-section {
+    display: block;
+    float: clear;
+}
+
 /* Tool buttons with icons */
 .tool-section button {
     padding: 8px 12px;
-    margin-right: 5px;
     border: 2px solid #ddd;
     background-color: #fff;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
     min-width: 40px;
-    display: flex;
+    float: left;
+    display: inline;
     align-items: center;
     justify-content: center;
 }
@@ -107,7 +111,7 @@
 }
 
 .thickness-section input[type="range"] {
-    width: 100px;
+    width: 160px;
     margin-right: 8px;
 }
 
