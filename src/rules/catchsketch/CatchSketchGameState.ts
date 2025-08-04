@@ -5,6 +5,8 @@
  * independent of the multiplayr framework to enable comprehensive testing.
  */
 
+import { Words } from './CatchSketchWords';
+
 export interface PlayerState {
     id: string;
     score: number;
@@ -37,7 +39,7 @@ export class CatchSketchGameState {
         if (playerIds.length < 3) {
             throw new Error('Catch Sketch requires at least 3 players');
         }
-        
+
         this.playerIds = [...playerIds];
         this.data = {
             round: 0,
@@ -75,7 +77,7 @@ export class CatchSketchGameState {
 
     private start_new_round(): void {
         const secretWord = this.generate_secret_word();
-        
+
         // Reset round state
         this.data.secretWord = secretWord;
         this.data.guesses = [];
@@ -131,10 +133,10 @@ export class CatchSketchGameState {
     private assign_remaining_turn_order(): void {
         const drawers = this.get_drawers();
         const unlockedDrawers = drawers.filter(id => !this.data.players[id].hasLocked);
-        
+
         // Shuffle remaining players for turn order 3+
         const shuffled = [...unlockedDrawers].sort(() => Math.random() - 0.5);
-        
+
         let nextOrder = 3;
         for (const playerId of shuffled) {
             const player = this.data.players[playerId];
@@ -151,7 +153,7 @@ export class CatchSketchGameState {
         const orderedDrawers = drawers
             .filter(id => this.data.players[id].turnOrder !== undefined)
             .sort((a, b) => this.data.players[a].turnOrder! - this.data.players[b].turnOrder!);
-        
+
         this.data.turnOrder = orderedDrawers;
     }
 
@@ -174,7 +176,6 @@ export class CatchSketchGameState {
         });
 
         if (isCorrect) {
-            // Award points
             this.award_points();
             return true;
         }
@@ -183,21 +184,30 @@ export class CatchSketchGameState {
     }
 
     private award_points(): void {
-        // Simple scoring: guesser gets 1 point, current drawer gets 1 point
         const guesser = this.data.players[this.data.currentGuesserId];
-        guesser.score += 1;
+        const guess_cnt = this.data.guesses.length;
+        const drawing_cnt = this.data.turnOrder.length;
+
+        let score = 0;
+        if (drawing_cnt === 2) {
+            score = (guess_cnt === 1 ? 3 : 1);
+        } else {
+            score = guess_cnt === 1 ? 3 :
+                    guess_cnt === 2 ? 2 : 1;
+        }
+        guesser.score += score;
 
         const currentDrawerIndex = this.data.guesses.length - 1;
         if (currentDrawerIndex < this.data.turnOrder.length) {
             const currentDrawerId = this.data.turnOrder[currentDrawerIndex];
             const drawer = this.data.players[currentDrawerId];
-            drawer.score += 1;
+            drawer.score += score;
         }
     }
 
     public next_round(): void {
         this.data.round++;
-        
+
         // Rotate guesser
         const currentGuesserIndex = this.playerIds.indexOf(this.data.currentGuesserId);
         const nextGuesserIndex = (currentGuesserIndex + 1) % this.playerIds.length;
@@ -207,12 +217,7 @@ export class CatchSketchGameState {
     }
 
     private generate_secret_word(): string {
-        const words = [
-            'cat', 'dog', 'house', 'tree', 'car', 'book', 'phone', 'computer',
-            'flower', 'mountain', 'river', 'bird', 'fish', 'apple', 'chair', 'table',
-            'sun', 'moon', 'star', 'cloud', 'rain', 'snow', 'fire', 'water'
-        ];
-        return words[Math.floor(Math.random() * words.length)];
+        return Words[Math.floor(Math.random() * Words.length)];
     }
 
     // Phase detection methods
@@ -221,13 +226,13 @@ export class CatchSketchGameState {
     }
 
     public is_guessing_phase(): boolean {
-        return this.data.turnOrder.length > 0 && 
+        return this.data.turnOrder.length > 0 &&
                this.data.guesses.length < this.data.turnOrder.length &&
                !this.has_correct_guess();
     }
 
     public is_review_phase(): boolean {
-        return this.data.turnOrder.length > 0 && 
+        return this.data.turnOrder.length > 0 &&
                (this.has_correct_guess() || this.data.guesses.length >= this.data.turnOrder.length);
     }
 
@@ -276,12 +281,12 @@ export class CatchSketchGameState {
         if (!this.is_guessing_phase()) {
             return null;
         }
-        
+
         const currentGuessIndex = this.data.guesses.length;
         if (currentGuessIndex < this.data.turnOrder.length) {
             return this.data.turnOrder[currentGuessIndex];
         }
-        
+
         return null;
     }
 

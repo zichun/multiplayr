@@ -15,7 +15,7 @@ import {
 import {
     CatchSketchHostLobby,
     CatchSketchClientLobby,
-    CatchSketchMainPage,
+    CatchSketchMainView,
 } from './views/CatchSketchViews';
 
 import {
@@ -62,7 +62,7 @@ export const CatchSketchRule: GameRuleInterface = {
             if (!gameState) {
                 return showLobby();
             }
-            
+
             // Restore gameState instance
             gameState = CatchSketchGameState.from_data(gameState.data, gameState.playerIds);
             mp.setData('gameState', gameState);
@@ -83,7 +83,7 @@ export const CatchSketchRule: GameRuleInterface = {
             mp.setViewProps(clientId, 'turnOrder', gameState.get_turn_order());
             mp.setViewProps(clientId, 'guesses', gameState.get_guesses());
             mp.setViewProps(clientId, 'currentDrawingPlayer', gameState.get_current_drawing_player());
-            
+
             // Phase flags
             mp.setViewProps(clientId, 'isDrawingPhase', gameState.is_drawing_phase());
             mp.setViewProps(clientId, 'isGuessingPhase', gameState.is_guessing_phase());
@@ -124,6 +124,7 @@ export const CatchSketchRule: GameRuleInterface = {
                         allCanvases[playerId] = playerCanvas;
                     }
                 });
+                allCanvases[mp.hostId] = mp.getData('drawing_canvas');
             }
             mp.setViewProps(clientId, 'allCanvases', allCanvases);
 
@@ -163,7 +164,7 @@ export const CatchSketchRule: GameRuleInterface = {
     views: {
         'host-lobby': CatchSketchHostLobby,
         'client-lobby': CatchSketchClientLobby,
-        'mainpage': CatchSketchMainPage,
+        'mainpage': CatchSketchMainView,
     }
 };
 

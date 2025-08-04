@@ -11,15 +11,19 @@ export function CatchSketchStartGame(mp: MPType, clientId: string): void {
         return;
     }
 
-    const playerIds = mp.getPlayerList();
-    if (playerIds.length < 3) {
-        return; // Need at least 3 players
+    const playerCount = mp.playersCount() + 1; // Host is a player
+    if (playerCount < 3) {
+        alert('We need at least 3 players to play CatchSketch');
+        return;
     }
 
-    const gameState = new CatchSketchGameState(playerIds);
+    const players = [mp.hostId];
+    mp.playersForEach((clientId) => players.push(clientId));
+    const gameState = new CatchSketchGameState(players);
     gameState.start_game();
-    
+
     mp.setData('gameState', gameState);
+    mp.setData('lobby_started', true);
 }
 
 export function CatchSketchLockToken(mp: MPType, clientId: string, tokenNumber: 1 | 2): void {
@@ -65,11 +69,6 @@ export function CatchSketchSubmitGuess(mp: MPType, clientId: string, guess: stri
 }
 
 export function CatchSketchNextRound(mp: MPType, clientId: string): void {
-    // Only host can advance to next round
-    if (clientId !== mp.hostId) {
-        return;
-    }
-
     let gameState = mp.getData('gameState');
     if (!gameState || !gameState.next_round) {
         return;
@@ -80,7 +79,7 @@ export function CatchSketchNextRound(mp: MPType, clientId: string): void {
         gameState = CatchSketchGameState.from_data(gameState.data, gameState.playerIds);
         mp.setData('gameState', gameState);
     }
-
+    mp.plugins['drawing'].resetAllCanvases();
     try {
         gameState.next_round();
         mp.setData('gameState', gameState);

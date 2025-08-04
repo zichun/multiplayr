@@ -233,6 +233,7 @@ export class GameObject {
         this.methods = rule.methods;
         this.views = rule.views;
         this.MP = GameObject.SetupMPObject(rule.methods, this.isHost, this, this.namespace);
+        const localMpPlugins = {};
 
         if (this.isHost) {
             this.dataStore = GameObject.CreateStore(rule.globalData, this);
@@ -264,8 +265,10 @@ export class GameObject {
                 );
 
                 this.plugins[plugin].setupRule(rule.plugins[plugin]);
+                localMpPlugins[plugin] = this.plugins[plugin].MP;
             });
         }
+        this.MP.plugins = localMpPlugins;
 
         if (!this.isHost && !this.parent) {
             this.dxc.clientReady();
@@ -1080,6 +1083,7 @@ export class GameObject {
         }
 
         const tr = {
+            hostId: this.clientId,
             hostStore: this.getHostStore(),
             clientsStore: this.getClientsStore(),
             pluginsStore: this.getPluginsStore()

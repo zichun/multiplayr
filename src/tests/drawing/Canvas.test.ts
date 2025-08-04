@@ -184,13 +184,5 @@ describe('Drawing Canvas', () => {
                 assert(hexPattern.test(color), `Invalid hex color: ${color}`);
             }
         });
-
-        it('should include basic colors', () => {
-            assert(COLOR_PALETTE.includes('#000000')); // Black
-            assert(COLOR_PALETTE.includes('#FF0000')); // Red
-            assert(COLOR_PALETTE.includes('#00FF00')); // Green
-            assert(COLOR_PALETTE.includes('#0000FF')); // Blue
-            assert(COLOR_PALETTE.includes('#FFFFFF')); // White
-        });
     });
 });

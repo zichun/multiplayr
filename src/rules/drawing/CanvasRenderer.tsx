@@ -36,7 +36,7 @@ export class CanvasRenderer extends React.Component<CanvasRendererProps, {}> {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // Render all actions
-        const actions = this.props.canvas.getActions();
+        const actions = this.props.canvas.actions;
         for (const action of actions) {
             this.renderAction(ctx, action);
         }

@@ -51,12 +51,19 @@ $(() => {
         }
     };
 
+    const statesS = sessionStorage.getItem('debuggerGameStates');
+
+    let hostId = '';
+    const states = JSON.parse(statesS);
+    if (states && states.length > 0) {
+        const state = states[states.length - 1];
+        hostId = JSON.parse(state).hostId;
+    }
+
     const transport = new _mplib.LocalClientTransport(
         (data) => {
             _mplib.messages.checkReturnMessage(data, 'clientId');
-        });
-
-    const statesS = sessionStorage.getItem('debuggerGameStates');
+        }, hostId);
 
     _mplib.MultiplayR.Host(
         'ito-debug',

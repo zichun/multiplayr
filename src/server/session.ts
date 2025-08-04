@@ -37,10 +37,11 @@ export class Session implements ServerSessionInterface {
     private room: Room;
 
     constructor(
-        transport: ServerTransportInterface
+        transport: ServerTransportInterface,
+        clientId?: string,
     ) {
         this.transport = transport;
-        this.clientId = uniqueId('mp-client-', true);
+        this.clientId = clientId ? clientId : uniqueId('mp-client-', true);
     }
 
     public reconnect(

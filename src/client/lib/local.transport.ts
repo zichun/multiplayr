@@ -29,9 +29,10 @@ export class LocalClientTransport implements ClientTransportInterface {
     private serverTransport: LocalServerTransport;
 
     constructor(
-        cb?: (packet: ReturnPacketType) => any
+        cb?: (packet: ReturnPacketType) => any,
+        hostId?: string
     ) {
-        this.serverTransport = new LocalServerTransport(this, (res) => {
+        this.serverTransport = new LocalServerTransport(this, hostId, (res) => {
             if (!checkReturnMessage(res, 'clientId')) {
                 return;
             }
@@ -67,9 +68,10 @@ class LocalServerTransport implements ServerTransportInterface {
 
     constructor(
         clientTransport: LocalClientTransport,
+        hostId?: string,
         cb?: CallbackType<ReturnPacketType>
     ) {
-        this.session = new Session(this);
+        this.session = new Session(this, hostId);
         this.clientTransport = clientTransport;
         returnSuccess(cb, 'clientId', this.session.getClientId());
     }
