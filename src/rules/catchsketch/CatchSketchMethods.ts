@@ -56,7 +56,7 @@ export function CatchSketchLockToken(mp: MPType, clientId: string, tokenNumber: 
 }
 
 export function CatchSketchTokenTimeout(mp: MPType, clientId: string): void {
-    let gameState = mp.getData('gameState');
+    const gameState = mp.getData('gameState');
     if (!gameState || !gameState.lock_token) {
         return;
     }
