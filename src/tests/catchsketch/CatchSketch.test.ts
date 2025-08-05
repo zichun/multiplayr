@@ -177,12 +177,59 @@ describe('Catch Sketch Game Logic', () => {
                 assert.equal(gameState.get_current_guesser(), 'player1');
                 assert.equal(gameState.get_round(), 0);
 
+                // Can't move to the next round
                 gameState.next_round();
+                assert.equal(gameState.get_round(), 0);
+
+                gameState.lock_token('player2', 1);
+                gameState.lock_token('player3', 2);
+
+                // Can't move to the next round
+                gameState.next_round();
+                assert.equal(gameState.get_round(), 0);
+
+                gameState.submit_guess('player1', "-");
+                gameState.submit_guess('player1', "-");
+
+                gameState.next_round();
+                assert.equal(gameState.get_round(), 1);
 
                 assert.equal(gameState.get_current_guesser(), 'player2');
                 assert.equal(gameState.get_round(), 1);
                 assert.equal(gameState.get_tokens_claimed(), 0);
                 assert.equal(gameState.is_drawing_phase(), true);
+            });
+
+            it('force_assign_token can assign tokens randomly with token 1 taken', () => {
+                const playerIds = ['player1', 'player2', 'player3', 'player4'];
+                const gameState = new CatchSketchGameState(playerIds);
+                gameState.start_game();
+
+                assert.equal(gameState.get_current_guesser(), 'player1');
+
+                assert.equal(gameState.force_assign_token(), false);
+                assert.equal(gameState.is_drawing_phase(), true);
+                gameState.lock_token('player4', 1);
+
+                assert.equal(gameState.force_assign_token(), true);
+                assert.equal(gameState.is_guessing_phase(), true);
+                assert.equal(gameState.get_turn_order()[0], 'player4');
+            });
+
+            it('force_assign_token can assign tokens randomly with token 2 taken', () => {
+                const playerIds = ['player1', 'player2', 'player3', 'player4'];
+                const gameState = new CatchSketchGameState(playerIds);
+                gameState.start_game();
+
+                assert.equal(gameState.get_current_guesser(), 'player1');
+
+                assert.equal(gameState.force_assign_token(), false);
+                assert.equal(gameState.is_drawing_phase(), true);
+                gameState.lock_token('player3', 2);
+
+                assert.equal(gameState.force_assign_token(), true);
+                assert.equal(gameState.is_guessing_phase(), true);
+                assert.equal(gameState.get_turn_order()[1], 'player3');
             });
 
             it('should maintain scores across rounds', () => {

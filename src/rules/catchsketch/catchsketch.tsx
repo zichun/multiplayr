@@ -23,7 +23,8 @@ import {
     CatchSketchLockToken,
     CatchSketchSubmitGuess,
     CatchSketchNextRound,
-    CatchSketchBackToLobby
+    CatchSketchBackToLobby,
+    CatchSketchTokenTimeout,
 } from './CatchSketchMethods';
 
 import { CatchSketchGameState } from './CatchSketchGameState';
@@ -37,6 +38,7 @@ export const CatchSketchRule: GameRuleInterface = {
     },
     globalData: {
         gameState: null,
+        timer: null,
     },
     playerData: {
     },
@@ -83,6 +85,9 @@ export const CatchSketchRule: GameRuleInterface = {
             mp.setViewProps(clientId, 'turnOrder', gameState.get_turn_order());
             mp.setViewProps(clientId, 'guesses', gameState.get_guesses());
             mp.setViewProps(clientId, 'currentDrawingPlayer', gameState.get_current_drawing_player());
+            mp.setViewProps(clientId, 'roundStartTime', gameState.get_round_start_time());
+            mp.setViewProps(clientId, 'firstTokenTime', gameState.get_first_token_time());
+            mp.setViewProps(clientId, 'tokenTimeout', gameState.get_token_timer_ms());
 
             // Phase flags
             mp.setViewProps(clientId, 'isDrawingPhase', gameState.is_drawing_phase());
@@ -90,14 +95,7 @@ export const CatchSketchRule: GameRuleInterface = {
             mp.setViewProps(clientId, 'isReviewPhase', gameState.is_review_phase());
 
             // Token ownership information
-            const tokenOwnership: { [token: number]: string | null } = { 1: null, 2: null };
-            for (const playerId of gameState.get_player_ids()) {
-                const player = gameState.get_player_data(playerId);
-                if (player?.tokenNumber) {
-                    tokenOwnership[player.tokenNumber] = playerId;
-                }
-            }
-            mp.setViewProps(clientId, 'tokenOwnership', tokenOwnership);
+            mp.setViewProps(clientId, 'tokenOwnership', gameState.get_token_ownership());
 
             // Player-specific data
             if (playerData) {
@@ -159,6 +157,7 @@ export const CatchSketchRule: GameRuleInterface = {
         'submitGuess': CatchSketchSubmitGuess,
         'nextRound': CatchSketchNextRound,
         'backToLobby': CatchSketchBackToLobby,
+        'tokenTimeout': CatchSketchTokenTimeout,
     },
 
     views: {

@@ -23,16 +23,26 @@
         .secret-word {
             margin-top: 10px;
             font-size: 24px;
-            font-weight: bold;
+            font-weight: normal;
             color: #007bff;
             padding: 10px;
             background-color: #f8f9fa;
             border-radius: 8px;
             display: inline-block;
+
+            strong {
+                font-weight: bold;
+            }
         }
     }
 
     .drawing-phase {
+        .catchsketch-round-elapsed {
+            font-size: 18px;
+            margin: 10px;
+            text-align: center;
+        }
+
         .tokens-section {
             text-align: center;
             margin-bottom: 20px;
@@ -61,19 +71,19 @@
                     transition: all 0.3s ease;
 
                     &.token-1 {
-                        background-color: #28a745;
+                        background-color: #1855a7;
 
                         &:hover:not(.claimed) {
-                            background-color: #218838;
+                            background-color: #213888;
                             transform: scale(1.1);
                         }
                     }
 
                     &.token-2 {
-                        background-color: #dc3545;
+                        background-color: #5518a7;
 
                         &:hover:not(.claimed) {
-                            background-color: #c82333;
+                            background-color: #382188;
                             transform: scale(1.1);
                         }
                     }

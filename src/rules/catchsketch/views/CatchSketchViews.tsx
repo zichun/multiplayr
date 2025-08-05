@@ -81,6 +81,9 @@ interface CatchSketchMainPageProps extends ViewPropsInterface {
     allCanvases: { [playerId: string]: any };
     currentCanvas: any;
     tokenOwnership: { [token: number]: string | null };
+    roundStartTime: number;
+    firstTokenTime: number;
+    tokenTimeout: number;
 }
 
 export class CatchSketchScoresView extends React.Component<CatchSketchMainPageProps, {}> {
@@ -178,10 +181,6 @@ export class CatchSketchMainComponent extends React.Component<CatchSketchMainPag
     private renderTokens() {
         const { isGuesser, playerData } = this.props;
 
-        if (isGuesser) {
-            return null; // Guesser doesn't see tokens
-        }
-
         const token1Claimed = this.getTokenOwner(1);
         const token2Claimed = this.getTokenOwner(2);
 
@@ -190,7 +189,7 @@ export class CatchSketchMainComponent extends React.Component<CatchSketchMainPag
                 <div className="tokens">
                     <div
                         className={`token token-1 ${token1Claimed ? 'claimed' : ''} ${playerData?.hasLocked ? 'disabled' : ''}`}
-                        onClick={() => !token1Claimed && !playerData?.hasLocked && this.lockToken(1)}
+                        onClick={() => !isGuesser && !token1Claimed && !playerData?.hasLocked && this.lockToken(1)}
                     >
                         {token1Claimed ? (
                             <div>
@@ -200,7 +199,7 @@ export class CatchSketchMainComponent extends React.Component<CatchSketchMainPag
                     </div>
                     <div
                         className={`token token-2 ${token2Claimed ? 'claimed' : ''} ${playerData?.hasLocked ? 'disabled' : ''}`}
-                        onClick={() => !token2Claimed && !playerData?.hasLocked && this.lockToken(2)}
+                        onClick={() => !isGuesser && !token2Claimed && !playerData?.hasLocked && this.lockToken(2)}
                     >
                         {token2Claimed ? (
                             <div>
@@ -371,41 +370,25 @@ export class CatchSketchMainComponent extends React.Component<CatchSketchMainPag
         );
     }
 
-    private renderTokenAcquisation() {
-        const token1Claimed = this.getTokenOwner(1);
-        const token2Claimed = this.getTokenOwner(2);
-
-        if (token1Claimed || token2Claimed) {
-            const claimed = token1Claimed || token2Claimed;
-            let playerTag = this.renderPlayerTag(claimed);
-            let tokenclaimed = token1Claimed ? "1" : "2";
-
-            return (<div>Token {tokenclaimed} claimed by {playerTag}</div>);
-        } else {
-            return (<div />);
-        }
-    }
-
     public render() {
         const {
-            round,
-            currentGuesser,
             isGuesser,
-            isHost,
             secretWord,
             isDrawingPhase,
             isGuessingPhase,
             isReviewPhase,
-            playerData
+            playerData,
+            tokensClaimed
         } = this.props;
+
+        const roundTimer = React.createElement(CatchSketchRoundTimer, this.props);
 
         return (
             <div className="catch-sketch">
                 <div className="game-header">
                     {isGuesser && <div className="guesser-info"><h3>You are the Guesser!</h3></div>}
-                    {isGuesser && this.renderTokenAcquisation()}
                     {secretWord && (
-                        <div className="secret-word">Secret Word: {secretWord}</div>
+                        <div className="secret-word">Secret Word: <strong>{secretWord}</strong></div>
                     )}
                 </div>
 
@@ -413,8 +396,9 @@ export class CatchSketchMainComponent extends React.Component<CatchSketchMainPag
                     <div className="drawing-phase">
                         {this.renderTokens()}
                         {!playerData?.hasLocked && this.renderDrawingArea()}
+                        {tokensClaimed === 1 && roundTimer}
                     </div>
-                    )}
+                )}
 
                 {isGuessingPhase && (
                     <div className="guessing-phase">
@@ -435,5 +419,24 @@ export class CatchSketchMainComponent extends React.Component<CatchSketchMainPag
                 )}
             </div>
         );
+    }
+}
+
+export class CatchSketchRoundTimer extends React.Component<CatchSketchMainPageProps, {time: number}> {
+    private interval: any;
+
+    constructor(props){
+        super(props);
+        this.state = { time: Date.now() };
+    }
+    public componentDidMount() {
+      this.interval = setInterval(() => this.setState({ time: Date.now() }), 1000);
+    }
+    public componentWillUnmount() {
+        clearInterval(this.interval);
+    }
+    public render() {
+        const time_left = Math.max(0, Math.round((this.props.tokenTimeout + this.props.firstTokenTime - this.state.time) / 1000));
+        return (<div className="catchsketch-round-elapsed">Ending in <strong>{time_left}s</strong></div>);
     }
 }

@@ -29,8 +29,8 @@ export interface GameStateData {
     guesses: GuessData[];
     tokensClaimed: number; // 0, 1, or 2
     turnOrder: string[]; // player IDs in guessing turn order
-    roundStartTimestamp: Date;
-    firstTokenTimeStamp: Date;
+    roundStartTimestamp: number;
+    firstTokenTimeStamp: number;
 }
 
 export class CatchSketchGameState {
@@ -51,8 +51,8 @@ export class CatchSketchGameState {
             guesses: [],
             tokensClaimed: 0,
             turnOrder: [],
-            roundStartTimestamp: new Date(),
-            firstTokenTimeStamp: new Date(),
+            roundStartTimestamp: Date.now(),
+            firstTokenTimeStamp: Date.now(),
         };
 
         // Initialize players
@@ -87,7 +87,7 @@ export class CatchSketchGameState {
         this.data.guesses = [];
         this.data.tokensClaimed = 0;
         this.data.turnOrder = [];
-        this.data.roundStartTimestamp = new Date();
+        this.data.roundStartTimestamp = Date.now();
 
         // Reset player round state (keep scores)
         for (const playerId of this.playerIds) {
@@ -98,7 +98,10 @@ export class CatchSketchGameState {
         }
     }
 
-    public lock_token(playerId: string, tokenNumber: 1 | 2): void {
+    public lock_token(playerId: string, tokenNumber: 1 | 2): number {
+        if (!this.is_drawing_phase()) {
+            return 0;
+        }
         if (playerId === this.data.currentGuesserId) {
             throw new Error('Guesser cannot draw or lock tokens');
         }
@@ -117,7 +120,7 @@ export class CatchSketchGameState {
         }
 
         if (this.data.tokensClaimed === 0) {
-            this.data.firstTokenTimeStamp = new Date();
+            this.data.firstTokenTimeStamp = Date.now();
         }
 
         // Check if token is already taken
@@ -137,6 +140,39 @@ export class CatchSketchGameState {
         if (this.data.tokensClaimed === 2) {
             this.assign_remaining_turn_order();
         }
+
+        return this.data.tokensClaimed;
+    }
+
+    public get_token_ownership(): { [token: number]: string | null } {
+        const tokenOwnership: { [token: number]: string | null } = { 1: null, 2: null };
+        for (const playerId of this.get_player_ids()) {
+            const player = this.get_player_data(playerId);
+            if (player?.tokenNumber) {
+                tokenOwnership[player.tokenNumber] = playerId;
+            }
+        }
+        return tokenOwnership;
+    }
+
+    public force_assign_token(): boolean {
+        if (!this.is_drawing_phase()) {
+            return false;
+        }
+
+        if (this.data.tokensClaimed !== 1) {
+            return false;
+        }
+
+        const drawers = this.get_drawers();
+        const unlockedDrawers = drawers.filter(id => !this.data.players[id].hasLocked);
+        const shuffled = [...unlockedDrawers].sort(() => Math.random() - 0.5);
+        const tokenOwnership = this.get_token_ownership();
+
+        if (shuffled.length > 0) {
+            this.lock_token(shuffled[0], tokenOwnership[1] ? 2 : 1);
+        }
+        return true;
     }
 
     private assign_remaining_turn_order(): void {
@@ -146,7 +182,7 @@ export class CatchSketchGameState {
         // Shuffle remaining players for turn order 3+
         const shuffled = [...unlockedDrawers].sort(() => Math.random() - 0.5);
 
-        let nextOrder = 3;
+        let nextOrder = this.data.tokensClaimed + 1;
         for (const playerId of shuffled) {
             const player = this.data.players[playerId];
             player.hasLocked = true; // Mark as locked even without token
@@ -290,6 +326,23 @@ export class CatchSketchGameState {
 
     public get_guesses(): GuessData[] {
         return [...this.data.guesses];
+    }
+
+    public get_round_start_time(): number {
+        return this.data.roundStartTimestamp;
+    }
+
+    public get_first_token_time(): number {
+        return this.data.firstTokenTimeStamp;
+    }
+
+    public get_token_timer_ms(): number {
+        const player_cnt = Object.keys(this.data.players).length;
+        if (player_cnt <= 3) {
+            return 10000;
+        } else {
+            return 30000;
+        }
     }
 
     public get_current_drawing_player(): string | null {

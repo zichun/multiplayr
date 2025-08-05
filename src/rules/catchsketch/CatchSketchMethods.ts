@@ -38,13 +38,36 @@ export function CatchSketchLockToken(mp: MPType, clientId: string, tokenNumber: 
         mp.setData('gameState', gameState);
     }
 
+    let timer = mp.getData('timer');
+    clearTimeout(timer);
+
     try {
-        gameState.lock_token(clientId, tokenNumber);
+        if (gameState.lock_token(clientId, tokenNumber) === 1) {
+            timer = setTimeout(() => {
+                mp.tokenTimeout();
+            }, gameState.get_token_timer_ms());
+            mp.setData('timer', timer);
+        }
         mp.setData('gameState', gameState);
     } catch (error) {
         // Silently fail - UI should prevent invalid actions
         console.warn('Lock token failed:', error.message);
     }
+}
+
+export function CatchSketchTokenTimeout(mp: MPType, clientId: string): void {
+    let gameState = mp.getData('gameState');
+    if (!gameState || !gameState.lock_token) {
+        return;
+    }
+
+    if (clientId !== mp.hostId) {
+        // Only host can force a token timeout
+        return;
+    }
+
+    gameState.force_assign_token();
+    mp.setData('gameState', gameState);
 }
 
 export function CatchSketchSubmitGuess(mp: MPType, clientId: string, guess: string): void {
