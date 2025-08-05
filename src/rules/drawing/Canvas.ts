@@ -51,6 +51,12 @@ export class Canvas {
         this.actions.push(action);
     }
 
+    public undo(): void {
+        if (this.actions.length > 0) {
+            this.actions.pop();
+        }
+    }
+
     /**
      * Clear all actions (erase-all)
      */

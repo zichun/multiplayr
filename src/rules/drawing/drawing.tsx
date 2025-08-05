@@ -105,7 +105,23 @@ export const Drawing: GameRuleInterface = {
             mp.playersForEach((playerId) => {
                 mp.setPlayerData(playerId, 'canvas', new Canvas());
             });
-        }
+        },
+
+        undoStroke: (mp: MPType, clientId: string) => {
+            let canvas: Canvas;
+
+            if (clientId === mp.hostId) {
+                // Update global canvas for host
+                canvas = Canvas.from(mp.getData('canvas')) || new Canvas();
+                canvas.undo();
+                mp.setData('canvas', canvas);
+            } else {
+                // Update player canvas
+                canvas = Canvas.from(mp.getPlayerData(clientId, 'canvas')) || new Canvas();
+                canvas.undo();
+                mp.setPlayerData(clientId, 'canvas', canvas);
+            }
+        },
     },
 
     views: {

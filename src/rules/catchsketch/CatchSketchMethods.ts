@@ -79,10 +79,11 @@ export function CatchSketchNextRound(mp: MPType, clientId: string): void {
         gameState = CatchSketchGameState.from_data(gameState.data, gameState.playerIds);
         mp.setData('gameState', gameState);
     }
-    mp.plugins['drawing'].resetAllCanvases();
     try {
-        gameState.next_round();
-        mp.setData('gameState', gameState);
+        if (gameState.next_round()) {
+            mp.plugins['drawing'].resetAllCanvases();
+            mp.setData('gameState', gameState);
+        }
     } catch (error) {
         console.warn('Next round failed:', error.message);
     }

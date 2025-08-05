@@ -166,6 +166,10 @@ export class DrawingView extends React.Component<DrawingViewProps, DrawingViewSt
         this.props.MP.clearCanvas();
     }
 
+    private undo = () => {
+        this.props.MP.undoStroke();
+    }
+
     public render() {
         const width = this.props.width || 400;
         const height = this.props.height || 300;
@@ -223,6 +227,9 @@ export class DrawingView extends React.Component<DrawingViewProps, DrawingViewSt
 
                         {/* Erase all */}
                         <div className="erase-section">
+                            <button onClick={this.undo} className="erase-all-button">
+                                Undo
+                            </button>
                             <button onClick={this.eraseAll} className="erase-all-button">
                                 Erase All
                             </button>

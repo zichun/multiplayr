@@ -176,7 +176,7 @@ export class CatchSketchMainComponent extends React.Component<CatchSketchMainPag
     }
 
     private renderTokens() {
-        const { tokensClaimed, isGuesser, playerData } = this.props;
+        const { isGuesser, playerData } = this.props;
 
         if (isGuesser) {
             return null; // Guesser doesn't see tokens
@@ -361,14 +361,29 @@ export class CatchSketchMainComponent extends React.Component<CatchSketchMainPag
                             )}
                             {allCanvases[playerId] && React.createElement(CanvasRenderer, {
                                 canvas: allCanvases[playerId],
-                                width: 250,
-                                height: 200
+                                width: 400,
+                                height: 300
                             })}
                         </div>
                     )})}
                 </div>
             </div>
         );
+    }
+
+    private renderTokenAcquisation() {
+        const token1Claimed = this.getTokenOwner(1);
+        const token2Claimed = this.getTokenOwner(2);
+
+        if (token1Claimed || token2Claimed) {
+            const claimed = token1Claimed || token2Claimed;
+            let playerTag = this.renderPlayerTag(claimed);
+            let tokenclaimed = token1Claimed ? "1" : "2";
+
+            return (<div>Token {tokenclaimed} claimed by {playerTag}</div>);
+        } else {
+            return (<div />);
+        }
     }
 
     public render() {
@@ -388,6 +403,7 @@ export class CatchSketchMainComponent extends React.Component<CatchSketchMainPag
             <div className="catch-sketch">
                 <div className="game-header">
                     {isGuesser && <div className="guesser-info"><h3>You are the Guesser!</h3></div>}
+                    {isGuesser && this.renderTokenAcquisation()}
                     {secretWord && (
                         <div className="secret-word">Secret Word: {secretWord}</div>
                     )}

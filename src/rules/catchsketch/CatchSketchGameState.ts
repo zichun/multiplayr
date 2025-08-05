@@ -29,6 +29,8 @@ export interface GameStateData {
     guesses: GuessData[];
     tokensClaimed: number; // 0, 1, or 2
     turnOrder: string[]; // player IDs in guessing turn order
+    roundStartTimestamp: Date;
+    firstTokenTimeStamp: Date;
 }
 
 export class CatchSketchGameState {
@@ -49,6 +51,8 @@ export class CatchSketchGameState {
             guesses: [],
             tokensClaimed: 0,
             turnOrder: [],
+            roundStartTimestamp: new Date(),
+            firstTokenTimeStamp: new Date(),
         };
 
         // Initialize players
@@ -83,6 +87,7 @@ export class CatchSketchGameState {
         this.data.guesses = [];
         this.data.tokensClaimed = 0;
         this.data.turnOrder = [];
+        this.data.roundStartTimestamp = new Date();
 
         // Reset player round state (keep scores)
         for (const playerId of this.playerIds) {
@@ -109,6 +114,10 @@ export class CatchSketchGameState {
 
         if (this.data.tokensClaimed >= 2) {
             throw new Error('All tokens have been claimed');
+        }
+
+        if (this.data.tokensClaimed === 0) {
+            this.data.firstTokenTimeStamp = new Date();
         }
 
         // Check if token is already taken
@@ -205,7 +214,12 @@ export class CatchSketchGameState {
         }
     }
 
-    public next_round(): void {
+    public next_round(): boolean {
+        if (!this.is_review_phase()) {
+            // Can't start a round if not review phase
+            return false;
+        }
+
         this.data.round++;
 
         // Rotate guesser
@@ -214,6 +228,7 @@ export class CatchSketchGameState {
         this.data.currentGuesserId = this.playerIds[nextGuesserIndex];
 
         this.start_new_round();
+        return true;
     }
 
     private generate_secret_word(): string {
