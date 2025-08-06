@@ -340,6 +340,8 @@ export class CatchSketchGameState {
         const player_cnt = Object.keys(this.data.players).length;
         if (player_cnt <= 3) {
             return 10000;
+        } else if (player_cnt === 4) {
+            return 20000;
         } else {
             return 30000;
         }

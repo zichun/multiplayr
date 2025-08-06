@@ -378,15 +378,18 @@ export class CatchSketchMainComponent extends React.Component<CatchSketchMainPag
             isGuessingPhase,
             isReviewPhase,
             playerData,
-            tokensClaimed
+            tokensClaimed,
+            currentGuesser
         } = this.props;
 
         const roundTimer = React.createElement(CatchSketchRoundTimer, this.props);
+        const guesserTag = this.renderPlayerTag(currentGuesser);
 
         return (
             <div className="catch-sketch">
                 <div className="game-header">
                     {isGuesser && <div className="guesser-info"><h3>You are the Guesser!</h3></div>}
+                    {!isGuesser && <div className="guesser-info"><h3>{guesserTag} will be guessing!</h3></div>}
                     {secretWord && (
                         <div className="secret-word">Secret Word: <strong>{secretWord}</strong></div>
                     )}
