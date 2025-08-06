@@ -113,6 +113,16 @@ export class DrawingView extends React.Component<DrawingViewProps, DrawingViewSt
         ];
     }
 
+    private getTouchPos(e: React.TouchEvent<HTMLCanvasElement>): [number, number] {
+        const canvas = this.canvasRef.current!;
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0] || e.changedTouches[0];
+        return [
+            touch.clientX - rect.left,
+            touch.clientY - rect.top
+        ];
+    }
+
     private onMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
         const pos = this.getMousePos(e);
         this.setState({
@@ -131,6 +141,46 @@ export class DrawingView extends React.Component<DrawingViewProps, DrawingViewSt
     }
 
     private onMouseUp = () => {
+        if (!this.state.isDrawing) return;
+
+        // Create action and send to server
+        const action: DrawingAction = {
+            t: this.state.tool,
+            c: this.state.tool === 'p' ? this.state.color : undefined,
+            s: this.state.thickness,
+            pts: this.state.currentStroke
+        };
+
+        // Send action to server
+        this.props.MP.updateCanvas(action);
+
+        this.setState({
+            isDrawing: false,
+            currentStroke: []
+        });
+    }
+
+    private onTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+        e.preventDefault(); // Prevent scrolling
+        const pos = this.getTouchPos(e);
+        this.setState({
+            isDrawing: true,
+            currentStroke: [pos]
+        });
+    }
+
+    private onTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+        e.preventDefault(); // Prevent scrolling
+        if (!this.state.isDrawing) return;
+
+        const pos = this.getTouchPos(e);
+        this.setState(prevState => ({
+            currentStroke: [...prevState.currentStroke, pos]
+        }));
+    }
+
+    private onTouchEnd = (e: React.TouchEvent<HTMLCanvasElement>) => {
+        e.preventDefault(); // Prevent scrolling
         if (!this.state.isDrawing) return;
 
         // Create action and send to server
@@ -245,12 +295,17 @@ export class DrawingView extends React.Component<DrawingViewProps, DrawingViewSt
                             className="drawing-canvas"
                             style={{
                                 backgroundColor: '#fff',
-                                cursor: this.state.tool === 'p' ? 'crosshair' : 'grab'
+                                cursor: this.state.tool === 'p' ? 'crosshair' : 'grab',
+                                touchAction: 'none' // Prevent touch scrolling/zooming
                             }}
                             onMouseDown={this.onMouseDown}
                             onMouseMove={this.onMouseMove}
                             onMouseUp={this.onMouseUp}
                             onMouseLeave={this.onMouseUp}
+                            onTouchStart={this.onTouchStart}
+                            onTouchMove={this.onTouchMove}
+                            onTouchEnd={this.onTouchEnd}
+                            onTouchCancel={this.onTouchEnd}
                         />
                     </div>
                 </div>
