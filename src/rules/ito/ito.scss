@@ -372,10 +372,12 @@
 
         &.locked {
             background-color: #eee;
+            .player-number {
+                color: #48d52f;
+            }
             &.out-of-order {
                 .player-number {
-                    color: #e5783f; // Red for penalty
-                    text-decoration: line-through;
+                    color: #d5482f; // Red for penalty
                 }
             }
         }

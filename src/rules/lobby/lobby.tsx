@@ -140,7 +140,7 @@ export const Lobby: GameRuleInterface = {
 
     views: {
         'Lobby': LobbyView,
-        'LobbyWithHostName': LobbyHostNameView,
+        'SetNameWithLobby': LobbyHostNameView,
         'SetName': LobbySetNameView,
         'select-accent': LobbySelectAccentView,
         'select-icon': LobbySelectIconView,
@@ -270,28 +270,24 @@ export const Lobby: GameRuleInterface = {
 
         'host-roommanagement-body-row': class extends React.Component<ViewPropsInterface & {clientId: string,
                                                                                             isConnected: boolean,
-                                                                                            name: string}, {}> {
+                                                                                            name: string}, {}>
+        {
+            constructor(props: any) {
+                super(props);
+                this.disconnect = this.disconnect.bind(this);
+            }
+
             public disconnect() {
                 this.props.MP.disconnectClient(this.props.clientId);
                 return true;
             }
 
             public render() {
-                return React.createElement(
-                    'tr',
-                    null,
-                    React.createElement(
-                        'td',
-                        null,
-                        React.createElement(
-                            'div',
-                            {
-                                className: this.props.isConnected ? 'lobby-connected' : 'lobby-disconnected'
-                            },
-                            '')),
-                    React.createElement('td', null, this.props.clientId),
-                    React.createElement('td', null, this.props.name)
-
+                return (<tr>
+                    <td><div className={this.props.isConnected ? 'lobby-connected' : 'lobby-disconnected'}></div></td>
+                    <td>{this.props.clientId}</td>
+                    <td>{this.props.name}</td>
+                </tr>
                 );
             }
         }

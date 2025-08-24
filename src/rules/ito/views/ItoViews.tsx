@@ -20,7 +20,7 @@ export class ItoHostLobby extends React.Component<ViewPropsInterface, {}> {
                     'home': {
                         'icon': 'home',
                         'label': 'Lobby',
-                        'view': mp.getPluginView('lobby', 'LobbyWithHostName')
+                        'view': mp.getPluginView('lobby', 'SetNameWithLobby')
                     },
                     'clients': {
                         'icon': 'users',
@@ -50,7 +50,7 @@ export class ItoClientLobby extends React.Component<ViewPropsInterface, {}> {
                     'home': {
                         'icon': 'id-card',
                         'label': 'Lobby',
-                        'view': mp.getPluginView('lobby', 'SetName')
+                        'view': mp.getPluginView('lobby', 'SetNameWithLobby')
                     },
                     'rules': {
                         'icon': 'book',
@@ -134,88 +134,91 @@ class ItoInputClues extends React.Component<ItoMainViewProps, {}> {
                         <h2>🎉 Victory! 🎉</h2>
                     </div>
                 )}
-            <div className="ito-your-info">
-                <div className="category-display">{category}</div>
-                {typeof secretNumber !== 'undefined' && <div className="secret-number-display">{secretNumber}</div>}
-            </div>
+                <div className="ito-your-info">
+                    <div className="category-display">{category}</div>
+                    {typeof secretNumber !== 'undefined' && <div className="secret-number-display">{secretNumber}</div>}
+                </div>
 
-            <div className="ito-locked-players">
-                <h3>Locked In</h3>
-                {locked.length === 0 && <p style={{ textAlign: 'center' }}>Players have not locked in yet.</p>}
-                {locked.map((player: any) => {
-                    const isOutOfOrder = player.secretNumber < lastLockedNumber;
-                    lastLockedNumber = player.secretNumber;
-                    const playerTag = MP.getPluginView('lobby', 'player-tag', { clientId: player.clientId });
-                    return (
-                        <div key={player.clientId} className={`player-row locked ${isOutOfOrder ? 'out-of-order' : ''}`}>
-                            <div className="player-clue-number">
-                                <div className="player-tag-clue">
-                                    <div className="player-tag-container">{playerTag}</div>
-                                    <div className="player-clue">{player.clue}</div>
-                                </div>
-                                <div className="player-number">{player.secretNumber}</div>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            { unlockedPlayers.length > 0 && (
-                <div className="ito-unlocked-players">
-                    <h3>Players</h3>
-                    { !hasLockedClue && (
-                          <div className="player-row unlocked current-user">
-                              <div className="player-clue-number">
-                                  <div className="player-tag-clue">
-                                      <div className="player-tag-container">{MP.getPluginView('lobby', 'player-tag', {clientId: clientId })}</div>
-                                      <div className="player-clue">
-                                          <ItoEnterClue {...this.props} />
-                                      </div>
-                                  </div>
-                                  <div className="player-number">{ secretNumber }</div>
-                              </div>
-                          </div>
-                    ) }
-                    {unlockedPlayers.map(id => {
-                        const playerTag = MP.getPluginView('lobby', 'player-tag', { clientId: id });
-                        const isCurrentUser = id === clientId;
-                        if (isCurrentUser) {
-                            return;
-                        }
+                <div className="ito-locked-players">
+                    <h3>Locked In</h3>
+                    {locked.length === 0 && <p style={{ textAlign: 'center' }}>Players have not locked in yet.</p>}
+                    {locked.map((player: any) => {
+                        const isOutOfOrder = player.secretNumber < lastLockedNumber;
+                        lastLockedNumber = player.secretNumber;
+                        const playerTag = MP.getPluginView('lobby', 'player-tag', { clientId: player.clientId });
                         return (
-                            <div key={id} className={`player-row unlocked ${isCurrentUser ? 'current-user' : ''}`}>
+                            <div key={player.clientId} className={`player-row locked ${isOutOfOrder ? 'out-of-order' : ''}`}>
                                 <div className="player-clue-number">
                                     <div className="player-tag-clue">
                                         <div className="player-tag-container">{playerTag}</div>
-                                        <div className="player-clue">
-                                            {clues[id] || <em>Waiting for clue...</em>}
-                                        </div>
+                                        <div className="player-clue">{player.clue}</div>
                                     </div>
-                                    <div className="player-number">?</div>
+                                    <div className="player-number">
+                                        {roundEnded && <span>{player.secretNumber}</span>}
+                                        {isOutOfOrder ? '⏷' : '⏶'}
+                                    </div>
                                 </div>
                             </div>
                         );
                     })}
                 </div>
-              )}
 
-            {!hasLockedClue && !roundEnded && (
-                <button className="lock-in-button" onClick={() => this.props.MP.lockClue()}>
-                    Lock It In
-                </button>
-            )}
+                { unlockedPlayers.length > 0 && (
+                      <div className="ito-unlocked-players">
+                          <h3>Players</h3>
+                          { !hasLockedClue && (
+                                <div className="player-row unlocked current-user">
+                                    <div className="player-clue-number">
+                                        <div className="player-tag-clue">
+                                            <div className="player-tag-container">{MP.getPluginView('lobby', 'player-tag', {clientId: clientId })}</div>
+                                            <div className="player-clue">
+                                                <ItoEnterClue {...this.props} />
+                                            </div>
+                                        </div>
+                                        <div className="player-number">{ secretNumber }</div>
+                                    </div>
+                                </div>
+                          ) }
+                          {unlockedPlayers.map(id => {
+                              const playerTag = MP.getPluginView('lobby', 'player-tag', { clientId: id });
+                              const isCurrentUser = id === clientId;
+                              if (isCurrentUser) {
+                                  return;
+                              }
+                              return (
+                                  <div key={id} className={`player-row unlocked ${isCurrentUser ? 'current-user' : ''}`}>
+                                      <div className="player-clue-number">
+                                          <div className="player-tag-clue">
+                                              <div className="player-tag-container">{playerTag}</div>
+                                              <div className="player-clue">
+                                                  {clues[id] || <em>Waiting for clue...</em>}
+                                              </div>
+                                          </div>
+                                          <div className="player-number">?</div>
+                                      </div>
+                                  </div>
+                              );
+                          })}
+                      </div>
+                  )}
 
-            {nextRound && (
-                <button className="lock-in-button" onClick={() => this.props.MP.nextRound()}>
-                    Next Round {this.props.round >= 2 ? ' (Endless)' : '' }
-                </button>
-            )}
+                {!hasLockedClue && !roundEnded && (
+                    <button className="lock-in-button" onClick={() => this.props.MP.lockClue()}>
+                        Lock It In
+                    </button>
+                )}
 
-            {newGame && (
-                <button className="lock-in-button" onClick={() => this.props.MP.restartGame()}>
-                    Start New Game
-                </button>
-            )}
+                {nextRound && (
+                    <button className="lock-in-button" onClick={() => this.props.MP.nextRound()}>
+                        Next Round {this.props.round >= 2 ? ' (Endless)' : '' }
+                    </button>
+                )}
+
+                {newGame && (
+                    <button className="lock-in-button" onClick={() => this.props.MP.restartGame()}>
+                        Start New Game
+                    </button>
+                )}
             </div>
         );
     }
