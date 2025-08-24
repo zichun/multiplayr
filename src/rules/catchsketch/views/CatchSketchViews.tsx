@@ -20,7 +20,7 @@ export class CatchSketchHostLobby extends React.Component<ViewPropsInterface, {}
                     'home': {
                         'icon': 'home',
                         'label': 'Lobby',
-                        'view': mp.getPluginView('lobby', 'LobbyWithHostName')
+                        'view': mp.getPluginView('lobby', 'SetNameWithLobby')
                     },
                     'clients': {
                         'icon': 'users',
@@ -50,7 +50,7 @@ export class CatchSketchClientLobby extends React.Component<ViewPropsInterface, 
                     'home': {
                         'icon': 'id-card',
                         'label': 'Lobby',
-                        'view': mp.getPluginView('lobby', 'SetName')
+                        'view': mp.getPluginView('lobby', 'SetNameWithLobby')
                     },
                     'rules': {
                         'icon': 'book',
