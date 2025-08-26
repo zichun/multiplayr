@@ -116,10 +116,6 @@ function parseHash() {
 
     const hash = window.location.hash.split('&');
 
-    if (hash.length !== 2) {
-        return dict;
-    }
-
     for (let i = 0; i < hash.length; i = i + 1) {
         extractFromHash(hash[i], 'roomId', dict);
         extractFromHash(hash[i], 'clientId', dict);
