@@ -61,7 +61,8 @@ export const Shell: GameRuleInterface = {
                 const header = React.createElement(
                     Shell.views['HostShell-Main-Head'],
                     {
-                        topBarContent: this.props.topBarContent ? this.props.topBarContent : this.props.MP.roomId,
+                        topBarContent: this.props.topBarContent,
+                        roomId: this.props.MP.roomId,
                         gameName: this.props.gameName ?? '',
                     });
 
@@ -119,7 +120,7 @@ export const Shell: GameRuleInterface = {
 
                                 <FontAwesomeIcon icon={ linkObj.icon }
                                              className={ className }
-                                             size='3x'
+                                             size='1x'
                                              key={ 'icon-' + linkName } />
                                 <label>{ linkObj.label }</label>
                             </div>
@@ -136,7 +137,7 @@ export const Shell: GameRuleInterface = {
                              onClick={ this._togglePanel }>
 
                             <FontAwesomeIcon icon="bars"
-                                         size='3x'
+                                         size='1x'
                                          className='icon menu' />
                         </div>
                         { icons }
@@ -146,14 +147,28 @@ export const Shell: GameRuleInterface = {
         },
 
         'HostShell-Main-Head': class extends React.Component<
-            ViewPropsInterface & { topBarContent: any, gameName: string},
+            ViewPropsInterface & { topBarContent: any, gameName: string, roomId: string},
             {}
         > {
+            constructor(props: any) {
+                super(props);
+                this.copyRoomId = this.copyRoomId.bind(this);
+            }
+            public copyRoomId() {
+                const url = window.location.protocol + "//" + window.location.host + "/join#roomId=" + this.props.roomId;
+                navigator.clipboard.writeText(url);
+            }
             public render() {
+                let topbar = null;
+                if (!this.props.topBarContent) {
+                    topbar = (<div className="room-id" onClick={ this.copyRoomId }>{ this.props.roomId }</div>);
+                } else {
+                    topbar = this.props.topBarContent;
+                }
                 return (
                     <div className='shell-header'>
                         <div className='shell-room'>
-                            { this.props.topBarContent }
+                            { topbar }
                         </div>
                         <div className='shell-title'>
                             { this.props.gameName }

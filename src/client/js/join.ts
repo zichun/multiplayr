@@ -37,6 +37,8 @@ $(() => {
             $('#clientId').val('');
         });
         $('#clientId').attr('disabled', '').val(hash.clientId);
+    } else if (hash.roomId) {
+        $('#roomId').val(hash.roomId);
     }
 
 });
