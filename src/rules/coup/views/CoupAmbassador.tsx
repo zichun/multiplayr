@@ -33,7 +33,7 @@ class CoupAmbassadorCardChangePage extends React.Component<CoupViewPropsInterfac
         this._unselectCard = this._unselectCard.bind(this);
     }
 
-    private _selectCard(choice: string, index: Number) {
+    private _selectCard(choice: string, index: number) {
         const cards = this.state.cards;
         for (let i = 0; i < cards.length; i++) {
             if (cards[i] === choice) {
@@ -45,7 +45,7 @@ class CoupAmbassadorCardChangePage extends React.Component<CoupViewPropsInterfac
         return true;
     }
 
-    private _unselectCard(choice: string, index: Number) {
+    private _unselectCard(choice: string, index: number) {
         const tr = [];
         for (let i = 0; i < this.state.cards.length; i++) {
             if (this.state.cards[i] !== choice) {

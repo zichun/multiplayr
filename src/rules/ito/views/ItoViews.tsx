@@ -66,7 +66,7 @@ export class ItoClientLobby extends React.Component<ViewPropsInterface, {}> {
 interface ItoMainViewProps extends ViewPropsInterface {
     hasLockedClue: boolean,
     secretNumber: number,
-    category: String,
+    category: string,
     gameStatus: GameStatus,
     round: number,
     lives: number,

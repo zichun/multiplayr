@@ -90,7 +90,7 @@ export class AvalonClientChooseQuestMembers extends React.Component<AvalonViewPr
         }
     }
 
-    private _selectMember(choice: string, index: Number) {
+    private _selectMember(choice: string, index: number) {
         const members = this.state.members;
 
         for (let i = 0; i < members.length; i++) {
@@ -109,7 +109,7 @@ export class AvalonClientChooseQuestMembers extends React.Component<AvalonViewPr
         return true;
     }
 
-    private _unselectMember(choice: string, index: Number) {
+    private _unselectMember(choice: string, index: number) {
         const tr = [];
 
         for (let i = 0; i < this.state.members.length; i++) {

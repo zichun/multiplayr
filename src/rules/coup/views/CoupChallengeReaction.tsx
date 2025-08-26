@@ -35,7 +35,7 @@ class CoupClientChooseLoseInfluencePage extends React.Component<CoupViewPropsInt
         this._selectCard = this._selectCard.bind(this);
     }
 
-    private _selectCard(choice: string, index: Number) {
+    private _selectCard(choice: string, index: number) {
         this.setState({ card: choice });
         return true;
     }

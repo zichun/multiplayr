@@ -14,6 +14,7 @@ import Session from './session';
 import MPRULES from '../../rules/rules';
 
 import * as DOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import * as React from 'react';
 
 import {
@@ -71,6 +72,7 @@ export class GameObject {
     };
     private plugins: { [ruleName: string]: GameObject };
     private playerData: any;
+    private reactRoots: WeakMap<Element, any>; // Cache for React 19 roots
 
     protected session: Session;
     protected dxc: DataExchange;
@@ -247,6 +249,7 @@ export class GameObject {
         }
 
         this.plugins = {};
+        this.reactRoots = new WeakMap(); // Initialize React 19 roots cache
         const prefix = this.namespace === '' ? '' : this.namespace + NAMESPACE_DELIMITER;
 
         if (this.parent) {
@@ -642,7 +645,14 @@ export class GameObject {
                 // we have this view
                 const view = this.runReactView(displayName, props);
                 if (container) {
-                    return DOM.render(view, container);
+                    // Use React 19 createRoot API
+                    let root = this.reactRoots.get(container);
+                    if (!root) {
+                        root = createRoot(container);
+                        this.reactRoots.set(container, root);
+                    }
+                    root.render(view);
+                    return view;
                 } else {
                     // todo: hackish. abstract out as a sync op
                     return view;
@@ -1151,7 +1161,7 @@ export class GameObject {
         }
 
         forEach(this.clientsData, (clientId, playerStore) => {
-            if (!clientsStore.hasOwnProperty(clientId) === undefined) {
+            if (!clientsStore.hasOwnProperty(clientId)) {
                 throw (new Error('Invalid client store state - no ' + clientId));
             }
             forEach(this.rule.playerData, (variable) => {

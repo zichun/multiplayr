@@ -1,12 +1,12 @@
-import * as express from 'express';
+import express from 'express';
 import * as http from 'http';
 import * as socketio from 'socket.io';
 import * as fs from 'fs';
 
-import * as webpackDevMiddleware from 'webpack-dev-middleware';
-import * as webpackHotMiddleware from 'webpack-hot-middleware'
-import * as webpack from 'webpack';
-import * as config from '../webpack.config.js';
+import webpackDevMiddleware from 'webpack-dev-middleware';
+import webpackHotMiddleware from 'webpack-hot-middleware';
+import webpack from 'webpack';
+import config from '../webpack.config.js';
 
 const app = express();
 const server = http.createServer(app);

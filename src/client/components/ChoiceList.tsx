@@ -15,7 +15,8 @@ export class ChoiceList extends React.Component<{
     multi?: boolean,
     className?: string,
     itemClassName?: string,
-    style?: any
+    style?: any,
+    children?: React.ReactNode
 }, {
     selectedKeys: string[]
 }> {
@@ -133,7 +134,8 @@ export class Choice extends React.Component<{
     className?: string,
     selectItem?: (choice: string, choiceIndex: number) => boolean,
     unselectItem?: (choice: string, choiceIndex: number) => boolean,
-    isSelected?: boolean
+    isSelected?: boolean,
+    children?: React.ReactNode
 }, {}> {
 
     private _onClick() {

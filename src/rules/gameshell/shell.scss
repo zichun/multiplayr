@@ -1,4 +1,4 @@
-$headerHeight: 39px;
+$headerHeight: 35px;
 $panelWidth: $headerHeight;
 $panelExtendWidth: 180px;
 
@@ -29,7 +29,12 @@ $panelExtendWidth: 180px;
         height: $headerHeight;
         line-height: $headerHeight;
         box-sizing: border-box;
+
+        .room-id {
+            cursor: pointer;
+        }
     }
+
 
     .shell-newgame {
         float: right;

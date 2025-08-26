@@ -41,7 +41,7 @@ class CoupClientSelectAction extends React.Component<CoupViewPropsInterface, {
         this._selectPlayer = this._selectPlayer.bind(this);
     }
 
-    private _selectAction(choice: string, index: Number) {
+    private _selectAction(choice: string, index: number) {
         this.setState({
             action: CoupAction[choice],
             player: this.state.player
@@ -49,7 +49,7 @@ class CoupClientSelectAction extends React.Component<CoupViewPropsInterface, {
         return true;
     }
 
-    private _selectPlayer(choice: string, index: Number) {
+    private _selectPlayer(choice: string, index: number) {
         this.setState({
             action: this.state.action,
             player: choice

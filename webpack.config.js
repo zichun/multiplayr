@@ -77,8 +77,10 @@ function IndividualRules() {
             publicPath: '/',
             pathinfo: true,
             filename: '[name].js',
-            libraryTarget: 'var',
-            library: '_mprules'
+            library: {
+                name: '_mprules',
+                type: 'var'
+            }
         },
         target: 'web',
         devtool: 'source-map',
@@ -141,8 +143,10 @@ function AllRulesConfig() {
             publicPath: '/',
             pathinfo: false,
             filename: '[name].bundle.js',
-            libraryTarget: 'var',
-            library: '_mprules'
+            library: {
+                name: '_mprules',
+                type: 'var'
+            }
         },
         target: 'web',
         module: WebModule(false),
@@ -167,8 +171,10 @@ function MultiplayrLibConfig(mode) {
             publicPath: '/',
             pathinfo: true,
             filename: '[name].bundle.js',
-            libraryTarget: 'var',
-            library: '_mplib'
+            library: {
+                name: '_mplib',
+                type: 'var'
+            }
         },
         target: 'web',
         devtool: mode === 'production' ? false : 'source-map',

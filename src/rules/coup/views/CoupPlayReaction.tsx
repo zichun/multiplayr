@@ -79,7 +79,7 @@ class CoupClientPlayReactionPage extends React.Component<CoupViewPropsInterface,
         this._selectReaction = this._selectReaction.bind(this);
     }
 
-    private _selectReaction(choice: string, index: Number) {
+    private _selectReaction(choice: string, index: number) {
         this.setState({ reaction: CoupReaction[choice] });
         return true;
     }

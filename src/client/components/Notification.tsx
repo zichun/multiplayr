@@ -11,7 +11,8 @@ import * as React from 'react';
 
 export class Notification extends React.Component<{
     hideAfter?: number,
-    clickToHide?: boolean
+    clickToHide?: boolean,
+    children?: React.ReactNode
 }, {
     hidden: boolean,
 }> {

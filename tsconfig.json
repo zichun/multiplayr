@@ -2,16 +2,29 @@
     "compilerOptions": {
         "incremental": true,
         "tsBuildInfoFile": "./buildcache/front-end",
-        "target": "es5",
+        "target": "ES2020",
+        "lib": ["ES2020", "DOM", "DOM.Iterable"],
         "module": "commonjs",
         "outDir": "build",
         "jsx": "react",
-        "sourceMap": true
+        "sourceMap": true,
+        "strict": false,
+        "noImplicitAny": false,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "moduleResolution": "node",
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "paths": {
+            "@fortawesome/react-fontawesome": ["./node_modules/@fortawesome/react-fontawesome/dist/index.d.ts"]
+        }
     },
-    "include": ["src", "node_modules/typescript/lib/lib.es6.d.ts"],
+    "include": ["src"],
     "exclude": [
         "node_modules",
         "out",
-        "gulp"
+        "gulp",
+        "build"
     ]
 }
