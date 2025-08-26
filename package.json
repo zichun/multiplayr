@@ -17,7 +17,7 @@
 		"assert": "^2.0.0",
 		"chance": "^1.0.4",
 		"colorsys": "^1.0.9",
-		"mocha": "^8.4.0",
+		"mocha": "^11.7.1",
 		"node-dir": "^0.1.16",
 		"react": "^19.1.1",
 		"react-dom": "^19.1.1",
@@ -29,6 +29,8 @@
 		"source-map-loader": "^5.0.0"
 	},
 	"devDependencies": {
+		"@humanwhocodes/config-array": "^0.13.0",
+		"@humanwhocodes/object-schema": "^2.0.3",
 		"@types/express": "^5.0.3",
 		"@types/jquery": "*",
 		"@types/mocha": "*",
@@ -45,7 +47,7 @@
 		"@typescript-eslint/parser": "^8.40.0",
 		"css-loader": "^5.0.1",
 		"del": "^2.2.2",
-		"eslint": "^8.57.0",
+		"eslint": "^9.34.0",
 		"eslint-plugin-react": "^7.21.5",
 		"eslint-webpack-plugin": "^4.2.0",
 		"express": "^4.17.1",

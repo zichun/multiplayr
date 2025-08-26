@@ -13,7 +13,12 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "paths": {
+            "@fortawesome/react-fontawesome": ["./node_modules/@fortawesome/react-fontawesome/dist/index.d.ts"]
+        }
     },
     "include": ["src"],
     "exclude": [

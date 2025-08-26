@@ -3,7 +3,7 @@
  */
 
 import { Canvas, DrawingAction, COLOR_PALETTE } from '../../rules/drawing/Canvas';
-import * as assert from 'assert';
+import assert from 'assert';
 
 describe('Drawing Canvas', () => {
     describe('Canvas class', () => {

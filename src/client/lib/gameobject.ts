@@ -1161,7 +1161,7 @@ export class GameObject {
         }
 
         forEach(this.clientsData, (clientId, playerStore) => {
-            if (!clientsStore.hasOwnProperty(clientId) === undefined) {
+            if (!clientsStore.hasOwnProperty(clientId)) {
                 throw (new Error('Invalid client store state - no ' + clientId));
             }
             forEach(this.rule.playerData, (variable) => {
