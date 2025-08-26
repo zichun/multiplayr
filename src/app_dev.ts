@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import webpackDevMiddleware from 'webpack-dev-middleware';
 import webpackHotMiddleware from 'webpack-hot-middleware';
 import webpack from 'webpack';
-import * as config from '../webpack.config.js';
+import config from '../webpack.config.js';
 
 const app = express();
 const server = http.createServer(app);
