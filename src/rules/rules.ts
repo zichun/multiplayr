@@ -104,11 +104,6 @@ export const MPRULES = {
         rules: ['lobby', 'gameshell', 'ito'],
         rule: ItoRule
     },
-    'drawing': {
-        description: 'Drawing Canvas - Collaborative Drawing Tool',
-        rules: ['drawing'],
-        rule: DrawingRule
-    },
     'catchsketch': {
         description: 'Catch Sketch - Speed Drawing Guessing Game',
         rules: ['lobby', 'gameshell', 'drawing', 'catchsketch'],

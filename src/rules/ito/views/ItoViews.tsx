@@ -6,6 +6,9 @@ import * as React from 'react';
 import { ViewPropsInterface } from '../../../common/interfaces';
 import { ItoGameRules } from './ItoRules';
 import {GameStatus } from '../ItoGameState';
+import FailSound from '../sounds/fail.mp3';
+import PassSound from '../sounds/pass.mp3';
+import Sound from 'react-sound';
 
 // Lobby Views
 export class ItoHostLobby extends React.Component<ViewPropsInterface, {}> {
@@ -142,10 +145,16 @@ class ItoInputClues extends React.Component<ItoMainViewProps, {}> {
                 <div className="ito-locked-players">
                     <h3>Locked In</h3>
                     {locked.length === 0 && <p style={{ textAlign: 'center' }}>Players have not locked in yet.</p>}
-                    {locked.map((player: any) => {
+                    {locked.map((player: any, index: number) => {
                         const isOutOfOrder = player.secretNumber < lastLockedNumber;
                         lastLockedNumber = player.secretNumber;
                         const playerTag = MP.getPluginView('lobby', 'player-tag', { clientId: player.clientId });
+
+                        let soundEl = null;
+                        if (index === locked.length - 1) {
+                            const sound = isOutOfOrder ? FailSound : PassSound;
+                            soundEl = (<Sound url={ sound } playStatus="PLAYING" />);
+                        }
                         return (
                             <div key={player.clientId} className={`player-row locked ${isOutOfOrder ? 'out-of-order' : ''}`}>
                                 <div className="player-clue-number">
@@ -156,6 +165,7 @@ class ItoInputClues extends React.Component<ItoMainViewProps, {}> {
                                     <div className="player-number">
                                         {roundEnded && <span>{player.secretNumber}</span>}
                                         {isOutOfOrder ? '⏷' : '⏶'}
+                                        { soundEl }
                                     </div>
                                 </div>
                             </div>
