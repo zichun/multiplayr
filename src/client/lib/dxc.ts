@@ -66,10 +66,12 @@ export class DataExchange implements ClientDataExchangeInterface {
     }
 
     public rehost(
+        ruleName: string,
         roomId: string,
         clientId: string,
         cb?: CallbackType<ReturnPacketType>
     ) {
+        this.ruleName = ruleName;
         this.session.rejoinRoom(
             roomId,
             clientId,

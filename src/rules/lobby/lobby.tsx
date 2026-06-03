@@ -224,70 +224,187 @@ export const Lobby: GameRuleInterface = {
         //
         // Views to allow host to manage players in the room
         //
-        'host-roommanagement': class extends React.Component<ViewPropsInterface, {}> {
-            public render() {
-
-                return React.createElement(
-                    'table',
-                    {id: 'lobby-roommanagement'},
-                    React.createElement(Lobby.views['host-roommanagement-header'], {}),
-                    React.createElement(Lobby.views['host-roommanagement-body'], this.props)
-                );
-            }
-        },
-
-        'host-roommanagement-header': class extends React.Component<ViewPropsInterface, {}> {
-            public render() {
-                return React.createElement(
-                    'tr',
-                    null,
-                    React.createElement('th', null, ' '),
-                    React.createElement('th', null, 'Client-Id'),
-                    React.createElement('th', null, 'Name')
-                );
-            }
-        },
-
-        'host-roommanagement-body': class extends React.Component<ViewPropsInterface & {names: string[],
-                                                                                        clientIds: string[],
-                                                                                        playersConnection: boolean[]}, {}> {
-            public render() {
-                const tr = [];
-                for (let i = 0; i < this.props.names.length; i = i + 1) {
-                    tr.push(React.createElement(Lobby.views['host-roommanagement-body-row'], {
-                        MP: this.props.MP,
-                        clientId: this.props.clientIds[i],
-                        name: this.props.names[i],
-                        isConnected: this.props.playersConnection[i],
-                        key: 'player' + i
-                    }));
-                }
-                return React.createElement('tbody',
-                                           null,
-                                           tr);
-            }
-        },
-
-        'host-roommanagement-body-row': class extends React.Component<ViewPropsInterface & {clientId: string,
-                                                                                            isConnected: boolean,
-                                                                                            name: string}, {}>
-        {
+        'host-roommanagement': class extends React.Component<ViewPropsInterface & {
+            names: string[],
+            clientIds: string[],
+            icons: number[],
+            accents: string[],
+            playersConnection: boolean[],
+            playerCount: number
+        }, { copied: boolean }> {
             constructor(props: any) {
                 super(props);
-                this.disconnect = this.disconnect.bind(this);
+                this.state = { copied: false };
+                this.copyRoomId = this.copyRoomId.bind(this);
             }
 
-            public disconnect() {
-                this.props.MP.disconnectClient(this.props.clientId);
-                return true;
+            public copyRoomId() {
+                const mp = this.props.MP;
+                const roomId = mp.roomId;
+                const protocol = window.location.protocol;
+                const host = window.location.host;
+                const pathname = window.location.pathname;
+
+                let joinPath = "/join";
+                if (pathname.indexOf("host_p2p.html") >= 0) {
+                    joinPath = pathname.replace("host_p2p.html", "join_p2p.html");
+                } else if (pathname.indexOf("host_p2p") >= 0) {
+                    joinPath = pathname.replace("host_p2p", "join_p2p");
+                } else if (pathname.indexOf("host.html") >= 0) {
+                    joinPath = pathname.replace("host.html", "join.html");
+                } else if (pathname.indexOf("host") >= 0) {
+                    joinPath = pathname.replace("host", "join");
+                }
+
+                const url = protocol + "//" + host + joinPath + "#roomId=" + roomId;
+
+                const reportSuccess = () => {
+                    this.setState({ copied: true });
+                    setTimeout(() => {
+                        this.setState({ copied: false });
+                    }, 1500);
+                };
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(url)
+                        .then(reportSuccess)
+                        .catch((err) => {
+                            console.error('Async: Could not copy text: ', err);
+                            this.fallbackCopyText(url);
+                            reportSuccess();
+                        });
+                } else {
+                    this.fallbackCopyText(url);
+                    reportSuccess();
+                }
+            }
+
+            private fallbackCopyText(text: string) {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.top = "0";
+                textArea.style.left = "0";
+                textArea.style.width = "2em";
+                textArea.style.height = "2em";
+                textArea.style.padding = "0";
+                textArea.style.border = "none";
+                textArea.style.outline = "none";
+                textArea.style.boxShadow = "none";
+                textArea.style.background = "transparent";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                } catch (err) {
+                    console.error('Fallback: Oops, unable to copy', err);
+                }
+                document.body.removeChild(textArea);
             }
 
             public render() {
-                return (<tr>
-                    <td><div className={this.props.isConnected ? 'lobby-connected' : 'lobby-disconnected'}></div></td>
-                    <td>{this.props.clientId}</td>
-                    <td>{this.props.name}</td>
-                </tr>
+                const mp = this.props.MP;
+                const roomId = mp.roomId;
+                const rawRuleName = mp.parent && mp.parent.ruleName ? mp.parent.ruleName : (sessionStorage.getItem('ruleName') || 'Game');
+                
+                const ruleDisplayName = (name: string): string => {
+                    if (!name) return 'Game Lobby';
+                    if (name.toLowerCase() === 'catchsketch') return 'Catch Sketch';
+                    if (name.toLowerCase() === 'theoddone') return 'The Odd One';
+                    if (name.toLowerCase() === 'tictactoepoker') return 'Tic Tac Toe Poker';
+                    if (name.toLowerCase() === 'minesweeperflags') return 'Minesweeper Flags';
+                    return name.charAt(0).toUpperCase() + name.slice(1);
+                };
+
+                const gameName = ruleDisplayName(rawRuleName);
+
+                const rows = [];
+                for (let i = 0; i < this.props.names.length; i++) {
+                    const clientId = this.props.clientIds[i];
+                    const name = this.props.names[i];
+                    const iconIndex = this.props.icons[i] ?? 0;
+                    const accent = this.props.accents[i] || '#888';
+                    const isHost = clientId === mp.hostId;
+                    const isConnected = isHost ? true : this.props.playersConnection[i];
+
+                    rows.push(
+                        <div className={`room-player-card ${isHost ? 'is-host' : ''}`} key={'player-' + i}>
+                            <div className="player-card-profile">
+                                <div className="player-card-avatar" style={{ backgroundColor: accent }}>
+                                    <FontAwesomeIcon icon={icons[iconIndex]} className="player-card-avatar-icon" />
+                                </div>
+                                <div className="player-card-details">
+                                    <span className="player-card-name">
+                                        {name}
+                                        {isHost && <span className="player-card-badge host">Host</span>}
+                                    </span>
+                                    <span className="player-card-id" title={clientId}>
+                                        ID: {clientId.substring(0, 8)}...
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="player-card-status">
+                                <span className={`status-pill ${isConnected ? 'connected' : 'disconnected'}`}>
+                                    <span className="status-dot"></span>
+                                    {isConnected ? 'Active' : 'Offline'}
+                                </span>
+                            </div>
+
+                            <div className="player-card-actions">
+                                {!isHost ? (
+                                    <button 
+                                        className="player-kick-btn"
+                                        title="Kick player from room"
+                                        onClick={() => {
+                                            if (confirm(`Are you sure you want to kick ${name} from this lobby?`)) {
+                                                mp.disconnectClient(clientId);
+                                            }
+                                        }}
+                                    >
+                                        <FontAwesomeIcon icon="trash" style={{ marginRight: '6px' }} />
+                                        Kick
+                                    </button>
+                                ) : (
+                                    <span className="player-host-lock" title="You cannot kick the host">
+                                        <FontAwesomeIcon icon="unlock" style={{ opacity: 0.5 }} />
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    );
+                }
+
+                return (
+                    <div className="lobby-roommanagement-container">
+                        <div className="lobby-roommanagement-header">
+                            <h2 className="lobby-roommanagement-title">
+                                <FontAwesomeIcon icon="users" style={{ marginRight: '10px', color: '#3498db' }} />
+                                Connected Clients
+                            </h2>
+                            <div className="lobby-info-badges">
+                                <div className="info-badge game-badge">
+                                    <span className="info-badge-label">Lobby:</span>
+                                    <span className="info-badge-value">{gameName}</span>
+                                </div>
+                                <div className="info-badge room-badge" onClick={this.copyRoomId} title="Click to copy join link">
+                                    <span className="info-badge-label">Room ID:</span>
+                                    <span className="info-badge-value monospace">
+                                        {this.state.copied ? 'Copied!' : roomId}
+                                    </span>
+                                </div>
+                                <div className="info-badge count-badge">
+                                    <span className="info-badge-label">Connected:</span>
+                                    <span className="info-badge-value">{this.props.names.length}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="room-players-list">
+                            {rows}
+                        </div>
+                    </div>
                 );
             }
         }

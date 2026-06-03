@@ -130,6 +130,7 @@ export class GameObject {
         this.isHost = true;
 
         this.dxc.rehost(
+            ruleName,
             roomId,
             clientId,
             (res: ReturnPacketType) => {
@@ -376,11 +377,7 @@ export class GameObject {
         });
 
         if (this.clients.indexOf(clientId) !== -1) {
-            if (this.clientsData[clientId].active === false) {
-                return this.rejoinClient(clientId);
-            } else {
-                throw (new Error('Client cannot re-join an active session'));
-            }
+            return this.rejoinClient(clientId);
         }
 
         this.clients.push(clientId);
@@ -1120,8 +1117,14 @@ export class GameObject {
             throw (new Error('Invalid call: only host can set plugin state'));
         }
 
+        if (!pluginStore) {
+            return;
+        }
+
         forEach(this.plugins, (pluginName, plugin) => {
-            plugin.setState(pluginStore[pluginName], mapPlayers);
+            if (pluginStore[pluginName] !== undefined && pluginStore[pluginName] !== null) {
+                plugin.setState(pluginStore[pluginName], mapPlayers);
+            }
         });
     }
 
@@ -1188,6 +1191,10 @@ export class GameObject {
             throw (new Error('Invalid call: only host can set state'));
         }
 
+        if (!stateString || stateString === 'undefined') {
+            return;
+        }
+
         const state = JSON.parse(stateString);
 
         if (!state.hostStore) {
@@ -1239,7 +1246,8 @@ export class GameObject {
             getPluginSetView: hostExposedMethodWrapper('getPluginSetView'),
             clientId: gameObj.clientId,
             hostId: gameObj.clientId, // todo: fix this for normal clients
-            roomId: gameObj.roomId
+            roomId: gameObj.roomId,
+            ruleName: gameObj.rule ? gameObj.rule.name : ''
         };
 
         forEach(methods, (method) => {

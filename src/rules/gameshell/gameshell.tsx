@@ -148,20 +148,84 @@ export const Shell: GameRuleInterface = {
 
         'HostShell-Main-Head': class extends React.Component<
             ViewPropsInterface & { topBarContent: any, gameName: string, roomId: string},
-            {}
+            { copied: boolean }
         > {
             constructor(props: any) {
                 super(props);
+                this.state = { copied: false };
                 this.copyRoomId = this.copyRoomId.bind(this);
             }
             public copyRoomId() {
-                const url = window.location.protocol + "//" + window.location.host + "/join#roomId=" + this.props.roomId;
-                navigator.clipboard.writeText(url);
+                const protocol = window.location.protocol;
+                const host = window.location.host;
+                const pathname = window.location.pathname;
+
+                let joinPath = "/join";
+                if (pathname.indexOf("host_p2p.html") >= 0) {
+                    joinPath = pathname.replace("host_p2p.html", "join_p2p.html");
+                } else if (pathname.indexOf("host_p2p") >= 0) {
+                    joinPath = pathname.replace("host_p2p", "join_p2p");
+                } else if (pathname.indexOf("host.html") >= 0) {
+                    joinPath = pathname.replace("host.html", "join.html");
+                } else if (pathname.indexOf("host") >= 0) {
+                    joinPath = pathname.replace("host", "join");
+                }
+
+                const url = protocol + "//" + host + joinPath + "#roomId=" + this.props.roomId;
+
+                const reportSuccess = () => {
+                    this.setState({ copied: true });
+                    setTimeout(() => {
+                        this.setState({ copied: false });
+                    }, 1500);
+                };
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(url)
+                        .then(reportSuccess)
+                        .catch((err) => {
+                            console.error('Async: Could not copy text: ', err);
+                            this.fallbackCopyText(url);
+                            reportSuccess();
+                        });
+                } else {
+                    this.fallbackCopyText(url);
+                    reportSuccess();
+                }
+            }
+            private fallbackCopyText(text: string) {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                
+                textArea.style.position = "fixed";
+                textArea.style.top = "0";
+                textArea.style.left = "0";
+                
+                textArea.style.width = "2em";
+                textArea.style.height = "2em";
+                textArea.style.padding = "0";
+                textArea.style.border = "none";
+                textArea.style.outline = "none";
+                textArea.style.boxShadow = "none";
+                textArea.style.background = "transparent";
+                
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+
+                try {
+                    document.execCommand('copy');
+                } catch (err) {
+                    console.error('Fallback: Oops, unable to copy', err);
+                }
+
+                document.body.removeChild(textArea);
             }
             public render() {
                 let topbar = null;
                 if (!this.props.topBarContent) {
-                    topbar = (<div className="room-id" onClick={ this.copyRoomId }>{ this.props.roomId }</div>);
+                    const text = this.state.copied ? "Copied!" : this.props.roomId;
+                    topbar = (<div className="room-id" onClick={ this.copyRoomId }>{ text }</div>);
                 } else {
                     topbar = this.props.topBarContent;
                 }

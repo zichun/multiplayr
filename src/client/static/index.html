@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayr</title>
+    <!-- Grotesk Fonts for De Stijl Aesthetics -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;900&family=Outfit:wght@400;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --mondrian-red: #e62b1e;
+            --mondrian-red-hover: #ff3b30;
+            --mondrian-blue: #004d9b;
+            --mondrian-blue-hover: #007aff;
+            --mondrian-yellow: #facd15;
+            --mondrian-cream: #f4f3eb;
+            --mondrian-black: #000000;
+            --mondrian-white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--mondrian-cream);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        /* The Mondrian Art Frame */
+        .art-frame {
+            border: 14px solid var(--mondrian-black);
+            background-color: var(--mondrian-black);
+            display: grid;
+            grid-template-columns: 1.6fr 2fr 1fr;
+            grid-template-rows: 140px 180px 140px;
+            gap: 12px; /* Thicker black grid lines */
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 25px 25px 0px rgba(0, 0, 0, 0.12);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .art-frame:hover {
+            box-shadow: 30px 30px 0px rgba(0, 0, 0, 0.18);
+        }
+
+        /* Base Cell Styles */
+        .cell {
+            background-color: var(--mondrian-white);
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 1. Title Block (White, Spans Col 1 & 2) */
+        .cell-title {
+            grid-column: 1 / 3;
+            grid-row: 1 / 2;
+            align-items: flex-end;
+            padding: 24px;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--mondrian-black);
+            line-height: 0.9;
+            letter-spacing: -2px;
+            text-transform: uppercase;
+        }
+
+        /* 2. Yellow Block (Top Right) */
+        .cell-yellow {
+            grid-column: 3 / 4;
+            grid-row: 1 / 2;
+            background-color: var(--mondrian-yellow);
+        }
+
+        /* 3. Host Button Block (Red, Spans Row 2 & 3) */
+        .cell-host {
+            grid-column: 1 / 2;
+            grid-row: 2 / 4;
+            background-color: var(--mondrian-red);
+            transition: background-color 0.25s ease;
+        }
+
+        /* 4. Center-Right Decorative Block (Cream) */
+        .cell-cream {
+            grid-column: 2 / 4;
+            grid-row: 2 / 3;
+            background-color: var(--mondrian-cream);
+        }
+
+        /* 5. Bottom-Center Block (White) */
+        .cell-bottom-center {
+            grid-column: 2 / 3;
+            grid-row: 3 / 4;
+            background-color: var(--mondrian-white);
+        }
+
+        /* 6. Join Button Block (Blue, Bottom Right) */
+        .cell-join {
+            grid-column: 3 / 4;
+            grid-row: 3 / 4;
+            background-color: var(--mondrian-blue);
+            transition: background-color 0.25s ease;
+        }
+
+        /* Interactive Navigation Button Panels */
+        .nav-link {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            text-decoration: none;
+            align-items: center;
+            justify-content: center;
+            color: var(--mondrian-white);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-align: center;
+            user-select: none;
+            cursor: pointer;
+        }
+
+        /* Text inside the button cell */
+        .btn-text {
+            font-size: 1.8rem;
+            line-height: 1.1;
+            display: block;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Host Button Specifics */
+        .host-link .btn-text {
+            font-size: 2.2rem;
+            color: var(--mondrian-white);
+            transform: rotate(-90deg); /* Modern, asymmetrical text orientation */
+        }
+
+        /* Join Button Specifics */
+        .join-link .btn-text {
+            font-size: 1.4rem;
+            color: var(--mondrian-white);
+        }
+
+        /* Hover interactions reflecting retro print shift */
+        .cell-host:hover {
+            background-color: var(--mondrian-red-hover);
+        }
+
+        .cell-host:hover .btn-text {
+            transform: rotate(-90deg) translate(-4px, -4px);
+            text-shadow: 4px 4px 0px var(--mondrian-black);
+        }
+
+        .cell-join:hover {
+            background-color: var(--mondrian-blue-hover);
+        }
+
+        .cell-join:hover .btn-text {
+            transform: translate(-4px, -4px);
+            text-shadow: 4px 4px 0px var(--mondrian-black);
+        }
+
+        /* Responsive scaling adjustments */
+        @media (max-width: 600px) {
+            .art-frame {
+                grid-template-rows: 100px 140px 100px;
+                gap: 8px;
+                border-width: 10px;
+            }
+            h1 {
+                font-size: 2.3rem;
+            }
+            .host-link .btn-text {
+                font-size: 1.6rem;
+            }
+            .join-link .btn-text {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Piet Mondrian Grid Frame -->
+    <div class="art-frame">
+        
+        <!-- Row 1, Col 1-2: Title Cell -->
+        <div class="cell cell-title">
+            <h1>Multiplayr</h1>
+        </div>
+
+        <!-- Row 1, Col 3: Decorative Yellow Block -->
+        <div class="cell cell-yellow"></div>
+
+        <!-- Row 2-3, Col 1: Red Host Room Action Cell -->
+        <div class="cell cell-host">
+            <a href="host_p2p.html" class="nav-link host-link">
+                <span class="btn-text">Host<br>Room</span>
+            </a>
+        </div>
+
+        <!-- Row 2, Col 2-3: Decorative Cream Block -->
+        <div class="cell cell-cream"></div>
+
+        <!-- Row 3, Col 2: Decorative White Block -->
+        <div class="cell cell-bottom-center"></div>
+
+        <!-- Row 3, Col 3: Blue Join Lobby Action Cell -->
+        <div class="cell cell-join">
+            <a href="join_p2p.html" class="nav-link join-link">
+                <span class="btn-text">Join<br>Lobby</span>
+            </a>
+        </div>
+
+    </div>
+
+</body>
+</html>

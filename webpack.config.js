@@ -8,13 +8,44 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const HtmlWebPackPlugin = require('html-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
 
+// Custom .env loader to load local environment variables without introducing new dependencies
+const dotenvPath = path.resolve(__dirname, '.env');
+if (fs.existsSync(dotenvPath)) {
+    const dotenvConfig = fs.readFileSync(dotenvPath, 'utf8');
+    dotenvConfig.split('\n').forEach(line => {
+        const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+        if (match) {
+            const key = match[1];
+            let value = match[2] || '';
+            if (value.startsWith('"') && value.endsWith('"')) {
+                value = value.substring(1, value.length - 1);
+            } else if (value.startsWith("'") && value.endsWith("'")) {
+                value = value.substring(1, value.length - 1);
+            }
+            process.env[key] = value.trim();
+        }
+    });
+}
+
 module.exports = (env, argv) => {
     const mode = (argv && argv.mode === 'production' ? 'production' : 'development');
+    
+    if (env && env.static) {
+        const distPath = path.resolve(__dirname, './dist/');
+        return [
+            MultiplayrLibConfig(mode, distPath),
+            HostJoinPages(mode, distPath, true),
+            AllRulesConfig(distPath),
+            DebuggerPages(distPath),
+            IndividualRules(distPath, true)
+        ];
+    }
+
     if (mode === 'production') {
         return [
             MultiplayrLibConfig(mode),
             ExpressServerConfig(mode),
-            HostJoinPages(),
+            HostJoinPages(mode),
             AllRulesConfig()
         ];
     } else {
@@ -22,13 +53,15 @@ module.exports = (env, argv) => {
             DebuggerPages(),
             IndividualRules(),
             MultiplayrLibConfig(mode),
-            ExpressServerConfig(mode)
+            ExpressServerConfig(mode),
+            HostJoinPages(mode),
+            AllRulesConfig()
         ];
     }
 };
 
-const localDebugPages = ['avalon', 'coup', 'theoddone', 'decrypto', 'minesweeperflags', 'tictactoepoker', 'ito', 'drawing', 'catchsketch'];
-function DebuggerPages() {
+const localDebugPages = ['avalon', 'coup', 'theoddone', 'decrypto', 'minesweeperflags', 'tictactoepoker', 'ito', 'drawing', 'catchsketch', 'durian', 'startups', 'clever'];
+function DebuggerPages(outputPath) {
     const entry = {};
     const plugins = localDebugPages.map(debug => {
         entry[debug + '.local'] = './src/client/js/' + debug + '.local.ts'
@@ -42,8 +75,8 @@ function DebuggerPages() {
     return {
         entry: entry,
         output: {
-            path: path.resolve(__dirname, './build/client/'),
-            publicPath: '/',
+            path: outputPath || path.resolve(__dirname, './build/client/'),
+            publicPath: '',
             pathinfo: true,
             filename: '[name].js'
         },
@@ -64,17 +97,30 @@ function DebuggerPages() {
     };
 }
 
-function IndividualRules() {
+function IndividualRules(outputPath, isStaticDist) {
     const entry = {};
     localDebugPages.forEach(debug => {
-        entry[debug] = ['webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000',
-                        './src/rules/' + debug + '.ts'];
+        entry[debug] = isStaticDist ? './src/rules/' + debug + '.ts' : [
+            'webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000',
+            './src/rules/' + debug + '.ts'
+        ];
     });
+
+    const plugins = [
+        ...ForkTsChecker,
+        ESLintPluginConfig(),
+        new webpack.NoEmitOnErrorsPlugin()
+    ];
+
+    if (!isStaticDist) {
+        plugins.push(new webpack.HotModuleReplacementPlugin());
+    }
+
     return {
         entry: entry,
         output: {
-            path: path.resolve(__dirname, './build/client/'),
-            publicPath: '/',
+            path: outputPath || path.resolve(__dirname, './build/client/'),
+            publicPath: '',
             pathinfo: true,
             filename: '[name].js',
             library: {
@@ -90,34 +136,42 @@ function IndividualRules() {
         resolve: {
             extensions: ['.tsx', '.ts', '.js'],
         },
-        plugins: [
-            ...ForkTsChecker,
-            ESLintPluginConfig(),
-            new webpack.HotModuleReplacementPlugin(),
-            new webpack.NoEmitOnErrorsPlugin()
-        ]
+        plugins: plugins
     };
 }
 
-function HostJoinPages() {
-    return {
-        entry: {
-            host: './src/client/js/host.ts',
-            join: './src/client/js/join.ts',
-        },
-        output: {
-            path: path.resolve(__dirname, './build/client/'),
-            publicPath: '/',
-            pathinfo: false,
-            filename: '[name].bundle.js'
-        },
-        target: 'web',
-        module: WebModule(false),
-        mode: 'production',
-        resolve: {
-            extensions: ['.tsx', '.ts', '.js'],
-        },
-        plugins: [
+function HostJoinPages(mode, outputPath, isStaticDist) {
+    const entry = isStaticDist ? {
+        host_p2p: './src/client/js/host_p2p.ts',
+        join_p2p: './src/client/js/join_p2p.ts',
+    } : {
+        host: './src/client/js/host.ts',
+        join: './src/client/js/join.ts',
+        host_p2p: './src/client/js/host_p2p.ts',
+        join_p2p: './src/client/js/join_p2p.ts',
+    };
+
+    const plugins = [];
+    if (isStaticDist) {
+        plugins.push(
+            new HtmlWebPackPlugin({
+                template: './src/client/static/index.html',
+                filename: './index.html',
+                inject: false
+            }),
+            new HtmlWebPackPlugin({
+                template: './src/client/static/host_p2p.html',
+                filename: './host_p2p.html',
+                inject: false
+            }),
+            new HtmlWebPackPlugin({
+                template: './src/client/static/join_p2p.html',
+                filename: './join_p2p.html',
+                inject: false
+            })
+        );
+    } else {
+        plugins.push(
             new HtmlWebPackPlugin({
                 template: './src/client/static/host.html',
                 filename: './host.html',
@@ -128,19 +182,53 @@ function HostJoinPages() {
                 filename: './join.html',
                 inject: false
             }),
+            new HtmlWebPackPlugin({
+                template: './src/client/static/host_p2p.html',
+                filename: './host_p2p.html',
+                inject: false
+            }),
+            new HtmlWebPackPlugin({
+                template: './src/client/static/join_p2p.html',
+                filename: './join_p2p.html',
+                inject: false
+            })
+        );
+    }
+
+    return {
+        entry: entry,
+        output: {
+            path: outputPath || path.resolve(__dirname, './build/client/'),
+            publicPath: '',
+            pathinfo: false,
+            filename: '[name].bundle.js'
+        },
+        target: 'web',
+        module: WebModule(false),
+        mode: mode,
+        resolve: {
+            extensions: ['.tsx', '.ts', '.js'],
+        },
+        plugins: [
+            ...plugins,
+            new webpack.DefinePlugin({
+                'process.env.TURN_URL': JSON.stringify(process.env.TURN_URL || ''),
+                'process.env.TURN_USERNAME': JSON.stringify(process.env.TURN_USERNAME || ''),
+                'process.env.TURN_CREDENTIAL': JSON.stringify(process.env.TURN_CREDENTIAL || '')
+            }),
             ESLintPluginConfig(),
             new webpack.NoEmitOnErrorsPlugin()
         ]
     };
 }
-function AllRulesConfig() {
+function AllRulesConfig(outputPath) {
     return {
         entry: {
             rules: './src/rules/rules.ts'
         },
         output: {
-            path: path.resolve(__dirname, './build/client/'),
-            publicPath: '/',
+            path: outputPath || path.resolve(__dirname, './build/client/'),
+            publicPath: '',
             pathinfo: false,
             filename: '[name].bundle.js',
             library: {
@@ -160,15 +248,15 @@ function AllRulesConfig() {
     };
 }
 
-function MultiplayrLibConfig(mode) {
+function MultiplayrLibConfig(mode, outputPath) {
     return {
         entry: {
             lib: './src/client/js/lib.ts',
             locallib: './src/client/js/locallib.ts',
         },
         output: {
-            path: path.resolve(__dirname, './build/client/'),
-            publicPath: '/',
+            path: outputPath || path.resolve(__dirname, './build/client/'),
+            publicPath: '',
             pathinfo: true,
             filename: '[name].bundle.js',
             library: {

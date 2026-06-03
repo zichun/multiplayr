@@ -15,6 +15,10 @@ import { TicTacToePokerRule } from './tictactoepoker/tictactoepoker_rule';
 import { ItoRule } from './ito/ito';
 import DrawingRule from './drawing/drawing';
 import { CatchSketchRule } from './catchsketch/catchsketch';
+import { DurianRule } from './durian/durian';
+import { StartupsRule } from './startups/startups';
+import { CleverRule } from './clever/clever';
+
 
 const CoupDebugger = NewDebuggerRule(
     'coup',
@@ -55,6 +59,31 @@ const CatchSketchDebugger = NewDebuggerRule(
         HistoryBufferSize: 10,
         HistoryInSessionStorage: true
     });
+
+const DurianDebugger = NewDebuggerRule(
+    'durian',
+    DurianRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const StartupsDebugger = NewDebuggerRule(
+    'startups',
+    StartupsRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const CleverDebugger = NewDebuggerRule(
+    'clever',
+    CleverRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
 
 export const MPRULES = {
     // 'bigger': {
@@ -138,6 +167,39 @@ export const MPRULES = {
         debug: true,
         rules: ['lobby', 'gameshell', 'drawing', 'catchsketch', 'debugger'],
         rule: CatchSketchDebugger
+    },
+    'durian': {
+        description: 'Durian - Shopkeeper & Inventory Crisis Game',
+        rules: ['lobby', 'gameshell', 'durian'],
+        rule: DurianRule
+    },
+    'durian-debug': {
+        description: 'Durian (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'durian', 'debugger'],
+        rule: DurianDebugger
+    },
+    'startups': {
+        description: 'Startups - Competitive Investment Card Game',
+        rules: ['lobby', 'gameshell', 'startups'],
+        rule: StartupsRule
+    },
+    'startups-debug': {
+        description: 'Startups (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'startups', 'debugger'],
+        rule: StartupsDebugger
+    },
+    'clever': {
+        description: 'Clever - Dice Drafting Roll and Write',
+        rules: ['lobby', 'gameshell', 'clever'],
+        rule: CleverRule
+    },
+    'clever-debug': {
+        description: 'Clever (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'clever', 'debugger'],
+        rule: CleverDebugger
     }
 };
 

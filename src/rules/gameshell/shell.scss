@@ -15,7 +15,7 @@ $panelExtendWidth: 180px;
     }
 
     .shell-title {
-        margin-left: 2em;
+        margin-left: 50px;
         padding-top: 10px;
         font-size: 2em;
     }
@@ -94,11 +94,12 @@ $panelExtendWidth: 180px;
 
     .shell-main-panel-link:hover {
         background-color: #959595;
+
         .icon {
             color: #353535;
         }
-        label {
-        }
+
+        label {}
     }
 
     .shell-body {

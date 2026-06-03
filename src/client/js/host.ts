@@ -5,7 +5,10 @@
  *
  */
 
+export {};
+
 /* eslint-disable no-var */
+declare var io;
 declare var _mplib;
 declare var _mprules;
 

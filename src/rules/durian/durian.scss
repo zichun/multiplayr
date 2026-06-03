@@ -1,0 +1,1477 @@
+/**
+ * durian.scss - Stylesheet for the Durian Oink board game
+ */
+
+// Harmony Color Palette (Oink Games inspiration)
+$bg-color: #ffffff; // White background
+$wood-plate: #d39e5e; // Warm light wood stand base
+$wood-dark: #8c5a2b; // Dark wood slot
+$card-front: #faf9f6; // Crisp clean off-white card face
+$card-back-pattern: #0a1f14; // Dark green jungle pattern for card backs
+$accent-orange: #ff6f3c; // Punchy signature orange
+$accent-yellow: #ffc93c; // Banana/grapefruit yellow
+$text-light: #faf9f6;
+$text-dark: #2d3748;
+
+.durian-game-board,
+.manager-resolution-scene,
+.durian-game-over-container {
+    background-color: $bg-color;
+    color: $text-dark;
+    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    //min-height: calc(100vh - 60px);
+    padding: 16px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+
+    h2,
+    h3,
+    h4 {
+        margin: 0 0 10px 0;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+}
+
+// 1. REVERSED LAYOUT SPECIFICATION
+// Section Layout Ordering: Actions at top, Order Board middle, Stands bottom.
+.durian-layout-section {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+// Global button styling (Vibrant flat color modern styling)
+.durian-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+
+    &:active {
+        transform: translateY(2px);
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+    }
+}
+
+.action-btn {
+    background-color: $accent-orange;
+    color: $text-light;
+
+    &:hover {
+        background-color: lighten($accent-orange, 5%);
+    }
+
+    &.secondary {
+        background-color: #4a5568;
+
+        &:hover {
+            background-color: #718096;
+        }
+    }
+
+    &.danger {
+        background-color: #e53e3e;
+
+        &:hover {
+            background-color: #fc8181;
+        }
+    }
+}
+
+// Glassmorphism helper (Updated for white light mode background)
+.glassmorphic-panel {
+    background: rgba(0, 0, 0, 0.02);
+    backdrop-filter: blur(8px);
+    border-radius: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    box-sizing: border-box;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+// TOP BAR STATS
+.durian-top-bar-stats {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-weight: 800;
+    text-transform: uppercase;
+
+    .manager-mood {
+        padding: 4px 10px;
+        border-radius: 8px;
+        color: #fff;
+        font-size: 0.85rem;
+
+        &.calm {
+            background-color: #2f855a;
+        }
+
+        &.suspicious {
+            background-color: #c05621;
+        }
+
+        &.furious {
+            background-color: #9b2c2c;
+            animation: pulse-glow 1s infinite alternate;
+        }
+    }
+}
+
+/* ========================================================
+   SECTION 1: ACTION CONTROLS (TOP OF BOARD)
+   ======================================================== */
+.action-section {
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 16px;
+    padding: 16px;
+    border: 2px dashed rgba(0, 0, 0, 0.1);
+
+    .turn-indicator {
+        color: $accent-orange;
+        text-align: center;
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+    }
+
+    .turn-choices {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .draw-btn {
+        background-color: $accent-yellow;
+        color: $text-dark;
+
+        &:hover {
+            background-color: lighten($accent-yellow, 10%);
+        }
+    }
+
+    // PULSING GOLD HANDBELL
+    .bell-btn {
+        background: radial-gradient(circle, #f6e05e 0%, #d69e2e 100%);
+        color: $text-dark;
+        border: 2px solid #ecc94b;
+        font-size: 1.1rem;
+
+        &.pulsing-bell {
+            animation: breathing-ring 1.5s infinite ease-in-out;
+        }
+
+        &:hover {
+            animation: jiggle-bell 0.5s ease-in-out infinite;
+        }
+    }
+
+    .waiting-turn-panel {
+        text-align: center;
+        padding: 10px;
+
+        .waiting-indicator {
+            font-size: 1.1rem;
+            color: rgba(0, 0, 0, 0.8);
+        }
+
+        .sub-text {
+            font-size: 0.9rem;
+            color: rgba(0, 0, 0, 0.5);
+            margin: 4px 0 0 0;
+        }
+    }
+}
+
+// 2-Side Choice Panel Visuals
+.fruit-choice-panel {
+    text-align: center;
+
+    .instruction {
+        margin-bottom: 16px;
+        font-weight: 600;
+    }
+
+    .sides-choices {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .side-card-choice {
+        background-color: $card-front;
+        color: $text-dark;
+        padding: 20px;
+        border-radius: 16px;
+        width: 140px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        border: 4px solid transparent;
+        transition: all 0.2s ease;
+
+        &:hover {
+            transform: translateY(-5px) scale(1.03);
+            border-color: $accent-orange;
+        }
+
+        .side-label {
+            font-size: 0.8rem;
+            color: #718096;
+            text-transform: uppercase;
+            font-weight: 800;
+        }
+
+        .fruit-visual {
+            font-size: 2rem;
+            margin: 12px 0;
+            line-height: 1;
+            letter-spacing: -0.1em;
+        }
+
+        .fruit-desc {
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+
+        .side-select-btn {
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            background-color: $bg-color;
+            color: $text-light;
+        }
+    }
+
+    .side-separator {
+        font-weight: 900;
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.4);
+    }
+}
+
+// Gorilla mischief select panel
+.gorilla-flip-panel {
+    text-align: center;
+    background: rgba(229, 62, 62, 0.1);
+    border: 2px solid rgba(229, 62, 62, 0.3);
+    border-radius: 16px;
+    padding: 16px;
+
+    .gorilla-card-drawn-header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+
+        p {
+            font-size: 1.2rem;
+            margin: 0;
+            font-weight: 800;
+        }
+
+        .badge-mischief {
+            background-color: #e53e3e;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+    }
+
+    .sub-instruction {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+    }
+
+    .gorilla-actions {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+
+        .selection-status {
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+    }
+}
+
+
+/* ========================================================
+   SECTION 2: MIDDLE ORDER BOARD
+   ======================================================== */
+.order-board-section {
+    width: 100%;
+
+    .order-clipboard {
+        background-color: #9b6a43; // Clipboard hardboard backing
+        border-radius: 20px;
+        padding: 24px 16px 16px 16px;
+        position: relative;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+        border: 4px solid #704728;
+    }
+
+    .clipboard-clip {
+        width: 100px;
+        height: 35px;
+        background-color: #bdc3c7; // Silver clipboard clip
+        border: 4px solid #7f8c8d;
+        border-radius: 8px;
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        z-index: 2;
+
+        &::after {
+            content: '';
+            width: 14px;
+            height: 14px;
+            background-color: #7f8c8d;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    }
+
+    .clipboard-paper {
+        background-color: #faf9f6; // Clean high quality check paper
+        color: $text-dark;
+        border-radius: 12px;
+        padding: 20px;
+        min-height: 140px;
+        box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .order-board-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 2px dashed #cbd5e0;
+        padding-bottom: 10px;
+        margin-bottom: 16px;
+
+        h3 {
+            color: $text-dark;
+            margin: 0;
+        }
+
+        .green-checkmark {
+            background-color: #38a169;
+            color: #fff;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+    }
+
+    .no-orders {
+        text-align: center;
+        color: #a0aec0;
+        padding: 24px 0;
+        font-weight: 600;
+    }
+
+    .orders-scroller {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        padding-bottom: 8px;
+    }
+
+    // Placed Order Card Tickets on Clipboard
+    .order-ticket {
+        flex: 0 0 auto;
+        background-color: #fff;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px 14px;
+        width: 90px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s ease;
+
+        &:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        &.selected-for-flip {
+            border: 3px solid $accent-orange;
+            background-color: #fffaf0;
+            box-shadow: 0 0 10px rgba(255, 111, 60, 0.4);
+        }
+
+        .ticket-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.7rem;
+            color: #a0aec0;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .gorilla-marker {
+            background-color: #e53e3e;
+            color: #fff;
+            padding: 1px 3px;
+            border-radius: 4px;
+            font-size: 0.55rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .fruit-tally {
+            font-size: 2.2rem;
+            margin: 6px 0;
+            line-height: 1;
+            letter-spacing: -0.1em;
+        }
+
+        .count-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        // Flipped state visuals
+        &.flipped-order {
+            background-color: #fffdf5;
+            border-color: #ecc94b;
+
+            &::before {
+                content: 'FLIPPED';
+                position: absolute;
+                top: 40%;
+                left: 5%;
+                transform: rotate(-15deg);
+                font-size: 0.65rem;
+                font-weight: 900;
+                color: rgba(229, 62, 62, 0.7);
+                border: 2px solid rgba(229, 62, 62, 0.7);
+                padding: 1px 3px;
+                border-radius: 3px;
+                background-color: rgba(255, 255, 255, 0.9);
+                pointer-events: none;
+            }
+        }
+    }
+}
+
+.running-orders-summary {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    h4 {
+        margin-bottom: 12px;
+        font-size: 0.9rem;
+    }
+
+    .summary-fruits-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .summary-fruit-item {
+        flex: 1;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 8px;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+
+        .icon {
+            font-size: 1.8rem;
+        }
+
+        .qty {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: $accent-yellow;
+            margin-top: 4px;
+        }
+    }
+}
+
+/* ========================================================
+   SECTION 3: BOTTOM INVENTORY STANDS
+   ======================================================== */
+.player-stands-section {
+    h3 {
+        font-size: 1.1rem;
+        margin-bottom: 16px;
+    }
+
+    // Grid layout supporting horizontal swiping on small screens, stable grid on large
+    .stands-grid {
+        display: flex;
+        gap: 16px;
+        overflow-x: auto;
+        padding: 12px 4px;
+        scroll-snap-type: x mandatory;
+
+        &::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        @media (min-width: 768px) {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            overflow-x: visible;
+            padding: 12px 0;
+        }
+    }
+
+    .inventory-stand-container {
+        flex: 0 0 130px;
+        scroll-snap-align: start;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        perspective: 1000px; // Smooth 3D flips
+
+        &.active-clerk-glow {
+            .wooden-stand-base {
+                box-shadow: 0 0 15px rgba(255, 201, 60, 0.6);
+            }
+        }
+    }
+
+    // 3D Styled Stands
+    .wooden-stand-slot {
+        background-color: $wood-dark;
+        border-radius: 8px 8px 0 0;
+        width: 100px;
+        height: 120px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        position: relative;
+        padding-bottom: 8px;
+        box-sizing: border-box;
+        box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .wooden-stand-base {
+        background-color: $wood-plate;
+        width: 124px;
+        padding: 10px 4px;
+        border-radius: 4px 4px 12px 12px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        box-sizing: border-box;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+
+    .stand-player-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+
+        // Force lobby tag to fit nicely
+        .lobby-player-tag {
+            padding: 2px 6px;
+            max-width: 110px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.9em;
+        }
+    }
+
+    .player-chips {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 2px;
+        font-size: 0.9rem;
+        font-weight: 800;
+
+        .chip-count {
+            color: rgba(0, 0, 0, 0.55);
+            font-size: 0.9rem;
+            margin-left: 2px;
+        }
+    }
+
+    // THE INVENTORY CARDS
+    .fruit-card {
+        width: 80px;
+        height: 110px;
+        border-radius: 8px;
+        box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.3), 0 4px 6px rgba(0, 0, 0, 0.1);
+        position: absolute;
+        bottom: 12px;
+        box-sizing: border-box;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        backface-visibility: hidden;
+
+        &.face-up {
+            background-color: $card-front;
+            color: $text-dark;
+            border: 3px solid #2d3748;
+
+            .card-inner {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                padding: 4px;
+                box-sizing: border-box;
+            }
+
+            .visible-fruit {
+                font-size: 2.2rem;
+                line-height: 1.1;
+                letter-spacing: -0.1em;
+                margin-bottom: 6px;
+            }
+
+            .visible-label {
+                font-size: 0.65rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                color: #4a5568;
+                text-align: center;
+            }
+        }
+
+        &.gorilla-face-up {
+            background-color: #2d3748;
+            color: #fff;
+            border: 3px solid #e53e3e;
+
+            .card-inner {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                padding: 4px;
+                box-sizing: border-box;
+            }
+
+            .visible-gorilla {
+                font-size: 2rem;
+                margin-bottom: 6px;
+            }
+
+            .visible-label {
+                font-size: 0.6rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                text-align: center;
+            }
+        }
+
+        // YOUR CARD IN STAND (Secret card back facing you)
+        &.card-back {
+            background-color: $card-back-pattern;
+            border: 3px solid $accent-orange;
+
+            .card-inner {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                position: relative;
+
+                // leaf pattern mock overlay
+                &::before {
+                    content: '🌿';
+                    font-size: 3rem;
+                    opacity: 0.15;
+                    position: absolute;
+                }
+            }
+
+            .mysterious-mark {
+                font-size: 2.8rem;
+                font-weight: 900;
+                color: $accent-orange;
+                z-index: 1;
+                text-shadow: 0 0 10px rgba(255, 111, 60, 0.4);
+                animation: bounce-slow 2s infinite alternate;
+            }
+
+            .card-back-label {
+                font-size: 0.55rem;
+                font-weight: 900;
+                letter-spacing: 0.1em;
+                color: rgba(255, 255, 255, 0.6);
+                margin: 4px 0 0 0;
+                z-index: 1;
+            }
+        }
+
+        &.face-up.double-sided {
+            background-color: $card-front;
+            color: $text-dark;
+            border: 3px solid #2d3748;
+
+            .card-inner.split {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                padding: 4px;
+                box-sizing: border-box;
+                justify-content: space-between;
+
+                .card-side-a,
+                .card-side-b {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    position: relative;
+                    padding: 2px 0;
+
+                    .side-indicator {
+                        position: absolute;
+                        top: 0px;
+                        left: 2px;
+                        font-size: 0.55rem;
+                        font-weight: 900;
+                        color: rgba(0, 0, 0, 0.3);
+                        background: rgba(0, 0, 0, 0.05);
+                        padding: 1px 3px;
+                        border-radius: 3px;
+                    }
+
+                    .visible-fruit {
+                        font-size: 1.3rem;
+                        line-height: 1;
+                        margin-bottom: 2px;
+                        display: block;
+                        text-align: center;
+                        white-space: nowrap;
+                        letter-spacing: -0.1em;
+                    }
+
+                    .visible-label {
+                        font-size: 0.55rem;
+                        font-weight: 800;
+                        text-transform: uppercase;
+                        color: #4a5568;
+                        line-height: 1;
+                    }
+                }
+
+                .card-divider {
+                    height: 1px;
+                    background: dashed #cbd5e0;
+                    margin: 1px 4px;
+                    border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+                }
+            }
+
+            &.revealed {
+                width: 72px !important;
+                height: 95px !important;
+                bottom: 8px;
+
+                .card-inner.split {
+                    padding: 2px;
+
+                    .card-side-a,
+                    .card-side-b {
+                        .visible-fruit {
+                            font-size: 1.05rem;
+                        }
+
+                        .side-indicator {
+                            font-size: 0.5rem;
+                        }
+
+                        .visible-label {
+                            font-size: 0.5rem;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+/* ========================================================
+   SECTION 4: CONFRONTATION SCENE (REPRESENTING AUDIT TABLE)
+   ======================================================== */
+.manager-resolution-scene {
+    .gorilla-angry-banner {
+        text-align: center;
+        background-color: #9b2c2c;
+        border: 4px solid #742a2a;
+        padding: 16px;
+        border-radius: 16px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+
+        h2 {
+            margin: 0 0 4px 0;
+            font-size: 1.5rem;
+            color: #fff;
+        }
+
+        .subtitle {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+        }
+    }
+
+    .resolution-layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+
+        @media (min-width: 768px) {
+            grid-template-columns: 3fr 2fr;
+        }
+    }
+
+    // Slide-in glassmorphic ledger receipt
+    .resolution-ledger {
+        background-color: #fffaf0; // Soft vintage cream receipt paper color
+        color: $text-dark;
+        border-radius: 20px;
+        border: 4px solid #e2e8f0;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+
+        h3 {
+            color: $text-dark;
+            border-bottom: 2px dashed #cbd5e0;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .ledger-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+
+            th,
+            td {
+                padding: 12px 10px;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            th {
+                text-transform: uppercase;
+                color: #718096;
+                font-weight: 800;
+                font-size: 0.75rem;
+            }
+
+            .fruit-cell {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+
+                .emoji {
+                    font-size: 1.6rem;
+                }
+
+                .name {
+                    font-weight: 800;
+                    text-transform: uppercase;
+                }
+            }
+
+            .exceeded-row {
+                background-color: #fff5f5;
+                color: #c53030;
+
+                td {
+                    border-bottom: 2px solid #feb2b2;
+                }
+            }
+
+            .verdict {
+                padding: 4px 8px;
+                border-radius: 6px;
+                font-size: 0.75rem;
+                display: inline-block;
+
+                &.error {
+                    background-color: #fed7d7;
+                    color: #9b2c2c;
+                }
+
+                &.success {
+                    background-color: #c6f6d5;
+                    color: #22543d;
+                }
+            }
+
+            .negation-tally {
+                display: block;
+                font-size: 0.7rem;
+                color: #a0aec0;
+                font-weight: normal;
+            }
+        }
+
+        .gorilla-discounts-applied {
+            margin-top: 16px;
+            padding: 12px;
+            background-color: rgba(229, 62, 62, 0.05);
+            border: 1px dashed rgba(229, 62, 62, 0.2);
+            border-radius: 12px;
+
+            h4 {
+                color: #c53030;
+                margin-bottom: 6px;
+                font-size: 0.8rem;
+            }
+
+            ul {
+                margin: 0;
+                padding-left: 16px;
+                font-size: 0.8rem;
+                color: #4a5568;
+                font-weight: 600;
+            }
+        }
+    }
+
+    .confrontation-dashboard {
+        text-align: center;
+        padding: 16px;
+        border-radius: 16px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        background-color: rgba(0, 0, 0, 0.3);
+
+        justify-content: center;
+        align-items: center;
+
+        .verdict-bubble {
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            padding: 16px;
+            width: 100%;
+            box-sizing: border-box;
+
+            p {
+                margin: 6px 0 0 0;
+                font-size: 0.9rem;
+                color: rgba(255, 255, 255, 0.7);
+            }
+
+            .text-green {
+                color: $accent-yellow;
+            }
+
+            .text-red {
+                color: #fc8181;
+            }
+        }
+
+        .blame-card {
+            background-color: #2d3748;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            box-sizing: border-box;
+
+            .punished-avatar {
+                margin: 12px 0;
+                display: flex;
+                justify-content: center;
+            }
+
+            .penalty-pts-badge {
+                display: inline-block;
+                background-color: $accent-orange;
+                padding: 10px 24px;
+                border-radius: 12px;
+                font-size: 1.4rem;
+                font-weight: 900;
+                color: #fff;
+                box-shadow: 0 4px 10px rgba(255, 111, 60, 0.4);
+                margin-top: 8px;
+            }
+        }
+
+        .next-round-btn {
+            background-color: $accent-yellow;
+            color: $text-dark;
+            padding: 14px 32px;
+            font-size: 1.1rem;
+
+            &:hover {
+                background-color: lighten($accent-yellow, 10%);
+            }
+        }
+    }
+
+    // Revealed inventories row
+    .revealed-stands-area {
+        margin-top: 24px;
+        border-top: 2px solid rgba(255, 255, 255, 0.1);
+        padding-top: 20px;
+
+        h3 {
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+        }
+
+        .stands-grid {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding: 12px 4px;
+
+            @media (min-width: 768px) {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                overflow-x: visible;
+            }
+        }
+
+        .inventory-stand-container.face-revealed {
+            flex: 0 0 110px;
+
+            .wooden-stand-slot {
+                width: 90px;
+                height: 105px;
+            }
+
+            .wooden-stand-base {
+                width: 106px;
+                padding: 6px;
+            }
+
+            .player-revealed-name {
+                font-size: 0.75rem;
+                font-weight: 800;
+                text-transform: uppercase;
+            }
+
+            .fruit-card.revealed {
+                width: 72px;
+                height: 95px;
+                bottom: 8px;
+                border: 3px solid #2d3748 !important;
+
+                .visible-fruit {
+                    font-size: 1.8rem;
+                }
+
+                .visible-gorilla {
+                    font-size: 1.6rem;
+                }
+
+                .visible-label {
+                    font-size: 0.55rem;
+                }
+            }
+        }
+    }
+}
+
+
+/* ========================================================
+   SECTION 5: GAME OVER & LEADERBOARD
+   ======================================================== */
+.durian-game-over-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    padding: 32px 16px;
+
+    .victory-celebration {
+        h2 {
+            font-size: 2rem;
+            color: $accent-yellow;
+            margin: 0;
+            text-shadow: 0 0 15px rgba(255, 201, 60, 0.4);
+        }
+
+        .subtitle {
+            margin: 6px 0 0 0;
+            color: rgba(255, 255, 255, 0.7);
+        }
+    }
+
+    .winner-podium {
+        background-color: #2d3748;
+        border: 3px solid $accent-yellow;
+        padding: 30px;
+        width: 100%;
+        max-width: 450px;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+
+        .crown {
+            font-size: 3.5rem;
+            display: block;
+            margin-bottom: 6px;
+            line-height: 1;
+        }
+
+        h3 {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        .winner-tag {
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            margin-bottom: 12px;
+        }
+
+        .score {
+            margin: 0;
+            font-size: 0.95rem;
+
+            strong {
+                color: $accent-orange;
+                font-size: 1.2rem;
+            }
+        }
+    }
+
+    .final-leaderboard {
+        width: 100%;
+        max-width: 450px;
+
+        .leaderboard-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .leaderboard-item {
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.95rem;
+
+            .rank {
+                color: rgba(255, 255, 255, 0.4);
+            }
+
+            .name {
+                font-weight: 800;
+                text-transform: uppercase;
+            }
+
+            .score {
+                color: $accent-yellow;
+            }
+        }
+    }
+
+    .game-over-host-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+        max-width: 450px;
+
+        button {
+            width: 100%;
+        }
+    }
+}
+
+
+/* ========================================================
+   SECTION 6: HOW TO PLAY RULES SLIDER STYLE
+   ======================================================== */
+.durian-rules-container {
+    color: $text-dark;
+    background-color: #faf9f6;
+    padding: 20px;
+    border-radius: 16px;
+    max-width: 450px;
+    margin: 0 auto;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    h2 {
+        color: $text-dark;
+        border-bottom: 2px dashed #cbd5e0;
+        padding-bottom: 8px;
+        margin-top: 0;
+        font-size: 1.25rem;
+    }
+
+    .rules-content {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        padding: 12px 0;
+
+        .rules-slide {
+            width: 100%;
+            animation: slide-right-in 0.3s ease;
+
+            h3 {
+                color: $accent-orange;
+                font-size: 1.05rem;
+                margin-top: 0;
+            }
+
+            p {
+                font-size: 0.9rem;
+                line-height: 1.5;
+                color: #4a5568;
+                margin: 8px 0;
+
+                &.highlight {
+                    background-color: #feebc8;
+                    border-left: 4px solid $accent-orange;
+                    padding: 8px;
+                    border-radius: 0 8px 8px 0;
+                    color: $text-dark;
+                    font-weight: 600;
+                }
+            }
+
+            ul {
+                padding-left: 20px;
+                margin: 8px 0;
+                font-size: 0.85rem;
+                color: #4a5568;
+                line-height: 1.4;
+
+                li {
+                    margin-bottom: 4px;
+                }
+            }
+        }
+    }
+
+    .rules-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid #e2e8f0;
+        padding-top: 12px;
+        margin-top: 12px;
+
+        button {
+            border: none;
+            background-color: $wood-dark;
+            color: $text-light;
+            font-weight: 800;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-transform: uppercase;
+
+            &:disabled {
+                background-color: #cbd5e0;
+                color: #a0aec0;
+                cursor: not-allowed;
+            }
+        }
+
+        span {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #718096;
+        }
+    }
+}
+
+// Utility styling for settings card
+.durian-settings {
+    h3 {
+        margin-bottom: 16px;
+    }
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+
+/* ========================================================
+   KEYFRAME ANIMATIONS (MICRO-INTERACTIONS)
+   ======================================================== */
+@keyframes breathing-ring {
+    0% {
+        box-shadow: 0 0 0 0 rgba(236, 201, 75, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(236, 201, 75, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(236, 201, 75, 0);
+    }
+}
+
+@keyframes jiggle-bell {
+    0% {
+        transform: rotate(0);
+    }
+
+    15% {
+        transform: rotate(8deg);
+    }
+
+    30% {
+        transform: rotate(-8deg);
+    }
+
+    45% {
+        transform: rotate(6deg);
+    }
+
+    60% {
+        transform: rotate(-6deg);
+    }
+
+    75% {
+        transform: rotate(3deg);
+    }
+
+    90% {
+        transform: rotate(-3deg);
+    }
+
+    100% {
+        transform: rotate(0);
+    }
+}
+
+@keyframes pulse-glow {
+    from {
+        opacity: 0.85;
+        box-shadow: 0 0 4px rgba(229, 62, 62, 0.4);
+    }
+
+    to {
+        opacity: 1;
+        box-shadow: 0 0 14px rgba(229, 62, 62, 0.8);
+    }
+}
+
+@keyframes bounce-slow {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(-6px);
+    }
+}
+
+@keyframes slide-right-in {
+    from {
+        transform: translateX(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.anim-fade-in {
+    animation: slide-right-in 0.3s ease-out;
+}
+
+.anim-slide-down {
+    animation: slide-down-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slide-down-in {
+    from {
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.anim-pulse {
+    animation: breathing-ring 2s infinite;
+}
+
+.anim-bounce {
+    animation: bounce-slow 1s infinite alternate;
+}

@@ -5,57 +5,136 @@
 }
 
 .debugger-icon {
-    position: absolute;
-    bottom: 4px;
-    right: 4px;
-    opacity: 0.2;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    font-size: 2.2rem !important;
+    opacity: 0.6;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(8px);
+    color: #38bdf8;
+    padding: 14px;
+    border-radius: 50%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     cursor: pointer;
-    transition: all 0.4s ease;
-    z-index: 21;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 99999;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .debugger-icon:hover {
     opacity: 1.0;
+    transform: scale(1.1) rotate(60deg);
+    background: rgba(15, 23, 42, 0.95);
+    color: #0ea5e9;
+    box-shadow: 0 12px 40px rgba(14, 165, 233, 0.5);
+    border-color: rgba(14, 165, 233, 0.4);
 }
 
 .debugger-pane {
-    z-index: 20;
-    position: absolute;
+    z-index: 99990;
+    position: fixed;
     top: 0;
     bottom: 0;
     right: 0;
-    width: 300px;
-    background: #e5e5e5;
-    opacity: 0.0;
-    transition: all 0.4s ease;
-    display: none;
+    width: 320px;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(100%);
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    color: #e2e8f0;
 }
 
 .debugger-pane.show {
-    display: block;
-    opacity: 0.9;
+    transform: translateX(0);
 }
 
 .debugger-stepper {
-    margin: 0 auto;
-    text-align: center;
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 
     .debugger-stepper-left, .debugger-stepper-right {
         cursor: pointer;
+        color: #94a3b8;
+        transition: color 0.2s;
+        
+        &:hover {
+            color: #38bdf8;
+        }
     }
 
     .debugger-stepper-count {
-        font-size: 2.0em;
-        margin: 0 3px 0 3px;
+        font-size: 1.4em;
+        font-weight: 700;
+        font-family: 'Outfit', sans-serif;
+        color: #f8fafc;
     }
 }
 
 .debugger-serialized {
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex-grow: 1;
+
     textarea {
-        display: block;
-        margin: 5px auto 5px;
-        width: 80%;
-        min-height: 200px;
+        flex-grow: 1;
+        width: 100%;
+        min-height: 250px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: #f1f5f9;
+        font-family: 'Fira Code', 'Courier New', monospace;
+        font-size: 0.8rem;
+        padding: 12px;
+        resize: none;
+        outline: none;
+
+        &:focus {
+            border-color: #38bdf8;
+        }
+    }
+
+    button {
+        background: #38bdf8;
+        color: #0f172a;
+        font-weight: 700;
+        font-family: 'Outfit', sans-serif;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+            background: #0ea5e9;
+            transform: translateY(-1px);
+        }
+
+        &:nth-of-type(2) {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+
+            &:hover {
+                background: rgba(239, 68, 68, 0.3);
+                border-color: #ef4444;
+            }
+        }
     }
 }

@@ -5,6 +5,7 @@
 	"scripts": {
 		"build": "rm -rf build && npm run test && npx webpack --mode production",
 		"buildDev": "rm -rf build && npx webpack --mode development",
+		"buildStatic": "npx webpack --env static --mode production",
 		"deploy": "npx webpack --mode development",
 		"test": "npx ts-mocha -p ./tsconfig.json src/tests/test.ts  --require ./.mochaIgnoreStyle.js",
 		"start": "node ./build/app"

@@ -1,0 +1,1146 @@
+/**
+ * clever.scss - Pop-art cardboard styling for Clever (Ganz Schön Clever)
+ */
+
+$black: #000000;
+$white: #ffffff;
+$yellow-color: #f1c40f;
+$blue-color: #3498db;
+$green-color: #2ecc71;
+$orange-color: #e67e22;
+$purple-color: #9b59b6;
+$wild-color: #ecf0f1;
+$bg-color: #ffffff;
+$card-bg: #ffffff;
+$text-color: #1a202c;
+$border-width: 3px;
+
+.clever-lobby {
+    text-align: center;
+    padding: 30px;
+    background-color: $bg-color;
+    color: $text-color;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    h1 {
+        font-size: 3.5em;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: $yellow-color;
+        border: $border-width solid $black;
+        background: $card-bg;
+        padding: 15px 40px;
+        border-radius: 12px;
+        box-shadow: 6px 6px 0px $black;
+        margin-bottom: 30px;
+    }
+
+    .clever-rules-summary {
+        background: $card-bg;
+        border: $border-width solid $black;
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 500px;
+        box-shadow: 6px 6px 0px $black;
+        margin: 20px 0;
+        text-align: left;
+
+        h3 {
+            margin-top: 0;
+            color: $blue-color;
+            border-bottom: 2px solid $black;
+            padding-bottom: 8px;
+        }
+
+        ul {
+            padding-left: 20px;
+            li {
+                margin-bottom: 8px;
+            }
+        }
+    }
+
+    .btn-start-game {
+        background: $green-color;
+        color: $black;
+        font-size: 1.4em;
+        font-weight: 800;
+        padding: 15px 40px;
+        border: $border-width solid $black;
+        border-radius: 12px;
+        cursor: pointer;
+        box-shadow: 6px 6px 0px $black;
+        transition: transform 0.1s, box-shadow 0.1s;
+        margin-top: 20px;
+
+        &:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 8px 8px 0px $black;
+        }
+
+        &:active {
+            transform: translate(2px, 2px);
+            box-shadow: 4px 4px 0px $black;
+        }
+    }
+}
+
+.clever-game-container {
+    background-color: $bg-color;
+    color: $text-color;
+    min-height: 100vh;
+    padding: 12px;
+    font-family: 'Outfit', sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 100vw;
+    overflow-x: hidden;
+    box-sizing: border-box;
+
+    /* 1. Header & Dashboards */
+    .game-header-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 18px;
+        justify-content: space-between;
+        align-items: center;
+        background: $card-bg;
+        border: $border-width solid $black;
+        border-radius: 12px;
+        padding: 12px 18px;
+        box-shadow: 4px 4px 0px $black;
+
+        .turn-indicator {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+
+            .badge {
+                font-weight: 800;
+                font-size: 1rem;
+                padding: 6px 12px;
+                border-radius: 8px;
+                border: 2px solid $black;
+                text-transform: uppercase;
+                display: inline-block;
+                width: max-content;
+                white-space: nowrap;
+            }
+
+            .my-turn-badge {
+                background-color: $yellow-color;
+                color: $black;
+            }
+
+            .other-turn-badge {
+                background-color: $purple-color;
+                color: $white;
+            }
+
+            .phase-subtitle {
+                font-size: 0.9em;
+                color: #4a5568;
+            }
+        }
+
+        .rounds-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            .round-badge {
+                font-size: 1.2rem;
+                font-weight: 800;
+                background-color: $blue-color;
+                color: $white;
+                padding: 6px 16px;
+                border-radius: 8px;
+                border: $border-width solid $black;
+                box-shadow: 3px 3px 0px $black;
+            }
+        }
+    }
+
+    /* Tabs for sheets selection in multiplayer */
+    .sheet-selector-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding-bottom: 4px;
+
+        .tab-btn {
+            background: #2d3748;
+            color: #a0aec0;
+            border: $border-width solid $black;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
+
+            &.active {
+                background: $yellow-color;
+                color: $black;
+                transform: translateY(-2px);
+                box-shadow: 3px 3px 0px $black;
+            }
+
+            &:hover:not(.active) {
+                background: #4a5568;
+                color: $white;
+            }
+        }
+    }
+
+    /* 2. Arena Grid (Dice, Tray, Reroll) */
+    .arena-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+
+        .arena-card {
+            flex: 1 1 300px;
+            min-width: 0;
+            background: $card-bg;
+            border: $border-width solid $black;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 4px 4px 0px $black;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+
+            h3 {
+                margin: 0;
+                font-size: 1.25em;
+                font-weight: 800;
+                letter-spacing: -0.02em;
+                border-bottom: 2px solid $black;
+                padding-bottom: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+        }
+
+        /* Dice pool list */
+        .dice-pool-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            min-height: 70px;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 12px;
+            border: 2px dashed #4a5568;
+        }
+
+        .btn-roll, .btn-reroll {
+            font-size: 1.1em;
+            font-weight: 800;
+            padding: 10px 24px;
+            border: $border-width solid $black;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 3px 3px 0px $black;
+            transition: all 0.1s;
+
+            &:hover:not(:disabled) {
+                transform: translate(-1px, -1px);
+                box-shadow: 4px 4px 0px $black;
+            }
+
+            &:active:not(:disabled) {
+                transform: translate(1px, 1px);
+                box-shadow: 2px 2px 0px $black;
+            }
+
+            &:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                box-shadow: none;
+                transform: none;
+            }
+        }
+
+        .btn-roll {
+            background-color: $green-color;
+            color: $black;
+        }
+
+        .btn-reroll {
+            background-color: $orange-color;
+            color: $white;
+        }
+
+        .silver-tray-zone {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            min-height: 80px;
+            background: radial-gradient(circle, #5b677a 0%, #303742 100%);
+            border: $border-width solid $black;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: inset 0px 4px 10px rgba(0,0,0,0.5);
+        }
+    }
+
+    /* 3. Dice Visual representation */
+    .clever-die {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        border: $border-width solid $black;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        font-weight: 800;
+        cursor: pointer;
+        user-select: none;
+        box-shadow: 3px 3px 0px $black;
+        position: relative;
+        transition: transform 0.15s, box-shadow 0.15s;
+
+        &:hover:not(.static) {
+            transform: translateY(-4px);
+            box-shadow: 5px 7px 0px $black;
+        }
+
+        &.active-clickable {
+            animation: bounce 0.4s infinite alternate;
+        }
+
+        &.white { background-color: $wild-color; color: $black; }
+        &.yellow { background-color: $yellow-color; color: $black; }
+        &.blue { background-color: $blue-color; color: $white; }
+        &.green { background-color: $green-color; color: $white; }
+        &.orange { background-color: $orange-color; color: $white; }
+        &.purple { background-color: $purple-color; color: $white; }
+
+        .wildcard-dot {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 8px;
+            height: 8px;
+            background-color: red;
+            border-radius: 50%;
+            border: 1px solid $black;
+        }
+
+        &.selected {
+            transform: scale(1.15) !important;
+            border: 3px solid #2ecc71 !important;
+            box-shadow: 4px 4px 0px $black !important;
+            z-index: 2;
+        }
+
+        .selected-check {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            background-color: #2ecc71;
+            color: #ffffff;
+            border-radius: 50%;
+            border: 2px solid #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 900;
+            box-shadow: 1px 1px 0px #000;
+            z-index: 3;
+        }
+    }
+
+    /* 4. Score Sheet Layout */
+    .score-sheet-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        background: $card-bg;
+        border: $border-width solid $black;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 4px 4px 0px $black;
+        max-width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
+
+        .sheet-title {
+            margin: 0;
+            font-size: 1.5em;
+            font-weight: 800;
+            border-bottom: $border-width solid $black;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .tracks-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+    }
+
+    /* Individual Color Areas */
+    .color-block {
+        border: $border-width solid $black;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 4px 4px 0px $black;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        box-sizing: border-box;
+
+        &.block-yellow {
+            background-color: rgba($yellow-color, 0.15);
+            border-color: $yellow-color;
+            flex: 1 1 320px;
+            max-width: 100%;
+        }
+
+        &.block-blue {
+            background-color: rgba($blue-color, 0.15);
+            border-color: $blue-color;
+            flex: 1 1 320px;
+            max-width: 100%;
+        }
+
+        &.block-green {
+            background-color: rgba($green-color, 0.12);
+            border-color: $green-color;
+            flex: 1 1 100%;
+            width: 100%;
+        }
+
+        &.block-orange {
+            background-color: rgba($orange-color, 0.15);
+            border-color: $orange-color;
+            flex: 1 1 100%;
+            width: 100%;
+        }
+
+        &.block-purple {
+            background-color: rgba($purple-color, 0.15);
+            border-color: $purple-color;
+            flex: 1 1 100%;
+            width: 100%;
+        }
+
+        .block-header {
+            font-weight: 800;
+            font-size: 1.1em;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid $black;
+            padding-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+    }
+
+    /* Yellow Grid Area */
+    .yellow-grid-layout {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+
+        .yellow-4x4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            flex-grow: 1;
+
+            .yellow-cell {
+                aspect-ratio: 1;
+                border: 2px solid $black;
+                border-radius: 6px;
+                background-color: $white;
+                color: $black;
+                font-weight: 800;
+                font-size: 1.25em;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                position: relative;
+                box-shadow: 2px 2px 0px $black;
+
+                &.marked {
+                    background-color: $yellow-color;
+                    color: $black;
+                    &::after {
+                        content: '✕';
+                        position: absolute;
+                        font-size: 1.5em;
+                        color: red;
+                        font-weight: 900;
+                    }
+                }
+
+                &.premarked {
+                    background-color: #e2e8f0;
+                    &::after {
+                        content: '✕';
+                        position: absolute;
+                        font-size: 1.2em;
+                        color: #718096;
+                        font-weight: 700;
+                    }
+                }
+
+                &.clickable {
+                    border-color: #3182ce;
+                    background-color: #ebf8ff;
+                    box-shadow: 0px 0px 8px rgba(49, 130, 206, 0.6);
+                }
+            }
+        }
+
+        .yellow-row-bonuses {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            justify-content: space-between;
+        }
+    }
+
+    .yellow-col-bonuses {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-top: 4px;
+        text-align: center;
+
+        .yellow-col-bonus-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.85em;
+
+            .star-points {
+                font-weight: 800;
+                color: $yellow-color;
+                background-color: $black;
+                padding: 2px 6px;
+                border-radius: 4px;
+                border: 1px solid $yellow-color;
+            }
+        }
+    }
+
+    /* Blue Grid Area */
+    .blue-scale-row {
+        display: flex;
+        gap: 4px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        border-bottom: 1px solid #4a5568;
+
+        .blue-scale-cell {
+            flex-grow: 1;
+            text-align: center;
+            border: 1px solid $black;
+            background: #2d3748;
+            padding: 4px;
+            border-radius: 4px;
+            min-width: 32px;
+
+            .scale-label {
+                font-size: 0.7em;
+                color: #a0aec0;
+            }
+
+            .scale-val {
+                font-weight: 800;
+                font-size: 0.85em;
+                color: $blue-color;
+            }
+        }
+    }
+
+    .blue-grid-layout {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-top: 8px;
+
+        .blue-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            flex-grow: 1;
+
+            .blue-cell {
+                aspect-ratio: 1;
+                border: 2px solid $black;
+                border-radius: 6px;
+                background-color: $white;
+                color: $black;
+                font-weight: 800;
+                font-size: 1.2em;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                position: relative;
+                box-shadow: 2px 2px 0px $black;
+
+                &.marked {
+                    background-color: $blue-color;
+                    color: $white;
+                    &::after {
+                        content: '✕';
+                        position: absolute;
+                        font-size: 1.4em;
+                        color: red;
+                        font-weight: 900;
+                    }
+                }
+
+                &.clickable {
+                    border-color: #3182ce;
+                    background-color: #ebf8ff;
+                    box-shadow: 0px 0px 8px rgba(49, 130, 206, 0.6);
+                }
+
+                .blue-coupling-icon {
+                    font-size: 1.1em;
+                }
+            }
+        }
+
+        .blue-row-bonuses {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+    }
+
+    .blue-col-bonuses {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-top: 4px;
+        text-align: center;
+    }
+
+    /* Linear Rows (Green, Orange, Purple) */
+    .linear-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 8px;
+        padding-bottom: 8px;
+        align-items: flex-start;
+
+        .linear-cell-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            min-width: 50px;
+        }
+
+        .linear-cell {
+            width: 50px;
+            height: 50px;
+            border: 2px solid $black;
+            border-radius: 8px;
+            background-color: $white;
+            color: $black;
+            font-weight: 800;
+            font-size: 1.25em;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 2px 2px 0px $black;
+            cursor: pointer;
+
+            &.clickable {
+                border-color: #3182ce;
+                background-color: #ebf8ff;
+                box-shadow: 0px 0px 8px rgba(49, 130, 206, 0.6);
+            }
+
+            .req-label {
+                font-size: 0.6em;
+                color: #718096;
+                text-transform: uppercase;
+            }
+
+            .cell-val {
+                font-weight: 800;
+            }
+
+            .multiplier-tag {
+                position: absolute;
+                top: 2px;
+                right: 2px;
+                font-size: 0.6em;
+                background-color: $black;
+                color: $white;
+                padding: 1px 3px;
+                border-radius: 3px;
+                font-weight: bold;
+            }
+        }
+
+        .green-star-score {
+            font-size: 0.7em;
+            font-weight: bold;
+            color: $green-color;
+            background: $black;
+            padding: 1px 4px;
+            border-radius: 4px;
+        }
+
+        .bonus-label-under {
+            font-size: 0.85em;
+            margin-top: 4px;
+        }
+    }
+
+    /* Tracker Bars (Reroll, Extra Die, Foxes) */
+    .trackers-section {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background: $card-bg;
+        border: $border-width solid $black;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 4px 4px 0px $black;
+
+        .tracker-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 12px;
+            padding: 4px 0;
+
+            .tracker-title {
+                font-weight: 800;
+                min-width: 90px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .tracker-slots {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+
+                .slot-circle {
+                    width: 28px;
+                    height: 28px;
+                    border-radius: 50%;
+                    border: 2px solid $black;
+                    background: #2d3748;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    position: relative;
+                    font-size: 0.8em;
+                    font-weight: bold;
+
+                    &.unlocked {
+                        border-color: $yellow-color;
+                        background: rgba($yellow-color, 0.2);
+                        color: $white;
+                    }
+
+                    &.used {
+                        background: #4a5568;
+                        border-color: #718096;
+                        color: #a0aec0;
+                        &::after {
+                            content: '';
+                            position: absolute;
+                            width: 100%;
+                            height: 2px;
+                            background-color: red;
+                            transform: rotate(45deg);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /* Overlay Card for Pending Bonus Resolution */
+    .bonus-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.85);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        backdrop-filter: blur(4px);
+        box-sizing: border-box;
+
+        &.non-blocking {
+            pointer-events: none;
+            background-color: transparent;
+            backdrop-filter: none;
+            align-items: flex-end; /* Align card to bottom of screen so it doesn't block the top/middle board sections */
+            justify-content: center;
+            padding-bottom: 40px;
+
+            .bonus-card {
+                pointer-events: auto; /* Allow clicking inside the card itself */
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                border-color: $yellow-color; /* Highlight card border */
+            }
+        }
+
+        .bonus-card {
+            background-color: $card-bg;
+            border: 4px solid $black;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 8px 8px 0px $black;
+            text-align: center;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+            .bonus-card-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 12px;
+                border-bottom: 2px solid $black;
+                padding-bottom: 8px;
+
+                h2 {
+                    margin: 0 !important;
+                    font-weight: 800;
+                    font-size: 1.8em;
+                    color: $yellow-color;
+                    letter-spacing: -0.02em;
+                }
+
+                .btn-minimize {
+                    background: #2d3748;
+                    color: $white;
+                    border: 2px solid $black;
+                    border-radius: 8px;
+                    padding: 6px 12px;
+                    font-weight: 800;
+                    font-size: 0.85em;
+                    cursor: pointer;
+                    box-shadow: 2px 2px 0px $black;
+                    transition: all 0.1s;
+
+                    &:hover {
+                        transform: translate(-1px, -1px);
+                        box-shadow: 3px 3px 0px $black;
+                        background: #4a5568;
+                    }
+                    
+                    &:active {
+                        transform: translate(1px, 1px);
+                        box-shadow: 1px 1px 0px $black;
+                    }
+                }
+            }
+
+            h2 {
+                margin-top: 0;
+                font-weight: 800;
+                font-size: 1.8em;
+                color: $yellow-color;
+                letter-spacing: -0.02em;
+            }
+
+            p {
+                color: #e2e8f0;
+                margin-bottom: 20px;
+                font-size: 1.1em;
+            }
+
+            .bonus-options {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+
+                .btn-bonus-opt {
+                    font-size: 1.1em;
+                    font-weight: 800;
+                    padding: 12px 24px;
+                    border: $border-width solid $black;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    box-shadow: 3px 3px 0px $black;
+                    transition: all 0.1s;
+                    text-transform: uppercase;
+
+                    &:hover {
+                        transform: translate(-1px, -1px);
+                        box-shadow: 4px 4px 0px $black;
+                    }
+
+                    &.yellow { background-color: $yellow-color; color: $black; }
+                    &.blue { background-color: $blue-color; color: $white; }
+                    &.green { background-color: $green-color; color: $white; }
+                    &.orange { background-color: $orange-color; color: $white; }
+                    &.purple { background-color: $purple-color; color: $white; }
+                }
+            }
+        }
+    }
+
+    /* Bonus trigger visual icons */
+    .bonus-icon-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 2px solid $black;
+        font-weight: 800;
+        font-size: 0.8em;
+        text-transform: uppercase;
+        box-shadow: 2px 2px 0px $black;
+
+        &.yellow { background-color: $yellow-color; color: $black; }
+        &.blue { background-color: $blue-color; color: $white; }
+        &.green { background-color: $green-color; color: $white; }
+        &.orange { background-color: $orange-color; color: $white; }
+        &.purple { background-color: $purple-color; color: $white; }
+        &.reroll { background-color: #718096; color: $white; }
+        &.fox { background-color: #e53e3e; color: $white; }
+        &.wild { background-color: $wild-color; color: $black; }
+    }
+
+    /* 5. Logs & Activity */
+    .logs-section {
+        background: $card-bg;
+        border: $border-width solid $black;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 4px 4px 0px $black;
+
+        h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+            font-weight: 800;
+            border-bottom: 1px solid #4a5568;
+            padding-bottom: 4px;
+        }
+
+        .logs-scroller {
+            height: 100px;
+            overflow-y: auto;
+            font-size: 0.85em;
+            color: #2d3748;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 4px;
+
+            .log-line {
+                border-bottom: 1px solid rgba(0,0,0,0.1);
+                padding-bottom: 2px;
+            }
+        }
+    }
+}
+
+/* 6. Scoring & Leaderboard screen styles */
+.clever-scoring-container {
+    background-color: $bg-color;
+    color: $text-color;
+    min-height: 100vh;
+    padding: 24px;
+    font-family: 'Outfit', sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+}
+
+.clever-gameover-container {
+    background-color: $card-bg;
+    color: $text-color;
+    border: $border-width solid $black;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 4px 4px 0px $black;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+
+    .trophy-banner {
+        font-size: 2.8em;
+        font-weight: 800;
+        color: $yellow-color;
+        text-shadow: 3px 3px 0px $black;
+        animation: bounce 1.5s ease-in-out infinite alternate;
+        text-align: center;
+    }
+
+    .leaderboard-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        max-width: 600px;
+        width: 100%;
+    }
+
+    .rank-item {
+        background: $card-bg;
+        border: 4px solid $black;
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 6px 6px 0px $black;
+
+        &.rank-first {
+            border-color: $yellow-color;
+            background: rgba($yellow-color, 0.1);
+        }
+
+        .rank-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+
+            .rank-num {
+                font-size: 1.8em;
+                font-weight: 800;
+                color: #4a5568;
+            }
+        }
+
+        .rank-breakdown {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+
+            .breakdown-details {
+                font-size: 0.85em;
+                color: #4a5568;
+            }
+
+            .rank-score-val {
+                font-size: 1.5em;
+                font-weight: 800;
+                color: $green-color;
+            }
+        }
+    }
+}
+
+/* Animations */
+@keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-6px); }
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.85); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.bonus-minimized-trigger {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background-color: $yellow-color;
+    color: $black;
+    border: $border-width solid $black;
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-weight: 800;
+    font-size: 1.1em;
+    cursor: pointer;
+    box-shadow: 4px 4px 0px $black;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: slideInUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    user-select: none;
+
+    &:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0px $black;
+    }
+
+    &:active {
+        transform: translate(2px, 2px);
+        box-shadow: 2px 2px 0px $black;
+    }
+
+    .pulse-dot {
+        width: 10px;
+        height: 10px;
+        background-color: #e53e3e;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7);
+        animation: pulse-dot-key 1.5s infinite;
+    }
+}
+
+@keyframes pulse-dot-key {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 8px rgba(229, 62, 62, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(229, 62, 62, 0);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(100px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}

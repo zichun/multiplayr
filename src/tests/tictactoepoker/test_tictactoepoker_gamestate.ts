@@ -41,7 +41,7 @@ describe('ticatctoepoker_gamestate', () => {
                 num_players: 2,
                 game_options: {enable_special_cards: true},
             };
-            let state = GameState.from_object(obj);
+            const state = GameState.from_object(obj);
 
             // Player 0
             // Deck: h7 h8 h9
@@ -148,7 +148,7 @@ describe('ticatctoepoker_gamestate', () => {
                 num_players: 2,
                 game_options: {enable_special_cards: true},
             };
-            let state = GameState.from_object(obj);
+            const state = GameState.from_object(obj);
 
             // Player 0
             // Deck: J T
@@ -215,7 +215,7 @@ describe('ticatctoepoker_gamestate', () => {
                 num_players: 2,
                 game_options: {enable_special_cards: true},
             };
-            let state = GameState.from_object(obj);
+            const state = GameState.from_object(obj);
 
             // Play all the cards
             for (let i = 0; i < 5; i++) {
@@ -230,7 +230,7 @@ describe('ticatctoepoker_gamestate', () => {
         });
 
         it('play normal cards until boards full', () => {
-            let state = new GameState(2, {enable_special_cards: false});
+            const state = new GameState(2, {enable_special_cards: false});
             state.start_new_game();
 
             for (let i = 0; i < 9; i++) {
@@ -264,7 +264,7 @@ describe('ticatctoepoker_gamestate', () => {
                 num_players: 2,
                 game_options: {enable_special_cards: true},
             };
-            let state = GameState.from_object(obj);
+            const state = GameState.from_object(obj);
 
             // Player 0
             assert.equal(state.get_current_player(), 0);
@@ -296,12 +296,12 @@ describe('ticatctoepoker_gamestate', () => {
 
 describe('tictactoepoker_board', () => {
     it('place_card and remove_card', () => {
-        let board = Board.create_empty();
+        const board = Board.create_empty();
 
-        let d2 = Card.create_normal(Suit.Diamonds, 2);
-        let c3 = Card.create_normal(Suit.Clubs, 3);
-        let h4 = Card.create_normal(Suit.Hearts, 4);
-        let s5 = Card.create_normal(Suit.Spades, 5);
+        const d2 = Card.create_normal(Suit.Diamonds, 2);
+        const c3 = Card.create_normal(Suit.Clubs, 3);
+        const h4 = Card.create_normal(Suit.Hearts, 4);
+        const s5 = Card.create_normal(Suit.Spades, 5);
         assert.equal(board.place_card(0, 0, d2), true);
         assert.equal(board.place_card(0, 1, c3), true);
         assert.equal(board.place_card(0, 1, h4), false);
@@ -320,7 +320,7 @@ describe('tictactoepoker_board', () => {
 
 
     it('compute_score row', () => {
-        let board = Board.create_empty();
+        const board = Board.create_empty();
 
         board.place_card(0, 0, Card.create_normal(Suit.Diamonds, 2));
         assert.strictEqual(board.compute_score(), 0);
@@ -335,7 +335,7 @@ describe('tictactoepoker_board', () => {
     });
 
     it('compute_score column', () => {
-        let board = Board.create_empty();
+        const board = Board.create_empty();
 
         board.place_card(0, 0, Card.create_normal(Suit.Diamonds, 2));
         assert.strictEqual(board.compute_score(), 0);
@@ -350,7 +350,7 @@ describe('tictactoepoker_board', () => {
     });
 
     it('compute_score four corners', () => {
-        let board = Board.create_empty();
+        const board = Board.create_empty();
 
         board.place_card(0, 0, Card.create_normal(Suit.Diamonds, 2));
         assert.strictEqual(board.compute_score(), 0);
@@ -373,7 +373,7 @@ describe('tictactoepoker_board', () => {
     });
 
     it('compute_score straight flush', () => {
-        let board = Board.create_empty();
+        const board = Board.create_empty();
 
         board.place_card(0, 0, Card.create_normal(Suit.Diamonds, Card.AceValue));
         board.place_card(1, 0, Card.create_normal(Suit.Diamonds, 13));
@@ -383,7 +383,7 @@ describe('tictactoepoker_board', () => {
     });
 
     it('compute_score flush', () => {
-        let board = Board.create_empty();
+        const board = Board.create_empty();
 
         board.place_card(0, 0, Card.create_normal(Suit.Diamonds, 3));
         board.place_card(1, 0, Card.create_normal(Suit.Diamonds, 10));
@@ -393,7 +393,7 @@ describe('tictactoepoker_board', () => {
     });
 
     it('compute_score straight ascending', () => {
-        let board = Board.create_empty();
+        const board = Board.create_empty();
 
         board.place_card(0, 0, Card.create_normal(Suit.Diamonds, 2));
         board.place_card(1, 0, Card.create_normal(Suit.Spades, 3));
@@ -403,7 +403,7 @@ describe('tictactoepoker_board', () => {
     });
 
     it('compute_score straight any order will do', () => {
-        let board = Board.create_empty();
+        const board = Board.create_empty();
 
         board.place_card(0, 0, Card.create_normal(Suit.Diamonds, 4));
         board.place_card(1, 0, Card.create_normal(Suit.Spades, 2));
@@ -414,7 +414,7 @@ describe('tictactoepoker_board', () => {
 
 
     it('compute_score with aces', () => {
-        let board = Board.create_empty();
+        const board = Board.create_empty();
 
         // Straight: A23
         board.place_card(0, 0, Card.create_normal(Suit.Diamonds, Card.AceValue));

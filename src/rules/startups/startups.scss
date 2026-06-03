@@ -1,0 +1,899 @@
+/**
+ * startups.scss - Styling for the Startups game
+ */
+
+.startups-rules-overlay {
+    padding: 20px;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: #333;
+    max-width: 800px;
+    margin: 0 auto;
+
+    h1 {
+        font-size: 2.5em;
+        text-align: center;
+        border-bottom: 6px solid #000;
+        padding-bottom: 15px;
+        margin-bottom: 30px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .rules-section {
+        background: #fff;
+        border: 4px solid #000;
+        border-radius: 0;
+        padding: 20px;
+        margin-bottom: 25px;
+        box-shadow: 6px 6px 0px #000;
+
+        h2 {
+            border-bottom: 3px solid #000;
+            padding-bottom: 8px;
+            margin-top: 0;
+            font-size: 1.5em;
+            text-transform: uppercase;
+        }
+
+        p {
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .companies-list {
+            list-style: none;
+            padding-left: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+
+            li {
+                background: #f8f9fa;
+                border: 2px solid #000;
+                padding: 10px;
+                font-size: 1.05em;
+            }
+        }
+
+        .action-card {
+            background: #fafafa;
+            border: 3px dashed #000;
+            padding: 15px;
+            margin: 15px 0;
+
+            h3 {
+                margin-top: 0;
+                text-transform: uppercase;
+                font-size: 1.2em;
+            }
+        }
+    }
+}
+
+.startups-game-container {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    padding: 20px;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    background-color: #fbfbfb;
+    color: #1a1a1a;
+
+    h3 {
+        font-size: 1.6em;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 4px solid #000;
+        padding-bottom: 8px;
+        margin-bottom: 15px;
+        color: #1a1a1a;
+    }
+
+    /* 1. Header Bar styling */
+    .game-header-bar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        border: 4px solid #000;
+        padding: 15px 25px;
+        background: #fff;
+        box-shadow: 6px 6px 0px #000;
+
+        .turn-indicator {
+            flex: 1 1 280px;
+
+            .my-turn-badge {
+                display: inline-block;
+                max-width: 100%;
+                box-sizing: border-box;
+                white-space: normal;
+                word-break: break-word;
+                background: #2ecc71;
+                color: #fff;
+                border: 3px solid #000;
+                font-weight: bold;
+                padding: 6px 15px;
+                font-size: 1.1em;
+                letter-spacing: 1px;
+                animation: pulse-border 1.5s infinite;
+            }
+
+            .other-turn-badge {
+                display: inline-block;
+                max-width: 100%;
+                box-sizing: border-box;
+                white-space: normal;
+                word-break: break-word;
+                background: #f1c40f;
+                color: #000;
+                border: 3px solid #000;
+                font-weight: bold;
+                padding: 6px 15px;
+                font-size: 1.1em;
+            }
+
+            .phase-subtitle {
+                margin-top: 8px;
+                font-size: 0.95em;
+                color: #555;
+                font-weight: 500;
+            }
+        }
+
+        .my-stats-container {
+            display: flex;
+            gap: 15px;
+
+            .stat-pill {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                border: 3px solid #000;
+                padding: 8px 16px;
+                font-size: 1.2em;
+                font-weight: 800;
+                background: #fff;
+                box-shadow: 3px 3px 0px #000;
+
+                &.coins {
+                    border-color: #f39c12;
+                    color: #e67e22;
+                }
+
+                &.debt {
+                    border-color: #e74c3c;
+                    color: #c0392b;
+                }
+            }
+        }
+    }
+
+    /* 2. Arena styling (Deck & Market) */
+    .arena-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 25px;
+
+        .deck-zone {
+            flex: 1 1 200px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 4px solid #000;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 6px 6px 0px #000;
+            transition: transform 0.2s, box-shadow 0.2s;
+
+            &.active-clickable {
+                cursor: pointer;
+                background: #eefdf4;
+                border-color: #2ecc71;
+
+                &:hover {
+                    transform: translate(-2px, -2px);
+                    box-shadow: 8px 8px 0px #000;
+                }
+                &:active {
+                    transform: translate(2px, 2px);
+                    box-shadow: 2px 2px 0px #000;
+                }
+            }
+
+            .deck-card-visual {
+                width: 130px;
+                height: 180px;
+                border: 4px solid #000;
+                background: #2c3e50;
+                color: #fff;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                align-items: center;
+                padding: 15px;
+                text-align: center;
+                box-shadow: 4px 4px 0px #000;
+
+                .deck-logo {
+                    font-size: 1.3em;
+                    font-weight: 900;
+                    letter-spacing: 2px;
+                    text-transform: uppercase;
+                    border-bottom: 3px solid #fff;
+                    padding-bottom: 4px;
+                    width: 100%;
+                }
+
+                .cards-remaining {
+                    font-size: 0.9em;
+                    font-weight: bold;
+                }
+            }
+
+            .deck-action-hint {
+                margin-top: 15px;
+                font-weight: bold;
+                font-size: 1.1em;
+                text-transform: uppercase;
+            }
+        }
+
+        .market-zone {
+            flex: 2 1 280px;
+            box-sizing: border-box;
+            border: 4px solid #000;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 6px 6px 0px #000;
+
+            .empty-market-placeholder {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 140px;
+                border: 3px dashed #ccc;
+                color: #888;
+                font-size: 1.1em;
+            }
+
+            .market-cards-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 15px;
+
+                .market-card-item {
+                    border: 4px solid #000;
+                    height: 110px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    background: #fff;
+                    padding: 0;
+                    position: relative;
+                    box-shadow: 4px 4px 0px #000;
+                    overflow: hidden;
+                    transition: transform 0.2s, box-shadow 0.2s;
+
+                    &.clickable {
+                        cursor: pointer;
+                        &:hover {
+                            transform: translate(-2px, -2px);
+                            box-shadow: 6px 6px 0px #000;
+                        }
+                    }
+
+                    &.blocked-by-antimonopoly {
+                        background: #f5f5f5;
+                        opacity: 0.7;
+                        cursor: not-allowed;
+                    }
+
+                    .card-company-label {
+                        color: #fff;
+                        padding: 8px;
+                        font-weight: bold;
+                        text-align: center;
+                        font-size: 0.95em;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                        border-bottom: 3px solid #000;
+                    }
+
+                    .market-coin-badge {
+                        flex-grow: 1;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 8px;
+                        font-weight: 800;
+                        font-size: 1.2em;
+                    }
+
+                    .antimonopoly-exempt-shield {
+                        background: #e74c3c;
+                        color: #fff;
+                        text-align: center;
+                        font-weight: bold;
+                        font-size: 0.85em;
+                        padding: 5px 0;
+                        text-transform: uppercase;
+                        border-top: 3px solid #000;
+                        width: 100%;
+                     }
+                }
+            }
+        }
+    }
+
+    /* 3. Portfolios styling */
+    .portfolios-section {
+        border: 4px solid #000;
+        background: #fff;
+        padding: 20px;
+        box-shadow: 6px 6px 0px #000;
+
+        .portfolios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+
+            .portfolio-card {
+                border: 3px solid #000;
+                padding: 15px;
+                background: #fdfdfd;
+                box-shadow: 3px 3px 0px #000;
+
+                &.is-self {
+                    border-color: #2980b9;
+                    box-shadow: 3px 3px 0px #2980b9;
+                    background: #f0f7fc;
+                }
+
+                &.is-active-turn {
+                    animation: active-glow 2s infinite alternate;
+                }
+
+                .portfolio-player-tag {
+                    font-weight: bold;
+                    font-size: 1.15em;
+                    border-bottom: 2px solid #000;
+                    padding-bottom: 5px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+
+                    .you-label {
+                        font-size: 0.8em;
+                        color: #2980b9;
+                        text-transform: uppercase;
+                    }
+                }
+
+                .portfolio-stats-line {
+                    margin: 8px 0;
+                    font-weight: 700;
+                    font-size: 0.95em;
+                    display: flex;
+                    gap: 12px;
+
+                    .debt-indicator {
+                        color: #e74c3c;
+                    }
+                }
+
+                .portfolio-shares-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    margin-top: 10px;
+
+                    .share-badge {
+                        border: 2px solid #000;
+                        border-left-width: 8px;
+                        background: #fff;
+                        padding: 5px 10px;
+                        display: flex;
+                        align-items: center;
+                        font-size: 0.95em;
+                        font-weight: bold;
+
+                        .company-dot {
+                            width: 8px;
+                            height: 8px;
+                            border-radius: 50%;
+                            margin-right: 8px;
+                        }
+
+                        .share-name {
+                            flex: 1;
+                        }
+
+                        .share-count {
+                            background: #000;
+                            color: #fff;
+                            padding: 1px 6px;
+                            font-size: 0.85em;
+                        }
+
+                        .antimonopoly-star {
+                            margin-left: 6px;
+                            font-size: 1.1em;
+                        }
+                    }
+
+                    .no-shares-yet {
+                        color: #888;
+                        font-style: italic;
+                        font-size: 0.9em;
+                        text-align: center;
+                        padding: 10px 0;
+                    }
+                }
+            }
+        }
+    }
+
+    /* 4. Hand styling */
+    .hand-section {
+        border: 4px solid #000;
+        background: #fff;
+        padding: 20px;
+        box-shadow: 6px 6px 0px #000;
+
+        .hand-cards-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 20px;
+
+            .hand-card-item {
+                border: 4px solid #000;
+                border-top-width: 12px;
+                background: #fff;
+                padding: 15px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                min-height: 170px;
+                box-shadow: 4px 4px 0px #000;
+                position: relative;
+
+                .hand-card-name {
+                    font-weight: bold;
+                    font-size: 1.1em;
+                    text-transform: uppercase;
+                    line-height: 1.3;
+                }
+
+                .hand-card-info {
+                    font-size: 0.85em;
+                    color: #666;
+                    margin: 8px 0;
+                }
+
+                .hand-card-actions {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 8px;
+                    margin-top: 10px;
+
+                    button {
+                        flex: 1 1 60px;
+                        border: 2px solid #000;
+                        padding: 6px 4px;
+                        font-size: 0.85em;
+                        font-weight: bold;
+                        cursor: pointer;
+                        text-transform: uppercase;
+                        transition: background-color 0.1s;
+
+                        &.btn-invest {
+                            background: #2ecc71;
+                            color: #fff;
+                            &:hover {
+                                background: #27ae60;
+                            }
+                        }
+
+                        &.btn-discard {
+                            background: #e74c3c;
+                            color: #fff;
+                            &:hover:not(:disabled) {
+                                background: #c0392b;
+                            }
+                            &:disabled {
+                                background: #ccc;
+                                color: #777;
+                                cursor: not-allowed;
+                                border-color: #999;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/* Scoring Phase Screen */
+.startups-scoring-container {
+    padding: 20px;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    color: #1a1a1a;
+
+    h2 {
+        font-size: 2.2em;
+        text-align: center;
+        text-transform: uppercase;
+        border-bottom: 5px solid #000;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+        color: #1a1a1a;
+    }
+
+    .scoring-intro {
+        text-align: center;
+        color: #555;
+        font-size: 1.1em;
+        margin-bottom: 25px;
+    }
+
+    .scoring-steps-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: space-around;
+        border: 4px solid #000;
+        background: #fff;
+        padding: 10px;
+        margin-bottom: 30px;
+        box-shadow: 4px 4px 0px #000;
+
+        .step-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 4px;
+            border-bottom: 4px solid transparent;
+            opacity: 0.4;
+            transition: opacity 0.3s;
+
+            &.active {
+                opacity: 1;
+                font-weight: bold;
+                border-bottom-width: 6px;
+            }
+
+            &.done {
+                opacity: 0.8;
+                text-decoration: line-through;
+            }
+
+            .step-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                margin-bottom: 6px;
+            }
+
+            .step-label {
+                font-size: 0.8em;
+                text-align: center;
+                white-space: nowrap;
+            }
+        }
+    }
+
+    .scoring-arena {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 25px;
+
+        .current-company-scoring-card {
+            border: 4px solid #000;
+            background: #fff;
+            box-shadow: 6px 6px 0px #000;
+            overflow: hidden;
+
+            .scoring-company-header {
+                color: #fff;
+                padding: 15px;
+                font-size: 1.4em;
+                font-weight: 800;
+                text-align: center;
+                text-transform: uppercase;
+                border-bottom: 4px solid #000;
+            }
+
+            .player-shares-comparison {
+                padding: 20px;
+
+                h4 {
+                    margin-top: 0;
+                    font-size: 1.2em;
+                    text-transform: uppercase;
+                }
+
+                .shares-table {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    margin-top: 15px;
+
+                    .shares-row {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        border: 2px solid #000;
+                        padding: 10px 15px;
+                        background: #fdfdfd;
+
+                        .player-name-tag {
+                            font-weight: bold;
+                            font-size: 1.1em;
+                        }
+
+                        .shares-count-badge {
+                            color: #fff;
+                            font-weight: bold;
+                            padding: 4px 12px;
+                            border: 2px solid #000;
+                        }
+                    }
+                }
+            }
+        }
+
+        .scoring-done-card {
+            border: 4px solid #000;
+            background: #d4edda;
+            color: #155724;
+            padding: 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 6px 6px 0px #000;
+        }
+
+        .scoring-logs-box {
+            border: 4px solid #000;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 6px 6px 0px #000;
+
+            h3 {
+                margin-top: 0;
+                border-bottom: 3px solid #000;
+                padding-bottom: 8px;
+                text-transform: uppercase;
+            }
+
+            .logs-scroller {
+                max-height: 250px;
+                overflow-y: auto;
+                background: #f8f9fa;
+                border: 2px solid #000;
+                padding: 15px;
+
+                .log-line-item {
+                    margin-bottom: 12px;
+                    border-bottom: 1px dashed #ccc;
+                    padding-bottom: 8px;
+
+                    &:last-child {
+                        margin-bottom: 0;
+                        border-bottom: none;
+                        padding-bottom: 0;
+                    }
+
+                    .log-company-header {
+                        font-weight: bold;
+                        color: #2c3e50;
+                        font-size: 1.05em;
+                        margin-bottom: 5px;
+                    }
+
+                    .log-transaction {
+                        font-family: monospace;
+                        font-size: 0.95em;
+                        padding-left: 10px;
+                        color: #555;
+                    }
+                }
+            }
+        }
+    }
+
+    .btn-next-scoring {
+        display: block;
+        margin: 30px auto 0 auto;
+        background: #3498db;
+        color: #fff;
+        border: 4px solid #000;
+        padding: 15px 35px;
+        font-size: 1.2em;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 4px 4px 0px #000;
+        transition: transform 0.1s, box-shadow 0.1s;
+
+        &:hover {
+            background: #2980b9;
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #000;
+        }
+        &:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000;
+        }
+    }
+
+    .waiting-for-host-scoring {
+        text-align: center;
+        font-style: italic;
+        color: #777;
+        margin-top: 30px;
+        font-size: 1.1em;
+    }
+}
+
+/* GameOver Leaderboard Screen */
+.startups-gameover-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: #1a1a1a;
+
+    .trophy-banner {
+        font-size: 3em;
+        text-align: center;
+        background: #f1c40f;
+        color: #000;
+        border: 5px solid #000;
+        padding: 15px;
+        font-weight: 900;
+        margin-bottom: 25px;
+        box-shadow: 6px 6px 0px #000;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    h2 {
+        text-transform: uppercase;
+        border-bottom: 4px solid #000;
+        padding-bottom: 8px;
+        color: #1a1a1a;
+    }
+
+    .leaderboard-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin: 25px 0;
+
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 4px solid #000;
+            padding: 15px 20px;
+            background: #fff;
+            box-shadow: 4px 4px 0px #000;
+
+            &.rank-first {
+                background: #fff9e6;
+                border-color: #f1c40f;
+                box-shadow: 6px 6px 0px #f1c40f;
+
+                .rank-num {
+                    color: #f1c40f;
+                    font-size: 1.8em;
+                }
+            }
+
+            .rank-left {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+
+                .rank-num {
+                    font-size: 1.4em;
+                    font-weight: 900;
+                }
+
+                .rank-player-tag {
+                    font-weight: bold;
+                    font-size: 1.25em;
+
+                    .winner-crown {
+                        color: #f1c40f;
+                        font-size: 0.9em;
+                        font-weight: bold;
+                    }
+                }
+            }
+
+            .rank-breakdown {
+                text-align: right;
+
+                .breakdown-details {
+                    font-size: 0.85em;
+                    color: #666;
+                    margin-bottom: 4px;
+                }
+
+                .rank-score-val {
+                    font-size: 1.4em;
+                    font-weight: 850;
+                }
+            }
+        }
+    }
+
+    .gameover-controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 30px;
+
+        button {
+            border: 4px solid #000;
+            padding: 12px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 4px 4px 0px #000;
+            transition: transform 0.1s;
+
+            &:hover {
+                transform: translate(-2px, -2px);
+                box-shadow: 6px 6px 0px #000;
+            }
+
+            &.btn-restart {
+                background: #2ecc71;
+                color: #fff;
+            }
+
+            &.btn-lobby {
+                background: #95a5a6;
+                color: #fff;
+            }
+        }
+    }
+
+    .waiting-for-host-gameover {
+        text-align: center;
+        font-style: italic;
+        color: #777;
+        margin-top: 30px;
+    }
+}
+
+/* Animations & Effects */
+@keyframes pulse-border {
+    0% {
+        box-shadow: 0 0 0 0px rgba(46, 204, 113, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 0 8px rgba(46, 204, 113, 0);
+    }
+}
+
+@keyframes active-glow {
+    0% {
+        border-color: #000;
+        box-shadow: 3px 3px 0px #000;
+    }
+    100% {
+        border-color: #3498db;
+        box-shadow: 3px 3px 8px #3498db;
+    }
+}

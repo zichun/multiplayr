@@ -25,6 +25,8 @@ app.use(express.static(rootDir + '/client/'));
 const paths = {
     'host': 'host.html',
     'join': 'join.html',
+    'host_p2p': 'host_p2p.html',
+    'join_p2p': 'join_p2p.html',
 
     'theoddone': 'theoddone.html',
     'decrypto': 'decrypto.html',
