@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>That Time You Killed Me Local Debugger</title>
+        <!-- Modern fonts -->
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;800&family=Inter:wght@400;800&display=swap" rel="stylesheet">
+    </head>
+    <body style="background-color: #1a202c; color: #e2e8f0; font-family: 'Outfit', sans-serif; margin: 0; padding: 12px;">
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+                integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs="
+                crossorigin="anonymous"></script>
+        <script src="locallib.bundle.js"></script>
+        <script src="ttykm.js"></script>
+        <script src="ttykm.local.js"></script>
+        <script src="https://use.fontawesome.com/0c388157c6.js"></script>
+
+        <div id="top-bar" style="background-color: #2d3748; padding: 10px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+            <strong style="text-transform: uppercase; letter-spacing: 0.05em;">⏳ That Time You Killed Me local debugger</strong>
+            <select id="res-select" style="background-color: #1a202c; color: #fff; border: 1px solid #4a5568; padding: 6px; border-radius: 4px;">
+                <option value="iphone15_P">iPhone 15/16 (Portrait)</option>
+                <option value="iphone15_L">iPhone 15/16 (Landscape)</option>
+                <option value="iphone15promax_P">iPhone 15/16 Pro Max (Portrait)</option>
+                <option value="iphone15promax_L">iPhone 15/16 Pro Max (Landscape)</option>
+                <option value="galaxyS23_P">Galaxy S23/S24 (Portrait)</option>
+                <option value="galaxyS23_L">Galaxy S23/S24 (Landscape)</option>
+                <option value="ipad_P">iPad Pro (Portrait)</option>
+                <option value="ipad_L">iPad Pro (Landscape)</option>
+            </select>
+        </div>
+        
+        <div style="font-weight: 800; text-transform: uppercase; font-size: 0.85rem; margin-bottom: 6px; color: #a0aec0;">📺 Shared Host Monitor Screen:</div>
+        <div id="host-container" style="margin-bottom: 20px; border: 2px solid #4a5568; border-radius: 8px; overflow: hidden; height: 350px; background-color: #ffffff;">
+        </div>
+
+        <div style="font-weight: 800; text-transform: uppercase; font-size: 0.85rem; margin-bottom: 6px; color: #a0aec0;">📱 Connected Player Devices (Mobile Viewports):</div>
+        <div id="clients" class="iphone15_P" style="display: flex; gap: 16px; overflow-x: auto; padding-bottom: 12px;">
+        </div>
+    </body>
+</html>

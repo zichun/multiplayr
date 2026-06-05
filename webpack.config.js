@@ -60,7 +60,7 @@ module.exports = (env, argv) => {
     }
 };
 
-const localDebugPages = ['avalon', 'coup', 'theoddone', 'decrypto', 'minesweeperflags', 'tictactoepoker', 'ito', 'drawing', 'catchsketch', 'durian', 'startups', 'clever'];
+const localDebugPages = ['avalon', 'coup', 'theoddone', 'decrypto', 'minesweeperflags', 'tictactoepoker', 'ito', 'drawing', 'catchsketch', 'durian', 'startups', 'clever', 'ttykm'];
 function DebuggerPages(outputPath) {
     const entry = {};
     const plugins = localDebugPages.map(debug => {

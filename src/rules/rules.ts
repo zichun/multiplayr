@@ -18,6 +18,7 @@ import { CatchSketchRule } from './catchsketch/catchsketch';
 import { DurianRule } from './durian/durian';
 import { StartupsRule } from './startups/startups';
 import { CleverRule } from './clever/clever';
+import { TTYKMRule } from './ttykm/ttykm';
 
 
 const CoupDebugger = NewDebuggerRule(
@@ -79,6 +80,14 @@ const StartupsDebugger = NewDebuggerRule(
 const CleverDebugger = NewDebuggerRule(
     'clever',
     CleverRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const TTYKMDebugger = NewDebuggerRule(
+    'ttykm',
+    TTYKMRule,
     {
         HistoryBufferSize: 10,
         HistoryInSessionStorage: true
@@ -200,6 +209,17 @@ export const MPRULES = {
         debug: true,
         rules: ['lobby', 'gameshell', 'clever', 'debugger'],
         rule: CleverDebugger
+    },
+    'ttykm': {
+        description: 'That Time You Killed Me - Abstract Time Travel Strategy',
+        rules: ['gameshell', 'ttykm'],
+        rule: TTYKMRule
+    },
+    'ttykm-debug': {
+        description: 'That Time You Killed Me (Debug)',
+        debug: true,
+        rules: ['gameshell', 'ttykm', 'debugger'],
+        rule: TTYKMDebugger
     }
 };
 

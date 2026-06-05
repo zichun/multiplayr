@@ -47,7 +47,11 @@ const paths = {
     'avalon': 'avalon.html',
     'ito': 'ito.html',
     'drawing': 'drawing.html',
-    'catchsketch': 'catchsketch.html'
+    'catchsketch': 'catchsketch.html',
+    'durian': 'durian.html',
+    'startups': 'startups.html',
+    'clever': 'clever.html',
+    'ttykm': 'ttykm.html'
 };
 
 for (const key of Object.keys(paths)) {
