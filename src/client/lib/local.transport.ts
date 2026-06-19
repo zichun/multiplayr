@@ -60,6 +60,14 @@ export class LocalClientTransport implements ClientTransportInterface {
     public setSession(session: ClientSessionInterface) {
         this.session = session;
     }
+
+    public isConnected(): boolean {
+        return true;
+    }
+
+    public disconnect(kicked?: boolean) {
+        // Local transport doesn't need to do anything.
+    }
 }
 
 class LocalServerTransport implements ServerTransportInterface {

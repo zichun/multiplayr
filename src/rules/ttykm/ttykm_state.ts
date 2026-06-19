@@ -1222,6 +1222,7 @@ export class TTYKMGameState {
             if (canPropagate) {
                 this.simulatePush(nextEra, idx, dir, 'statue', color);
                 this.lastActionText += ` -> Statue move propagated to ${this.getEraName(nextEra)}`;
+                this.propagateStatueMove(nextEra, color, dir);
             } else {
                 this.lastActionText += ` -> Statue move propagation blocked on ${this.getEraName(nextEra)}`;
             }

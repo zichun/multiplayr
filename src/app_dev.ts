@@ -40,18 +40,7 @@ const paths = {
     'join': 'join.html',
     'host_p2p': 'host_p2p.html',
     'join_p2p': 'join_p2p.html',
-
-    'theoddone': 'theoddone.html',
-    'decrypto': 'decrypto.html',
-    'coup': 'coup.html',
-    'avalon': 'avalon.html',
-    'ito': 'ito.html',
-    'drawing': 'drawing.html',
-    'catchsketch': 'catchsketch.html',
-    'durian': 'durian.html',
-    'startups': 'startups.html',
-    'clever': 'clever.html',
-    'ttykm': 'ttykm.html'
+    'debug': 'debug.html'
 };
 
 for (const key of Object.keys(paths)) {
@@ -64,6 +53,13 @@ for (const key of Object.keys(paths)) {
         });
     }
 }
+
+const debugGames = ['avalon', 'coup', 'theoddone', 'decrypto', 'minesweeperflags', 'tictactoepoker', 'ito', 'drawing', 'catchsketch', 'durian', 'startups', 'clever', 'ttykm'];
+debugGames.forEach(game => {
+    app.get('/' + game, (req, res) => {
+        res.redirect('/debug?game=' + game);
+    });
+});
 
 //
 // Set up socket.io connections

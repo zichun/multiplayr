@@ -17,6 +17,8 @@ export interface ClientTransportInterface {
     updateClientId();
     sendMessage(packet: PacketType, cb?: CallbackType<ReturnPacketType>);
     setSession(session: ClientSessionInterface);
+    isConnected(): boolean;
+    disconnect(kicked?: boolean): void;
 }
 
 export interface ServerTransportInterface {

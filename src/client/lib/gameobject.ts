@@ -97,7 +97,7 @@ export class GameObject {
             this.isHost = false;
             this.clientId = transport.getClientId();
             if (!this.parent && container) {
-                sessionStorage.setItem('clientId', this.clientId);
+                localStorage.setItem('clientId', this.clientId);
             }
         } else {
             this.parent = parent;
@@ -140,9 +140,9 @@ export class GameObject {
                 }
 
                 if (!this.parent && this.container) {
-                    sessionStorage.setItem('ruleName', ruleName);
-                    sessionStorage.setItem('roomId', roomId);
-                    sessionStorage.setItem('clientId', clientId);
+                    localStorage.setItem('ruleName', ruleName);
+                    localStorage.setItem('roomId', roomId);
+                    localStorage.setItem('clientId', clientId);
                 }
 
                 this.roomId = roomId;
@@ -173,8 +173,8 @@ export class GameObject {
             }
 
             if (!this.parent && this.container) {
-                sessionStorage.setItem('ruleName', ruleName);
-                sessionStorage.setItem('roomId', res.message);
+                localStorage.setItem('ruleName', ruleName);
+                localStorage.setItem('roomId', res.message);
             }
 
             this.roomId = res.message;
@@ -281,6 +281,161 @@ export class GameObject {
 
     public getClientId() {
         return this.clientId;
+    }
+
+    public getRootSession(): Session {
+        if (this.parent) {
+            return this.parent.getRootSession();
+        }
+        return this.session;
+    }
+
+    public hasAncestorPlugin(pluginName: string): boolean {
+        if (this.plugins[pluginName] !== undefined) {
+            return true;
+        }
+        if (this.parent) {
+            return this.parent.hasAncestorPlugin(pluginName);
+        }
+        return false;
+    }
+
+    public getAncestorPlugin(pluginName: string): GameObject | undefined {
+        if (this.plugins[pluginName] !== undefined) {
+            return this.plugins[pluginName];
+        }
+        if (this.parent) {
+            return this.parent.getAncestorPlugin(pluginName);
+        }
+        return undefined;
+    }
+
+    public getLobbyPlayersInfo() {
+        if (!this.isHost) {
+            throw (new Error('Only host can call getLobbyPlayersInfo'));
+        }
+
+        const getRootGameObj = (go: GameObject): GameObject => {
+            if (go.parent) return getRootGameObj(go.parent);
+            return go;
+        };
+        const rootGo = getRootGameObj(this);
+        const lobbyPlugin = this.getAncestorPlugin('lobby');
+        
+        const info = [];
+        const clients = rootGo.clients || [];
+        
+        for (let i = 0; i < clients.length; i++) {
+            const clientId = clients[i];
+            const clientStore = rootGo.clientsData[clientId];
+            const isConnected = clientStore ? clientStore.dataStore('__isConnected').getValue() : false;
+            
+            let name = `Client ${i + 1}`;
+            let icon = 6; // default user-circle index
+            let accent = '';
+            
+            if (lobbyPlugin) {
+                try {
+                    name = lobbyPlugin.getPlayerData(clientId, 'name') || name;
+                    const iconVal = lobbyPlugin.getPlayerData(clientId, 'icon');
+                    if (typeof iconVal === 'number') {
+                        icon = iconVal;
+                    }
+                    accent = lobbyPlugin.getPlayerData(clientId, 'accent') || '';
+                } catch (e) {
+                    console.error('Error querying lobby player data', e);
+                }
+            }
+            
+            info.push({
+                clientId,
+                name,
+                icon,
+                accent,
+                isConnected
+            });
+        }
+        
+        return info;
+    }
+
+    public disconnectClientDevice(clientId: string) {
+        if (!this.isHost) {
+            throw (new Error('Only host can disconnect client devices'));
+        }
+        const rootSession = this.getRootSession();
+        if (rootSession) {
+            rootSession.disconnectClientDevice(clientId);
+        }
+    }
+
+    public getConnectionInfo() {
+        const rootSession = this.getRootSession();
+        const transport = rootSession ? rootSession.getTransport() : null;
+        const isHost = rootSession ? rootSession.isHost() : false;
+        
+        if (!isHost) {
+            // Client session
+            const connected = transport ? transport.isConnected() : false;
+            return {
+                isHost: false,
+                connected: connected,
+                status: connected ? 'green' : 'red',
+                tooltip: connected ? 'Connected to Host' : 'Disconnected from Host'
+            };
+        } else {
+            // Host session
+            const transportConnected = transport ? transport.isConnected() : false;
+            if (!transportConnected) {
+                return {
+                    isHost: true,
+                    connected: false,
+                    status: 'red',
+                    tooltip: 'Hosting mechanism is broken'
+                };
+            }
+            
+            // Transport is active, check clients
+            const getRootGameObj = (go: GameObject): GameObject => {
+                if (go.parent) return getRootGameObj(go.parent);
+                return go;
+            };
+            const rootGo = getRootGameObj(this);
+            const clients = rootGo.clients || [];
+            
+            let allConnected = true;
+            let disconnectedCount = 0;
+            const totalClients = clients.length;
+            
+            clients.forEach(clientId => {
+                const clientStore = rootGo.clientsData[clientId];
+                const isConnectedVal = clientStore ? clientStore.dataStore('__isConnected').getValue() : false;
+                if (!isConnectedVal) {
+                    allConnected = false;
+                    disconnectedCount++;
+                }
+            });
+            
+            if (totalClients > 0 && !allConnected) {
+                return {
+                    isHost: true,
+                    connected: true,
+                    status: 'yellow',
+                    tooltip: `Transport active. ${totalClients - disconnectedCount}/${totalClients} clients connected.`,
+                    totalClients,
+                    connectedClients: totalClients - disconnectedCount
+                };
+            } else {
+                return {
+                    isHost: true,
+                    connected: true,
+                    status: 'green',
+                    tooltip: totalClients === 0 ? 'Hosting. No clients joined yet.' : `Hosting. All ${totalClients} clients connected.`,
+                    totalClients,
+                    connectedClients: totalClients
+                };
+            }
+        }
     }
 
     public getMPObject() {
@@ -502,7 +657,7 @@ export class GameObject {
 
                 if (!this.parent && this.container) {
                     const gameState = this.getState();
-                    sessionStorage.setItem('gameState', gameState);
+                    localStorage.setItem('gameState', gameState);
                 }
 
                 if (this.parent) {
@@ -806,7 +961,7 @@ export class GameObject {
         return this;
     }
 
-    private getPlayerData(
+    public getPlayerData(
         playerId: string,
         variable: string
     ) {
@@ -1247,7 +1402,10 @@ export class GameObject {
             clientId: gameObj.clientId,
             hostId: gameObj.clientId, // todo: fix this for normal clients
             roomId: gameObj.roomId,
-            ruleName: gameObj.rule ? gameObj.rule.name : ''
+            ruleName: gameObj.rule ? gameObj.rule.name : '',
+            hostAsPlayer: gameObj.rule ? !!gameObj.rule.hostAsPlayer : false,
+            getConnectionInfo: () => gameObj.getConnectionInfo(),
+            hasAncestorPlugin: (pluginName: string) => gameObj.hasAncestorPlugin(pluginName)
         };
 
         forEach(methods, (method) => {
@@ -1266,7 +1424,7 @@ export class GameObject {
                 'getPlayerData', 'setPlayerData', 'getPlayersData',
                 'setView', 'setViewProps', 'deleteViewProps',
                 'playersForEach', 'playersCount',
-                'removeClient'];
+                'removeClient', 'disconnectClientDevice', 'getLobbyPlayersInfo'];
             exposed.forEach((method) => {
                 obj[method] = hostExposedMethodWrapper(method);
             });

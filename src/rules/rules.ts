@@ -93,6 +93,30 @@ const TTYKMDebugger = NewDebuggerRule(
         HistoryInSessionStorage: true
     });
 
+const MinesweeperFlagsDebugger = NewDebuggerRule(
+    'minesweeperflags',
+    MinesweeperFlagsRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const TicTacToePokerDebugger = NewDebuggerRule(
+    'tictactoepoker',
+    TicTacToePokerRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const ItoDebugger = NewDebuggerRule(
+    'ito',
+    ItoRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
 
 export const MPRULES = {
     // 'bigger': {
@@ -105,121 +129,164 @@ export const MPRULES = {
     'rockscissorspaper': {
         description: 'A classic 2 player game',
         rules: ['lobby', 'gameshell', 'rockscissorspaper'],
-        rule: RockScissorsPaperRule
+        rule: RockScissorsPaperRule,
+        icon: '✊'
     },
     'theoddone': {
         description: 'Guess the odd one',
         rules: ['lobby', 'gameshell', 'theoddone'],
-        rule: TheOddOneRule
+        rule: TheOddOneRule,
+        icon: '🔍'
     },
     'coup': {
         description: 'Coup - Resistance',
         rules: ['lobby', 'gameshell', 'coup'],
-        rule: CoupRule
+        rule: CoupRule,
+        icon: '⚔️'
     },
     'avalon': {
         description: 'The Resistance - Avalon',
         rules: ['lobby', 'gameshell', 'avalon'],
-        rule: AvalonRule
+        rule: AvalonRule,
+        icon: '👑'
     },
     'decrypto': {
         description: 'Decrypto',
         rules: ['lobby', 'gameshell', 'decrypto'],
-        rule: DecryptoRule
+        rule: DecryptoRule,
+        icon: '🕵️'
     },
     'minesweeperflags': {
         description: 'Minesweeper Flags',
         rules: ['gameshell', 'minesweeperflags'],
-        rule: MinesweeperFlagsRule
+        rule: MinesweeperFlagsRule,
+        icon: '🚩'
+    },
+    'minesweeperflags-debug': {
+        description: 'Minesweeper Flags (Debug)',
+        debug: true,
+        rules: ['gameshell', 'minesweeperflags', 'debugger'],
+        rule: MinesweeperFlagsDebugger,
+        icon: '🚩'
     },
     'tictactoepoker': {
         description: 'Tic-tac-toe Poker',
         rules: ['gameshell', 'tictactoepoker'],
-        rule: TicTacToePokerRule
+        rule: TicTacToePokerRule,
+        icon: '❌'
+    },
+    'tictactoepoker-debug': {
+        description: 'Tic-tac-toe Poker (Debug)',
+        debug: true,
+        rules: ['gameshell', 'tictactoepoker', 'debugger'],
+        rule: TicTacToePokerDebugger,
+        icon: '❌'
     },
     'ito': {
         description: 'Ito - Cooperative Number Game',
         rules: ['lobby', 'gameshell', 'ito'],
-        rule: ItoRule
+        rule: ItoRule,
+        icon: '🔢'
+    },
+    'ito-debug': {
+        description: 'Ito (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'ito', 'debugger'],
+        rule: ItoDebugger,
+        icon: '🔢'
     },
     'catchsketch': {
         description: 'Catch Sketch - Speed Drawing Guessing Game',
         rules: ['lobby', 'gameshell', 'drawing', 'catchsketch'],
-        rule: CatchSketchRule
+        rule: CatchSketchRule,
+        icon: '📝'
     },
     'coup-debug': {
         description: 'Coup - Resistance (Debug)',
         debug: true,
         rules: ['lobby', 'gameshell', 'coup', 'debugger'],
-        rule: CoupDebugger
+        rule: CoupDebugger,
+        icon: '⚔️'
     },
     'avalon-debug': {
         description: 'Avalon (Debug)',
         debug: true,
         rules: ['lobby', 'gameshell', 'avalon', 'debugger'],
-        rule: AvalonDebugger
+        rule: AvalonDebugger,
+        icon: '👑'
     },
     'theoddone-debug': {
         description: 'TheOddOne (Debug)',
         debug: true,
         rules: ['lobby', 'gameshell', 'theoddone', 'debugger'],
-        rule: TheOddOneDebugger
+        rule: TheOddOneDebugger,
+        icon: '🔍'
     },
     'decrypto-debug': {
         description: 'Decrypto (Debug)',
         debug: true,
         rules: ['lobby', 'gameshell', 'decrypto', 'debugger'],
-        rule: DecryptoDebugger
+        rule: DecryptoDebugger,
+        icon: '🕵️'
     },
     'catchsketch-debug': {
         description: 'Catch Sketch (Debug)',
         debug: true,
         rules: ['lobby', 'gameshell', 'drawing', 'catchsketch', 'debugger'],
-        rule: CatchSketchDebugger
+        rule: CatchSketchDebugger,
+        icon: '📝'
     },
     'durian': {
         description: 'Durian - Shopkeeper & Inventory Crisis Game',
         rules: ['lobby', 'gameshell', 'durian'],
-        rule: DurianRule
+        rule: DurianRule,
+        icon: '🍍'
     },
     'durian-debug': {
         description: 'Durian (Debug)',
         debug: true,
         rules: ['lobby', 'gameshell', 'durian', 'debugger'],
-        rule: DurianDebugger
+        rule: DurianDebugger,
+        icon: '🍍'
     },
     'startups': {
         description: 'Startups - Competitive Investment Card Game',
         rules: ['lobby', 'gameshell', 'startups'],
-        rule: StartupsRule
+        rule: StartupsRule,
+        icon: '💼'
     },
     'startups-debug': {
         description: 'Startups (Debug)',
         debug: true,
         rules: ['lobby', 'gameshell', 'startups', 'debugger'],
-        rule: StartupsDebugger
+        rule: StartupsDebugger,
+        icon: '💼'
     },
     'clever': {
         description: 'Clever - Dice Drafting Roll and Write',
         rules: ['lobby', 'gameshell', 'clever'],
-        rule: CleverRule
+        rule: CleverRule,
+        icon: '🧠'
     },
     'clever-debug': {
         description: 'Clever (Debug)',
         debug: true,
         rules: ['lobby', 'gameshell', 'clever', 'debugger'],
-        rule: CleverDebugger
+        rule: CleverDebugger,
+        icon: '🧠'
     },
     'ttykm': {
         description: 'That Time You Killed Me - Abstract Time Travel Strategy',
         rules: ['gameshell', 'ttykm'],
-        rule: TTYKMRule
+        rule: TTYKMRule,
+        icon: '⏳'
     },
     'ttykm-debug': {
         description: 'That Time You Killed Me (Debug)',
         debug: true,
         rules: ['gameshell', 'ttykm', 'debugger'],
-        rule: TTYKMDebugger
+        rule: TTYKMDebugger,
+        icon: '⏳'
     }
 };
 

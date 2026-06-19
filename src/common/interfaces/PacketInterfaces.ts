@@ -51,7 +51,8 @@ export enum SessionMessageType {
     JoinRoom,       // client wants to join a room.
     SendMessage,    // client wants to send a message to another client.
     RoomBroadcast,  // a broadcast is being emitted from the server.
-    RejoinRoom      // client wants to rejoin a room
+    RejoinRoom,     // client wants to rejoin a room
+    DisconnectDevice // host wants to disconnect a client device
 }
 
 export enum RoomMessageType {

@@ -35,6 +35,80 @@ const renderHatSVG = (playerColor: number, size: number = 24) => {
     );
 };
 
+const renderStatueSVG = (statueType: number, size: number = 32) => {
+    const isWhite = statueType === 0;
+    const isBlack = statueType === 1;
+    const isNeutral = !isWhite && !isBlack;
+
+    let primaryColor = '#ffffff';
+    let accentColor = '#457fc4';
+    if (isBlack) {
+        primaryColor = '#1e1e24';
+        accentColor = '#e74c3c';
+    } else if (isNeutral) {
+        primaryColor = '#f5c342';
+        accentColor = '#d35400';
+    }
+
+    const strokeColor = '#000000';
+    const strokeWidth = 1.5;
+
+    return (
+        <svg width={size} height={size} viewBox="0 0 32 32" style={{ display: 'inline-block', verticalAlign: 'middle', filter: 'drop-shadow(1.5px 1.5px 0px rgba(0,0,0,0.15))' }}>
+            <polygon 
+                points="6,8 16,2 26,8" 
+                fill={primaryColor} 
+                stroke={strokeColor} 
+                strokeWidth={strokeWidth} 
+                strokeLinejoin="round"
+            />
+            <rect 
+                x="7" 
+                y="8" 
+                width="18" 
+                height="3" 
+                fill={accentColor} 
+                stroke={strokeColor} 
+                strokeWidth={strokeWidth} 
+                strokeLinejoin="round"
+            />
+            <rect x="9" y="11" width="2" height="11" fill={primaryColor} stroke={strokeColor} strokeWidth={strokeWidth} />
+            <rect x="15" y="11" width="2" height="11" fill={primaryColor} stroke={strokeColor} strokeWidth={strokeWidth} />
+            <rect x="21" y="11" width="2" height="11" fill={primaryColor} stroke={strokeColor} strokeWidth={strokeWidth} />
+            <rect 
+                x="7" 
+                y="22" 
+                width="18" 
+                height="2" 
+                fill={accentColor} 
+                stroke={strokeColor} 
+                strokeWidth={strokeWidth} 
+                strokeLinejoin="round"
+            />
+            <rect 
+                x="5" 
+                y="24" 
+                width="22" 
+                height="2" 
+                fill={primaryColor} 
+                stroke={strokeColor} 
+                strokeWidth={strokeWidth} 
+                strokeLinejoin="round"
+            />
+            <rect 
+                x="3" 
+                y="26" 
+                width="26" 
+                height="3" 
+                fill={primaryColor} 
+                stroke={strokeColor} 
+                strokeWidth={strokeWidth} 
+                strokeLinejoin="round"
+            />
+        </svg>
+    );
+};
+
 export interface TTYKMSpaceType {
     player: number | null;
     seed: boolean;
@@ -643,8 +717,11 @@ class TTYKMMainView extends React.Component<TTYKMViewPropsInterface, TTYKMViewSt
                                 : '🪵➡️';
                     content = <div className="piece-plant-fallen">{arrow}</div>;
                 } else if (space.statue !== null) {
-                    const stClass = space.statue === 10 ? 'neutral' : (space.statue === 0 ? 'white-s' : 'black-s');
-                    content = <div className={`piece-statue ${stClass}`}>🏛️</div>;
+                    content = (
+                        <div className="piece-statue">
+                            {renderStatueSVG(space.statue, 36)}
+                        </div>
+                    );
                 } else if (space.elephant !== null) {
                     content = (
                         <div className="piece-elephant" style={{ position: 'relative' }}>
@@ -732,11 +809,15 @@ class TTYKMMainView extends React.Component<TTYKMViewPropsInterface, TTYKMViewSt
                         <>
                             <div className="supply-item">
                                 <span className="label">White Statues:</span>
-                                <span className="value">🏛️ x {supplies.statues[0]}</span>
+                                <span className="value">
+                                    {renderStatueSVG(0, 18)} x {supplies.statues[0]}
+                                </span>
                             </div>
                             <div className="supply-item">
                                 <span className="label">Black Statues:</span>
-                                <span className="value">🏛️ x {supplies.statues[1]}</span>
+                                <span className="value">
+                                    {renderStatueSVG(1, 18)} x {supplies.statues[1]}
+                                </span>
                             </div>
                         </>
                     )}
@@ -873,15 +954,15 @@ class TTYKMGameRules extends React.Component<{}, {}> {
                 <section>
                     <h3>🏛️ Chapter 2: Influence Module</h3>
                     <ul>
-                        <li><strong>Statues as Walls:</strong> Statues 🏛️ are immovable for players. Pushing any player copy into a statue squishes and eliminates that copy.</li>
-                        <li><strong>Build Statue:</strong> Place a statue 🏛️ of your color adjacent to your copy. Statue building propagates to future eras, pushing other objects out of the way.</li>
-                        <li><strong>Rebound Rules:</strong> What happens when statue propagation in a future era is blocked by an immovable obstacle (your own copy, a shrub, a tree, or another statue)?
+                        <li><strong>Statues as Obstacles:</strong> You cannot move into or push a statue directly with a normal move. Pushing any player copy into a statue squishes and eliminates that copy (acting as a wall).</li>
+                        <li><strong>Build Statue:</strong> Place a statue of your color adjacent to your copy. Each traveler has exactly 1 statue in reserve, and **can only build it once per game**. Statue building propagates to future eras, pushing other objects out of the way.</li>
+                        <li><strong>Rebound Rules:</strong> What happens when statue propagation in a future era is blocked by an obstacle (your own copy, a shrub, a tree, or another statue)?
                             <ul>
                                 <li><strong>2021 Rules (Legacy Rebound):</strong> The build rebounds. The statue is instead built in the future era on the space immediately behind your copy, pushing any objects in that opposite direction. If that rebound space is also blocked or off-board, the build fails.</li>
                                 <li><strong>2023 Rules (No Rebound):</strong> The build simply fails to propagate to that future era.</li>
                             </ul>
                         </li>
-                        <li><strong>Pulling Statues:</strong> When moving your copy, you can voluntarily pull a statue you are adjacent to into your vacated space, propagating the statue's movement to future eras.</li>
+                        <li><strong>Pulling Statues:</strong> When moving your copy, you can voluntarily pull an adjacent statue of any color into your vacated space, propagating the statue's movement to future eras.</li>
                     </ul>
                 </section>
 

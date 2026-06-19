@@ -22,18 +22,19 @@ $(() => {
     const iceServers = getIceServersConfig();
     const transportOpts: any = { iceServers };
 
-    // Check if we can resume an existing P2P game from sessionStorage
-    if (sessionStorage.getItem('gameState') &&
-        sessionStorage.getItem('roomId') &&
-        sessionStorage.getItem('clientId') &&
-        sessionStorage.getItem('ruleName')) {
+    // Check if we can resume an existing P2P game from localStorage
+    if (localStorage.getItem('gameState') &&
+        localStorage.getItem('roomId') &&
+        localStorage.getItem('clientId') &&
+        localStorage.getItem('ruleName')) {
 
-        const roomId = sessionStorage.getItem('roomId');
-        const ruleName = sessionStorage.getItem('ruleName');
-        const savedClientId = sessionStorage.getItem('clientId');
-        const gameState = sessionStorage.getItem('gameState');
+        const roomId = localStorage.getItem('roomId');
+        const ruleName = localStorage.getItem('ruleName');
+        const savedClientId = localStorage.getItem('clientId');
+        const gameState = localStorage.getItem('gameState');
 
-        if (confirm('An existing P2P game at room ' + roomId + ' (' + ruleName + ') detected. Click OK to resume the game, and cancel to host a new game.')) {
+        const displayRoomId = roomId.startsWith('mp-') ? roomId.substring(3) : roomId;
+        if (confirm('An existing P2P game at room ' + displayRoomId + ' (' + ruleName + ') detected. Click OK to resume the game, and cancel to host a new game.')) {
             console.log(`Attempting to resume P2P game at room ${roomId}...`);
             
             transportOpts.customPeerId = savedClientId;
@@ -42,10 +43,17 @@ $(() => {
                 (data) => {
                     _mplib.messages.checkReturnMessage(data, 'clientId');
 
-                    // Update UI to display Room ID
-                    $('#room-info').html(
-                        `P2P Room Active! Share Room ID to join: <span id="room-id-display">${savedClientId}</span>`
-                    );
+                    // Update UI status
+                    const displayId = savedClientId.startsWith('mp-') ? savedClientId.substring(3) : savedClientId;
+                    $('#room-info')
+                        .removeClass('connecting')
+                        .addClass('connected')
+                        .text('Host P2P is established. Room Code: ' + displayId);
+
+                    // Hide host setup UI, show game container, and set hash
+                    $('#host-setup-ui').hide();
+                    $('#game-container').show().empty();
+                    location.hash = ruleName;
 
                     // Rehost the game using the saved state
                     _mplib.MultiplayR.ReHost(
@@ -54,17 +62,17 @@ $(() => {
                         savedClientId,
                         gameState,
                         transport,
-                        document.getElementById('rules')
+                        document.getElementById('game-container')
                     );
                 }
             );
             return;
         } else {
-            // Clean up session storage if the user chooses to start fresh
-            sessionStorage.removeItem('gameState');
-            sessionStorage.removeItem('roomId');
-            sessionStorage.removeItem('clientId');
-            sessionStorage.removeItem('ruleName');
+            // Clean up local storage if the user chooses to start fresh
+            localStorage.removeItem('gameState');
+            localStorage.removeItem('roomId');
+            localStorage.removeItem('clientId');
+            localStorage.removeItem('ruleName');
         }
     }
 
@@ -75,10 +83,12 @@ $(() => {
             _mplib.messages.checkReturnMessage(data, 'clientId');
             clientId = data.message;
 
-            // Update UI to display Room ID
-            $('#room-info').html(
-                `P2P Room Active! Share Room ID to join: <span id="room-id-display">${clientId}</span>`
-            );
+            // Update UI status
+            const displayId = clientId.startsWith('mp-') ? clientId.substring(3) : clientId;
+            $('#room-info')
+                .removeClass('connecting')
+                .addClass('connected')
+                .text('Host P2P is established. Room Code: ' + displayId);
 
             // Render rule choices
             Object.keys(_mprules.MPRULES).forEach((ruleName) => {
@@ -87,36 +97,43 @@ $(() => {
                     $('#rules').append(makeRule(ruleName, rule));
                 }
             });
-
-            // Add simple link to Join P2P page
-            $('#rules').append(
-                '<a href="/join_p2p" style="font-size:1.5em; margin: 20px; display: block; text-align: center;">Join P2P Games</a>'
-            );
         }
     );
 
     function makeRule(name: string, rule: any) {
-        const $rule = $('<div class="rule" />');
+        const $rule = $('<div class="rule" />')
+            .click(hostGame(name));
+        const prettyName = name.charAt(0).toUpperCase() + name.slice(1);
+        const displayName = rule.icon ? `${rule.icon} ${prettyName}` : prettyName;
 
-        $('<header class="name">' + name + '</header>').appendTo($rule);
+        $('<header class="name">' + displayName + '</header>').appendTo($rule);
         $('<div class="desc">' + rule.description + '</div>').appendTo($rule);
-        $('<button class="host">Host this game!</button>')
-            .click(hostGame(name))
-            .appendTo($rule);
 
         return $rule;
     }
 
     function hostGame(ruleName: string) {
         return () => {
+            // Hide host setup UI, show game container, and set hash
+            $('#host-setup-ui').hide();
+            $('#game-container').show().empty();
+            location.hash = ruleName;
+
             // host game through WebRTCTransport
             _mplib.MultiplayR.Host(
                 ruleName,
                 transport,
-                document.getElementById('rules')
+                document.getElementById('game-container')
             );
         };
     }
+
+    // Listen to history / back button navigation
+    window.addEventListener('hashchange', () => {
+        if (!location.hash) {
+            location.reload();
+        }
+    });
 });
 
 function getIceServersConfig() {

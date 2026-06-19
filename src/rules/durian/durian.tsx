@@ -31,6 +31,7 @@ import { DurianGameState } from './DurianGameState';
 
 export const DurianRule: GameRuleInterface = {
     name: 'durian',
+    hostAsPlayer: true,
     plugins: {
         'lobby': Lobby,
         'gameshell': Shell

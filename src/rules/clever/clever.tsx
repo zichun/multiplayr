@@ -37,6 +37,7 @@ import { CleverGameState } from './CleverGameState';
 
 export const CleverRule: GameRuleInterface = {
     name: 'clever',
+    hostAsPlayer: true,
     plugins: {
         'lobby': Lobby,
         'gameshell': Shell

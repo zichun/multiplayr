@@ -37,6 +37,8 @@ export class WebRTCTransport implements ClientTransportInterface {
 
     // For Client: Direct connection to the host
     private hostConnection: any = null;
+    private hostConnected = false;
+    private kicked = false;
 
     // Callbacks for local or remote async replies
     private pendingCallbacks: { [packetId: string]: CallbackType<ReturnPacketType> } = {};
@@ -44,30 +46,48 @@ export class WebRTCTransport implements ClientTransportInterface {
     // Reconnection state
     private isReconnecting = false;
     private reconnectTimeout: any = null;
+    private options: { roomId?: string; customPeerId?: string; iceServers?: any[] };
+    private initialCallback?: (packet: ReturnPacketType) => any;
+    private heartbeatInterval: any = null;
+    private recreateTimeout: any = null;
 
     constructor(
         options: { roomId?: string; customPeerId?: string; iceServers?: any[] },
         cb?: (packet: ReturnPacketType) => any
     ) {
-        // Generate a unique client identifier
-        this.clientId = options.customPeerId || uniqueId('mp-client-', true).replace(/\./g, '-');
-        this.roomId = options.roomId;
+        this.options = options;
+        this.initialCallback = cb;
+        // Generate a unique client identifier (short P2P ID format: mp-XXXXXX)
+        this.clientId = options.customPeerId || ('mp-' + Math.floor(100000 + Math.random() * 900000).toString());
+        this.roomId = options.roomId ? (options.roomId.startsWith('mp-') ? options.roomId : 'mp-' + options.roomId) : undefined;
 
-        // Initialize PeerJS
-        // peerjs.min.js must be loaded from CDN in the host/join template.
-        // We use Google's public STUN servers for standard NAT traversal.
+        this.initPeer();
+        this.startHeartbeat();
+    }
+
+    private initPeer() {
+        if (this.peer) {
+            try {
+                this.peer.destroy();
+            } catch (e) {
+                console.error('Error destroying old peer:', e);
+            }
+        }
+
         if (typeof Peer === 'undefined') {
             console.error('PeerJS library (Peer) is not loaded in the browser document.');
-            if (cb) {
-                returnError(cb, 'PeerJS library not loaded');
+            if (this.initialCallback) {
+                returnError(this.initialCallback, 'PeerJS library not loaded');
+                this.initialCallback = undefined;
             }
             return;
         }
 
+        console.log('Initializing PeerJS client with ID:', this.clientId);
         this.peer = new Peer(this.clientId, {
             debug: 2,
             config: {
-                iceServers: options.iceServers || [
+                iceServers: this.options.iceServers || [
                     { urls: 'stun:stun.l.google.com:19302' },
                     { urls: 'stun:stun1.l.google.com:19302' },
                     { urls: 'stun:stun2.l.google.com:19302' }
@@ -78,32 +98,89 @@ export class WebRTCTransport implements ClientTransportInterface {
         this.peer.on('open', (id: string) => {
             console.log('PeerJS connection established. My Peer ID is:', id);
             this.clientId = id;
-            if (cb) {
-                cb({
+            if (this.initialCallback) {
+                this.initialCallback({
                     success: true,
                     message: id,
                     messageType: 'clientId'
                 });
+                this.initialCallback = undefined;
             }
         });
 
         this.peer.on('error', (err: any) => {
             console.error('PeerJS error encountered:', err);
+            this.handlePeerError(err);
         });
 
         this.peer.on('disconnected', () => {
             console.warn('PeerJS disconnected from signaling server. Attempting to reconnect peer...');
-            try {
-                this.peer.reconnect();
-            } catch (e) {
-                console.error('Failed to reconnect PeerJS to signaling server:', e);
-            }
+            this.attemptSignalingReconnect();
         });
 
         // Listen for incoming peer connections (only active on Host)
         this.peer.on('connection', (conn: any) => {
             this.handleIncomingConnection(conn);
         });
+    }
+
+    private handlePeerError(err: any) {
+        const errType = err.type;
+        console.warn(`Handling PeerJS error: ${errType}`);
+
+        if (errType === 'unavailable-id') {
+            console.warn('Peer ID is unavailable. Retrying in 2 seconds...');
+
+            // If the collision occurs on a generated ID, regenerate it before retrying
+            if (!this.options.customPeerId) {
+                this.clientId = 'mp-' + Math.floor(100000 + Math.random() * 900000).toString();
+                console.log('Regenerated client ID due to collision:', this.clientId);
+            }
+
+            if (this.recreateTimeout) clearTimeout(this.recreateTimeout);
+            this.recreateTimeout = setTimeout(() => {
+                this.initPeer();
+            }, 2000);
+        } else if (errType === 'peer-unavailable') {
+            console.warn('Target peer is unavailable (host offline). Retrying host connection...');
+            this.attemptReconnectToHost();
+        } else if (
+            errType === 'network' ||
+            errType === 'server-error' ||
+            errType === 'socket-closed' ||
+            errType === 'socket-error'
+        ) {
+            this.attemptSignalingReconnect();
+        }
+    }
+
+    private attemptSignalingReconnect() {
+        if (this.peer && !this.peer.destroyed) {
+            if (this.peer.disconnected) {
+                console.log('Attempting to reconnect PeerJS signaling...');
+                try {
+                    this.peer.reconnect();
+                } catch (e) {
+                    console.error('Failed to reconnect PeerJS:', e);
+                }
+            }
+        } else {
+            console.log('Peer destroyed or missing. Reinitializing PeerJS...');
+            this.initPeer();
+        }
+    }
+
+    private startHeartbeat() {
+        if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
+        this.heartbeatInterval = setInterval(() => {
+            if (!this.peer || this.peer.destroyed) {
+                console.warn('Heartbeat: PeerJS is destroyed or missing. Reinitializing...');
+                this.initPeer();
+            } else if (this.peer.disconnected) {
+                console.warn('Heartbeat: PeerJS disconnected. Reconnecting...');
+                this.attemptSignalingReconnect();
+            }
+        }, 5000);
     }
 
     public getClientId(): string {
@@ -225,6 +302,7 @@ export class WebRTCTransport implements ClientTransportInterface {
 
         conn.on('open', () => {
             console.log('WebRTC connection to host successfully established!');
+            this.hostConnected = true;
 
             // Send handshake packet so host recognizes client ID
             conn.send({
@@ -243,12 +321,14 @@ export class WebRTCTransport implements ClientTransportInterface {
 
         conn.on('close', () => {
             console.warn('Disconnected from Host.');
+            this.hostConnected = false;
             this.session.onReconnect();
             this.attemptReconnectToHost();
         });
 
         conn.on('error', (err: any) => {
             console.error('WebRTC host connection error:', err);
+            this.hostConnected = false;
             if (cb) returnError(cb, err.toString());
             this.attemptReconnectToHost();
         });
@@ -366,6 +446,7 @@ export class WebRTCTransport implements ClientTransportInterface {
      */
     private attemptReconnectToHost() {
         if (this.session.isHost()) return; // Host doesn't need to reconnect to itself
+        if (this.kicked) return;
         if (this.isReconnecting) return;
 
         this.isReconnecting = true;
@@ -377,7 +458,31 @@ export class WebRTCTransport implements ClientTransportInterface {
                 return;
             }
 
+            if (!this.peer || this.peer.destroyed) {
+                console.warn('Reconnection skipped: peer is destroyed or null. Retrying in 3 seconds...');
+                this.isReconnecting = false;
+                this.scheduleReconnect();
+                return;
+            }
+
+            if (this.peer.disconnected) {
+                console.warn('Reconnection skipped: peer disconnected from signaling. Reconnecting signaling first...');
+                this.attemptSignalingReconnect();
+                this.isReconnecting = false;
+                this.scheduleReconnect();
+                return;
+            }
+
             console.log(`Reconnection attempt to Host Room ${this.roomId}...`);
+
+            if (this.hostConnection) {
+                try {
+                    this.hostConnection.close();
+                } catch (e) {
+                    // Ignore
+                }
+            }
+
             const conn = this.peer.connect(this.roomId, {
                 reliable: true
             });
@@ -387,6 +492,7 @@ export class WebRTCTransport implements ClientTransportInterface {
             conn.on('open', () => {
                 console.log('WebRTC reconnection to host successfully established!');
                 this.isReconnecting = false;
+                this.hostConnected = true;
 
                 if (this.reconnectTimeout) {
                     clearTimeout(this.reconnectTimeout);
@@ -409,11 +515,13 @@ export class WebRTCTransport implements ClientTransportInterface {
 
             conn.on('close', () => {
                 console.warn('WebRTC reconnection closed.');
+                this.hostConnected = false;
                 this.scheduleReconnect();
             });
 
             conn.on('error', (err: any) => {
                 console.error('WebRTC reconnection error:', err);
+                this.hostConnected = false;
                 this.scheduleReconnect();
             });
         };
@@ -423,10 +531,40 @@ export class WebRTCTransport implements ClientTransportInterface {
 
     private scheduleReconnect() {
         if (this.session.isHost()) return;
+        if (this.kicked) return;
         if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
         this.reconnectTimeout = setTimeout(() => {
             this.attemptReconnectToHost();
         }, 3000); // Try reconnecting every 3 seconds
+    }
+
+    public isConnected(): boolean {
+        const isHost = this.session ? this.session.isHost() : false;
+        if (isHost) {
+            return !!(this.peer && this.peer.open && !this.peer.disconnected);
+        } else {
+            return this.hostConnected;
+        }
+    }
+
+    public disconnect(kicked?: boolean): void {
+        if (kicked) {
+            this.kicked = true;
+        }
+        if (this.hostConnection) {
+            try {
+                this.hostConnection.close();
+            } catch (e) {
+                // Ignore
+            }
+        }
+        if (this.peer) {
+            try {
+                this.peer.disconnect();
+            } catch (e) {
+                // Ignore
+            }
+        }
     }
 }
 

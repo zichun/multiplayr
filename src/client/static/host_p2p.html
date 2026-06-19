@@ -5,7 +5,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
         <title>Multiplayr: P2P Host</title>
 
-        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.2/semantic.min.css"></link>
+        <!-- Modern font -->
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+        
         <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
                 integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs="
                 crossorigin="anonymous"></script>
@@ -16,59 +18,149 @@
         <script src="https://use.fontawesome.com/0c388157c6.js"></script>
         <style>
             body {
-                background: #f4f7f6;
+                background-color: #ffffff;
+                color: #000000;
+                font-family: 'Inter', sans-serif;
+                margin: 0;
+                padding: 40px 20px;
+                box-sizing: border-box;
             }
-            .rule {
-                background: white;
-                border-radius: 8px;
-                padding: 20px;
-                margin-bottom: 20px;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+
+            .container {
+                max-width: 900px;
+                margin: 0 auto;
             }
-            .rule header {
-                font-size: 1.6em;
-                font-weight: bold;
-                color: #2c3e50;
-                margin-bottom: 10px;
+
+            .host-title {
+                font-family: 'Outfit', sans-serif;
+                font-size: 2.8rem;
+                font-weight: 900;
+                text-transform: uppercase;
+                margin: 0 0 10px 0;
+                letter-spacing: -0.03em;
             }
-            .rule .desc {
-                font-size: 1.1em;
-                color: #7f8c8d;
-                margin-bottom: 15px;
+
+            .title-divider {
+                height: 6px;
+                background-color: #000000;
+                margin-bottom: 40px;
             }
-            .rule button {
-                background-color: #27ae60;
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 4px;
-                font-size: 1.1em;
-                cursor: pointer;
-            }
-            .rule button:hover {
-                background-color: #219653;
-            }
+
             #room-info {
-                background: #34495e;
-                color: white;
-                padding: 15px;
+                border: 4px solid #000000;
+                padding: 24px;
                 text-align: center;
-                font-size: 1.3em;
-                border-radius: 6px;
-                margin-bottom: 20px;
+                font-weight: 800;
+                font-size: 1.3rem;
+                box-shadow: 6px 6px 0px #000000;
+                margin-bottom: 40px;
+                box-sizing: border-box;
+                transition: background-color 0.3s ease;
             }
-            #room-id-display {
-                font-weight: bold;
-                color: #2ecc71;
-                font-family: monospace;
+
+            #room-info.connecting {
+                background-color: #f5c342; /* Ito Yellow */
+                color: #000000;
+            }
+
+            #room-info.connected {
+                background-color: #48b975; /* Ito Green */
+                color: #000000;
+            }
+
+            #rules {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 24px;
+                margin-bottom: 40px;
+            }
+
+            .rule {
+                background-color: #ffffff;
+                border: 4px solid #000000;
+                padding: 28px;
+                box-shadow: 6px 6px 0px #000000;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                cursor: pointer;
+                transition: transform 0.1s, box-shadow 0.1s;
+            }
+
+            .rule:hover {
+                transform: translate(-2px, -2px);
+                box-shadow: 8px 8px 0px #000000;
+            }
+
+            .rule:active {
+                transform: translate(4px, 4px);
+                box-shadow: 0px 0px 0px #000000;
+            }
+
+            .rule header.name {
+                font-family: 'Outfit', sans-serif;
+                font-size: 1.6rem;
+                font-weight: 900;
+                color: #000000;
+                text-transform: uppercase;
+                border-bottom: 2px solid #000000;
+                padding-bottom: 8px;
+                margin: 0 0 16px 0;
+                letter-spacing: -0.02em;
+            }
+
+            .rule .desc {
+                font-size: 1.05rem;
+                color: #000000;
+                line-height: 1.5;
+            }
+
+            /* Join P2P Link styled as Neobrutalist Button */
+            .join-p2p-btn {
+                display: block;
+                background-color: #4a90e2;
+                color: #ffffff;
+                border: 3px solid #000000;
+                font-size: 1.2rem;
+                font-weight: 800;
+                padding: 14px 28px;
+                text-align: center;
+                text-decoration: none;
+                box-shadow: 4px 4px 0px #000000;
+                max-width: 280px;
+                margin: 20px auto 0 auto;
+                transition: transform 0.1s, box-shadow 0.1s;
+                box-sizing: border-box;
+            }
+
+            .join-p2p-btn:hover {
+                color: #ffffff;
+                transform: translate(2px, 2px);
+                box-shadow: 2px 2px 0px #000000;
+            }
+
+            .join-p2p-btn:active {
+                transform: translate(4px, 4px);
+                box-shadow: 0px 0px 0px #000000;
             }
         </style>
     </head>
     <body>
-        <div id="rules">
-            <div id="room-info">
-                Initializing WebRTC Peer Room...
+        <div id="host-setup-ui" class="container">
+            <h1 class="host-title">Multiplayr: P2P Host</h1>
+            <div class="title-divider"></div>
+            
+            <div id="room-info" class="connecting">
+                Connecting to WebRTC...
+            </div>
+
+            <div id="rules"></div>
+
+            <div id="actions">
+                <a href="/join_p2p" class="join-p2p-btn">Join P2P Games</a>
             </div>
         </div>
+
+        <div id="game-container" style="display: none; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; background-color: #ffffff; z-index: 9999;"></div>
     </body>
 </html>

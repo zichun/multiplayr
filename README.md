@@ -1,4 +1,4 @@
-# Multiplayr 🎮
+# Multiplayr
 
 Multiplayr is a lightweight, reactive platform for creating multiplayer games where mobile devices (smartphones, tablets) act as game controllers/screens and a host device drives the central game loop. The game rules are defined in a data-driven, declarative (reactive) fashion.
 
@@ -9,7 +9,7 @@ In every game room, there is a single **Host** device and multiple **Client** de
 
 ---
 
-## 🛠️ Building & Running
+## Building & Running
 
 Get your local environment up and running:
 
@@ -53,7 +53,7 @@ npm test
 
 ---
 
-## 📐 High-Level Architecture
+## High-Level Architecture
 
 The Multiplayr engine is built upon a layered network protocol. Each layer populates a specific segment of a message packet and passes it down to the next:
 
@@ -77,7 +77,7 @@ graph TD
 
 ---
 
-## 📜 Declaring Game Rules
+## Declaring Game Rules
 
 A game rule implements the `GameRuleInterface` and is declared as a reactive object. 
 
@@ -105,14 +105,21 @@ export interface GameRuleInterface {
 
 ---
 
-## 🔌 Developer Deep-Dives & Agent Guidelines
+## Developer Deep-Dives & Agent Guidelines
 
-For exhaustive explanations, architecture flowcharts, step-by-step guides on creating games, plugin composing, writing AI bots, and running local automated simulations, please see our dedicated guide:
+For exhaustive explanations, architecture flowcharts, design guidelines, and testing patterns, please refer to the following documentation in the `./docs` directory:
 
-👉 [**Multiplayr Developer Guide & Agent Guidelines**](file:///c:/repos/multiplayr/docs/DEVELOPER_GUIDE.md)
+1. [**Multiplayr Developer Guide & Agent Guidelines**](file:///c:/repos/multiplayr/docs/DEVELOPER_GUIDE.md)
+   - **Action-Reconciliation Lifecycle**: Uni-directional client-server action flow.
+   - **Plugin Chaining & Namespaces**: Composability of features (`lobby`, `gameshell`).
+   - **The GameState/View/Method Pattern**: Decoupled game engines.
+   - **Mandatory Testing Methodologies**: Class-level unit tests and integration tests via `GameRuleTest`.
+2. [**Multiplayr Design Language & Style Guide**](file:///c:/repos/multiplayr/docs/DESIGN_GUIDE.md)
+   - **Neo-Brutalist Aesthetic**: Outlined elements and solid offset shadows (`box-shadow: 4px 4px 0px #000;`).
+   - **Multi-Device Responsiveness**: Supporting portrait/landscape orientations, proper touch target sizes (min `44px`), and viewport-height layout constraints.
+   - **UI Tabs**: Leveraging the Game Shell navigation menu to organize interfaces cleanly.
+   - **Event Broadcasts**: Toast notifications and sound feedback via `gameshell`.
+   - **Emoji Rules**: Restricting emojis to functional text-replacement iconography only.
 
-This guide covers:
-- 🔄 **The View-Reconciliation & Remote Action Flow** (with sequence diagrams)
-- 🔗 **Plugin Chaining & Dynamic Namespace Resolution** (e.g., `lobby_started`)
-- 🏗️ **Step-by-Step Tutorial**: Writing a new game from scratch
-- 🤖 **Automated Testing & AI Bots**: Implementing headless `MultiplayrAI` systems with `GameRuleTest`
+> [!IMPORTANT]
+> **Instructions for AI Agents**: Before modifying any existing code, creating new games, or editing styles in this repository, you **MUST** read and strictly adhere to both the Developer Guide and the Design & Style Language Guide to maintain architectural consistency and structural quality.

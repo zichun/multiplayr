@@ -30,6 +30,7 @@ import { ItoGameState } from './ItoGameState';
 
 export const ItoRule: GameRuleInterface = {
     name: 'ito',
+    hostAsPlayer: true,
     plugins: {
         'lobby': Lobby,
         'gameshell': Shell

@@ -6,6 +6,8 @@ import * as React from 'react';
 import { ViewPropsInterface } from '../../../common/interfaces';
 import { StartupsGameRules } from './StartupsRules';
 import { GameStatus, Company, COMPANIES, COMPANY_COLORS, COMPANY_COUNTS } from '../StartupsGameState';
+import PassSound from '../sounds/pass.mp3';
+import Coin2Sound from '../sounds/coin2.mp3';
 
 // Lobby Views
 export class StartupsHostLobby extends React.Component<ViewPropsInterface, {}> {
@@ -75,6 +77,10 @@ interface StartupsMainViewProps extends ViewPropsInterface {
     scoringLogs: string[];
     isHost: boolean;
     lastTakenFromMarketCompany: Company | null;
+    lastMove?: any;
+    clientIds?: string[];
+    names?: string[];
+    accents?: string[];
 
     // Player specific props
     hand: Company[];
@@ -153,6 +159,55 @@ class StartupsGameScreen extends React.Component<StartupsMainViewProps, {}> {
                     </div>
                 </div>
 
+                {/* 3. Portfolios Grid */}
+                <div className="portfolios-section">
+                    <h3>Public Portfolios</h3>
+                    <div className="portfolios-grid">
+                        {playerIds.map((id) => {
+                            const pState = players[id];
+                            if (!pState) return null;
+                            const isCurrent = id === currentPlayerId;
+
+                            return (
+                                <div key={id} className={`portfolio-card ${id === myId ? 'is-self' : ''} ${isCurrent ? 'is-active-turn' : ''}`}>
+                                    <div className="portfolio-player-tag">
+                                        {MP.getPluginView('lobby', 'player-tag', { clientId: id })}
+                                        {id === myId && <span className="you-label">(You)</span>}
+                                    </div>
+                                    <div className="portfolio-stats-line">
+                                        <span>🪙 {pState.coins1}</span>
+                                    </div>
+                                    <div className="portfolio-shares-list">
+                                        {COMPANIES.map((company) => {
+                                            const count = pState.portfolio[company] || 0;
+                                            if (count === 0) return null;
+                                            const holdsToken = antiMonopolyTokens[company] === id;
+
+                                            return (
+                                                <div
+                                                    key={company}
+                                                    className="share-badge"
+                                                    style={{ borderLeftColor: COMPANY_COLORS[company] }}
+                                                >
+                                                    <span className="company-dot" style={{ backgroundColor: COMPANY_COLORS[company] }}></span>
+                                                    <span className="share-name">{company.split(' ')[0]}</span>
+                                                    <span className="share-count">{count}</span>
+                                                    {holdsToken && (
+                                                        <span className="antimonopoly-star" title="Anti-Monopoly Token Holder!">🏆</span>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                        {Object.keys(pState.portfolio).length === 0 && (
+                                            <div className="no-shares-yet">No shares invested yet.</div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
                 {/* 2. Playing Arena (Deck and Market) */}
                 <div className="arena-grid">
                     {/* Draw Deck Zone */}
@@ -216,55 +271,6 @@ class StartupsGameScreen extends React.Component<StartupsMainViewProps, {}> {
                                 })}
                             </div>
                         )}
-                    </div>
-                </div>
-
-                {/* 3. Portfolios Grid */}
-                <div className="portfolios-section">
-                    <h3>Public Portfolios</h3>
-                    <div className="portfolios-grid">
-                        {playerIds.map((id) => {
-                            const pState = players[id];
-                            if (!pState) return null;
-                            const isCurrent = id === currentPlayerId;
-
-                            return (
-                                <div key={id} className={`portfolio-card ${id === myId ? 'is-self' : ''} ${isCurrent ? 'is-active-turn' : ''}`}>
-                                    <div className="portfolio-player-tag">
-                                        {MP.getPluginView('lobby', 'player-tag', { clientId: id })}
-                                        {id === myId && <span className="you-label">(You)</span>}
-                                    </div>
-                                    <div className="portfolio-stats-line">
-                                        <span>🪙 {pState.coins1}</span>
-                                    </div>
-                                    <div className="portfolio-shares-list">
-                                        {COMPANIES.map((company) => {
-                                            const count = pState.portfolio[company] || 0;
-                                            if (count === 0) return null;
-                                            const holdsToken = antiMonopolyTokens[company] === id;
-
-                                            return (
-                                                <div
-                                                    key={company}
-                                                    className="share-badge"
-                                                    style={{ borderLeftColor: COMPANY_COLORS[company] }}
-                                                >
-                                                    <span className="company-dot" style={{ backgroundColor: COMPANY_COLORS[company] }}></span>
-                                                    <span className="share-name">{company.split(' ')[0]}</span>
-                                                    <span className="share-count">{count}</span>
-                                                    {holdsToken && (
-                                                        <span className="antimonopoly-star" title="Anti-Monopoly Token Holder!">🏆</span>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                        {Object.keys(pState.portfolio).length === 0 && (
-                                            <div className="no-shares-yet">No shares invested yet.</div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
                     </div>
                 </div>
 
@@ -498,6 +504,30 @@ export class StartupsMainPage extends React.Component<StartupsMainViewProps, {}>
     public render() {
         const mp = this.props.MP;
 
+        // Construct the toast object if we have lastMove
+        let toastNotification = null;
+        if (this.props.lastMove) {
+            const lastMove = this.props.lastMove;
+            const idx = this.props.clientIds ? this.props.clientIds.indexOf(lastMove.playerId) : -1;
+            const playerName = (idx !== -1 && this.props.names?.[idx]) || lastMove.playerId;
+            const playerColor = (idx !== -1 && this.props.accents?.[idx]) || '#2c3e50';
+
+            const actionText = lastMove.action === 'invest' ? 'invested in' : 'discarded';
+            const text = `${playerName} ${actionText} ${lastMove.company}`;
+
+            const isMyTurn = this.props.currentPlayerId === this.props.MP.clientId;
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+            const soundToPlay = (isMyTurn && isMobile) ? Coin2Sound : PassSound;
+
+            toastNotification = {
+                id: lastMove.moveId,
+                message: text,
+                bgColor: playerColor,
+                sound: soundToPlay,
+                duration: 3000 // Disappears after 3 seconds
+            };
+        }
+
         const links = {
             'home': {
                 'icon': 'gamepad',
@@ -565,7 +595,8 @@ export class StartupsMainPage extends React.Component<StartupsMainViewProps, {}>
                     ? '📊'
                     : this.props.gameStatus === GameStatus.GameOver
                         ? '🏆'
-                        : `🪙x${this.props.coins1}`
+                        : `🪙x${this.props.coins1}`,
+                'toastNotification': toastNotification
             });
     }
 }

@@ -332,6 +332,30 @@ describe('TTYKM Game State Logic', () => {
             assert.equal(state.boards[0][1].statue, 0);    // Statue pulled to index 1
             assert.equal(state.boards[0][2].player, 0);    // Player at index 2
         });
+
+        it('should recursively propagate statue movement from Past through to Future', () => {
+            const state = new TTYKMGameState({ growthModule: false, influenceModule: true, memoryModule: false });
+            // Set up White statues at index 5 on all three boards
+            state.boards[0][5].statue = 0;
+            state.boards[1][5].statue = 0;
+            state.boards[2][5].statue = 0;
+            state.supplies.statues[0] = 0;
+
+            // Player copy at index 1 on Past (0)
+            state.boards[0][1].player = 0;
+
+            state.selectCopy(1);
+            // Move from index 1 down (DOWN is index 1 + 4 = 5) pushing statue at index 5 to index 9
+            // This statue push should propagate to Present (index 5 to 9) and Future (index 5 to 9)
+            state.performAction({ type: 'move', dir: DOWN });
+
+            assert.equal(state.boards[0][5].player, 0); // Player moved to index 5 on Past
+            assert.equal(state.boards[0][9].statue, 0);  // Statue pushed to index 9 on Past
+            assert.equal(state.boards[1][9].statue, 0);  // Pushed to index 9 on Present (propagated)
+            assert.equal(state.boards[2][9].statue, 0);  // Pushed to index 9 on Future (propagated recursively)
+            assert.equal(state.boards[1][5].statue, null); // Vacated Present space
+            assert.equal(state.boards[2][5].statue, null); // Vacated Future space
+        });
     });
 
     describe('Memory Module', () => {

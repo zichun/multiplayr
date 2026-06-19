@@ -24,18 +24,23 @@ $(() => {
             uri: location.protocol + '//' + location.host
         },
         (data) => {
-            if (sessionStorage.getItem('gameState') &&
-                sessionStorage.getItem('roomId') &&
-                sessionStorage.getItem('clientId') &&
-                sessionStorage.getItem('ruleName')) {
+            if (localStorage.getItem('gameState') &&
+                localStorage.getItem('roomId') &&
+                localStorage.getItem('clientId') &&
+                localStorage.getItem('ruleName')) {
 
-                const roomId = sessionStorage.getItem('roomId');
-                const ruleName = sessionStorage.getItem('ruleName');
-                const clientId = sessionStorage.getItem('clientId');
-                const gameState = sessionStorage.getItem('gameState');
+                const roomId = localStorage.getItem('roomId');
+                const ruleName = localStorage.getItem('ruleName');
+                const clientId = localStorage.getItem('clientId');
+                const gameState = localStorage.getItem('gameState');
 
                 if (confirm('An existing game at room ' + roomId + ' (' + ruleName + ') detected. Click OK to resume the game, and cancel to host a new game')) {
                     return rehost(ruleName, roomId, clientId, gameState);
+                } else {
+                    localStorage.removeItem('gameState');
+                    localStorage.removeItem('roomId');
+                    localStorage.removeItem('clientId');
+                    localStorage.removeItem('ruleName');
                 }
             }
 

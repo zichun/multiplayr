@@ -1,12 +1,12 @@
-# Multiplayr Developer Guide & Agent Guidelines 📘
+# Multiplayr Developer Guide & Agent Guidelines
 
-Welcome! This guide is designed to help human developers and AI agentic systems rapidly understand the architecture, core abstractions, composition patterns, and testing framework of Multiplayr. 
+This guide is designed to help human developers and AI agentic systems rapidly understand the architecture, core abstractions, composition patterns, and testing framework of Multiplayr. 
 
 Whether you are debugging existing game loops or building brand-new games, these pages contain the precise diagrams and step-by-step code flows needed to work effectively in this repository.
 
 ---
 
-## 🔄 1. The Action-Reconciliation Lifecycle
+## 1. The Action-Reconciliation Lifecycle
 
 The most fundamental concept in Multiplayr is its **uni-directional, reactive data flow** across the client-server boundary. 
 
@@ -58,7 +58,7 @@ sequenceDiagram
 
 ---
 
-## 🔗 2. Plugin Composition & Namespace Chaining
+## 2. Plugin Composition & Namespace Chaining
 
 Multiplayr features a composition system where game rules can include plugins:
 ```typescript
@@ -108,234 +108,258 @@ When `onDataChange` finishes, the Host engine automatically nests the computed R
 
 ---
 
-## 🏗️ 3. Tutorial: Creating a Game from Scratch
+## 3. The Decoupled GameState Architecture Pattern (Case Study: Ito)
 
-Let's walk through implementing a simple game: **"Guess the Number"**.
+To maintain clean code, high testability, and clear separation of concerns, all new game rules in Multiplayr must adhere to the **decoupled GameState/View/Method/GameRule architecture**. This pattern separates the core game engine from the network synchronization and UI layers.
 
-### Step 1: Register the Rule
-Add your game definition to [src/rules/rules.ts](file:///c:/repos/multiplayr/src/rules/rules.ts) so the server and client bundle loaders know it exists.
+This architecture consists of four distinct layers:
+1. **Standalone GameState Class (`ItoGameState.ts`)**: The pure, frame-independent state machine containing all game variables, transition rules, and validation logic.
+2. **React Views (`ItoViews.tsx`)**: Reactive presentation components that render UI based on props and trigger server methods on user interaction.
+3. **Remote Methods (`ItoMethods.ts`)**: Server-side RPC entry points that receive client actions, rehydrate the GameState class, mutate it, and persist it back.
+4. **Game Rule Definition (`ito.tsx`)**: The main Multiplayr wrapper that integrates plugins, manages global metadata, handles data change ticks, and distributes view props.
 
-```typescript
-import { GuessTheNumberRule } from './guessthenumber/guessthenumber';
-
-export const MPRULES = {
-    // ... other rules ...
-    'guessthenumber': {
-        description: 'A simple cooperative number guessing game!',
-        rules: ['lobby', 'gameshell', 'guessthenumber'],
-        rule: GuessTheNumberRule
-    }
-};
+```mermaid
+flowchart TD
+    subgraph Client Device
+        V[React Views] -- "1. MP.submitClue(clue)" --> RPC[Remote Procedure Call]
+    end
+    
+    subgraph Host / Server
+        RPC -- "2. remote execution" --> M[ItoMethods: ItoSubmitClue]
+        M -- "3. Get raw state & rehydrate" --> GS[ItoGameState Class]
+        GS -- "4. Mutate game variables" --> GS
+        M -- "5. Serialize & save" --> DB[(Multiplayr Store: mp.setData)]
+        DB -- "6. Trigger tick" --> OD[onDataChange in ito.tsx]
+        OD -- "7. Rehydrate & calculate views/props" --> OD
+        OD -- "8. Push props: mp.setViewProps" --> V
+    end
 ```
 
-### Step 2: Implement the Game Logic
-Create `src/rules/guessthenumber/guessthenumber.ts`. This file will hold your variables, game reconciliation loop, remote methods, and frontend screens:
+### 3.1 Standalone GameState Class (`ItoGameState.ts`)
+The `ItoGameState` class is a pure TypeScript/JavaScript class. It has NO dependencies on React, Socket.io, or the Multiplayr core. 
+
+Key design requirements:
+- **Serialization & Rehydration**: Game session states in Multiplayr are saved as JSON strings inside the Host's database between ticks. This strips all prototype methods. The class must implement a serialization pattern using a raw data structure and a rehydration method:
+  ```typescript
+  export interface GameStateData {
+      status: GameStatus;
+      round: number;
+      lives: number;
+      players: { [playerId: string]: PlayerState };
+      lockedPlayers: string[];
+  }
+
+  export class ItoGameState {
+      private data: GameStateData;
+      private readonly playerIds: string[];
+
+      constructor(playerIds: string[]) {
+          this.playerIds = [...playerIds];
+          this.data = { ...initialState };
+      }
+
+      // Rehydrate the class from raw serialized JSON data
+      public static from_data(data: GameStateData, playerIds: string[]): ItoGameState {
+          const gameState = new ItoGameState(playerIds);
+          gameState.data = { ...data };
+          return gameState;
+      }
+
+      // Retrieve raw serializable data structure
+      public get_data(): GameStateData {
+          return { ...this.data };
+      }
+  }
+  ```
+- **Pure Game Logic**: All transitions, checks, and updates must reside in the GameState class as pure methods (e.g. `submit_clue`, `lock_clue`, `next_round`) that throw descriptive errors on invalid inputs or out-of-order moves.
+
+### 3.2 Game Rule Definition (`ito.tsx`)
+The game rule file serves as the coordinator. It defines composed plugins and orchestrates the database change tick (`onDataChange`).
 
 ```typescript
-import * as React from 'react';
-import { GameRuleInterface, MPType, ViewPropsInterface } from '../../common/interfaces';
-
-export const GuessTheNumberRule: GameRuleInterface = {
-    name: 'guessthenumber',
-
-    // Compose with the standard Lobby and Shell plugins
-    plugins: {},
-
-    // Global variables (Only Host reads/writes)
+export const ItoRule: GameRuleInterface = {
+    name: 'ito',
+    hostAsPlayer: true,
+    plugins: {
+        'lobby': Lobby,
+        'gameshell': Shell
+    },
     globalData: {
-        targetNumber: () => Math.floor(Math.random() * 100) + 1,
-        gameWon: false,
-        attempts: 0
+        gameState: null, // Stores raw serialized GameStateData
     },
-
-    // Player-specific variables
-    playerData: {
-        lastGuess: null
-    },
-
-    // State Reconciliation Loop (Runs on Host when data changes)
     onDataChange: (mp: MPType) => {
-        const gameWon = mp.getData('gameWon');
-        const attempts = mp.getData('attempts');
+        const started = mp.getData('lobby_started');
+        if (!started) {
+            // Lobby/setup phase views
+            mp.setView(mp.hostId, 'host-lobby');
+            mp.playersForEach(c => mp.setView(c, 'client-lobby'));
+            return true;
+        }
 
-        // Set props for all players
-        mp.playersForEach((client) => {
-            mp.setViewProps(client, 'attempts', attempts);
-            mp.setViewProps(client, 'gameWon', gameWon);
-            mp.setViewProps(client, 'lastGuess', mp.getPlayerData(client, 'lastGuess'));
-            
-            // Route views
-            if (gameWon) {
-                mp.setView(client, 'WinView');
-            } else {
-                mp.setView(client, 'PlayView');
-            }
+        // Rehydrate GameState to perform operations
+        let gameState = mp.getData('gameState');
+        if (!gameState.get_player_data) {
+            gameState = ItoGameState.from_data(gameState.data, gameState.playerIds);
+            mp.setData('gameState', gameState);
+        }
+
+        // Extract and distribute props to client views
+        mp.playersForEach((clientId) => {
+            mp.setViewProps(clientId, 'clues', gameState.get_clues());
+            mp.setViewProps(clientId, 'lives', gameState.get_lives());
+            mp.setViewProps(clientId, 'secretNumber', gameState.get_player_data(clientId)?.secretNumber);
+            mp.setView(clientId, 'mainpage');
         });
 
-        // Set Host dashboard view
-        mp.setView(mp.hostId, 'HostDashboard');
-        mp.setViewProps(mp.hostId, 'attempts', attempts);
-
-        return true; // Return true to push and render updated views
-    },
-
-    // Remote Methods (Called from client views, executed on Host)
-    methods: {
-        submitGuess: (mp: MPType, clientId: string, guess: number) => {
-            const target = mp.getData('targetNumber');
-            const attempts = mp.getData('attempts');
-
-            mp.setPlayerData(clientId, 'lastGuess', guess);
-            mp.setData('attempts', attempts + 1);
-
-            if (guess === target) {
-                mp.setData('gameWon', true);
-            }
-        }
-    },
-
-    // UI View Components (React)
-    views: {
-        PlayView: class extends React.Component<ViewPropsInterface & { attempts: number, lastGuess: number }, { guessVal: string }> {
-            state = { guessVal: '' };
-
-            onSubmit = () => {
-                const val = parseInt(this.state.guessVal);
-                if (!isNaN(val)) {
-                    // Call the remote host method
-                    this.props.MP.submitGuess(val);
-                }
-            };
-
-            render() {
-                return (
-                    <div className="guess-play-view">
-                        <h2>Guess the Number!</h2>
-                        <p>Attempts: {this.props.attempts}</p>
-                        {this.props.lastGuess !== null && <p>Your last guess was: {this.props.lastGuess}</p>}
-                        <input 
-                            type="number" 
-                            value={this.state.guessVal} 
-                            onChange={(e) => this.setState({ guessVal: e.target.value })} 
-                        />
-                        <button onClick={this.onSubmit}>Submit Guess</button>
-                    </div>
-                );
-            }
-        },
-
-        WinView: class extends React.Component<ViewPropsInterface & { attempts: number }, {}> {
-            render() {
-                return (
-                    <div className="guess-win-view">
-                        <h2>🎉 You Won!</h2>
-                        <p>It took the team {this.props.attempts} attempts to find the correct number.</p>
-                    </div>
-                );
-            }
-        },
-
-        HostDashboard: class extends React.Component<ViewPropsInterface & { attempts: number }, {}> {
-            render() {
-                return (
-                    <div className="guess-host-view">
-                        <h1>Game Dashboard</h1>
-                        <p>The players have made {this.props.attempts} guesses.</p>
-                    </div>
-                );
-            }
-        }
+        return true;
     }
 };
 ```
 
----
-
-## 🤖 4. Automated Testing & AI Bots
-
-Multiplayr provides a powerful framework for writing offline, high-speed simulations. The central class is `GameRuleTest`, which spins up a Host and multiple Client game objects in-memory using a lightweight loopback `LocalClientTransport`.
-
-### The `MultiplayrAI` Bot Interface
-
-To write automated bots, implement the `MultiplayrAI` interface:
+### 3.3 Remote Methods (`ItoMethods.ts`)
+Methods are RPC hooks executed only on the Host. They should never write to `mp` variables directly; instead, they operate on the rehydrated `GameState` class and commit it back.
 
 ```typescript
-export interface MultiplayrAI {
-    onPropsChange(props: ViewPropsInterface): void;
-}
-```
-
-Whenever the Host updates the view state and pushes new props, the bot's `onPropsChange` method is triggered. The bot can inspect the properties and invoke actions via `props.MP`.
-
-### Example Headless Simulation Test
-
-Here is an example test file structure showing how to mock a player with a bot to verify game loops:
-
-```typescript
-import * as assert from 'assert';
-import { GameRuleTest } from '../GameRuleTest';
-import { MultiplayrAI, ViewPropsInterface } from '../../common/interfaces';
-
-// Simple Bot Logic
-class GuessingBot implements MultiplayrAI {
-    public onPropsChange(props: ViewPropsInterface & { gameWon: boolean, lastGuess: number }) {
-        if (props.gameWon) return; // Stop playing if won
-
-        const previousGuess = props.lastGuess || 0;
-        const nextGuess = previousGuess + 1;
-
-        // Execute action remoted to host
-        props.MP.submitGuess(nextGuess);
+export const ItoSubmitClue = (mp: MPType, clientId: string, clue: string) => {
+    // 1. Fetch the raw data and rehydrate it
+    let gameState = mp.getData('gameState');
+    if (!gameState.get_player_data) {
+        gameState = ItoGameState.from_data(gameState.data, gameState.playerIds);
     }
-}
 
-describe('Guess The Number AI Simulation', () => {
-    it('should successfully complete the game automatically', () => {
-        // Spin up the rule engine with 1 player in-memory
-        const gameTest = new GameRuleTest('guessthenumber', 1);
-        const bot = new GuessingBot();
+    // 2. Perform validation and transition
+    gameState.submit_clue(clientId, clue);
 
-        // Bind bot to Player index 0
-        gameTest.setAIPlayer(0, bot, {
-            'submitGuess': (mp, original_method, guess) => {
-                console.log(`Bot guessed: ${guess}`);
-                original_method(guess); // Calls the real rule method
-            }
-        });
-
-        // Set the initial game board state manually (forcing targetNumber = 5)
-        const mockState = JSON.stringify({
-            hostStore: {
-                targetNumber: 5,
-                gameWon: false,
-                attempts: 0
-            },
-            clientsStore: {
-                [gameTest.getPlayerClientId(0)]: {
-                    lastGuess: null
-                }
-            },
-            pluginsStore: {}
-        });
-        
-        gameTest.setState(mockState); // Triggers initial bot reaction
-
-        // Assertions: Verify game status
-        assert.strictEqual(gameTest.getHostData('gameWon'), true);
-        assert.strictEqual(gameTest.getHostData('attempts'), 5);
-    });
-});
+    // 3. Serialize and save back to DB (which triggers onDataChange)
+    mp.setData('gameState', gameState);
+};
 ```
+
+### 3.4 Composing with Lobby and Game Shell
+All game rules must compose with the `lobby` and `gameshell` plugins to handle the game setup flow and responsive styling shells:
+- **Lobby setup flow**: Clients connect, customize names/colors, and the host starts the game. The host starts the game by invoking `startGame` (e.g. `ItoStartGame`), which sets `lobby_started` to `true` and initializes `ItoGameState` with the active player IDs from the lobby.
+- **Game Shell rendering**: In React views, wrap the game view inside `mp.getPluginView('gameshell', 'HostShell-Main', { links, gameName, topBarContent })`. This provides sidebar navigation links, settings pages, and standard top bar status values (like round indices or lives counts).
 
 ---
 
-## 🧭 5. Agent Guidelines
+## 4. UI Player Reference Guidelines
+
+When rendering player names, tags, or references in React views, developers must adhere to strict guidelines. **Raw Client ID string literals (like `"mp-client-xxxx"`) must NEVER be printed directly on the UI.**
+
+Always use the standard plugins views:
+- **Badge/Tag with Colors**: Use the `player-tag` plugin view. It prints a styled badge displaying the player's name and accent color:
+  ```typescript
+  const playerTag = MP.getPluginView('lobby', 'player-tag', { clientId: id });
+  // Returns: React Element representing the badge
+  ```
+- **Plain Text Name**: Use the `player-name` plugin view. It prints the plain text name set in the lobby:
+  ```typescript
+  const playerName = MP.getPluginView('lobby', 'player-name', { clientId: id });
+  // Returns: React Element representing plain text name
+  ```
+- **Fallback References**: In the event that player names/tags are not configured or available (e.g., custom local mode, or special roles), use:
+  - Relative references: `"Player 1"`, `"Player 2"`.
+  - Assigned role names: `"The Assassin"`, `"Guesser"`.
+
+---
+
+## 5. Mandatory Testing Methodologies
+
+Writing robust tests is mandatory for all Multiplayr game rules. We split testing into two separate, mandatory layers: class-level logic tests and integration/simulation tests.
+
+```mermaid
+flowchart TD
+    subgraph Unit Tests (Class-level)
+        GameStateTest[test_ito.ts] -->|Direct Method Calls| Logic[ItoGameState Class]
+        Logic -->|Assertions| GameStateTest
+    end
+    
+    subgraph Integration Tests (Multiplayr-level)
+        GameTest[couptest.ts] -->|invokeClientMethod| Multiplayr[GameRuleTest Instance]
+        Multiplayr -->|Mutate state| Multiplayr
+        GameTest -->|getClientData| Multiplayr
+        Multiplayr -->|Assertions| GameTest
+    end
+```
+
+### 5.1 Type A: Core Game Logic (Class-Level) Unit Tests
+These tests target only the decoupled `GameState` class, without running the Multiplayr server infrastructure. They run synchronously, making them fast and simple to debug.
+
+- **Objective**: Verify that state machine rules, validation limits, scores, and win/loss states work as expected.
+- **Mocking**: Instantiating custom boards or secret numbers is done by manually modifying the retrieved raw state structure, then re-rehydrating the class.
+- **Example Pattern (Minesweeper & Ito)**:
+  ```typescript
+  describe('Ito Game State Logic', () => {
+      it('should lose lives when numbers are locked in wrong order', () => {
+          const game = new GameState(['alice', 'bob']);
+          game.start_game();
+
+          // Mock numbers directly on the state data
+          const data = game.get_data();
+          data.players['alice'].secretNumber = 90; // Higher number
+          data.players['bob'].secretNumber = 10;   // Lower number
+
+          const mockedGame = GameState.from_data(data, ['alice', 'bob']);
+          
+          mockedGame.submit_clue('alice', 'clueA');
+          mockedGame.lock_clue('alice'); // Locks 90 first
+
+          mockedGame.submit_clue('bob', 'clueB');
+          mockedGame.lock_clue('bob'); // Locks 10 second -> Out of order!
+
+          assert.strictEqual(mockedGame.get_lives(), 2, 'Should have lost a life');
+      });
+  });
+  ```
+
+### 5.2 Type B: Integration / Simulation (Multiplayr-Level) Tests
+These tests run inside `GameRuleTest`, simulating the real Multiplayr architecture: it spins up an in-memory server and multiple local client instances linked via local transports.
+
+- **Objective**: Ensure that client methods remote successfully to the host, `onDataChange` correctly distributes views and props, and data mutations persist across database ticks.
+- **Mocks**: Injecting specific game situations is done using `setState(mockStateJsonString)` directly on the `GameRuleTest` instance.
+- **Verification Primitives**:
+  - `invokeClientMethod(playerIndex, methodName, ...args)`: Simulates a player submitting an action from a React view.
+  - `invokeHostMethod(methodName, ...args)`: Simulates host actions.
+  - `getClientData(playerIndex, variable)` / `getHostData(variable)`: Query raw values in the database.
+- **Example Pattern (Coup)**:
+  ```typescript
+  describe('Coup Assassin Integration Test', () => {
+      it('should reduce gold and assassinate target card', () => {
+          const couptest = new GameRuleTest('coup', 3);
+          couptest.setState(basicStateJson); // Inject mock mid-game board state
+
+          const targetClientId = couptest.getPlayerClientId(1);
+
+          // Simulate Player 0 executing the "assassinate" client action targeting Player 1
+          couptest.invokeClientMethod(0, 'takeAction', CoupAction.Assassin, targetClientId);
+          
+          // Simulate Host ending the challenge timer
+          couptest.invokeHostMethod('endChallengePhase');
+
+          // Simulate Player 1 revealing card index 1
+          couptest.invokeClientMethod(1, 'revealCard', '1');
+
+          // Assert database modifications
+          assert.strictEqual(couptest.getClientData(0, 'coins'), 1, 'Player 0 spent 3 coins');
+          const targetCards = couptest.getClientData(1, 'cards');
+          assert.strictEqual(targetCards[1].state, CoupCardState.Assassinated);
+      });
+  });
+  ```
+
+### 5.3 Mandatory Test Requirements
+Every new game rule added to the repository must submit **both** Type A and Type B test files. A pull request without logic-level unit tests and end-to-end integration tests will be rejected.
+
+---
+
+## 6. Agent Guidelines
 
 If you are an AI assistant tasked with modifying or extending Multiplayr, follow these strict coding guidelines to ensure perfect compatibility:
 
 > [!WARNING]
 > **Host-Only State Mutability**: NEVER attempt to store game state variables directly inside a React component's `this.state` or on the client-side `GameObject` instance. The Host is the *only* device that executes game methods and writes to the `DataStore`. Clients must remain entirely state-free and driven strictly by views and props pushed down by the Host.
 
+*   **Read the Design & Style Language Guide**: You MUST review and strictly adhere to all guidelines in [DESIGN_GUIDE.md](file:///c:/repos/multiplayr/docs/DESIGN_GUIDE.md) before writing styling rules, designing view layouts, or outputting templates.
 *   **Plugin Prefix Safety**: When adding a new composed rule or plugin, verify that you are prefixing any plugin variables appropriately (e.g. `mp.setData('lobby_name', val)` instead of `mp.setData('name', val)`).
 *   **Method Signatures**: All custom methods inside `methods` MUST have `mp: MPType` as their first parameter, and `clientId: string` as their second parameter:
     ```typescript

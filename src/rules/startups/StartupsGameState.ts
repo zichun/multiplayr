@@ -61,6 +61,13 @@ export interface PlayerState {
     coins3: number; // 3-point coins in supply (received during scoring)
 }
 
+export interface MoveRecord {
+    playerId: string;
+    action: 'invest' | 'discard';
+    company: Company;
+    moveId: string;
+}
+
 export interface GameStateData {
     status: GameStatus;
     deck: Company[];
@@ -72,6 +79,7 @@ export interface GameStateData {
     scoringCompanyIndex: number;
     scoringLogs: string[];
     antiMonopolyTokens: { [key in Company]?: string | null };
+    lastMove: MoveRecord | null;
 }
 
 export class StartupsGameState {
@@ -90,7 +98,8 @@ export class StartupsGameState {
             lastTakenFromMarketCompany: null,
             scoringCompanyIndex: 0,
             scoringLogs: [],
-            antiMonopolyTokens: {}
+            antiMonopolyTokens: {},
+            lastMove: null
         };
 
         // Initialize players
@@ -131,6 +140,7 @@ export class StartupsGameState {
         this.data.lastTakenFromMarketCompany = null;
         this.data.scoringCompanyIndex = 0;
         this.data.scoringLogs = [];
+        this.data.lastMove = null;
 
         // Build deck
         const fullDeck: Company[] = [];
@@ -260,6 +270,14 @@ export class StartupsGameState {
         player.hand.splice(cardIndex, 1);
         player.portfolio[company] = (player.portfolio[company] || 0) + 1;
 
+        // Record last move
+        this.data.lastMove = {
+            playerId,
+            action: 'invest',
+            company,
+            moveId: Math.random().toString(36).substring(2, 9)
+        };
+
         // Reassign anti monopoly
         this.reassign_anti_monopoly_tokens();
 
@@ -289,6 +307,14 @@ export class StartupsGameState {
             company,
             coins: 0
         });
+
+        // Record last move
+        this.data.lastMove = {
+            playerId,
+            action: 'discard',
+            company,
+            moveId: Math.random().toString(36).substring(2, 9)
+        };
 
         this.check_end_turn();
     }
@@ -414,6 +440,14 @@ export class StartupsGameState {
 
             if (maxCount === 0) {
                 this.data.antiMonopolyTokens[company] = null;
+                continue;
+            }
+
+            const currentHolder = this.data.antiMonopolyTokens[company];
+            const holderCount = currentHolder ? (this.data.players[currentHolder].portfolio[company] || 0) : 0;
+
+            if (currentHolder && holderCount === maxCount) {
+                // If there is already a holder and they have the max count, they keep it (even if tied)
                 continue;
             }
 

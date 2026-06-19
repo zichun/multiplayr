@@ -4,7 +4,7 @@
 import * as React from 'react';
 import * as Chance from 'chance';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { icons, LobbyView, LobbySetNameView, LobbySelectIconView, LobbySelectAccentView, LobbyAvatarView, LobbyHelloView, LobbyHostNameView } from './LobbyView';
+import { icons, LobbyView, LobbySetNameView, LobbySelectIconView, LobbySelectAccentView, LobbyAvatarView, LobbyHelloView, LobbyHostNameView, LobbyNameView } from './LobbyView';
 import './lobby.scss';
 
 import {
@@ -66,6 +66,8 @@ export const Lobby: GameRuleInterface = {
         const clientIds = [];
         const playersConnection = [];
 
+        const showHost = mp.parent && mp.parent.hostAsPlayer;
+
         mp.playersForEach((client, i) => {
             clientIds.push(client);
             orderedNames.push(names[i]);
@@ -90,6 +92,7 @@ export const Lobby: GameRuleInterface = {
             mp.setViewProps(client, 'names', orderedNames);
             mp.setViewProps(client, 'icons', orderedIcons);
             mp.setViewProps(client, 'accents', orderedAccents);
+            mp.setViewProps(client, 'showHost', showHost);
         });
 
         mp.setViewProps(mp.hostId, 'name', mp.getData('name'));
@@ -102,6 +105,7 @@ export const Lobby: GameRuleInterface = {
         mp.setViewProps(mp.hostId, 'accents', orderedAccents);
         mp.setViewProps(mp.hostId, 'playerCount', mp.playersCount());
         mp.setViewProps(mp.hostId, 'playersConnection', playersConnection);
+        mp.setViewProps(mp.hostId, 'showHost', showHost);
 
         return false;
     },
@@ -203,15 +207,15 @@ export const Lobby: GameRuleInterface = {
                 }
 
                 return (
-                    <div className={ className }
-                         style={ outerStyle }>
+                    <div className={className}
+                        style={outerStyle}>
                         <div className='lobby-player-tag-avatar'
-                             style={ style }>
-                            <FontAwesomeIcon icon={ icons[this.props.icons[i]] }
-                                         className='lobby-player-tag-icon' />
+                            style={style}>
+                            <FontAwesomeIcon icon={icons[this.props.icons[i]]}
+                                className='lobby-player-tag-icon' />
                         </div>
                         <div className='lobby-player-tag-name'>
-                            { this.props.names[i] }
+                            {this.props.names[i]}
                         </div>
                     </div>
                 );
@@ -219,6 +223,7 @@ export const Lobby: GameRuleInterface = {
         },
 
         'avatar': LobbyAvatarView,
+        'player-name': LobbyNameView,
         'HelloMessage': LobbyHelloView,
 
         //
@@ -306,8 +311,8 @@ export const Lobby: GameRuleInterface = {
             public render() {
                 const mp = this.props.MP;
                 const roomId = mp.roomId;
-                const rawRuleName = mp.parent && mp.parent.ruleName ? mp.parent.ruleName : (sessionStorage.getItem('ruleName') || 'Game');
-                
+                const rawRuleName = mp.parent && mp.parent.ruleName ? mp.parent.ruleName : (localStorage.getItem('ruleName') || sessionStorage.getItem('ruleName') || 'Game');
+
                 const ruleDisplayName = (name: string): string => {
                     if (!name) return 'Game Lobby';
                     if (name.toLowerCase() === 'catchsketch') return 'Catch Sketch';
@@ -354,7 +359,7 @@ export const Lobby: GameRuleInterface = {
 
                             <div className="player-card-actions">
                                 {!isHost ? (
-                                    <button 
+                                    <button
                                         className="player-kick-btn"
                                         title="Kick player from room"
                                         onClick={() => {

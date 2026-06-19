@@ -113,7 +113,7 @@ describe('Startups Game Logic', () => {
             assert.equal(customGame.get_data().antiMonopolyTokens[Company.Giraffe], 'alice');
         });
 
-        it('should return Anti-Monopoly token to center if there is a tie', () => {
+        it('should retain Anti-Monopoly token on the player if there is a tie', () => {
             const players = ['alice', 'bob', 'charlie'];
             const game = new GameState(players);
             game.start_game();
@@ -130,6 +130,25 @@ describe('Startups Game Logic', () => {
 
             const customGame = GameState.from_data(data, players);
             customGame.invest_card('bob', Company.Giraffe);
+
+            assert.equal(customGame.get_data().antiMonopolyTokens[Company.Giraffe], 'alice');
+        });
+
+        it('should keep Anti-Monopoly token in center if there is a tie and no one held it', () => {
+            const players = ['alice', 'bob', 'charlie'];
+            const game = new GameState(players);
+            game.start_game();
+
+            const data = game.get_data();
+            data.players['alice'].portfolio[Company.Giraffe] = 1;
+            data.players['bob'].portfolio[Company.Giraffe] = 1;
+            data.antiMonopolyTokens[Company.Giraffe] = null;
+            data.players['alice'].hand = [Company.Bowwow];
+            data.status = GameStatus.DiscardOrInvestPhase;
+            data.currentPlayerIndex = 0;
+
+            const customGame = GameState.from_data(data, players);
+            customGame.invest_card('alice', Company.Bowwow);
 
             assert.equal(customGame.get_data().antiMonopolyTokens[Company.Giraffe], null);
         });

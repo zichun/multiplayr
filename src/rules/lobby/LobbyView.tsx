@@ -16,13 +16,30 @@ export const icons: IconName[] = [
     'bed', 'beer', 'bomb', 'blind', 'cloud', 'cookie', 'fax', 'futbol', 'map', 'map-signs', 'paw', 'ship', 'grin'
 ];
 
+function getCookie(name: string): string {
+    if (typeof document === 'undefined') return '';
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
+    return '';
+}
+
+function setCookie(name: string, value: string, days = 365) {
+    if (typeof document === 'undefined') return;
+    const d = new Date();
+    d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+    const expires = `expires=${d.toUTCString()}`;
+    document.cookie = `${name}=${encodeURIComponent(value)};${expires};path=/;SameSite=Lax`;
+}
+
 const colors_default = ['#0074D9', '#7FDBFF', '#39CCCC', '#3D9970', '#2ECC40', '#01FF70', '#EEAB00', '#FF851B', '#FF4136',
-                        '#F012BE', '#B10DC9', '#AAAAAA'];
+    '#F012BE', '#B10DC9'];
 
 interface LobbyViewInterface extends ViewPropsInterface {
     names: string[],
     icons: number[],
-    accents: string[]
+    accents: string[],
+    showHost?: boolean
 }
 interface LobbySetNameViewInterface extends ViewPropsInterface {
     name: string,
@@ -46,11 +63,26 @@ export class LobbyAvatarView extends React.Component<{
     public render() {
         return (
             <div className='lobby-avatar'
-                    style={{ backgroundColor: this.props.accent }}>
-                <FontAwesomeIcon icon={ icons[this.props.icon] }
-                                size='4x'
-                                className='lobby-avatar-icon' />
+                style={{ backgroundColor: this.props.accent }}>
+                <FontAwesomeIcon icon={icons[this.props.icon]}
+                    size='4x'
+                    className='lobby-avatar-icon' />
             </div>
+        );
+    }
+}
+export class LobbyNameView extends React.Component<{
+    name: string,
+    icon: number,
+    accent: string
+}, {}> {
+    public render() {
+        const avatar = React.createElement(
+            LobbyAvatarView,
+            this.props);
+
+        return (
+            <span className='lobby-name'>{this.props.name}</span>
         );
     }
 }
@@ -66,8 +98,8 @@ export class LobbyHelloView extends React.Component<{
 
         return (
             <div className='lobby-player-card'>
-                { avatar }
-                <div className='lobby-name'>{ this.props.name }</div>
+                {avatar}
+                <div className='lobby-name'>{this.props.name}</div>
             </div>
         );
     }
@@ -81,7 +113,9 @@ export class LobbyView extends React.Component<LobbyViewInterface, {}> {
     public startGame() {
         const mp = this.props.MP;
         const names = this.props.names;
-        if (!namesAllFilled(names)) {
+        const showHost = this.props.showHost;
+        const namesToCheck = showHost ? names : names.slice(0, names.length - 1);
+        if (!namesAllFilled(namesToCheck)) {
             alert('Please fill in all player names before starting the game.');
             return;
         }
@@ -92,8 +126,9 @@ export class LobbyView extends React.Component<LobbyViewInterface, {}> {
     public render() {
         const createHello = (names, icons, accents) => {
             const tr = [];
+            const limit = this.props.showHost ? names.length : names.length - 1;
 
-            for (let i = 0; i < names.length - 1; i = i + 1) {
+            for (let i = 0; i < limit; i = i + 1) {
                 tr.push(
                     React.createElement(
                         LobbyHelloView,
@@ -102,10 +137,10 @@ export class LobbyView extends React.Component<LobbyViewInterface, {}> {
                             name: names[i],
                             icon: icons[i],
                             accent: accents[i]
-                        }) );
+                        }));
             }
 
-            if (names.length === 0) {
+            if (limit === 0) {
                 tr.push(
                     React.createElement(
                         'div',
@@ -119,11 +154,13 @@ export class LobbyView extends React.Component<LobbyViewInterface, {}> {
             return tr;
         };
 
+        const isHost = this.props.MP.clientId === this.props.MP.hostId;
+
         return React.createElement(
             'div',
             null,
             React.createElement('div', { id: 'lobby-playerlist' }, createHello(this.props.names, this.props.icons, this.props.accents)),
-            React.createElement('button', { onClick: this.startGame }, 'Start game')
+            isHost && React.createElement('button', { onClick: this.startGame }, 'Start game')
         );
     }
 }
@@ -131,9 +168,9 @@ export class LobbyHostNameView extends React.Component<LobbyViewInterface & { na
     public render() {
         return (
             <div>
-                { React.createElement(LobbySetNameView, this.props) }
+                {React.createElement(LobbySetNameView, this.props)}
                 <hr />
-                { React.createElement(LobbyView, this.props) }
+                {React.createElement(LobbyView, this.props)}
             </div>
         )
     }
@@ -141,13 +178,32 @@ export class LobbyHostNameView extends React.Component<LobbyViewInterface & { na
 export class LobbySetNameView extends React.Component<LobbySetNameViewInterface, { name: string }> {
     constructor(props: LobbySetNameViewInterface) {
         super(props);
-        this.state = { name: this.props.name };
+        let initialName = this.props.name;
+        const savedName = getCookie('mp_player_name');
+        if (savedName && savedName.trim() !== '') {
+            if (!initialName || initialName.trim() === '' || initialName === 'Host') {
+                initialName = savedName;
+            }
+        }
+        this.state = { name: initialName };
         this.onChange = this.onChange.bind(this);
     }
 
+    public componentDidMount() {
+        const savedName = getCookie('mp_player_name');
+        if (savedName && savedName.trim() !== '') {
+            const currentName = this.props.name;
+            if (!currentName || currentName.trim() === '' || currentName === 'Host') {
+                this.props.MP.setName(savedName);
+            }
+        }
+    }
+
     public onChange(e: any) {
-        this.setState({ name: e.target.value });
-        this.props.MP.setName(e.target.value);
+        const val = e.target.value;
+        this.setState({ name: val });
+        this.props.MP.setName(val);
+        setCookie('mp_player_name', val);
         return true;
     }
 
@@ -157,13 +213,13 @@ export class LobbySetNameView extends React.Component<LobbySetNameViewInterface,
         return (
             <div className='lobby-setname-container'>
                 <input className='lobby-setname-input'
-                        defaultValue={ this.state.name }
-                        onChange={ this.onChange }
-                        placeholder='Your Name'
-                        />
+                    value={this.state.name || ''}
+                    onChange={this.onChange}
+                    placeholder='Your Name'
+                />
 
-                { selectIcon }
-                { selectAccent }
+                {selectIcon}
+                {selectAccent}
             </div>
         );
     }
@@ -200,10 +256,10 @@ export class LobbySelectAccentView extends React.Component<ViewPropsInterface & 
             }
 
             tr.push(
-                <div className={ className }
-                        style={{ backgroundColor: colors[i] }}
-                        onClick={ this._setAccent.bind(this, colors[i]) }
-                        key={ 'accent' + i }>
+                <div className={className}
+                    style={{ backgroundColor: colors[i] }}
+                    onClick={this._setAccent.bind(this, colors[i])}
+                    key={'accent' + i}>
                 </div>
             );
         }
@@ -217,7 +273,7 @@ export class LobbySelectAccentView extends React.Component<ViewPropsInterface & 
     }
 }
 
-export class LobbySelectIconView extends React.Component<ViewPropsInterface & { icon: number, accent: string } , { icon: number }> {
+export class LobbySelectIconView extends React.Component<ViewPropsInterface & { icon: number, accent: string }, { icon: number }> {
     constructor(props: any) {
         super(props);
         this.state = { icon: this.props.icon };
@@ -241,14 +297,14 @@ export class LobbySelectIconView extends React.Component<ViewPropsInterface & { 
             }
             tr.push(
                 <div className='lobby-select-icon'
-                        key={ 'select-icon-' + i }
-                        onClick={ this._setIcon.bind(this, i) }>
+                    key={'select-icon-' + i}
+                    onClick={this._setIcon.bind(this, i)}>
 
-                    <FontAwesomeIcon icon={ icons[i] }
-                                    size='2x'
-                                    className={ className }
-                                    style={ style }
-                                    key={ 'icon-' + icons[i] } />
+                    <FontAwesomeIcon icon={icons[i]}
+                        size='2x'
+                        className={className}
+                        style={style}
+                        key={'icon-' + icons[i]} />
                 </div>
             );
         }

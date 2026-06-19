@@ -36,8 +36,7 @@ module.exports = (env, argv) => {
             MultiplayrLibConfig(mode, distPath),
             HostJoinPages(mode, distPath, true),
             AllRulesConfig(distPath),
-            DebuggerPages(distPath),
-            IndividualRules(distPath, true)
+            DebuggerPages(distPath)
         ];
     }
 
@@ -51,7 +50,6 @@ module.exports = (env, argv) => {
     } else {
         return [
             DebuggerPages(),
-            IndividualRules(),
             MultiplayrLibConfig(mode),
             ExpressServerConfig(mode),
             HostJoinPages(mode),
@@ -60,17 +58,10 @@ module.exports = (env, argv) => {
     }
 };
 
-const localDebugPages = ['avalon', 'coup', 'theoddone', 'decrypto', 'minesweeperflags', 'tictactoepoker', 'ito', 'drawing', 'catchsketch', 'durian', 'startups', 'clever', 'ttykm'];
 function DebuggerPages(outputPath) {
-    const entry = {};
-    const plugins = localDebugPages.map(debug => {
-        entry[debug + '.local'] = './src/client/js/' + debug + '.local.ts'
-        return (new HtmlWebPackPlugin({
-            template: './src/client/static/' + debug + '.html',
-            filename: './' + debug + '.html',
-            inject: false
-        }));
-    });
+    const entry = {
+        'debug.local': './src/client/js/debug.local.ts'
+    };
 
     return {
         entry: entry,
@@ -89,54 +80,15 @@ function DebuggerPages(outputPath) {
         },
         module: WebModule(true),
         plugins: [
-            ...plugins,
+            new HtmlWebPackPlugin({
+                template: './src/client/static/debug.html',
+                filename: './debug.html',
+                inject: false
+            }),
             ...ForkTsChecker,
             ESLintPluginConfig(),
             new webpack.NoEmitOnErrorsPlugin()
         ]
-    };
-}
-
-function IndividualRules(outputPath, isStaticDist) {
-    const entry = {};
-    localDebugPages.forEach(debug => {
-        entry[debug] = isStaticDist ? './src/rules/' + debug + '.ts' : [
-            'webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000',
-            './src/rules/' + debug + '.ts'
-        ];
-    });
-
-    const plugins = [
-        ...ForkTsChecker,
-        ESLintPluginConfig(),
-        new webpack.NoEmitOnErrorsPlugin()
-    ];
-
-    if (!isStaticDist) {
-        plugins.push(new webpack.HotModuleReplacementPlugin());
-    }
-
-    return {
-        entry: entry,
-        output: {
-            path: outputPath || path.resolve(__dirname, './build/client/'),
-            publicPath: '',
-            pathinfo: true,
-            filename: '[name].js',
-            library: {
-                name: '_mprules',
-                type: 'var'
-            }
-        },
-        target: 'web',
-        devtool: 'source-map',
-        mode: 'development',
-        optimization: { minimize: false },
-        module: WebModule(true),
-        resolve: {
-            extensions: ['.tsx', '.ts', '.js'],
-        },
-        plugins: plugins
     };
 }
 

@@ -31,6 +31,7 @@ import { CatchSketchGameState } from './CatchSketchGameState';
 
 export const CatchSketchRule: GameRuleInterface = {
     name: 'catchsketch',
+    hostAsPlayer: true,
     plugins: {
         'lobby': Lobby,
         'gameshell': Shell,

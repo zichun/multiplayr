@@ -27,12 +27,15 @@ $(() => {
 
     const hash = parseHash();
     if (hash.roomId && hash.clientId) {
-        // Pre-populate input fields
-        $('#roomId').val(hash.roomId);
+        // Normalize roomId prefix
+        const fullRoomId = hash.roomId.startsWith('mp-') ? hash.roomId : 'mp-' + hash.roomId;
+        // Pre-populate input fields with stripped display code
+        const displayRoomId = hash.roomId.startsWith('mp-') ? hash.roomId.substring(3) : hash.roomId;
+        $('#roomId').val(displayRoomId);
         $('#clientId').val(hash.clientId);
         $joinButton.show().attr('disabled', 'disabled').text('Reconnecting...');
 
-        console.log(`Auto-rejoining Room ${hash.roomId} with Client ID ${hash.clientId}...`);
+        console.log(`Auto-rejoining Room ${fullRoomId} with Client ID ${hash.clientId}...`);
 
         // Instantiate WebRTC Transport with the saved client ID
         transportOpts.customPeerId = hash.clientId;
@@ -44,7 +47,7 @@ $(() => {
 
                 // Automatically attempt to rejoin
                 _mplib.MultiplayR.ReJoin(
-                    hash.roomId,
+                    fullRoomId,
                     clientId,
                     transport,
                     document.getElementById('container'),
@@ -64,7 +67,8 @@ $(() => {
         );
     } else {
         if (hash.roomId) {
-            $('#roomId').val(hash.roomId);
+            const displayRoomId = hash.roomId.startsWith('mp-') ? hash.roomId.substring(3) : hash.roomId;
+            $('#roomId').val(displayRoomId);
         }
 
         // Standard flow: dynamic client ID generation, wait for button click
@@ -124,12 +128,14 @@ function setupJoinButton(clientId: string, transport: any, savedClientId?: strin
 
     // Unbind any previous click handlers to prevent duplicates
     $joinButton.off('click').click(() => {
-        const roomId = $('#roomId').val().toString().trim();
+        const rawRoomId = $('#roomId').val().toString().trim();
 
-        if (!roomId) {
+        if (!rawRoomId) {
             $('#error').text('Please enter a Host Room ID.');
             return;
         }
+
+        const roomId = rawRoomId.startsWith('mp-') ? rawRoomId : 'mp-' + rawRoomId;
 
         $joinButton.attr('disabled', 'disabled');
         $joinButton.text('Connecting P2P to Host...');

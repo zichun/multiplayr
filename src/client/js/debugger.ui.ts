@@ -32,7 +32,6 @@ export class DebuggerUI {
         // 2. Set modern styling on the body element
         $('body').css({
             'background-color': '#0f172a',
-            'color': '#f1f5f9',
             'font-family': "'Outfit', 'Inter', sans-serif",
             'margin': '0',
             'padding': '0',

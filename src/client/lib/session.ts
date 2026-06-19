@@ -140,6 +140,26 @@ export class Session implements ClientSessionInterface {
         this._transport.sendMessage(packet, cb);
     }
 
+    public disconnectClientDevice(
+        clientId: string,
+        cb?: CallbackType<ReturnPacketType>
+    ) {
+        const packet = {
+            session: {
+                action: SessionMessageType.DisconnectDevice,
+                toClientId: clientId,
+                fromClientId: this._clientId
+            }
+        };
+        this._transport.sendMessage(packet, cb);
+    }
+
+    public disconnectDevice() {
+        if (this._transport && this._transport.disconnect) {
+            this._transport.disconnect(true);
+        }
+    }
+
     public onMessage(
         packet: PacketType,
         cb?: CallbackType<ReturnPacketType>
@@ -157,6 +177,10 @@ export class Session implements ClientSessionInterface {
         case SessionMessageType.SendMessage:
             // Received a (routed) SendMessage from another client. Forward it to the layer above.
             this._onMessage(packet, cb);
+            break;
+
+        case SessionMessageType.DisconnectDevice:
+            this.disconnectDevice();
             break;
 
         default:
@@ -225,6 +249,10 @@ export class Session implements ClientSessionInterface {
 
     public getClientId() {
         return this._clientId;
+    }
+
+    public getTransport(): ClientTransportInterface {
+        return this._transport;
     }
 
     public getRoomId() {

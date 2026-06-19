@@ -75,6 +75,16 @@ export class SocketTransport implements ClientTransportInterface {
         this.session = session;
     }
 
+    public isConnected(): boolean {
+        return this.socket && this.socket.connected;
+    }
+
+    public disconnect(kicked?: boolean) {
+        if (this.socket) {
+            this.socket.disconnect();
+        }
+    }
+
     private reconnectTransport() {
         this.socket.emit('rejoin',
                          {

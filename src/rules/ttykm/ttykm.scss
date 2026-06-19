@@ -354,18 +354,10 @@
     }
 
     .piece-statue {
-        font-size: 2.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         z-index: 2;
-
-        &.white-s {
-            filter: drop-shadow(1.5px 1.5px 0px #457fc4);
-        }
-        &.black-s {
-            filter: drop-shadow(1.5px 1.5px 0px #e74c3c);
-        }
-        &.neutral {
-            filter: drop-shadow(1.5px 1.5px 0px #f5c342);
-        }
     }
 
     .piece-elephant {

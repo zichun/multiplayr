@@ -20,21 +20,40 @@ body {
 }
 
 .lobby-select-icon-container {
-    width: 75%;
-    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 450px;
+    margin: 15px auto;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    max-height: 160px;
+    overflow-y: auto;
+    box-sizing: border-box;
+
+    /* Sleek custom scrollbar */
+    &::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
 }
 
 .lobby-select-accent-container {
     width: 75%;
     margin: 0 auto;
-}
-
-.lobby-select-icon {
-    cursor: pointer;
-    color: #a5a5a5;
-    float: left;
-    margin: 3px;
-    padding: 1px;
 }
 
 .lobby-select-accent {
@@ -43,25 +62,44 @@ body {
     width: 32px;
     height: 32px;
     margin: 11px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .lobby-select-accent.selected {
-    height: 50px;
-    width: 50px;
-    margin: 2px;
+    transform: scale(1.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .lobby-select-accent:hover {
-    height: 46px;
-    width: 46px;
-    margin: 4px;
+    transform: scale(1.15);
+}
+
+.lobby-select-icon {
+    cursor: pointer;
+    color: #a5a5a5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    
+    &:hover {
+        background-color: #f1f5f9;
+        color: #334155;
+    }
+}
+
+.lobby-select-icon-icon {
+    transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .lobby-select-icon-icon.selected {
-}
-
-.lobby-select-icon:hover {
-    color: black;
+    transform: scale(1.2);
 }
 
 .waiting {
@@ -500,6 +538,28 @@ button {
                     padding: 8px;
                 }
             }
+        }
+    }
+
+    .lobby-select-icon-container {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        max-height: none;
+        width: 90%;
+        justify-content: flex-start;
+        padding: 12px 8px;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+    }
+
+    .lobby-select-icon {
+        flex: 0 0 auto;
+        padding: 6px;
+        border-radius: 8px;
+        
+        &:active {
+            background-color: rgba(0, 0, 0, 0.05);
         }
     }
 }

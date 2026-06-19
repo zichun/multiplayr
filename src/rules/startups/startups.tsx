@@ -32,6 +32,7 @@ import { StartupsGameState } from './StartupsGameState';
 
 export const StartupsRule: GameRuleInterface = {
     name: 'startups',
+    hostAsPlayer: true,
     plugins: {
         'lobby': Lobby,
         'gameshell': Shell
@@ -79,6 +80,7 @@ export const StartupsRule: GameRuleInterface = {
             mp.setViewProps(clientId, 'scoringLogs', data.scoringLogs);
             mp.setViewProps(clientId, 'isHost', clientId === mp.hostId);
             mp.setViewProps(clientId, 'lastTakenFromMarketCompany', data.lastTakenFromMarketCompany);
+            mp.setViewProps(clientId, 'lastMove', data.lastMove || null);
 
             if (playerState) {
                 mp.setViewProps(clientId, 'hand', playerState.hand);
