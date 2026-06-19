@@ -111,6 +111,7 @@ export class CleverGameState {
             this.data.players[id] = this.create_empty_player(id);
         }
 
+        this.setup_log_interceptor();
         this.data.gameLogs.push('Game initialized. Press Start to begin!');
     }
 
@@ -145,6 +146,7 @@ export class CleverGameState {
     public static from_data(data: GameStateData): CleverGameState {
         const gameState = new CleverGameState(data.playerIds);
         gameState.data = { ...data };
+        gameState.setup_log_interceptor();
         return gameState;
     }
 
@@ -156,6 +158,7 @@ export class CleverGameState {
         this.data.round = 1;
         this.data.activePlayerIndex = 0;
         this.data.gameLogs = [];
+        this.setup_log_interceptor();
         this.data.gameLogs.push('=== Game Started! ===');
 
         // Reset players
@@ -200,6 +203,7 @@ export class CleverGameState {
             for (const id of this.data.playerIds) {
                 const player = this.data.players[id];
                 player.bonusesToResolve.push({ type: 'choice_X_6' });
+                this.clean_pending_bonuses(id);
             }
             this.data.gameLogs.push('Round 4: All players must choose one round-start bonus: one X-bonus (Yellow, Blue, or Green) OR a 6-bonus (Orange or Purple).');
             this.check_bonus_resolution_phase();
@@ -264,6 +268,7 @@ export class CleverGameState {
         }
 
         this.data.gameLogs.push(`${playerId} selected option ${choice} for their Round 4 start bonus.`);
+        this.clean_pending_bonuses(playerId);
         this.check_bonus_resolution_phase();
     }
 
@@ -327,6 +332,7 @@ export class CleverGameState {
         }
 
         this.data.gameLogs.push(`${playerId} chose to resolve their Round 4 start bonus as a ${bonusType}.`);
+        this.clean_pending_bonuses(playerId);
         this.check_bonus_resolution_phase();
     }
 
@@ -1085,6 +1091,7 @@ export class CleverGameState {
                 this.check_purple_triggers(playerId, index);
             }
         }
+        this.clean_pending_bonuses(playerId);
     }
 
     // --- Cascading Bonus Triggers ---
@@ -1425,10 +1432,103 @@ export class CleverGameState {
             this.check_purple_triggers(playerId, purpleIndex);
         }
 
+        this.clean_pending_bonuses(playerId);
+
         // If in RoundStartBonus phase, check if we're done
         if (this.data.status === GameStatus.RoundStartBonus) {
             this.check_bonus_resolution_phase();
         }
+    }
+
+    private has_legal_moves_for_bonus(playerId: string, bonus: PendingBonus): boolean {
+        const player = this.data.players[playerId];
+        if (bonus.type === 'yellow_X') {
+            const grid = [
+                [3, 6, 5, null],
+                [2, 1, null, 5],
+                [1, null, 2, 4],
+                [null, 3, 4, 6]
+            ];
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                    const val = grid[r][c];
+                    if (val !== null && !player.yellow[r][c]) {
+                        // Ensure player hasn't already marked this number in their yellow grid
+                        let alreadyMarkedCount = 0;
+                        for (let r2 = 0; r2 < 4; r2++) {
+                            for (let c2 = 0; c2 < 4; c2++) {
+                                if (grid[r2][c2] === val && player.yellow[r2][c2]) {
+                                    alreadyMarkedCount++;
+                                }
+                            }
+                        }
+                        if (alreadyMarkedCount === 0) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+        if (bonus.type === 'blue_X') {
+            for (let i = 0; i < 11; i++) {
+                if (!player.blue[i]) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        if (bonus.type === 'green_X') {
+            return player.green < 11;
+        }
+        if (bonus.type === 'orange_num') {
+            return player.orange.indexOf(null) !== -1;
+        }
+        if (bonus.type === 'purple_num') {
+            return player.purple.indexOf(null) !== -1;
+        }
+        if (bonus.type === 'choice_X_6') {
+            return this.has_legal_moves_for_bonus(playerId, { type: 'yellow_X' })
+                || this.has_legal_moves_for_bonus(playerId, { type: 'blue_X' })
+                || this.has_legal_moves_for_bonus(playerId, { type: 'green_X' })
+                || this.has_legal_moves_for_bonus(playerId, { type: 'orange_num', value: 6 })
+                || this.has_legal_moves_for_bonus(playerId, { type: 'purple_num', value: 6 });
+        }
+        return false;
+    }
+
+    private clean_pending_bonuses(playerId: string): void {
+        const player = this.data.players[playerId];
+        while (player.bonusesToResolve.length > 0) {
+            const nextBonus = player.bonusesToResolve[0];
+            if (!this.has_legal_moves_for_bonus(playerId, nextBonus)) {
+                player.bonusesToResolve.shift();
+                
+                let bonusName: string = nextBonus.type;
+                if (nextBonus.value !== undefined) {
+                    bonusName = `${bonusName} (${nextBonus.value})`;
+                }
+                this.data.gameLogs.push(`⚠️ ${playerId}'s pending ${bonusName} bonus was skipped because there are no legal cells/sums left to mark.`);
+            } else {
+                break;
+            }
+        }
+    }
+
+    private setup_log_interceptor(): void {
+        if (!this.data.gameLogs) {
+            this.data.gameLogs = [];
+        }
+        if (this.data.gameLogs.length > 25) {
+            this.data.gameLogs = this.data.gameLogs.slice(-25);
+        }
+        this.data.gameLogs.push = function(...items: string[]) {
+            const res = Array.prototype.push.apply(this, items);
+            if (this.length > 25) {
+                this.splice(0, this.length - 25);
+            }
+            return res;
+        };
     }
 
     // --- Scoring & Leaderboard calculations ---

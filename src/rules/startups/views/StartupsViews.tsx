@@ -509,11 +509,15 @@ export class StartupsMainPage extends React.Component<StartupsMainViewProps, {}>
         if (this.props.lastMove) {
             const lastMove = this.props.lastMove;
             const idx = this.props.clientIds ? this.props.clientIds.indexOf(lastMove.playerId) : -1;
-            const playerName = (idx !== -1 && this.props.names?.[idx]) || lastMove.playerId;
+            const playerName = mp.getPluginView('lobby', 'player-name', { clientId: lastMove.playerId });
             const playerColor = (idx !== -1 && this.props.accents?.[idx]) || '#2c3e50';
 
             const actionText = lastMove.action === 'invest' ? 'invested in' : 'discarded';
-            const text = `${playerName} ${actionText} ${lastMove.company}`;
+            const text = (
+                <span>
+                    {playerName} {actionText} {lastMove.company}
+                </span>
+            ) as any;
 
             const isMyTurn = this.props.currentPlayerId === this.props.MP.clientId;
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
@@ -524,7 +528,7 @@ export class StartupsMainPage extends React.Component<StartupsMainViewProps, {}>
                 message: text,
                 bgColor: playerColor,
                 sound: soundToPlay,
-                duration: 3000 // Disappears after 3 seconds
+                duration: 10000
             };
         }
 

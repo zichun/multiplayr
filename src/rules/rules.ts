@@ -19,6 +19,7 @@ import { DurianRule } from './durian/durian';
 import { StartupsRule } from './startups/startups';
 import { CleverRule } from './clever/clever';
 import { TTYKMRule } from './ttykm/ttykm';
+import { MaskmenRule } from './maskmen/maskmen';
 
 
 const CoupDebugger = NewDebuggerRule(
@@ -88,6 +89,14 @@ const CleverDebugger = NewDebuggerRule(
 const TTYKMDebugger = NewDebuggerRule(
     'ttykm',
     TTYKMRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const MaskmenDebugger = NewDebuggerRule(
+    'maskmen',
+    MaskmenRule,
     {
         HistoryBufferSize: 10,
         HistoryInSessionStorage: true
@@ -287,6 +296,19 @@ export const MPRULES = {
         rules: ['gameshell', 'ttykm', 'debugger'],
         rule: TTYKMDebugger,
         icon: '⏳'
+    },
+    'maskmen': {
+        description: 'Maskmen - Dynamic Wrestler Hierarchy Card Game',
+        rules: ['lobby', 'gameshell', 'maskmen'],
+        rule: MaskmenRule,
+        icon: '🤼'
+    },
+    'maskmen-debug': {
+        description: 'Maskmen (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'maskmen', 'debugger'],
+        rule: MaskmenDebugger,
+        icon: '🤼'
     }
 };
 

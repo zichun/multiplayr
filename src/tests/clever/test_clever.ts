@@ -476,4 +476,165 @@ describe('Clever Game Logic', () => {
             }, /already marked elsewhere/);
         });
     });
+
+    describe('Deadlock Prevention & Bonus Auto-Skipping', () => {
+        it('should automatically skip yellow_X bonus if all 6 unique numbers are already marked in Yellow', () => {
+            const players = ['alice'];
+            const game = new CleverGameState(players);
+            game.start_game();
+
+            const data = game.get_data();
+            const player = data.players['alice'];
+
+            // Mark all 6 unique numbers in yellow grid
+            // Grid layout:
+            // [3, 6, 5, null]
+            // [2, 1, null, 5]
+            // [1, null, 2, 4]
+            // [null, 3, 4, 6]
+            player.yellow[0][0] = true; // 3
+            player.yellow[0][1] = true; // 6
+            player.yellow[0][2] = true; // 5
+            player.yellow[1][0] = true; // 2
+            player.yellow[1][1] = true; // 1
+            player.yellow[2][3] = true; // 4
+
+            // Now, mock round 4 choice of yellow_X
+            data.status = GameStatus.RoundStartBonus;
+            player.bonusesToResolve = [{ type: 'choice_X_6' }];
+
+            const gameMock = CleverGameState.from_data(data);
+            gameMock.push_round4_choice_result('alice', 'yellow_X');
+
+            const finalData = gameMock.get_data();
+            // The yellow_X should be automatically skipped
+            assert.equal(finalData.players['alice'].bonusesToResolve.length, 0);
+            // Verify warning message is logged
+            assert(finalData.gameLogs.some(log => log.includes("pending yellow_X bonus was skipped")));
+        });
+
+        it('should automatically skip blue_X bonus if all 11 sums are already marked in Blue', () => {
+            const players = ['alice'];
+            const game = new CleverGameState(players);
+            game.start_game();
+
+            const data = game.get_data();
+            const player = data.players['alice'];
+
+            // Mark all 11 sums in Blue
+            player.blue = Array(11).fill(true);
+
+            // Mock round 4 choice of blue_X
+            data.status = GameStatus.RoundStartBonus;
+            player.bonusesToResolve = [{ type: 'choice_X_6' }];
+
+            const gameMock = CleverGameState.from_data(data);
+            gameMock.push_round4_choice_result('alice', 'blue_X');
+
+            const finalData = gameMock.get_data();
+            // The blue_X should be automatically skipped
+            assert.equal(finalData.players['alice'].bonusesToResolve.length, 0);
+            // Verify warning message is logged
+            assert(finalData.gameLogs.some(log => log.includes("pending blue_X bonus was skipped")));
+        });
+
+        it('should automatically skip choice_X_6 round 4 start bonus if all tracks are completely full/blocked', () => {
+            const players = ['alice'];
+            const game = new CleverGameState(players);
+            
+            // Set up a game state about to start round 4
+            const data = game.get_data();
+
+            const player = data.players['alice'];
+            // Fill all tracks
+            player.yellow[0][0] = true; // 3
+            player.yellow[0][1] = true; // 6
+            player.yellow[0][2] = true; // 5
+            player.yellow[1][0] = true; // 2
+            player.yellow[1][1] = true; // 1
+            player.yellow[2][3] = true; // 4
+
+            player.blue = Array(11).fill(true);
+            player.green = 11;
+            player.orange = Array(11).fill(6);
+            player.purple = Array(11).fill(6);
+
+            // Set up the state at the end of round 3 passive turn
+            data.round = 3;
+            data.status = GameStatus.PassiveChoosing;
+            data.soloPassiveTurn = true;
+            data.activePlayerIndex = 0;
+            player.extraDicePickedThisTurn = ['green']; // mock passive selection done
+            player.hasConfirmedPassiveSelection = false;
+
+            const transitionGame = CleverGameState.from_data(data);
+            transitionGame.confirm_passive_selection('alice');
+
+            const finalData = transitionGame.get_data();
+            // The round should have advanced to 4, but because choice_X_6 had no legal moves,
+            // it was auto-skipped and active turn started directly!
+            assert.equal(finalData.round, 4);
+            assert.equal(finalData.status, GameStatus.ActiveRolling);
+            assert.equal(finalData.players['alice'].bonusesToResolve.length, 0);
+            assert(finalData.gameLogs.some(log => log.includes("pending choice_X_6 bonus was skipped")));
+        });
+
+        it('should automatically skip cascading yellow_X bonus earned from Orange path if Yellow is deadlocked', () => {
+            const players = ['alice'];
+            const game = new CleverGameState(players);
+            game.start_game();
+
+            const data = game.get_data();
+            const player = data.players['alice'];
+
+            // Deadlock Yellow
+            player.yellow[0][0] = true; // 3
+            player.yellow[0][1] = true; // 6
+            player.yellow[0][2] = true; // 5
+            player.yellow[1][0] = true; // 2
+            player.yellow[1][1] = true; // 1
+            player.yellow[2][3] = true; // 4
+
+            // Fill Orange up to cell 4 (index 3) so that next orange entry (index 4) triggers Yellow X
+            player.orange[0] = 1;
+            player.orange[1] = 2;
+            player.orange[2] = 3;
+            player.orange[3] = 4;
+
+            // Set choosing active die state
+            data.status = GameStatus.ActiveChoosing;
+            data.rolledDice = [{ color: 'orange', value: 5 }];
+            data.poolDice = [{ color: 'orange', value: 1 }];
+
+            const gameMock = CleverGameState.from_data(data);
+            
+            // Alice picks orange die. This marks Orange index 4, triggering Yellow X.
+            gameMock.pick_active_die('alice', 'orange');
+
+            const finalData = gameMock.get_data();
+            // The yellow_X should be triggered and immediately auto-skipped, leaving bonusesToResolve empty!
+            assert.equal(finalData.players['alice'].bonusesToResolve.length, 0);
+            assert(finalData.gameLogs.some(log => log.includes("pending yellow_X bonus was skipped")));
+            // Game should advance to simulated passive choosing since active pool is empty
+            assert.equal(finalData.status, GameStatus.PassiveChoosing);
+        });
+
+        it('should cap the activity logs at 25 entries', () => {
+            const players = ['alice'];
+            const game = new CleverGameState(players);
+            game.start_game();
+
+            // Push 30 logs directly
+            const data = game.get_data();
+            for (let i = 0; i < 30; i++) {
+                data.gameLogs.push(`Log Entry #${i}`);
+            }
+
+            // Verify count is capped at 25
+            assert.equal(data.gameLogs.length, 25);
+            // Verify it has the latest entries (Log Entry #5 to #29)
+            assert.equal(data.gameLogs[0], 'Log Entry #5');
+            assert.equal(data.gameLogs[24], 'Log Entry #29');
+        });
+    });
 });

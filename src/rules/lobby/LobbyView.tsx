@@ -82,7 +82,7 @@ export class LobbyNameView extends React.Component<{
             this.props);
 
         return (
-            <span className='lobby-name'>{this.props.name}</span>
+            <span>{this.props.name}</span>
         );
     }
 }

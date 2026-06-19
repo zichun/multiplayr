@@ -1074,17 +1074,6 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                     </div>
                 )}
 
-                {/* 7. Logs section */}
-                <div className="logs-section">
-                    <h3>Game Activity</h3>
-                    <div className="logs-scroller">
-                        {gameLogs.map((log, index) => (
-                            <div key={index} className="log-line">
-                                {formatLogLine(log)}
-                            </div>
-                        ))}
-                    </div>
-                </div>
             </div>
         );
     }
@@ -1686,11 +1675,39 @@ export class CleverMainPage extends React.Component<CleverMainViewProps, {}> {
             scoreText = (yellowScore + blueScore + greenScore + orangeScore + purpleScore + foxScore).toString();
         }
 
+        const formatLogLine = (log: string) => {
+            let formatted = log;
+            const ids = this.props.clientIds || [];
+            const nms = this.props.names || [];
+            for (const id of this.props.playerIds) {
+                const idx = ids.indexOf(id);
+                const name = (idx !== -1 && idx < nms.length) ? nms[idx] : id;
+                formatted = formatted.split(id).join(name);
+            }
+            return formatted;
+        };
+
         const links = {
             'home': {
                 'icon': 'gamepad',
                 'label': 'Clever',
                 'view': MainPage(this.props)
+            },
+            'activity': {
+                'icon': 'history',
+                'label': 'Activity',
+                'view': (
+                    <div className="activity-tab-container" style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
+                        <h2 style={{ borderBottom: '2px solid #e2e8f0', paddingBottom: '10px', marginBottom: '20px', color: '#2d3748' }}>Game Activity</h2>
+                        <div className="logs-scroller" style={{ maxHeight: '70vh', overflowY: 'auto', background: '#1a202c', borderRadius: '8px', padding: '15px', border: '1px solid #4a5568', display: 'flex', flexDirection: 'column-reverse', gap: '4px' }}>
+                            {this.props.gameLogs.map((log, index) => (
+                                <div key={index} className="log-line" style={{ padding: '8px 0', borderBottom: '1px solid #2d3748', color: '#e2e8f0', fontSize: '0.95em' }}>
+                                    {formatLogLine(log)}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )
             },
             'rules': {
                 'icon': 'book',

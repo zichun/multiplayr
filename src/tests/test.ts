@@ -15,3 +15,5 @@ import './catchsketch/CatchSketch.test';
 import './durian/test_durian';
 import './clever/test_clever';
 import './ttykm/test_ttykm';
+import './maskmen/test_maskmen';
+
