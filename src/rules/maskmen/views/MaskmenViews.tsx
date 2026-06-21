@@ -18,22 +18,14 @@ export class MaskmenHostLobby extends React.Component<ViewPropsInterface, {}> {
             'gameshell',
             'HostShell-Main',
             {
+                'gameName': 'Maskmen',
                 'links': {
                     'home': {
                         'icon': 'home',
                         'label': 'Lobby',
                         'view': (
                             <div className="maskmen-lobby">
-                                <h2>Maskmen Lobby</h2>
                                 {mp.getPluginView('lobby', 'SetNameWithLobby')}
-                                <div style={{ marginTop: '30px' }}>
-                                    <button
-                                        className="brutalist-button btn-primary"
-                                        onClick={() => mp.startGame()}
-                                    >
-                                        Start Game ⚡
-                                    </button>
-                                </div>
                             </div>
                         )
                     },
@@ -61,16 +53,16 @@ export class MaskmenClientLobby extends React.Component<ViewPropsInterface, {}> 
             'gameshell',
             'HostShell-Main',
             {
+                'gameName': 'Maskmen',
                 'links': {
                     'home': {
                         'icon': 'id-card',
                         'label': 'Lobby',
                         'view': (
                             <div className="maskmen-lobby">
-                                <h2>Maskmen Lobby</h2>
                                 {mp.getPluginView('lobby', 'SetNameWithLobby')}
                                 <div className="lobby-status">
-                                    ⏳ Waiting for Host to start...
+                                    Waiting for Host to start...
                                 </div>
                             </div>
                         )
@@ -93,7 +85,7 @@ export class MaskmenRulesView extends React.Component<{}, {}> {
                 <h2 style={{ borderBottom: '4px solid #000', paddingBottom: '8px' }}>Maskmen Rules</h2>
                 <div style={{ fontSize: '0.95em', lineHeight: '1.5' }}>
                     <p><strong>Goal:</strong> Empty your hand of cards as quickly as possible over 4 seasons (rounds).</p>
-                    
+
                     <h3 style={{ marginTop: '15px', borderBottom: '2px solid #000' }}>Wrestler Strengths</h3>
                     <p>There are 6 wrestler colors. At the start of each season, wrestlers have no relative strength. Strength is established during play:</p>
                     <ul>
@@ -161,25 +153,25 @@ export function getSeasonPointsGained(outOrder: number, totalPlayers: number): n
 export function findMaximalChains(edges: Array<[WrestlerColor, WrestlerColor]>): WrestlerColor[][] {
     const adj = new Map<WrestlerColor, WrestlerColor[]>();
     const inDegree = new Map<WrestlerColor, number>();
-    
+
     const allColors = new Set<WrestlerColor>();
     for (const [stronger, weaker] of edges) {
         allColors.add(stronger);
         allColors.add(weaker);
     }
-    
+
     for (const c of allColors) {
         adj.set(c, []);
         inDegree.set(c, 0);
     }
-    
+
     for (const [stronger, weaker] of edges) {
         adj.get(weaker)!.push(stronger);
         inDegree.set(stronger, (inDegree.get(stronger) || 0) + 1);
     }
-    
+
     const chains: WrestlerColor[][] = [];
-    
+
     function dfs(curr: WrestlerColor, path: WrestlerColor[]) {
         const neighbors = adj.get(curr) || [];
         if (neighbors.length === 0) {
@@ -194,13 +186,13 @@ export function findMaximalChains(edges: Array<[WrestlerColor, WrestlerColor]>):
             path.pop();
         }
     }
-    
+
     for (const c of allColors) {
         if (inDegree.get(c) === 0) {
             dfs(c, [c]);
         }
     }
-    
+
     return chains;
 }
 
@@ -238,7 +230,7 @@ class MaskmenArenaView extends React.Component<MaskmenMainProps, MaskmenViewStat
         }
 
         const handCount = this.props.hand.filter(c => c === wrestler).length;
-        
+
         // Find the first legal card count (1, 2, or 3)
         let firstLegalCount = 1;
         for (let count = 1; count <= 3; count++) {

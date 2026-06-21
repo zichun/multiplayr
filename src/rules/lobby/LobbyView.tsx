@@ -156,11 +156,24 @@ export class LobbyView extends React.Component<LobbyViewInterface, {}> {
 
         const isHost = this.props.MP.clientId === this.props.MP.hostId;
 
-        return React.createElement(
-            'div',
-            null,
-            React.createElement('div', { id: 'lobby-playerlist' }, createHello(this.props.names, this.props.icons, this.props.accents)),
-            isHost && React.createElement('button', { onClick: this.startGame }, 'Start game')
+        return (
+            <div>
+                <div id="lobby-playerlist">
+                    {createHello(this.props.names, this.props.icons, this.props.accents)}
+                </div>
+                {isHost && (
+
+                    <div style={{ marginTop: '30px' }}>
+                        <button
+                            className="lobby-brutalist-button btn-primary"
+                            onClick={() => this.startGame()}
+                        >
+                            Start Game
+                        </button>
+                    </div>
+
+                )}
+            </div>
         );
     }
 }
