@@ -1,0 +1,578 @@
+/**
+ * jaipur.scss - Neo-Brutalist Indian-flavored styling for Jaipur
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;700&display=swap');
+
+// Jaipur Indian-Flavor color palette
+$base-bg: #FAF9F6; // Alabaster/warm off-white
+$panel-bg: #FFFFFF;
+$border-color: #000000;
+$disabled-bg: #EAE8E1;
+
+// Jaipur Rich Accents
+$accent-turmeric: #F4C430;   // Vibrant Saffron/Yellow
+$accent-terracotta: #C25A3F; // Warm Terracotta Red-Orange
+$accent-indigo: #204051;     // Deep Indigo Blue
+$accent-emerald: #2E8B57;    // Cardamom Green
+$accent-pink: #E75480;       // Indian Rose Pink
+$accent-sand: #E6D7C3;
+
+// Typography Base
+.jaipur-rules-panel,
+.jaipur-arena-container,
+.jaipur-game-over-container {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: #000000;
+    box-sizing: border-box;
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        text-transform: uppercase;
+        font-weight: 800;
+        letter-spacing: 1px;
+        margin-top: 0;
+        margin-bottom: 12px;
+    }
+
+    h2 {
+        border-bottom: 4px solid #000000;
+        padding-bottom: 8px;
+        color: $accent-indigo;
+    }
+
+    h3 {
+        border-bottom: 2px solid #000000;
+        padding-bottom: 6px;
+        font-size: 1.1em;
+        color: $accent-terracotta;
+    }
+}
+
+// Brutalist Panels
+.brutalist-panel {
+    background-color: $panel-bg;
+    border: 3px solid $border-color;
+    box-shadow: 4px 4px 0px $border-color;
+    padding: 12px;
+    margin-bottom: 15px;
+    position: relative;
+
+    @media (max-width: 480px) {
+        padding: 8px;
+        margin-bottom: 10px;
+    }
+
+    &.panel-turmeric {
+        background-color: lighten($accent-turmeric, 35%);
+        border-color: $border-color;
+    }
+
+    &.panel-indigo {
+        background-color: lighten($accent-indigo, 60%);
+        border-color: $border-color;
+    }
+
+    &.panel-terracotta {
+        background-color: lighten($accent-terracotta, 40%);
+        border-color: $border-color;
+    }
+}
+
+// Tactile Buttons
+.brutalist-button {
+    font-family: 'Outfit', sans-serif;
+    text-transform: uppercase;
+    font-weight: 800;
+    font-size: 0.85em;
+    padding: 8px 14px;
+    border: 3px solid $border-color;
+    background-color: #ffffff;
+    box-shadow: 3px 3px 0px $border-color;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    outline: none;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    &:hover:not(:disabled) {
+        transform: translate(-2px, -2px);
+        box-shadow: 5px 5px 0px $border-color;
+    }
+
+    &:active:not(:disabled) {
+        transform: translate(1px, 1px);
+        box-shadow: 1px 1px 0px $border-color;
+    }
+
+    &:disabled {
+        background-color: $disabled-bg;
+        color: #7f8c8d;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: 1px 1px 0px $border-color;
+        border-color: #999;
+    }
+
+    &.btn-turmeric {
+        background-color: $accent-turmeric;
+        color: #000000;
+    }
+
+    &.btn-terracotta {
+        background-color: $accent-terracotta;
+        color: #ffffff;
+    }
+
+    &.btn-indigo {
+        background-color: $accent-indigo;
+        color: #ffffff;
+    }
+
+    &.btn-emerald {
+        background-color: $accent-emerald;
+        color: #ffffff;
+    }
+}
+
+// Main Grid Layout
+.jaipur-arena-container {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 60px);
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    gap: 15px;
+    background-color: $base-bg;
+
+    @media (max-width: 480px) {
+        padding: 6px;
+        gap: 10px;
+    }
+}
+
+// Arena Sub-Areas
+.opp-dashboard {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid $border-color;
+    padding-bottom: 8px;
+    background-color: #ffffff;
+    padding: 8px 12px;
+    border: 3px solid $border-color;
+    box-shadow: 3px 3px 0px $border-color;
+
+    .opp-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        font-size: 1.05em;
+    }
+
+    .opp-stats {
+        display: flex;
+        gap: 12px;
+        font-size: 0.9em;
+        font-weight: 600;
+    }
+}
+
+// Market Card Zone
+.market-zone {
+    text-align: center;
+
+    .market-label-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+
+        .deck-badge {
+            background-color: $accent-indigo;
+            color: white;
+            border: 2px solid $border-color;
+            padding: 3px 8px;
+            font-weight: 800;
+            font-size: 0.85em;
+        }
+    }
+
+    .market-cards {
+        display: flex;
+        justify-content: safe center;
+        gap: 8px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 12px 16px;
+    }
+}
+
+// Dashboard grid for split layout (Tokens left, Player right)
+.board-middle-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+
+    & > div {
+        flex: 1 1 320px;
+        min-width: 0;
+    }
+}
+
+// Tokens stack styling
+.tokens-stacks-container {
+    .tokens-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .token-stack-card {
+        flex: 1 1 130px;
+        border: 2px solid $border-color;
+        padding: 6px 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #ffffff;
+        font-weight: 800;
+        font-size: 0.85em;
+        box-shadow: 2px 2px 0px $border-color;
+
+        &.stack-diamonds { border-color: $accent-pink; background-color: lighten($accent-pink, 40%); }
+        &.stack-gold { border-color: $accent-turmeric; background-color: lighten($accent-turmeric, 35%); }
+        &.stack-silver { border-color: #95a5a6; background-color: #f1f2f6; }
+        &.stack-cloth { border-color: $accent-terracotta; background-color: lighten($accent-terracotta, 40%); }
+        &.stack-spice { border-color: $accent-indigo; background-color: lighten($accent-indigo, 60%); }
+        &.stack-leather { border-color: #8b5a2b; background-color: #f5ebe0; }
+
+        .token-stack-visual {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 2px solid #000;
+            background-color: #000;
+            color: #fff;
+            font-size: 0.8em;
+            box-shadow: 1px 1px 0px #000;
+        }
+    }
+}
+
+// Card styling
+.jaipur-card {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    width: 68px;
+    height: 98px;
+    flex-shrink: 0;
+    border: 3px solid $border-color;
+    box-shadow: 3px 3px 0px $border-color;
+    background-color: #ffffff;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    padding: 6px 4px;
+    box-sizing: border-box;
+    transition: transform 0.15s, box-shadow 0.15s;
+
+    .card-top-icon {
+        align-self: flex-start;
+        font-size: 0.85em;
+    }
+
+    .card-center-emoji {
+        font-size: 1.8em;
+    }
+
+    .card-name-label {
+        font-size: 0.6em;
+        font-weight: 800;
+        text-transform: uppercase;
+        text-align: center;
+        letter-spacing: 0.2px;
+    }
+
+    // Card types styling
+    &.card-diamonds { background-color: lighten($accent-pink, 38%); border-color: darken($accent-pink, 10%); }
+    &.card-gold { background-color: lighten($accent-turmeric, 32%); border-color: darken($accent-turmeric, 10%); }
+    &.card-silver { background-color: #f2f2f2; border-color: #7f8c8d; }
+    &.card-cloth { background-color: lighten($accent-terracotta, 35%); border-color: darken($accent-terracotta, 10%); }
+    &.card-spice { background-color: lighten($accent-indigo, 58%); border-color: darken($accent-indigo, 10%); }
+    &.card-leather { background-color: #f7ede2; border-color: #8b5a2b; }
+    &.card-camels { background-color: #faf0e6; border-color: #d2b48c; }
+
+    &:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 5px 5px 0px $border-color;
+    }
+
+    &:active {
+        transform: translate(1px, 1px);
+        box-shadow: 1px 1px 0px $border-color;
+    }
+
+    // Selection highlights
+    &.selected-take {
+        border-color: $accent-turmeric;
+        transform: translateY(-8px);
+        box-shadow: 3px 11px 0px $border-color;
+    }
+
+    &.selected-return {
+        border-color: $accent-terracotta;
+        transform: translateY(8px);
+        box-shadow: 3px -1px 0px $border-color;
+    }
+
+    &.selected-sell {
+        border-color: $accent-indigo;
+        transform: translateY(-6px);
+        box-shadow: 3px 9px 0px $border-color;
+    }
+}
+
+// Player controls bottom panel
+.player-dashboard {
+    background-color: #ffffff;
+    border: 3px solid $border-color;
+    box-shadow: 4px 4px 0px $border-color;
+    padding: 10px 12px;
+
+    .herd-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px dashed #000;
+        padding-bottom: 6px;
+        margin-bottom: 8px;
+        font-weight: 700;
+        font-size: 0.9em;
+
+        .herd-list {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            flex: 1;
+            margin-left: 10px;
+            padding: 4px 12px;
+        }
+        
+        .herd-item-camels {
+            width: 24px;
+            height: 32px;
+            flex-shrink: 0;
+            border: 2px solid $border-color;
+            background-color: #faf0e6;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+            cursor: pointer;
+            box-shadow: 1px 1px 0px $border-color;
+
+            &.selected-return {
+                border-color: $accent-terracotta;
+                transform: translateY(-4px);
+            }
+        }
+    }
+
+    .hand-row {
+        h3 {
+            margin-bottom: 6px;
+            font-size: 0.95em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            
+            span {
+                font-size: 0.8em;
+                color: #555;
+            }
+        }
+
+        .hand-cards {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 12px 16px;
+        }
+    }
+}
+
+// Actions panel
+.actions-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+
+    .brutalist-button {
+        flex: 1 1 45%;
+        font-size: 0.8em;
+    }
+}
+
+// Rules view styling
+.jaipur-rules-panel {
+    padding: 15px;
+    background-color: $base-bg;
+
+    .rules-section {
+        margin-bottom: 20px;
+        line-height: 1.5;
+
+        ul {
+            padding-left: 18px;
+            margin-top: 5px;
+
+            li {
+                margin-bottom: 6px;
+            }
+        }
+    }
+}
+
+// Stats & Results view styling
+.jaipur-stats-panel {
+    padding: 15px;
+
+    .score-summary-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .round-log-card {
+        border: 2px solid $border-color;
+        background-color: #ffffff;
+        padding: 10px;
+        margin-bottom: 12px;
+        box-shadow: 3px 3px 0px $border-color;
+
+        h4 {
+            border-bottom: 2px solid $border-color;
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-bottom: 4px;
+        }
+    }
+}
+
+// Transition view overlay for round end and game over
+.jaipur-game-over-container {
+    text-align: center;
+    padding: 30px 15px;
+    max-width: 500px;
+    margin: 0 auto;
+
+    .trophy-visual {
+        font-size: 4em;
+        margin-bottom: 15px;
+    }
+
+    .scores-card {
+        background-color: #ffffff;
+        border: 3px solid $border-color;
+        box-shadow: 4px 4px 0px $border-color;
+        padding: 20px;
+        margin-bottom: 25px;
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2em;
+            font-weight: 800;
+            margin-bottom: 10px;
+            border-bottom: 2px dashed #eee;
+            padding-bottom: 6px;
+        }
+    }
+
+    .btn-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+}
+
+// Card exit/entry animations
+@keyframes cardFadeOut {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+        width: 68px;
+        min-width: 68px;
+        max-width: 68px;
+        padding: 6px 4px;
+        border-width: 3px;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.3) translateY(-30px) rotate(-10deg);
+        width: 0;
+        min-width: 0;
+        max-width: 0;
+        padding: 0;
+        border-width: 0;
+        box-shadow: none;
+    }
+}
+
+@keyframes cardFadeIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(30px) rotate(10deg);
+        width: 0;
+        min-width: 0;
+        max-width: 0;
+        padding: 0;
+        border-width: 0;
+        box-shadow: none;
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+        width: 68px;
+        min-width: 68px;
+        max-width: 68px;
+        padding: 6px 4px;
+        border-width: 3px;
+    }
+}
+
+.jaipur-card {
+    &.anim-disappearing {
+        animation: cardFadeOut 0.35s forwards ease-in-out;
+        pointer-events: none !important;
+    }
+
+    &.anim-appearing {
+        animation: cardFadeIn 0.35s forwards ease-in-out;
+        pointer-events: none !important;
+    }
+}
+

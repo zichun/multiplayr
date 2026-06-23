@@ -16,4 +16,5 @@ import './durian/test_durian';
 import './clever/test_clever';
 import './ttykm/test_ttykm';
 import './maskmen/test_maskmen';
-
+import './cockroach/test_cockroach';
+import './jaipur/test_jaipur';

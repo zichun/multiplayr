@@ -90,12 +90,50 @@ $(() => {
                 .addClass('connected')
                 .text('Host P2P is established. Room Code: ' + displayId);
 
-            // Render rule choices
+            // Define categories
+            const categories = [
+                { title: '2 Players Only', maxLimit: 2, rules: [] },
+                { title: 'Up to 4 Players', maxLimit: 4, rules: [] },
+                { title: 'Up to 6 Players', maxLimit: 6, rules: [] },
+                { title: 'Up to 8 Players', maxLimit: 8, rules: [] },
+                { title: 'Party Games (9+ Players)', maxLimit: Infinity, rules: [] }
+            ];
+
+            // Distribute rules into categories
             Object.keys(_mprules.MPRULES).forEach((ruleName) => {
                 const rule = _mprules.MPRULES[ruleName];
                 if (!rule.debug) {
-                    $('#rules').append(makeRule(ruleName, rule));
+                    const maxPlayers = rule.maxPlayers || 2; // default fallback
+                    const category = categories.find(cat => maxPlayers <= cat.maxLimit);
+                    if (category) {
+                        category.rules.push({ name: ruleName, rule });
+                    }
                 }
+            });
+
+            // Clear and render by category
+            const $rulesContainer = $('#rules').empty();
+
+            categories.forEach((cat) => {
+                if (cat.rules.length === 0) return;
+
+                // Sort rules within category alphabetically by game name
+                cat.rules.sort((a, b) => {
+                    const nameA = a.name.toLowerCase();
+                    const nameB = b.name.toLowerCase();
+                    return nameA.localeCompare(nameB);
+                });
+
+                const $section = $('<section class="category-section" />');
+                $('<h2 class="category-title">' + cat.title + '</h2>').appendTo($section);
+                
+                const $grid = $('<div class="rules-grid" />');
+                cat.rules.forEach((item) => {
+                    $grid.append(makeRule(item.name, item.rule));
+                });
+                
+                $grid.appendTo($section);
+                $rulesContainer.append($section);
             });
         }
     );
@@ -103,11 +141,26 @@ $(() => {
     function makeRule(name: string, rule: any) {
         const $rule = $('<div class="rule" />')
             .click(hostGame(name));
+        
+        const $content = $('<div class="rule-content" />').appendTo($rule);
+
         const prettyName = name.charAt(0).toUpperCase() + name.slice(1);
         const displayName = rule.icon ? `${rule.icon} ${prettyName}` : prettyName;
 
-        $('<header class="name">' + displayName + '</header>').appendTo($rule);
-        $('<div class="desc">' + rule.description + '</div>').appendTo($rule);
+        $('<header class="name">' + displayName + '</header>').appendTo($content);
+        $('<div class="desc">' + rule.description + '</div>').appendTo($content);
+
+        // Render player count badge
+        let playersText = '';
+        if (rule.minPlayers && rule.maxPlayers) {
+            if (rule.minPlayers === rule.maxPlayers) {
+                playersText = `${rule.minPlayers} players`;
+            } else {
+                playersText = `${rule.minPlayers}-${rule.maxPlayers} players`;
+            }
+            const $badge = $('<div class="player-count-badge"><i class="fa fa-users"></i> ' + playersText + '</div>');
+            $badge.appendTo($rule);
+        }
 
         return $rule;
     }

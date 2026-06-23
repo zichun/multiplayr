@@ -271,3 +271,41 @@ All game UIs must be functional and fully optimized for:
 - **Viewport Fit**: Design client views to fit within the viewport height (`100vh`) without requiring extensive vertical or horizontal scrolling.
 - **Compact Layouts**: On small mobile devices, condense margins, reduce padding, and dynamically scale card sizes (e.g. using CSS grid or flexbox with dynamic units).
 - **Tabbed Segregation**: Move non-essential metrics (like historical logs or full rules) into secondary Game Shell tabs (`links`) so the home page remains compact and focuses entirely on active player controls.
+
+### 8.4 Robust Scroll Lists & Container-Based Wrapping
+To ensure the user interface is completely robust across simulated environments (such as the side-by-side Multiplayr debug emulator or split-screen views) and actual mobile devices, developers must adhere to these CSS patterns:
+
+- **Container-Aware Stacking**:
+  Avoid using window-width media queries (e.g., `@media (max-width: 768px)`) to stack columns vertically. If a game is loaded inside an iframe or split-pane, the window is wide but the game container is narrow, leading to squished, unplayable columns. Instead, use a wrapping Flexbox layout with a minimum flex basis:
+  ```scss
+  .board-middle-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+
+      & > div {
+          flex: 1 1 320px; // Wrap vertically once space is under ~640px
+          min-width: 0;    // Allow the child columns to shrink inside grid contexts
+      }
+  }
+  ```
+- **Dynamic List Wrapping**:
+  For grids containing uniform components (such as small badges or token stacks), use wrapping flex containers rather than hardcoded columns:
+  ```scss
+  .tokens-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+
+      .token-stack-card {
+          flex: 1 1 130px; // Wrap to 1 column on narrow spaces, stretch to 2 or 3 when space is wider
+      }
+  }
+  ```
+- **Prevent Boundary Clipping in Scroll lists**:
+  Horizontal scroll containers (like card hands, herds, or market displays) must define vertical and horizontal padding (e.g., `padding: 12px 16px;`). This provides breathing room so that:
+  1. The first and last items do not collide with container borders.
+  2. Selected cards using `transform: translateY(...)` offsets or large `box-shadow` styles do not have their shadows/borders clipped by the container's scroll boundary.
+- **Safe Center Alignment**:
+  Never use a standard `justify-content: center` on horizontal scrolling containers. If the items overflow, centering clips the start (left side) of the list, rendering the first items permanently unreachable by scroll controls. Use `justify-content: safe center` to center items when space permits, while falling back to start alignment upon overflow.
+

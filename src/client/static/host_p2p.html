@@ -69,10 +69,29 @@
             }
 
             #rules {
+                margin-bottom: 40px;
+            }
+
+            .category-section {
+                margin-bottom: 48px;
+            }
+
+            .category-title {
+                font-family: 'Outfit', sans-serif;
+                font-size: 1.8rem;
+                font-weight: 900;
+                text-transform: uppercase;
+                margin: 0 0 20px 0;
+                letter-spacing: -0.02em;
+                border-bottom: 4px solid #000000;
+                padding-bottom: 8px;
+                display: inline-block;
+            }
+
+            .rules-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
                 gap: 24px;
-                margin-bottom: 40px;
             }
 
             .rule {
@@ -83,8 +102,32 @@
                 box-sizing: border-box;
                 display: flex;
                 flex-direction: column;
+                justify-content: space-between;
+                min-height: 220px;
                 cursor: pointer;
                 transition: transform 0.1s, box-shadow 0.1s;
+            }
+
+            .rule-content {
+                display: flex;
+                flex-direction: column;
+                flex-grow: 1;
+                margin-bottom: 16px;
+            }
+
+            .player-count-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background-color: #f3f3f3;
+                border: 2px solid #000000;
+                padding: 6px 12px;
+                font-size: 0.85rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                width: fit-content;
+                box-shadow: 2px 2px 0px #000000;
+                margin-top: auto;
             }
 
             .rule:hover {

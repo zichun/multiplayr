@@ -97,6 +97,7 @@ import { faThermometerEmpty } from "@fortawesome/free-solid-svg-icons/faThermome
 import { faTicketAlt } from "@fortawesome/free-solid-svg-icons/faTicketAlt";
 import { faTrash } from "@fortawesome/free-solid-svg-icons/faTrash";
 import { faTree } from "@fortawesome/free-solid-svg-icons/faTree";
+import { faTrophy } from "@fortawesome/free-solid-svg-icons/faTrophy";
 import { faUmbrella } from "@fortawesome/free-solid-svg-icons/faUmbrella";
 import { faUnlock } from "@fortawesome/free-solid-svg-icons/faUnlock";
 import { faUserCircle } from "@fortawesome/free-solid-svg-icons/faUserCircle";
@@ -213,6 +214,7 @@ library.add(faThermometerEmpty);
 library.add(faTicketAlt);
 library.add(faTrash);
 library.add(faTree);
+library.add(faTrophy);
 library.add(faUmbrella);
 library.add(faUnlock);
 library.add(faUserCircle);

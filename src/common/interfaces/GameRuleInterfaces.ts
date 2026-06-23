@@ -17,9 +17,12 @@ export interface GameRuleInterface {
 
 export interface GameRuleWrapperInterface {
     description: string;
-    debug: boolean;
+    debug?: boolean;
     rules: string[];
     rule: GameRuleInterface;
+    icon?: string;
+    minPlayers?: number;
+    maxPlayers?: number;
 }
 
 export interface ViewPropsInterface {

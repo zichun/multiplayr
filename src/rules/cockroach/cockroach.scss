@@ -1,0 +1,921 @@
+/**
+ * cockroach.scss - Neo-Brutalist styling for Cockroach Poker: Royal
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;700&display=swap');
+
+// Neo-Brutalist Color Palette
+$base-bg: #f8f9fa;
+$panel-bg: #ffffff;
+$border-color: #000000;
+$disabled-bg: #e9ecef;
+
+// Functional Accents (Vibrant, high-contrast flat colors)
+$accent-primary: #3498db; // Flat Blue
+$accent-success: #2ecc71; // Emerald Green
+$accent-danger: #e74c3c; // Crimson Red
+$accent-warning: #f1c40f; // Warm Yellow
+$accent-secondary: #95a5a6;
+
+// Typography Base
+.cockroach-lobby-container,
+.cockroach-rules-panel,
+.cockroach-arena-container,
+.cockroach-game-over-container {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: #000000;
+    box-sizing: border-box;
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        text-transform: uppercase;
+        font-weight: 800;
+        letter-spacing: 1px;
+        margin-top: 0;
+        margin-bottom: 15px;
+    }
+
+    h2 {
+        border-bottom: 4px solid #000000;
+        padding-bottom: 8px;
+    }
+
+    h3 {
+        border-bottom: 2px solid #000000;
+        padding-bottom: 6px;
+        font-size: 1.1em;
+    }
+}
+
+// Brutalist container panels
+.brutalist-panel {
+    background-color: $panel-bg;
+    border: 4px solid $border-color;
+    box-shadow: 6px 6px 0px $border-color;
+    padding: 15px;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+// Tactile Buttons
+.brutalist-button {
+    font-family: 'Outfit', sans-serif;
+    text-transform: uppercase;
+    font-weight: 800;
+    font-size: 0.9em;
+    padding: 10px 16px;
+    border: 3px solid $border-color;
+    background-color: #ffffff;
+    box-shadow: 4px 4px 0px $border-color;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    outline: none;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0px $border-color;
+    }
+
+    &:active {
+        transform: translate(2px, 2px);
+        box-shadow: 2px 2px 0px $border-color;
+    }
+
+    &:disabled {
+        background-color: $disabled-bg;
+        color: #7f8c8d;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: 2px 2px 0px $border-color;
+    }
+
+    &.btn-primary {
+        background-color: $accent-primary;
+        color: #ffffff;
+    }
+
+    &.btn-success {
+        background-color: $accent-success;
+        color: #000000;
+    }
+
+    &.btn-danger {
+        background-color: $accent-danger;
+        color: #ffffff;
+    }
+
+    &.btn-secondary {
+        background-color: $accent-secondary;
+        color: #ffffff;
+    }
+}
+
+// Form Controls
+.brutalist-select {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95em;
+    padding: 8px 12px;
+    border: 3px solid $border-color;
+    width: 100%;
+    border-radius: 0;
+    background-color: #ffffff;
+    box-shadow: 3px 3px 0px $border-color;
+    outline: none;
+    cursor: pointer;
+    margin-bottom: 15px;
+
+    &:focus {
+        border-color: $accent-primary;
+    }
+}
+
+// Form group spacing
+.form-group {
+    margin-bottom: 15px;
+
+    label {
+        font-weight: 700;
+        display: block;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        font-size: 0.85em;
+    }
+}
+
+// Lobby Styling
+.cockroach-lobby-container {
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+
+    .lobby-actions {
+        margin-top: 25px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .lobby-waiting-status {
+        background-color: $accent-warning;
+        padding: 15px;
+        border: 3px solid #000;
+        box-shadow: 4px 4px 0px #000;
+        font-weight: 700;
+        text-align: center;
+        margin-top: 20px;
+    }
+}
+
+// Rules panel
+.cockroach-rules-panel {
+    padding: 15px;
+
+    .rules-section {
+        margin-bottom: 25px;
+        line-height: 1.5;
+
+        ul {
+            padding-left: 20px;
+            margin-top: 5px;
+
+            li {
+                margin-bottom: 8px;
+            }
+        }
+    }
+}
+
+// Arena Main Container
+.cockroach-arena-container {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 60px); // subtract shell header
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 0 auto;
+    padding: 15px;
+    gap: 20px;
+}
+
+// Turn status bar
+.arena-status-bar {
+    .status-indicator {
+        padding: 10px 15px;
+        border: 4px solid $border-color;
+        box-shadow: 4px 4px 0px $border-color;
+        font-weight: 800;
+        font-size: 1.1em;
+        text-transform: uppercase;
+        text-align: center;
+
+        &.my-turn {
+            background-color: $accent-warning;
+        }
+
+        &.opponent-turn {
+            background-color: #ffffff;
+        }
+    }
+}
+
+
+// Penalty Pile layout
+.penalty-pile-container {
+    .penalty-pile-layout {
+        display: flex;
+        align-items: center;
+        gap: 25px;
+        padding: 5px 0;
+    }
+
+    .pile-stack-visual {
+        width: 80px;
+        height: 110px;
+        border: 3px dashed #7f8c8d;
+        background-color: #f1f2f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+
+        &::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            right: -4px;
+            bottom: -4px;
+            border: 3px solid #000;
+            background-color: #ffffff;
+            z-index: 1;
+        }
+
+        .pile-count-badge {
+            font-weight: 800;
+            font-size: 0.9em;
+            position: relative;
+            z-index: 2;
+        }
+    }
+
+    .penalty-top-card-visual {
+        flex: 1;
+    }
+}
+
+// Tableau player list styling
+.players-tableaus-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+
+    .tableaus-list {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding-right: 5px;
+    }
+}
+
+.player-tableau-row {
+    display: flex;
+    flex-direction: column;
+    border: 3px solid $border-color;
+    padding: 8px 12px;
+    background-color: #ffffff;
+    box-shadow: 3px 3px 0px $border-color;
+
+    &.active-player {
+        background-color: #f9f9f9;
+        border-color: $accent-primary;
+    }
+
+    .tableau-player-header {
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .tableau-cards-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .empty-tableau-text {
+        font-style: italic;
+        color: #7f8c8d;
+        font-size: 0.85em;
+    }
+}
+
+// Tableau Card Badges with warning pulse
+.tableau-card-badge {
+    display: inline-flex;
+    align-items: center;
+    border: 2px solid $border-color;
+    padding: 3px 8px;
+    background-color: #ffffff;
+    font-weight: 800;
+    font-size: 0.85em;
+
+    .badge-emoji {
+        margin-right: 4px;
+    }
+
+    &.royal {
+        background-color: $accent-warning;
+    }
+
+    &.warning-pulse {
+        border-color: $accent-danger;
+        animation: brutalistPulse 1.2s infinite alternate;
+    }
+}
+
+@keyframes brutalistPulse {
+    0% {
+        box-shadow: 0 0 0 0px rgba(231, 76, 60, 0.7);
+    }
+
+    100% {
+        box-shadow: 0 0 0 6px rgba(231, 76, 60, 0);
+        background-color: #fdf2f2;
+    }
+}
+
+// Cards presentation styling
+.brutalist-card {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 110px;
+    border: 3px solid $border-color;
+    box-shadow: 3px 3px 0px $border-color;
+    background-color: #ffffff;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+
+    .card-emoji {
+        font-size: 1.8em;
+        margin-bottom: 6px;
+    }
+
+    .card-label {
+        font-size: 0.7em;
+        font-weight: 800;
+        text-transform: uppercase;
+        text-align: center;
+        padding: 0 4px;
+    }
+
+    .card-badge {
+        position: absolute;
+        top: 2px;
+        right: 4px;
+        font-size: 0.8em;
+    }
+
+    &:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 5px 5px 0px $border-color;
+    }
+
+    &:active {
+        transform: translate(1px, 1px);
+        box-shadow: 1px 1px 0px $border-color;
+    }
+
+    &.selected {
+        border-color: $accent-primary;
+        background-color: #ebf5fb;
+        transform: translateY(-8px);
+        box-shadow: 4px 12px 0px $border-color;
+    }
+
+    &.card-type-royal {
+        border-color: $accent-warning;
+        box-shadow: 3px 3px 0px $accent-warning, 3px 3px 0px $border-color;
+    }
+
+    &.card-type-joker {
+        border-color: $accent-success;
+        background-color: #f4fbf7;
+    }
+
+    &.card-type-blank {
+        border-color: $accent-danger;
+        background-color: #fdf5f5;
+    }
+}
+
+// Peeking card 3D flip setup
+.transit-card-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    min-height: 0;
+    overflow-y: auto;
+
+    .transit-flow-desc {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        margin-bottom: 12px;
+    }
+
+    .transit-arrow {
+        font-size: 1.2em;
+    }
+
+    .transit-claim-display {
+        font-size: 1.1em;
+        font-weight: 800;
+        background-color: #f1f2f6;
+        border: 2px solid #000;
+        padding: 5px 12px;
+        box-shadow: 2px 2px 0px #000;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+    }
+}
+
+// 3D card flip animation container
+.card-transit-visual {
+    perspective: 800px;
+    width: 90px;
+    height: 125px;
+    margin-bottom: 20px;
+
+    .card-back-only {
+        width: 100%;
+        height: 100%;
+        cursor: default;
+        background-color: #34495e;
+        border-color: #000000;
+        box-shadow: 4px 4px 0px #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &::after {
+            content: '🪳';
+            font-size: 2.2em;
+            color: #ffffff;
+            opacity: 0.15;
+        }
+
+        &:hover {
+            transform: none;
+            box-shadow: 4px 4px 0px #000;
+        }
+    }
+}
+
+.transit-interactive-card {
+    width: 100%;
+    height: 100%;
+    cursor: default;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    position: relative;
+    box-shadow: 4px 4px 0px #000;
+
+    &:hover {
+        transform: none;
+    }
+
+    &.flipped {
+        transform: rotateY(180deg);
+    }
+
+    .card-front,
+    .card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0;
+        box-sizing: border-box;
+    }
+
+    .card-back {
+        background-color: #2c3e50;
+        color: white;
+        border: 3px solid #000;
+        padding: 5px;
+
+        .brutalist-button {
+            padding: 4px 8px;
+            font-size: 0.7em;
+            min-height: 28px;
+            box-shadow: 2px 2px 0px #000;
+        }
+    }
+
+    .card-front {
+        background-color: #ffffff;
+        transform: rotateY(180deg);
+        border: 3px solid #000;
+        padding: 5px;
+
+        .card-detail {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+
+            .card-emoji {
+                font-size: 1.8em;
+                margin-bottom: 4px;
+            }
+
+            .card-label {
+                font-size: 0.65em;
+                font-weight: 800;
+                text-transform: uppercase;
+                text-align: center;
+            }
+
+            &.card-type-royal {
+                background-color: #fef9e7;
+                border: 2px solid $accent-warning;
+            }
+        }
+    }
+}
+
+// Receiver Decisions block
+.receiver-decisions-pane {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    .decision-row {
+        display: flex;
+        gap: 15px;
+
+        .brutalist-button {
+            flex: 1;
+        }
+    }
+
+    .peek-warning-text {
+        font-style: italic;
+        color: $accent-danger;
+        font-size: 0.85em;
+        text-align: center;
+        margin: 5px 0;
+    }
+
+    .peeked-info-text {
+        font-weight: 800;
+        text-transform: uppercase;
+        color: $accent-danger;
+        text-align: center;
+        margin: 5px 0;
+        font-size: 0.95em;
+        letter-spacing: 0.5px;
+    }
+
+    .pass-disabled-text {
+        font-style: italic;
+        color: #7f8c8d;
+        font-size: 0.9em;
+        text-align: center;
+        margin: 5px 0;
+    }
+}
+
+// Pass on forms
+.pass-on-section {
+    border-top: 3px solid #000000;
+    padding-top: 15px;
+    margin-top: 5px;
+
+    h4 {
+        text-transform: uppercase;
+        font-weight: 800;
+        font-size: 0.9em;
+        margin-top: 0;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+}
+
+// Active Play card setups
+.active-play-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    .action-instruction {
+        font-size: 0.85em;
+        color: #555555;
+        margin-top: 0;
+        margin-bottom: 15px;
+    }
+
+    .select-card-prompt {
+        padding: 25px;
+        border: 2px dashed #7f8c8d;
+        background-color: #fcfcfc;
+        font-style: italic;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.9em;
+    }
+
+    .btn-play {
+        width: 100%;
+        margin-top: 10px;
+    }
+}
+
+// Claims Chips Grid
+.claims-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 15px;
+
+    .claim-chip {
+        border: 2px solid #000;
+        box-shadow: 2px 2px 0px #000;
+        background-color: #ffffff;
+        font-size: 1.1em;
+        padding: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        outline: none;
+
+        &:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0px #000;
+        }
+
+        &.active {
+            background-color: $accent-primary;
+            color: #ffffff;
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px #000;
+        }
+
+        &.royal-chip {
+            grid-column: span 2;
+            font-size: 0.8em;
+            font-weight: 800;
+            text-transform: uppercase;
+
+            &.active {
+                background-color: $accent-warning;
+                color: #000000;
+            }
+        }
+    }
+}
+
+// Special Resolution Styling
+.special-resolution-panel {
+    .special-resolution-content {
+        line-height: 1.4;
+    }
+
+    .resolution-warning {
+        font-weight: 600;
+        font-size: 0.9em;
+        margin-bottom: 10px;
+        color: $accent-danger;
+    }
+
+    .substitute-instruction {
+        font-size: 0.85em;
+        color: #555555;
+        background-color: #f1f2f6;
+        border: 2px solid #000;
+        padding: 8px 12px;
+        box-shadow: 2px 2px 0px #000;
+        margin-bottom: 15px;
+    }
+
+    .selected-substitutes-count {
+        font-weight: 800;
+        font-size: 0.9em;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+    }
+
+    .brutalist-button {
+        width: 100%;
+    }
+}
+
+// Player's Hand zone
+.hand-zone-container {
+    h3 span {
+        font-size: 0.8em;
+        color: #555;
+    }
+
+    .hand-cards-list {
+        display: flex;
+        overflow-x: auto;
+        gap: 10px;
+        padding: 5px 0 10px 0;
+        scrollbar-width: thin;
+
+        &::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background-color: #000000;
+        }
+    }
+
+    .hand-card {
+        flex: 0 0 80px;
+        width: 80px;
+        box-sizing: border-box;
+    }
+
+    .empty-hand-text {
+        padding: 20px;
+        text-align: center;
+        font-style: italic;
+        font-weight: 600;
+        color: #7f8c8d;
+        width: 100%;
+    }
+}
+
+// Challenge Result Notification
+.challenge-logs-container {
+    .challenge-result-summary {
+        line-height: 1.45;
+    }
+
+    .result-main-text {
+        font-size: 1.05em;
+        font-weight: 700;
+        border-bottom: 2px solid #000000;
+        padding-bottom: 8px;
+        margin-bottom: 8px;
+    }
+
+    .result-details-list {
+        font-size: 0.9em;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .penalty-draws-summary {
+            background-color: #ebf5fb;
+            border: 2px solid $border-color;
+            padding: 4px 8px;
+            margin-top: 4px;
+        }
+
+        .special-substitutes-summary {
+            background-color: #fdf5f5;
+            border: 2px solid $border-color;
+            padding: 4px 8px;
+            margin-top: 4px;
+        }
+    }
+}
+
+// Settings panel inside Host shell
+.settings-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 400px;
+    margin: 20px auto;
+
+    .brutalist-button {
+        width: 100%;
+    }
+}
+
+// Game Over view
+.cockroach-game-over-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+    padding: 15px;
+
+    .victory-panel {
+        max-width: 500px;
+        width: 100%;
+        text-align: center;
+        padding: 30px 20px;
+    }
+
+    .loser-display-box {
+        margin: 25px 0;
+
+        .loser-label {
+            font-size: 0.85em;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: $accent-danger;
+            margin-bottom: 8px;
+        }
+
+        .loser-name-badge {
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .losers-outcome-desc {
+            font-size: 0.95em;
+            color: #555555;
+            line-height: 1.4;
+        }
+    }
+
+    .game-over-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 20px;
+
+        .brutalist-button {
+            flex: 1;
+        }
+    }
+}
+
+// Multi-device responsiveness rules
+@media (max-width: 768px) {
+    .claims-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+// Player selection Brutalist chips styling
+.player-select-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+}
+
+.player-select-chip {
+    cursor: pointer;
+    user-select: none;
+    display: inline-block;
+
+    .lobby-player-tag {
+        border: 3px solid #000000 !important;
+        box-shadow: 3px 3px 0px #000000 !important;
+        border-radius: 0 !important;
+        transition: transform 0.1s, box-shadow 0.1s;
+        margin: 0;
+        padding: 6px 12px !important;
+        background-color: #ffffff;
+        font-family: 'Outfit', sans-serif;
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 0.9em;
+
+        &:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0px #000000 !important;
+        }
+    }
+
+    &.active {
+        .lobby-player-tag {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px #000000 !important;
+        }
+    }
+}
