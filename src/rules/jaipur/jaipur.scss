@@ -270,78 +270,47 @@ $accent-sand: #E6D7C3;
     }
 }
 
-// Card styling
-.jaipur-card {
+// Card styling using geometric minimalist playing cards
+.jaipur-card-wrapper {
     display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
+    flex-shrink: 0;
     width: 68px;
     height: 98px;
-    flex-shrink: 0;
-    border: 3px solid $border-color;
-    box-shadow: 3px 3px 0px $border-color;
-    background-color: #ffffff;
     position: relative;
     cursor: pointer;
     user-select: none;
-    padding: 6px 4px;
-    box-sizing: border-box;
-    transition: transform 0.15s, box-shadow 0.15s;
-
-    .card-top-icon {
-        align-self: flex-start;
-        font-size: 0.85em;
-    }
-
-    .card-center-emoji {
-        font-size: 1.8em;
-    }
-
-    .card-name-label {
-        font-size: 0.6em;
-        font-weight: 800;
-        text-transform: uppercase;
-        text-align: center;
-        letter-spacing: 0.2px;
-    }
-
-    // Card types styling
-    &.card-diamonds { background-color: lighten($accent-pink, 38%); border-color: darken($accent-pink, 10%); }
-    &.card-gold { background-color: lighten($accent-turmeric, 32%); border-color: darken($accent-turmeric, 10%); }
-    &.card-silver { background-color: #f2f2f2; border-color: #7f8c8d; }
-    &.card-cloth { background-color: lighten($accent-terracotta, 35%); border-color: darken($accent-terracotta, 10%); }
-    &.card-spice { background-color: lighten($accent-indigo, 58%); border-color: darken($accent-indigo, 10%); }
-    &.card-leather { background-color: #f7ede2; border-color: #8b5a2b; }
-    &.card-camels { background-color: #faf0e6; border-color: #d2b48c; }
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 
     &:hover {
         transform: translate(-2px, -2px);
-        box-shadow: 5px 5px 0px $border-color;
     }
 
-    &:active {
-        transform: translate(1px, 1px);
-        box-shadow: 1px 1px 0px $border-color;
-    }
-
-    // Selection highlights
+    // High-fidelity selection transitions with colored glows
     &.selected-take {
-        border-color: $accent-turmeric;
-        transform: translateY(-8px);
-        box-shadow: 3px 11px 0px $border-color;
+        transform: translateY(-10px);
+        
+        .playing-card-face {
+            border-color: $accent-turmeric !important;
+            box-shadow: 0 0.8em 2.2em rgba(244, 196, 48, 0.45) !important;
+        }
     }
 
     &.selected-return {
-        border-color: $accent-terracotta;
-        transform: translateY(8px);
-        box-shadow: 3px -1px 0px $border-color;
+        transform: translateY(10px);
+
+        .playing-card-face {
+            border-color: $accent-terracotta !important;
+            box-shadow: 0 -0.4em 1.5em rgba(194, 90, 63, 0.45) !important;
+        }
     }
 
     &.selected-sell {
-        border-color: $accent-indigo;
-        transform: translateY(-6px);
-        box-shadow: 3px 9px 0px $border-color;
+        transform: translateY(-8px);
+
+        .playing-card-face {
+            border-color: $accent-indigo !important;
+            box-shadow: 0 0.8em 2.2em rgba(32, 64, 81, 0.45) !important;
+        }
     }
 }
 
@@ -369,24 +338,28 @@ $accent-sand: #E6D7C3;
             flex: 1;
             margin-left: 10px;
             padding: 4px 12px;
-        }
-        
-        .herd-item-camels {
-            width: 24px;
-            height: 32px;
-            flex-shrink: 0;
-            border: 2px solid $border-color;
-            background-color: #faf0e6;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7em;
-            cursor: pointer;
-            box-shadow: 1px 1px 0px $border-color;
+            align-items: flex-end;
 
-            &.selected-return {
-                border-color: $accent-terracotta;
-                transform: translateY(-4px);
+            // Overlapping card fan look in the herd list
+            .jaipur-card-wrapper {
+                margin-right: -10px;
+                transition: transform 0.2s, margin-right 0.2s;
+
+                &:hover {
+                    margin-right: 0px;
+                    transform: translateY(-5px);
+                }
+
+                // In the herd row, selection translates UPWARD to stay visible
+                &.selected-return {
+                    transform: translateY(-10px);
+                    margin-right: 0px;
+
+                    .playing-card-face {
+                        border-color: $accent-terracotta !important;
+                        box-shadow: 0 0.8em 2.2em rgba(194, 90, 63, 0.45) !important;
+                    }
+                }
             }
         }
     }

@@ -10,7 +10,10 @@
     background-color: #fbfbfb;
     min-height: calc(100vh - 100px);
 
-    h1, h2, h3, h4 {
+    h1,
+    h2,
+    h3,
+    h4 {
         text-transform: uppercase;
         letter-spacing: 1px;
         color: #000;
@@ -34,12 +37,35 @@
 }
 
 // Wrestler Colors
-.wrestler-Pink { background-color: #ff6bdf; color: #000; }
-.wrestler-Green { background-color: #2ecc71; color: #fff; }
-.wrestler-Yellow { background-color: #f1c40f; color: #000; }
-.wrestler-Blue { background-color: #3498db; color: #fff; }
-.wrestler-Purple { background-color: #9b59b6; color: #fff; }
-.wrestler-Orange { background-color: #e67e22; color: #fff; }
+.wrestler-Pink {
+    background-color: #ff6bdf;
+    color: #000;
+}
+
+.wrestler-Green {
+    background-color: #2ecc71;
+    color: #fff;
+}
+
+.wrestler-Yellow {
+    background-color: #f1c40f;
+    color: #000;
+}
+
+.wrestler-Blue {
+    background-color: #3498db;
+    color: #fff;
+}
+
+.wrestler-Purple {
+    background-color: #9b59b6;
+    color: #fff;
+}
+
+.wrestler-Orange {
+    background-color: #e67e22;
+    color: #fff;
+}
 
 // Compact Card Badge / Wrestler Token representation
 .wrestler-token {
@@ -86,29 +112,21 @@
         justify-content: center;
     }
 
-    .played-trick-card {
-        border: 3px solid #000;
-        box-shadow: 4px 4px 0px #000;
-        padding: 12px 18px;
-        border-radius: 6px;
-        text-align: center;
-        min-width: 100px;
+    .wrestler-card-played-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
 
-        .wrestler-name {
-            font-weight: bold;
-            font-size: 1.1em;
-            text-transform: uppercase;
-            margin-bottom: 5px;
-        }
-
-        .card-count-badge {
-            background: #000;
-            color: #fff;
+        .played-by-name {
             font-size: 0.8em;
-            padding: 2px 6px;
-            border-radius: 3px;
             font-weight: bold;
+            color: #000;
         }
+    }
+
+    .wrestler-card-played {
+        position: relative;
     }
 }
 
@@ -118,54 +136,34 @@
     .cards-row {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 15px;
         margin: 15px 0;
     }
 
-    .selector-card {
-        border: 3px solid #000;
-        box-shadow: 4px 4px 0px #000;
-        padding: 12px 8px;
-        border-radius: 6px;
-        cursor: pointer;
-        width: 75px;
-        text-align: center;
-        transition: transform 0.15s, box-shadow 0.15s;
-        font-weight: bold;
+    .wrestler-card-selector {
+        position: relative;
         user-select: none;
-
-        &:hover {
-            transform: translate(-2px, -2px);
-            box-shadow: 6px 6px 0px #000;
-        }
-
-        &:active {
-            transform: translate(2px, 2px);
-            box-shadow: 2px 2px 0px #000;
-        }
-
-        &.selected {
-            border-color: #000;
-            box-shadow: 0px 0px 0px #000;
-            transform: translateY(4px);
-            outline: 3px solid #457fc4;
-        }
-
-        &.disabled {
-            background-color: #eee;
-            border-color: #999;
-            box-shadow: none;
-            color: #999;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .card-qty {
-            display: block;
-            font-size: 1.3em;
-            margin-top: 5px;
-        }
     }
+}
+
+.card-qty-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #000;
+    color: #fff;
+    border: 2px solid #000;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.8em;
+    box-shadow: 2px 2px 0px #000;
+    z-index: 10;
+    font-family: 'Outfit', 'Inter', sans-serif;
 }
 
 .player-status-bar {
@@ -181,10 +179,11 @@
         padding: 6px 12px;
         border: 3px solid #000;
         box-shadow: 3px 3px 0px #000;
-        
+
         &.my-turn {
             background-color: #f1c40f;
         }
+
         &.opponent-turn {
             background-color: #fff;
         }
@@ -238,11 +237,23 @@
         }
     }
 
-@keyframes brutalist-pulse {
-    0% { transform: scale(1); box-shadow: 4px 4px 0px #000; }
-    50% { transform: scale(1.05); box-shadow: 6px 6px 0px #e74c3c; background-color: #ff4d4d; }
-    100% { transform: scale(1); box-shadow: 4px 4px 0px #000; }
-}
+    @keyframes brutalist-pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 4px 4px 0px #000;
+        }
+
+        50% {
+            transform: scale(1.05);
+            box-shadow: 6px 6px 0px #e74c3c;
+            background-color: #ff4d4d;
+        }
+
+        100% {
+            transform: scale(1);
+            box-shadow: 4px 4px 0px #000;
+        }
+    }
 
     &.btn-primary {
         background-color: #3498db;
@@ -268,6 +279,7 @@
     .log-entry {
         border-bottom: 1px solid #ddd;
         padding: 4px 0;
+
         &:last-child {
             border-bottom: none;
         }
@@ -303,7 +315,8 @@
     border-collapse: collapse;
     border: 3px solid #000;
 
-    th, td {
+    th,
+    td {
         border: 2px solid #000;
         padding: 8px 12px;
         text-align: left;

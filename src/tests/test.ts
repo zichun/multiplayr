@@ -18,3 +18,6 @@ import './ttykm/test_ttykm';
 import './maskmen/test_maskmen';
 import './cockroach/test_cockroach';
 import './jaipur/test_jaipur';
+import './splendorduel/test_splendorduel';
+import './test_cards';
+

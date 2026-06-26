@@ -60,7 +60,8 @@ module.exports = (env, argv) => {
 
 function DebuggerPages(outputPath) {
     const entry = {
-        'debug.local': './src/client/js/debug.local.ts'
+        'debug.local': './src/client/js/debug.local.ts',
+        'cards.sandbox': './src/client/js/cards.sandbox.tsx'
     };
 
     return {
@@ -83,6 +84,11 @@ function DebuggerPages(outputPath) {
             new HtmlWebPackPlugin({
                 template: './src/client/static/debug.html',
                 filename: './debug.html',
+                inject: false
+            }),
+            new HtmlWebPackPlugin({
+                template: './src/client/static/cards.html',
+                filename: './cards.html',
                 inject: false
             }),
             ...ForkTsChecker,
@@ -187,6 +193,10 @@ function AllRulesConfig(outputPath) {
                 name: '_mprules',
                 type: 'var'
             }
+        },
+        externals: {
+            react: 'React',
+            'react-dom': 'ReactDOM'
         },
         target: 'web',
         module: WebModule(false),

@@ -1,0 +1,790 @@
+/**
+ * splendorduel.scss - Stylings for Splendor Duel in Multiplayr
+ */
+
+.splendor-board-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  color: #000000;
+}
+
+// Banners
+.brutalist-banner {
+  border: 3px solid #000;
+  box-shadow: 4px 4px 0px #000;
+  padding: 15px;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 1.1em;
+  margin-bottom: 10px;
+  transition: all 0.2s;
+
+  &.ability-banner {
+    background-color: #a23cd6; // royal purple
+    color: #ffffff;
+  }
+
+  &.royal-banner {
+    background-color: #f6d32d; // golden yellow
+    color: #000000;
+  }
+
+  &.discard-banner {
+    background-color: #e01b24; // warning red
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  &.stuck-banner {
+    background-color: #ff7f00; // alert orange
+    color: #ffffff;
+  }
+
+  .steal-buttons-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  .discard-selection-area {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    align-items: center;
+
+    .hand-selection {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    .discard-summary {
+      background-color: #ffffff;
+      color: #000000;
+      border: 2px solid #000;
+      padding: 10px 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .discard-bag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      min-height: 32px;
+      justify-content: center;
+
+      .discard-token-badge {
+        display: inline-block;
+        width: 32px;
+        height: 32px;
+        line-height: 30px;
+        text-align: center;
+        border: 2px solid #000;
+        border-radius: 50%;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 0.9em;
+
+        &:hover {
+          transform: scale(1.1);
+        }
+      }
+    }
+  }
+}
+
+// Split Columns
+.arena-split-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  width: 100%;
+
+  & > div {
+    flex: 1 1 450px;
+    min-width: 0;
+  }
+}
+
+// Left Column (Board & Dashboards)
+.left-game-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+// Right Column (Pyramid & Tableaus)
+.right-game-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+// Player Panels
+.player-panel {
+  border: 3px solid #000;
+  box-shadow: 6px 6px 0px #000;
+  padding: 15px;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &.active-player-panel {
+    border-color: #000000;
+    box-shadow: 6px 6px 0px #000000;
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 800;
+    font-size: 1.2em;
+    border-bottom: 2px solid #000;
+    padding-bottom: 8px;
+
+    .turn-indicator {
+      background-color: #000000;
+      color: #ffffff;
+      padding: 3px 8px;
+      font-size: 0.75em;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .panel-badges {
+      display: flex;
+      gap: 6px;
+
+      .badge {
+        border: 2px solid #000;
+        padding: 2px 6px;
+        font-size: 0.85em;
+        font-weight: 800;
+
+        &.prestige-badge { background-color: #f6d32d; }
+        &.crown-badge { background-color: #ffbe6f; }
+        &.privilege-badge { background-color: #c0caf5; }
+      }
+    }
+  }
+
+  .panel-tokens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    .token-count {
+      border: 2px solid #000;
+      padding: 4px 8px;
+      font-size: 0.9em;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background-color: #f6f5f4;
+
+      &.reserved-count {
+        background-color: #e2d5f0;
+      }
+    }
+  }
+
+  .panel-bonuses {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    .bonus-icon-badge {
+      border: 2px solid #000;
+      padding: 2px 6px;
+      font-size: 0.85em;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  }
+}
+
+// Board controls
+.board-header-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border: 3px solid #000;
+  background-color: #ffffff;
+  padding: 12px;
+  font-weight: 700;
+  box-shadow: 4px 4px 0px #000;
+
+  .board-actions {
+    display: flex;
+    gap: 8px;
+  }
+}
+
+// 5x5 Board Grid
+.board-container {
+  border: 4px solid #000;
+  box-shadow: 6px 6px 0px #000;
+  background-color: #1a1523; // Dark velvet backdrop
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+
+  .action-helper-text {
+    color: #f6d32d;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.9em;
+    text-align: center;
+  }
+
+  .grid-5x5 {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-gap: 12px;
+    width: 100%;
+    max-width: 420px;
+    aspect-ratio: 1 / 1;
+  }
+
+  .board-cell {
+    border: 3px solid #000;
+    border-radius: 8px;
+    background-color: #2b243a;
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+    transition: all 0.2s;
+    box-shadow: 2px 2px 0px #000;
+    min-width: 44px;
+    min-height: 44px;
+
+    &:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0px #000;
+      background-color: #3f3554;
+    }
+
+    &:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0px #000;
+    }
+
+    &.cell-selected {
+      border-color: #f6d32d;
+      background-color: #4e3d64;
+      transform: scale(1.05);
+      z-index: 2;
+    }
+
+    &.gold-selected {
+      border-color: #f6d32d;
+      background-color: #554422;
+      transform: scale(1.05);
+      z-index: 2;
+    }
+
+    &.matching-highlight {
+      border-color: #2ec27e;
+      animation: pulse 1.5s infinite alternate;
+    }
+
+    .board-gem-token {
+      width: 80%;
+      height: 80%;
+      border: 2px solid #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 2px 2px 0px #000;
+
+      .gem-emoji {
+        font-size: 1.3em;
+      }
+    }
+
+    .coords-debug {
+      display: none; // hide coordinate debug strings, keeping neat and tidy
+    }
+  }
+
+  .board-selection-execution {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+
+    .execution-panel {
+      width: 100%;
+      text-align: center;
+
+      .execute-take-btn {
+        background-color: #2ec27e;
+        color: #ffffff;
+        width: 100%;
+        max-width: 350px;
+
+        &:hover {
+          background-color: #26a269;
+        }
+      }
+
+      .gold-tip {
+        color: #ffbe6f;
+        font-weight: 700;
+        font-size: 0.9em;
+      }
+
+      .invalid-warning {
+        color: #e01b24;
+        font-weight: bold;
+      }
+    }
+  }
+}
+
+// Card Pyramid
+.pyramid-container {
+  border: 3px solid #000;
+  box-shadow: 6px 6px 0px #000;
+  background-color: #ffffff;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+
+  .pyramid-row {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    overflow-x: auto;
+    padding-bottom: 8px;
+
+    &::-webkit-scrollbar {
+      height: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: #000;
+      border-radius: 3px;
+    }
+  }
+
+  .deck-card-slot {
+    flex: 0 0 100px;
+  }
+
+  .deck-card-back {
+    width: 100px;
+    height: 140px;
+    border: 3px solid #000;
+    background-color: #241f31;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 3px 3px 0px #000;
+    position: relative;
+
+    .level-dots {
+      font-size: 1.1em;
+      letter-spacing: 2px;
+    }
+
+    .deck-count {
+      font-weight: 800;
+      font-size: 1.2em;
+    }
+
+    .reserve-blind-btn {
+      position: absolute;
+      bottom: 10px;
+      font-size: 0.7em;
+      padding: 2px 6px;
+      background-color: #f6d32d;
+      color: #000;
+      border-width: 2px;
+      font-weight: 700;
+      min-height: 24px;
+    }
+  }
+
+  .pyramid-cards-row {
+    display: flex;
+    gap: 12px;
+    flex-grow: 1;
+
+    .card-empty-slot {
+      width: 110px;
+      height: 150px;
+      border: 3px dashed #bbb;
+      background-color: #f6f5f4;
+    }
+  }
+}
+
+// Jewel Card Component
+.jewel-card {
+  width: 115px;
+  height: 155px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 8px;
+  position: relative;
+  transition: all 0.2s;
+  box-sizing: border-box;
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px #000 !important;
+
+    .card-action-overlay {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+
+  .card-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+
+    .card-prestige {
+      font-weight: 900;
+      font-size: 0.95em;
+    }
+
+    .card-crowns {
+      font-size: 0.85em;
+      letter-spacing: -1px;
+    }
+
+    .card-bonus {
+      .bonus-pill {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 1px 4px;
+        font-size: 0.7em;
+        font-weight: 800;
+        border-radius: 4px;
+      }
+    }
+  }
+
+  .card-ability-badge {
+    background-color: #7624b2;
+    color: #ffffff;
+    font-size: 0.6em;
+    font-weight: 800;
+    text-align: center;
+    padding: 2px 4px;
+    border: 1.5px solid #000;
+    text-transform: uppercase;
+    align-self: center;
+    max-width: 95%;
+  }
+
+  .card-bottom-area {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .cost-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      justify-content: flex-start;
+
+      .cost-bubble {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.55em;
+        font-weight: 900;
+
+        &.cost-discounted {
+          opacity: 0.2;
+          text-decoration: line-through;
+        }
+      }
+    }
+  }
+
+  .card-action-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s;
+    z-index: 3;
+
+    .card-buy-btn {
+      background-color: #2ec27e;
+      color: #ffffff;
+      font-size: 0.85em;
+      padding: 4px 10px;
+      min-height: 28px;
+    }
+
+    .card-reserve-btn {
+      background-color: #ffbe6f;
+      color: #000000;
+      font-size: 0.85em;
+      padding: 4px 10px;
+      min-height: 28px;
+    }
+  }
+
+  .card-level-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 6px;
+    font-size: 0.5em;
+    color: #888;
+    letter-spacing: 1px;
+  }
+}
+
+// Royals Pool
+.royals-pool-container {
+  border: 3px solid #000;
+  box-shadow: 6px 6px 0px #000;
+  background-color: #ffffff;
+  padding: 15px;
+
+  .royals-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .royal-pool-card {
+    border: 3px solid #000;
+    background-color: #ffbe6f;
+    padding: 10px;
+    width: 90px;
+    height: 75px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-family: 'Outfit', sans-serif;
+    box-shadow: 3px 3px 0px #000;
+    transition: all 0.2s;
+
+    .royal-points {
+      font-weight: 800;
+      font-size: 1.1em;
+    }
+
+    .royal-ability {
+      background-color: #7624b2;
+      color: #ffffff;
+      font-size: 0.55em;
+      font-weight: 800;
+      padding: 2px 4px;
+      border: 1px solid #000;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .royal-label {
+      font-size: 0.55em;
+      font-weight: 700;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    &.clickable-royal {
+      cursor: pointer;
+      border-color: #a23cd6;
+      animation: pulse-purple 1.5s infinite alternate;
+
+      &:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 5px 5px 0px #000;
+      }
+    }
+  }
+}
+
+// Reserved Cards Container
+.reserved-cards-container {
+  border: 3px solid #000;
+  box-shadow: 6px 6px 0px #000;
+  background-color: #ffffff;
+  padding: 15px;
+
+  .reserved-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
+// General Brutalist Styles
+.brutalist-button {
+  background-color: #ffffff;
+  color: #000000;
+  border: 3px solid #000;
+  box-shadow: 3px 3px 0px #000;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-weight: 800;
+  padding: 6px 14px;
+  text-transform: uppercase;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  &:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #000;
+  }
+
+  &:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000;
+  }
+
+  &:disabled {
+    background-color: #eee !important;
+    color: #999 !important;
+    border-color: #888 !important;
+    box-shadow: 1px 1px 0px #000 !important;
+    transform: none !important;
+    cursor: not-allowed !important;
+  }
+}
+
+// Modals
+.brutalist-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.brutalist-modal {
+  background-color: #ffffff;
+  border: 4px solid #000;
+  box-shadow: 8px 8px 0px #000;
+  padding: 25px;
+  max-width: 450px;
+  width: 100%;
+  box-sizing: border-box;
+
+  h3 {
+    text-transform: uppercase;
+    font-size: 1.5em;
+    border-bottom: 3px solid #000;
+    padding-bottom: 8px;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  .joker-color-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 15px;
+
+    .color-choice-btn {
+      width: 100%;
+      justify-content: flex-start;
+      padding: 10px 20px;
+    }
+  }
+}
+
+// Rules panels
+.splendor-rules-panel {
+  background-color: #ffffff;
+  border: 3px solid #000;
+  box-shadow: 4px 4px 0px #000;
+  padding: 20px;
+
+  h2, h3 {
+    text-transform: uppercase;
+    border-bottom: 3px solid #000;
+    padding-bottom: 8px;
+    margin-top: 0;
+  }
+}
+
+// Animations
+@keyframes pulse {
+  0% {
+    box-shadow: 2px 2px 0px #000, 0 0 0 0px rgba(46, 194, 126, 0.7);
+  }
+  100% {
+    box-shadow: 2px 2px 0px #000, 0 0 0 8px rgba(46, 194, 126, 0);
+  }
+}
+
+@keyframes pulse-purple {
+  0% {
+    box-shadow: 3px 3px 0px #000, 0 0 0 0px rgba(162, 60, 214, 0.7);
+  }
+  100% {
+    box-shadow: 3px 3px 0px #000, 0 0 0 8px rgba(162, 60, 214, 0);
+  }
+}

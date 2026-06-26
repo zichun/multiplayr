@@ -6,6 +6,8 @@ import * as React from 'react';
 import { ViewPropsInterface } from '../../../common/interfaces';
 import { GameStatus, WrestlerColor, PlayRecord } from '../MaskmenGameState';
 import PassSound from '../../ito/sounds/pass.mp3';
+import { PlayingCard } from '../../../client/lib/card-renderer/PlayingCard';
+import { MASKMEN_PALETTES, MASKMEN_ICONS } from '../MaskmenAssets';
 import CardSound from '../../coup/sounds/card.mp3';
 import SuccessSound from '../../coup/sounds/coin2.mp3';
 
@@ -384,11 +386,31 @@ class MaskmenArenaView extends React.Component<MaskmenMainProps, MaskmenViewStat
                             <div style={{ color: '#666', fontStyle: 'italic' }}>Trick is empty. Play to lead!</div>
                         ) : (
                             currentTrick.plays.map((play, idx) => (
-                                <div key={idx} className={`played-trick-card wrestler-${play.wrestler}`}>
-                                    <div className="wrestler-name">{play.wrestler}</div>
-                                    <div className="card-count-badge">🃏 {play.cardCount}</div>
-                                    <div style={{ fontSize: '0.7em', marginTop: '4px', color: '#000' }}>
-                                        {MP.getPluginView('lobby', 'player-name', { clientId: play.playerId })}
+                                <div key={idx} className="wrestler-card-played-wrapper">
+                                    <div className="wrestler-card-played">
+                                        <PlayingCard
+                                            card={{
+                                                id: `wrestler_card_${play.wrestler}`,
+                                                name: `${play.wrestler} Wrestler`,
+                                                widthMm: 63.5,
+                                                heightMm: 88.9,
+                                                borderRadiusMm: 4,
+                                                palette: MASKMEN_PALETTES[play.wrestler],
+                                                borderWidth: 0.25,
+                                                borderColor: 'border',
+                                                mainArt: {
+                                                    iconId: `wrestlerMask_${play.wrestler}`,
+                                                    showFrame: false,
+                                                    scaling: 1.4,
+                                                },
+                                            }}
+                                            customIcons={MASKMEN_ICONS}
+                                            responsive={true}
+                                            width="80px"
+                                        />
+                                        <div className="card-qty-badge">
+                                            x{play.cardCount}
+                                        </div>
                                     </div>
                                 </div>
                             ))
@@ -439,11 +461,34 @@ class MaskmenArenaView extends React.Component<MaskmenMainProps, MaskmenViewStat
                                     return (
                                         <div
                                             key={wrestler}
-                                            className={`selector-card wrestler-${wrestler} ${isSelected ? 'selected' : ''}`}
+                                            className={`wrestler-card-selector ${isSelected ? 'selected' : ''}`}
                                             onClick={() => this.selectWrestler(wrestler)}
                                         >
-                                            <div>{wrestler}</div>
-                                            <span className="card-qty">x{count}</span>
+                                            <PlayingCard
+                                                card={{
+                                                    id: `wrestler_card_${wrestler}`,
+                                                    name: `${wrestler} Wrestler`,
+                                                    widthMm: 63.5,
+                                                    heightMm: 88.9,
+                                                    borderRadiusMm: 4,
+                                                    palette: MASKMEN_PALETTES[wrestler],
+                                                    borderWidth: 0.25,
+                                                    borderColor: 'border',
+                                                    mainArt: {
+                                                        iconId: `wrestlerMask_${wrestler}`,
+                                                        scaling: 1.4,
+                                                        showFrame: false,
+                                                    }
+                                                }}
+                                                customIcons={MASKMEN_ICONS}
+                                                responsive={true}
+                                                width="80px"
+                                                selectable={true}
+                                                selected={isSelected}
+                                            />
+                                            <div className="card-qty-badge">
+                                                x{count}
+                                            </div>
                                         </div>
                                     );
                                 })}
@@ -721,17 +766,17 @@ class MaskmenGameOverScreen extends React.Component<MaskmenMainProps, {}> {
                             className="brutalist-button btn-primary"
                             onClick={() => MP.restartGame()}
                         >
-                            🔄 Play Again
+                            Play Again
                         </button>
                         <button
                             className="brutalist-button btn-pass"
                             onClick={() => MP.backToLobby()}
                         >
-                            🏠 Lobby
+                            Lobby
                         </button>
                     </div>
                 ) : (
-                    <div className="lobby-status">⏳ Waiting for Host to restart...</div>
+                    <div className="lobby-status">Waiting for Host to restart...</div>
                 )}
             </div>
         );

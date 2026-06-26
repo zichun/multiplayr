@@ -40,7 +40,8 @@ const paths = {
     'join': 'join.html',
     'host_p2p': 'host_p2p.html',
     'join_p2p': 'join_p2p.html',
-    'debug': 'debug.html'
+    'debug': 'debug.html',
+    'cards': 'cards.html'
 };
 
 for (const key of Object.keys(paths)) {

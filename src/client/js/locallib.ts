@@ -5,6 +5,12 @@
  *
  */
 
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+
+(window as any).React = React;
+(window as any).ReactDOM = ReactDOM;
+
 import MultiplayR from '../lib/multiplayr';
 import LocalClientTransport from '../lib/local.transport';
 import * as messages from '../../common/messages';

@@ -9,6 +9,11 @@ import { GameStatus, Company, COMPANIES, COMPANY_COLORS, COMPANY_COUNTS } from '
 import PassSound from '../sounds/pass.mp3';
 import Coin2Sound from '../sounds/coin2.mp3';
 
+// Card Renderer & Assets
+import { PlayingCard } from '../../../client/lib/card-renderer/PlayingCard';
+import { ExpressiveIcon } from '../../../client/lib/card-renderer/IconEngine';
+import { STARTUPS_PALETTES, STARTUPS_ICONS, getCompanyCardDefinition } from '../StartupsAssets';
+
 // Lobby Views
 export class StartupsHostLobby extends React.Component<ViewPropsInterface, {}> {
     public render() {
@@ -107,7 +112,26 @@ function MainPage(props: StartupsMainViewProps) {
 }
 
 // Game Board Interface
-class StartupsGameScreen extends React.Component<StartupsMainViewProps, {}> {
+interface StartupsGameScreenState {
+    selectedCardIndex: number | null;
+}
+
+class StartupsGameScreen extends React.Component<StartupsMainViewProps, StartupsGameScreenState> {
+    constructor(props: StartupsMainViewProps) {
+        super(props);
+        this.state = {
+            selectedCardIndex: null
+        };
+    }
+
+    componentDidUpdate(prevProps: StartupsMainViewProps) {
+        // Reset selection if turn changes or phase changes
+        if (prevProps.currentPlayerId !== this.props.currentPlayerId ||
+            prevProps.gameStatus !== this.props.gameStatus) {
+            this.setState({ selectedCardIndex: null });
+        }
+    }
+
     render() {
         const {
             MP,
@@ -139,7 +163,7 @@ class StartupsGameScreen extends React.Component<StartupsMainViewProps, {}> {
                 <div className="game-header-bar">
                     <div className="turn-indicator">
                         {isMyTurn ? (
-                            <span className="my-turn-badge">⚡ YOUR TURN ⚡</span>
+                            <span className="my-turn-badge">YOUR TURN</span>
                         ) : (
                             <span className="other-turn-badge">
                                 Waiting for {MP.getPluginView('lobby', 'player-tag', { clientId: currentPlayerId })}
@@ -148,7 +172,7 @@ class StartupsGameScreen extends React.Component<StartupsMainViewProps, {}> {
                         <div className="phase-subtitle">
                             {gameStatus === GameStatus.ActionPhase
                                 ? "Draw a card from the Deck or Take one from the Market"
-                                : "Invest in your portfolio or Discard to the Market"}
+                                : "Select a card from your hand below to Invest or Discard"}
                         </div>
                     </div>
 
@@ -189,7 +213,13 @@ class StartupsGameScreen extends React.Component<StartupsMainViewProps, {}> {
                                                     className="share-badge"
                                                     style={{ borderLeftColor: COMPANY_COLORS[company] }}
                                                 >
-                                                    <span className="company-dot" style={{ backgroundColor: COMPANY_COLORS[company] }}></span>
+                                                    <div className="share-badge-icon-wrapper">
+                                                        <ExpressiveIcon
+                                                            icon={STARTUPS_ICONS[`companyIcon_${company}`]}
+                                                            palette={STARTUPS_PALETTES[company]}
+                                                            scale={0.4}
+                                                        />
+                                                    </div>
                                                     <span className="share-name">{company.split(' ')[0]}</span>
                                                     <span className="share-count">{count}</span>
                                                     {holdsToken && (
@@ -220,9 +250,26 @@ class StartupsGameScreen extends React.Component<StartupsMainViewProps, {}> {
                             }
                         }}
                     >
-                        <div className="deck-card-visual">
-                            <div className="deck-logo">STARTUPS</div>
-                            <div className="cards-remaining">📦 {deckCount} cards left</div>
+                        <div className="deck-card-visual-wrapper">
+                            <PlayingCard
+                                card={{
+                                    id: 'startups_deck',
+                                    name: 'Startups Deck',
+                                    widthMm: 63.5,
+                                    heightMm: 88.9,
+                                    borderRadiusMm: 4.5,
+                                    palette: 'softPastel',
+                                    backIconId: 'startupsLogo',
+                                    backIconScaling: 2,
+                                    backBgColor: '#3b4252'
+                                }}
+                                customIcons={STARTUPS_ICONS}
+                                isFlipped={true}
+                                responsive={true}
+                            />
+                            <div className="cards-remaining-badge">
+                                📦 {deckCount} left
+                            </div>
                         </div>
                         <div className="deck-action-hint" style={isMyTurn && gameStatus === GameStatus.ActionPhase && !canAffordDraw ? { color: '#e74c3c', fontWeight: 'bold' } : {}}>
                             {isMyTurn && gameStatus === GameStatus.ActionPhase
@@ -243,26 +290,31 @@ class StartupsGameScreen extends React.Component<StartupsMainViewProps, {}> {
                                 {market.map((card) => {
                                     const isExempt = antiMonopolyTokens[card.company] === myId;
                                     const canTake = isMyTurn && gameStatus === GameStatus.ActionPhase && !isExempt;
+                                    const cardDef = getCompanyCardDefinition(card.company);
 
                                     return (
                                         <div
                                             key={card.id}
-                                            className={`market-card-item ${canTake ? 'clickable' : ''} ${isExempt ? 'blocked-by-antimonopoly' : ''}`}
-                                            style={{ borderColor: COMPANY_COLORS[card.company] }}
+                                            className={`market-card-wrapper ${canTake ? 'clickable' : ''} ${isExempt ? 'blocked-by-antimonopoly' : ''}`}
                                             onClick={() => {
                                                 if (canTake) {
                                                     MP.takeFromMarket(card.id);
                                                 }
                                             }}
                                         >
-                                            <div className="card-company-label" style={{ backgroundColor: COMPANY_COLORS[card.company] }}>
-                                                {card.company}
-                                            </div>
-                                            <div className="market-coin-badge">
+                                            <PlayingCard
+                                                card={cardDef}
+                                                width="120px"
+                                                customIcons={STARTUPS_ICONS}
+                                                responsive={true}
+                                                hoverable={canTake}
+                                                selectable={canTake}
+                                            />
+                                            <div className="market-coin-badge-overlay">
                                                 🪙 {card.coins}
                                             </div>
                                             {isExempt && (
-                                                <div className="antimonopoly-exempt-shield" title="You hold the Anti-Monopoly token. Cannot take this card!">
+                                                <div className="antimonopoly-exempt-shield-overlay" title="You hold the Anti-Monopoly token. Cannot take this card!">
                                                     🛡️ Exempt
                                                 </div>
                                             )}
@@ -277,40 +329,82 @@ class StartupsGameScreen extends React.Component<StartupsMainViewProps, {}> {
                 {/* 4. Hand Display & Turn Actions */}
                 <div className="hand-section">
                     <h3>Your Hand ({hand.length} cards)</h3>
+
+                    {/* Unified Actions Panel */}
+                    {this.state.selectedCardIndex !== null && hand[this.state.selectedCardIndex] && (() => {
+                        const selectedCompany = hand[this.state.selectedCardIndex];
+                        const isRestrictedDiscard = selectedCompany === this.props.lastTakenFromMarketCompany;
+                        const showActions = isMyTurn && gameStatus === GameStatus.DiscardOrInvestPhase;
+
+                        return (
+                            <div className="hand-action-panel" style={{ borderLeftColor: COMPANY_COLORS[selectedCompany] }}>
+                                <div className="action-panel-info">
+                                    <span className="action-panel-title">
+                                        Selected: <strong style={{ color: COMPANY_COLORS[selectedCompany] }}>{selectedCompany}</strong>
+                                    </span>
+                                    <span className="action-panel-meta">
+                                        Total cards in game: {COMPANY_COUNTS[selectedCompany]}
+                                    </span>
+                                </div>
+                                {showActions ? (
+                                    <div className="action-buttons">
+                                        <button
+                                            className="btn-invest-large"
+                                            onClick={() => {
+                                                MP.investCard(selectedCompany);
+                                                this.setState({ selectedCardIndex: null });
+                                            }}
+                                        >
+                                            Invest in {selectedCompany.split(' ')[0]}
+                                        </button>
+                                        <button
+                                            className="btn-discard-large"
+                                            disabled={isRestrictedDiscard}
+                                            title={isRestrictedDiscard ? "Cannot discard the same company you took from the Market this turn" : ""}
+                                            onClick={() => {
+                                                MP.discardCard(selectedCompany);
+                                                this.setState({ selectedCardIndex: null });
+                                            }}
+                                        >
+                                            Discard {selectedCompany.split(' ')[0]}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="action-panel-hint">
+                                        {isMyTurn
+                                            ? "You must draw a card first before you can invest or discard."
+                                            : "Not your turn to make a move."}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })()}
+
                     <div className="hand-cards-list">
                         {hand.map((company, index) => {
-                            const showActions = isMyTurn && gameStatus === GameStatus.DiscardOrInvestPhase;
-                            // Enforce same company discard restriction
-                            const isRestrictedDiscard = company === this.props.lastTakenFromMarketCompany;
+                            const isSelected = this.state.selectedCardIndex === index;
+                            const canSelect = true; // Let them select anytime to inspect
+                            const cardDef = getCompanyCardDefinition(company);
 
                             return (
                                 <div
                                     key={index}
-                                    className="hand-card-item"
-                                    style={{ borderColor: COMPANY_COLORS[company] }}
+                                    className={`hand-card-wrapper ${canSelect ? 'selectable' : ''} ${isSelected ? 'selected' : ''}`}
+                                    onClick={() => {
+                                        this.setState({
+                                            selectedCardIndex: isSelected ? null : index
+                                        });
+                                    }}
                                 >
-                                    <div className="hand-card-color-strip" style={{ backgroundColor: COMPANY_COLORS[company] }}></div>
-                                    <div className="hand-card-name">{company}</div>
-                                    <div className="hand-card-info">Cards total: {COMPANY_COUNTS[company]}</div>
-
-                                    {showActions && (
-                                        <div className="hand-card-actions">
-                                            <button
-                                                className="btn-invest"
-                                                onClick={() => MP.investCard(company)}
-                                            >
-                                                📈 Invest
-                                            </button>
-                                            <button
-                                                className="btn-discard"
-                                                disabled={isRestrictedDiscard}
-                                                title={isRestrictedDiscard ? "Cannot discard same company you took from Market this turn" : ""}
-                                                onClick={() => MP.discardCard(company)}
-                                            >
-                                                🗑️ Discard
-                                            </button>
-                                        </div>
-                                    )}
+                                    <PlayingCard
+                                        card={cardDef}
+                                        width="100px"
+                                        customIcons={STARTUPS_ICONS}
+                                        responsive={true}
+                                        hoverable={true}
+                                        selectable={canSelect}
+                                        selected={isSelected}
+                                    />
                                 </div>
                             );
                         })}
@@ -353,7 +447,14 @@ class StartupsScoringScreen extends React.Component<StartupsMainViewProps, {}> {
                     {scoringCompanyIndex < COMPANIES.length ? (
                         <div className="current-company-scoring-card" style={{ borderColor: COMPANY_COLORS[currentCompany] }}>
                             <div className="scoring-company-header" style={{ backgroundColor: COMPANY_COLORS[currentCompany] }}>
-                                🪙 Scoring: {currentCompany} ({COMPANY_COUNTS[currentCompany]} cards total)
+                                <div className="scoring-company-header-icon">
+                                    <ExpressiveIcon
+                                        icon={STARTUPS_ICONS[`companyIcon_${currentCompany}`]}
+                                        palette={STARTUPS_PALETTES[currentCompany]}
+                                        scale={0.7}
+                                    />
+                                </div>
+                                <span>Scoring: {currentCompany} ({COMPANY_COUNTS[currentCompany]} cards total)</span>
                             </div>
 
                             <div className="player-shares-comparison">

@@ -5,6 +5,12 @@
  *
  */
 
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+
+(window as any).React = React;
+(window as any).ReactDOM = ReactDOM;
+
 import MultiplayR from '../lib/multiplayr';
 import SocketTransport from '../lib/socket.transport';
 import WebRTCTransport from '../lib/webrtc.transport';

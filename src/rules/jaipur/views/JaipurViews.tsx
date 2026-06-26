@@ -5,6 +5,8 @@
 import * as React from 'react';
 import { ViewPropsInterface } from '../../../common/interfaces';
 import { GameStatus, Card, CardType, Token, PlayerState, MoveRecord, RoundResult } from '../JaipurGameState';
+import { PlayingCard } from '../../../client/lib/card-renderer/PlayingCard';
+import { JAIPUR_ICONS, getJaipurCardDefinition } from '../JaipurAssets';
 
 // Helper to map card types to Emojis (icon-replacement ONLY)
 export const goodsEmoji = (type: CardType): string => {
@@ -859,15 +861,21 @@ class JaipurArenaView extends React.Component<JaipurMainProps, JaipurViewState> 
                                 animClass = 'anim-appearing';
                             }
 
+                            const cardDef = getJaipurCardDefinition(card.type);
+
                             return (
                                 <div
                                     key={card.id}
-                                    className={`jaipur-card card-${card.type} ${isTakeSelected ? 'selected-take' : ''} ${animClass}`}
+                                    className={`jaipur-card-wrapper card-${card.type} ${isTakeSelected ? 'selected-take' : ''} ${animClass}`}
                                     onClick={() => this.toggleMarketSelect(card.id)}
                                 >
-                                    <span className="card-top-icon">{goodsEmoji(card.type)}</span>
-                                    <span className="card-center-emoji">{goodsEmoji(card.type)}</span>
-                                    <span className="card-name-label">{goodsLabel(card.type)}</span>
+                                    <PlayingCard
+                                        card={cardDef}
+                                        width="68px"
+                                        customIcons={JAIPUR_ICONS}
+                                        responsive={true}
+                                        selectable={isMyTurn && !isAnimating}
+                                    />
                                 </div>
                             );
                         })}
@@ -901,13 +909,21 @@ class JaipurArenaView extends React.Component<JaipurMainProps, JaipurViewState> 
                             <div className="herd-list">
                                 {herd.map(card => {
                                     const isReturnSelected = selectedHerdCardIds.includes(card.id);
+                                    const cardDef = getJaipurCardDefinition(card.type, true);
                                     return (
                                         <div
                                             key={card.id}
-                                            className={`herd-item-camels ${isReturnSelected ? 'selected-return' : ''}`}
+                                            className={`jaipur-card-wrapper card-${card.type} ${isReturnSelected ? 'selected-return' : ''}`}
                                             onClick={() => this.toggleHerdSelect(card.id)}
+                                            style={{ height: '56px' }}
                                         >
-                                            🐫
+                                            <PlayingCard
+                                                card={cardDef}
+                                                width="40px"
+                                                customIcons={JAIPUR_ICONS}
+                                                responsive={true}
+                                                selectable={isMyTurn && !isAnimating}
+                                            />
                                         </div>
                                     );
                                 })}
@@ -935,15 +951,21 @@ class JaipurArenaView extends React.Component<JaipurMainProps, JaipurViewState> 
                                         if (isReturnSelected) highlightClass = 'selected-return';
                                         if (isSellSelected) highlightClass = 'selected-sell';
 
+                                        const cardDef = getJaipurCardDefinition(card.type);
+
                                         return (
                                             <div
                                                 key={card.id}
-                                                className={`jaipur-card card-${card.type} ${highlightClass}`}
+                                                className={`jaipur-card-wrapper card-${card.type} ${highlightClass}`}
                                                 onClick={() => this.toggleHandSelect(card.id)}
                                             >
-                                                <span className="card-top-icon">{goodsEmoji(card.type)}</span>
-                                                <span className="card-center-emoji">{goodsEmoji(card.type)}</span>
-                                                <span className="card-name-label">{goodsLabel(card.type)}</span>
+                                                <PlayingCard
+                                                    card={cardDef}
+                                                    width="68px"
+                                                    customIcons={JAIPUR_ICONS}
+                                                    responsive={true}
+                                                    selectable={isMyTurn && !isAnimating}
+                                                />
                                             </div>
                                         );
                                     })

@@ -22,6 +22,7 @@ import { TTYKMRule } from './ttykm/ttykm';
 import { MaskmenRule } from './maskmen/maskmen';
 import { CockroachRule } from './cockroach/cockroach';
 import { JaipurRule } from './jaipur/jaipur';
+import { SplendorDuelRule } from './splendorduel/splendorduel';
 
 
 const CoupDebugger = NewDebuggerRule(
@@ -139,6 +140,14 @@ const CockroachDebugger = NewDebuggerRule(
 const JaipurDebugger = NewDebuggerRule(
     'jaipur',
     JaipurRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const SplendorDuelDebugger = NewDebuggerRule(
+    'splendorduel',
+    SplendorDuelRule,
     {
         HistoryBufferSize: 10,
         HistoryInSessionStorage: true
@@ -413,6 +422,23 @@ export const MPRULES = {
         rules: ['lobby', 'gameshell', 'jaipur', 'debugger'],
         rule: JaipurDebugger,
         icon: '🐫',
+        minPlayers: 2,
+        maxPlayers: 2
+    },
+    'splendorduel': {
+        description: 'Splendor Duel - 2 Player Tactical Jewel Game',
+        rules: ['lobby', 'gameshell', 'splendorduel'],
+        rule: SplendorDuelRule,
+        icon: '💎',
+        minPlayers: 2,
+        maxPlayers: 2
+    },
+    'splendorduel-debug': {
+        description: 'Splendor Duel (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'splendorduel', 'debugger'],
+        rule: SplendorDuelDebugger,
+        icon: '💎',
         minPlayers: 2,
         maxPlayers: 2
     }

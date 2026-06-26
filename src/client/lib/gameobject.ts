@@ -1400,7 +1400,7 @@ export class GameObject {
             getPluginView: hostExposedMethodWrapper('getPluginView'),
             getPluginSetView: hostExposedMethodWrapper('getPluginSetView'),
             clientId: gameObj.clientId,
-            hostId: gameObj.clientId, // todo: fix this for normal clients
+            hostId: (gameObj.getRootSession() && gameObj.getRootSession().getHostId()) || gameObj.clientId,
             roomId: gameObj.roomId,
             ruleName: gameObj.rule ? gameObj.rule.name : '',
             hostAsPlayer: gameObj.rule ? !!gameObj.rule.hostAsPlayer : false,

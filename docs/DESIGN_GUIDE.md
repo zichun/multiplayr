@@ -309,3 +309,27 @@ To ensure the user interface is completely robust across simulated environments 
 - **Safe Center Alignment**:
   Never use a standard `justify-content: center` on horizontal scrolling containers. If the items overflow, centering clips the start (left side) of the list, rendering the first items permanently unreachable by scroll controls. Use `justify-content: safe center` to center items when space permits, while falling back to start alignment upon overflow.
 
+---
+
+## 9. Rendering Playing Cards using `card-renderer`
+
+Multiplayr provides a dedicated, geometric minimalist playing card rendering library (`card-renderer`) to layout and render cards with high precision. For a detailed API reference and configuration schemas, see the comprehensive [card-renderer README.md](file:///c:/repos/multiplayr/src/client/lib/card-renderer/README.md). When utilizing this library, developers must adhere to the following guidelines:
+
+### 9.1 Color Scheme Alignment
+The card's `palette` configuration must align with the specific visual theme of the game being implemented. Avoid generic palettes if the game has a custom style guide; instead, pass a curated `Palette` object that reflects the exact color palette of the board game.
+
+### 9.2 Flat Card Aesthetic (Borderless by Default)
+By default, cards and their internal layout components (such as frames, cost grids, headers, and footers) should be **borderless** (i.e. `borderWidth: 0` on the card, and `showBorder: false` on overlays/components). This maintains a clean, modern, flat vector card design feel and prevents visual clutter. Outer borders should only be enabled under bespoke gameplay states (such as highlighting a selected card, indicating active cards, or showing draft status).
+
+### 9.3 Standard Card Dimensions
+To support high-density layouts and responsive scaling, cards on Multiplayr should by default be configured to a width of **`80px`** (e.g., `width="80px"` with `responsive={true}`). The `PlayingCard` component will automatically handle vector auto-scaling internally, scaling headers, footers, illustrations, and margins proportionally to fit this size perfectly without any text cropping or border distortion.
+
+### 9.4 Self-Contained Card Styling & Interaction States
+Games and rules should **NOT** try to apply additional styling, overrides, or layout containers to configure the card's borders, margins, shadows, or interaction states. 
+* **Do not write custom CSS or SCSS overrides** to animate card hovers, active clicks, or selection outlines.
+* Instead, leverage the native, built-in properties of the `<PlayingCard>` component:
+  * Pass `hoverable={true}` to enable premium hover lifting translations and shadow elevations.
+  * Pass `selectable={true}` to configure touch targets and pointer cursors.
+  * Pass `selected={true}` to draw a perfectly color-coordinated selection outline and apply tactile pressed translations.
+This ensures all playing cards behave consistently across the platform and prevents visual conflicts or layout breakage in different viewports.
+
