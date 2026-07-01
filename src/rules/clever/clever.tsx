@@ -30,7 +30,8 @@ import {
     CleverConfirmPassiveSelection,
     CleverEndPlayerTurn,
     CleverRestartGame,
-    CleverBackToLobby
+    CleverBackToLobby,
+    CleverSkipActivePicking
 } from './CleverMethods';
 
 import { CleverGameState } from './CleverGameState';
@@ -155,6 +156,7 @@ export const CleverRule: GameRuleInterface = {
         'endPlayerTurn': CleverEndPlayerTurn,
         'restartGame': CleverRestartGame,
         'backToLobby': CleverBackToLobby,
+        'skipActivePicking': CleverSkipActivePicking,
     },
 
     views: {

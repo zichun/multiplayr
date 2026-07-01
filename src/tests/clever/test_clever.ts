@@ -218,7 +218,7 @@ describe('Clever Game Logic', () => {
             }
         });
 
-        it('should allow passive player to change their selection before confirming, correctly restoring previous state', () => {
+        it('should block changing passive selection once a selection is made', () => {
             const players = ['alice', 'bob'];
             const game = new CleverGameState(players);
             game.start_game();
@@ -238,94 +238,15 @@ describe('Clever Game Logic', () => {
             mockData.players['bob'].extraDicePickedThisTurn = [];
             mockData.players['bob'].hasConfirmedPassiveSelection = false;
 
-            // Mock starting player state snapshot
-            mockData.passiveStartPlayerStates = {
-                'bob': JSON.parse(JSON.stringify(mockData.players['bob']))
-            };
-
             const gameMock = CleverGameState.from_data(mockData);
 
             // Bob picks green die first
             gameMock.pick_passive_die('bob', 'green');
-            
-            let dataAfterFirstPick = gameMock.get_data();
-            assert.equal(dataAfterFirstPick.players['bob'].green, 1);
-            assert.deepEqual(dataAfterFirstPick.players['bob'].extraDicePickedThisTurn, ['green']);
 
-            // Bob changes his mind and picks blue die
-            gameMock.pick_passive_die('bob', 'blue');
-
-            let dataAfterSecondPick = gameMock.get_data();
-            // Bob's green track should be restored to 0!
-            assert.equal(dataAfterSecondPick.players['bob'].green, 0);
-            // Bob's blue track (sum: blue:3 + white:5 = 8 -> index 6) should be marked true!
-            assert.equal(dataAfterSecondPick.players['bob'].blue[6], true);
-            // Bob's extraDicePickedThisTurn should contain 'blue'
-            assert.deepEqual(dataAfterSecondPick.players['bob'].extraDicePickedThisTurn, ['blue']);
-        });
-
-        it('should suppress log lines during passive selection changes and only log finalized picks once all confirmed', () => {
-            const players = ['alice', 'bob', 'charlie'];
-            const game = new CleverGameState(players);
-            game.start_game();
-
-            const mockData = game.get_data();
-            mockData.status = GameStatus.PassiveChoosing;
-            mockData.activePlayerIndex = 0; // alice active, bob & charlie passive
-            mockData.trayDice = [
-                { color: 'green', value: 4 },
-                { color: 'blue', value: 3 }
-            ];
-            mockData.activePickedDice = [
-                { color: 'yellow', value: 5 },
-                { color: 'white', value: 5 },
-                { color: 'orange', value: 5 }
-            ];
-            mockData.players['bob'].extraDicePickedThisTurn = [];
-            mockData.players['bob'].hasConfirmedPassiveSelection = false;
-            mockData.players['charlie'].extraDicePickedThisTurn = [];
-            mockData.players['charlie'].hasConfirmedPassiveSelection = false;
-
-            mockData.passiveStartPlayerStates = {
-                'bob': JSON.parse(JSON.stringify(mockData.players['bob'])),
-                'charlie': JSON.parse(JSON.stringify(mockData.players['charlie']))
-            };
-
-            const gameMock = CleverGameState.from_data(mockData);
-
-            // Initially logs are empty or just start game log lines
-            const initialLogCount = gameMock.get_data().gameLogs.length;
-
-            // Bob drafts green
-            gameMock.pick_passive_die('bob', 'green');
-            assert.equal(gameMock.get_data().gameLogs.length, initialLogCount); // Suppressed!
-
-            // Bob changes to blue
-            gameMock.pick_passive_die('bob', 'blue');
-            assert.equal(gameMock.get_data().gameLogs.length, initialLogCount); // Suppressed!
-
-            // Bob confirms
-            gameMock.confirm_passive_selection('bob');
-            assert.equal(gameMock.get_data().gameLogs.length, initialLogCount); // Suppressed!
-
-            // Charlie drafts green
-            gameMock.pick_passive_die('charlie', 'green');
-            assert.equal(gameMock.get_data().gameLogs.length, initialLogCount); // Suppressed!
-
-            // Charlie confirms
-            gameMock.confirm_passive_selection('charlie');
-
-            const finalLogs = gameMock.get_data().gameLogs;
-            // Now that all are confirmed, we expect:
-            // 1. Bob's final choice logged
-            // 2. Charlie's final choice logged
-            // 3. "All passive players have confirmed their selections." logged
-            // 4. "Active turn ended for alice." logged
-            // 5. "It is bob's turn as Active Player!" logged
-            assert.equal(finalLogs.length, initialLogCount + 5);
-            assert(finalLogs[finalLogs.length - 5].includes('bob (passive) picked die blue:3'));
-            assert(finalLogs[finalLogs.length - 4].includes('charlie (passive) picked die green:4'));
-            assert(finalLogs[finalLogs.length - 3].includes('All passive players have confirmed their selections.'));
+            // Trying to change selection should throw an error
+            assert.throws(() => {
+                gameMock.pick_passive_die('bob', 'blue');
+            }, /Passive selection is permanent/);
         });
     });
 
@@ -617,6 +538,103 @@ describe('Clever Game Logic', () => {
             assert(finalData.gameLogs.some(log => log.includes("pending yellow_X bonus was skipped")));
             // Game should advance to simulated passive choosing since active pool is empty
             assert.equal(finalData.status, GameStatus.PassiveChoosing);
+        });
+
+        it('should allow picking unusable yellow die when it is the only remaining die and is already marked', () => {
+            const players = ['alice', 'bob'];
+            const game = new CleverGameState(players);
+            game.start_game();
+
+            const data = game.get_data();
+            const player = data.players['alice'];
+
+            // Mark one of the two 5s in Yellow grid (Row 0, Col 2 is value 5, Row 1, Col 3 is also value 5)
+            player.yellow[0][2] = true;
+
+            // Set rolledDice to just have the Yellow die of value 5
+            data.status = GameStatus.ActiveChoosing;
+            data.rolledDice = [{ color: 'yellow', value: 5 }];
+            data.poolDice = [{ color: 'yellow', value: 5 }];
+
+            const gameMock = CleverGameState.from_data(data);
+
+            // Attempt to pick yellow. This should NOT throw an error because there are no other legal moves.
+            gameMock.pick_active_die('alice', 'yellow');
+
+            const finalData = gameMock.get_data();
+            assert.equal(finalData.activePickedDice.length, 1);
+            assert.equal(finalData.activePickedDice[0].color, 'yellow');
+            assert.equal(finalData.activePickedDice[0].value, 5);
+            // Verify that the other 5 was NOT marked
+            assert.equal(finalData.players['alice'].yellow[1][3], false);
+            // Verify game log mentions forced unusable selection
+            assert(finalData.gameLogs.some(log => log.includes("forced to pick an unusable die")));
+        });
+
+        it('should move all remaining dice to the Silver Tray when active picking is skipped/ended early', () => {
+            const players = ['alice', 'bob'];
+            const game = new CleverGameState(players);
+            game.start_game();
+
+            const data = game.get_data();
+            data.status = GameStatus.ActiveChoosing;
+            data.rolledDice = [
+                { color: 'yellow', value: 5 },
+                { color: 'blue', value: 3 }
+            ];
+            data.poolDice = [
+                { color: 'yellow', value: 5 },
+                { color: 'blue', value: 3 },
+                { color: 'green', value: 2 },
+                { color: 'orange', value: 1 }
+            ];
+            data.activePickedDice = [];
+            data.trayDice = [];
+
+            const gameMock = CleverGameState.from_data(data);
+
+            // Alice skips active picking
+            gameMock.skip_active_picking('alice');
+
+            const finalData = gameMock.get_data();
+            assert.equal(finalData.status, GameStatus.PassiveChoosing);
+            assert.equal(finalData.poolDice.length, 0);
+            assert.equal(finalData.rolledDice.length, 0);
+            // All 4 pool dice should have dropped onto the Silver Tray
+            assert.equal(finalData.trayDice.length, 4);
+            assert(finalData.trayDice.some(d => d.color === 'yellow'));
+            assert(finalData.trayDice.some(d => d.color === 'blue'));
+            assert(finalData.trayDice.some(d => d.color === 'green'));
+            assert(finalData.trayDice.some(d => d.color === 'orange'));
+            assert(finalData.gameLogs.some(log => log.includes("ended active picking early")));
+        });
+
+        it('should preserve rolled values in poolDice and trayDice rather than defaulting them to 1', () => {
+            const players = ['alice', 'bob'];
+            const game = new CleverGameState(players);
+            game.start_game();
+
+            // Set to rolling phase
+            const data = game.get_data();
+            data.status = GameStatus.ActiveRolling;
+            data.poolDice = [
+                { color: 'yellow', value: 1 },
+                { color: 'blue', value: 1 },
+                { color: 'green', value: 1 }
+            ];
+
+            const gameMock = CleverGameState.from_data(data);
+            
+            // Roll the dice. This should randomize values and update poolDice as well!
+            gameMock.roll_active_dice('alice');
+
+            const rolledData = gameMock.get_data();
+            // Assert values in poolDice are matched with rolledDice
+            for (const rd of rolledData.rolledDice) {
+                const pd = rolledData.poolDice.find(d => d.color === rd.color);
+                assert.ok(pd);
+                assert.equal(pd!.value, rd.value);
+            }
         });
 
         it('should cap the activity logs at 25 entries', () => {

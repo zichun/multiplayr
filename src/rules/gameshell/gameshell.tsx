@@ -33,7 +33,8 @@ interface HostShellMainInterface extends ViewPropsInterface {
     currentView?: string,
     topBarContent?: any,
     gameName?: string,
-    toastNotification?: ToastNotification | null
+    toastNotification?: ToastNotification | null,
+    roomClassName?: string
 }
 
 interface HostShellMainState {
@@ -176,6 +177,7 @@ export const Shell: GameRuleInterface = {
                         topBarContent: this.props.topBarContent,
                         roomId: this.props.MP.roomId,
                         gameName: this.props.gameName ?? '',
+                        roomClassName: this.props.roomClassName,
                     });
 
                 const body = React.createElement(Shell.views['HostShell-Main-Body'], {
@@ -318,7 +320,7 @@ export const Shell: GameRuleInterface = {
         },
 
         'HostShell-Main-Head': class extends React.Component<
-            ViewPropsInterface & { topBarContent: any, gameName: string, roomId: string},
+            ViewPropsInterface & { topBarContent: any, gameName: string, roomId: string, roomClassName?: string},
             { copied: boolean }
         > {
             constructor(props: any) {
@@ -400,9 +402,10 @@ export const Shell: GameRuleInterface = {
                 } else {
                     topbar = this.props.topBarContent;
                 }
+                const roomClassName = 'shell-room' + (this.props.roomClassName ? ' ' + this.props.roomClassName : '');
                 return (
                     <div className='shell-header'>
-                        <div className='shell-room'>
+                        <div className={ roomClassName }>
                             { topbar }
                         </div>
                         <div className='shell-title'>

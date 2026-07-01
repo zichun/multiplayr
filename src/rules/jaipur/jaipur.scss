@@ -11,11 +11,11 @@ $border-color: #000000;
 $disabled-bg: #EAE8E1;
 
 // Jaipur Rich Accents
-$accent-turmeric: #F4C430;   // Vibrant Saffron/Yellow
+$accent-turmeric: #F4C430; // Vibrant Saffron/Yellow
 $accent-terracotta: #C25A3F; // Warm Terracotta Red-Orange
-$accent-indigo: #204051;     // Deep Indigo Blue
-$accent-emerald: #2E8B57;    // Cardamom Green
-$accent-pink: #E75480;       // Indian Rose Pink
+$accent-indigo: #204051; // Deep Indigo Blue
+$accent-emerald: #2E8B57; // Cardamom Green
+$accent-pink: #E75480; // Indian Rose Pink
 $accent-sand: #E6D7C3;
 
 // Typography Base
@@ -221,7 +221,7 @@ $accent-sand: #E6D7C3;
     flex-wrap: wrap;
     gap: 15px;
 
-    & > div {
+    &>div {
         flex: 1 1 320px;
         min-width: 0;
     }
@@ -247,12 +247,35 @@ $accent-sand: #E6D7C3;
         font-size: 0.85em;
         box-shadow: 2px 2px 0px $border-color;
 
-        &.stack-diamonds { border-color: $accent-pink; background-color: lighten($accent-pink, 40%); }
-        &.stack-gold { border-color: $accent-turmeric; background-color: lighten($accent-turmeric, 35%); }
-        &.stack-silver { border-color: #95a5a6; background-color: #f1f2f6; }
-        &.stack-cloth { border-color: $accent-terracotta; background-color: lighten($accent-terracotta, 40%); }
-        &.stack-spice { border-color: $accent-indigo; background-color: lighten($accent-indigo, 60%); }
-        &.stack-leather { border-color: #8b5a2b; background-color: #f5ebe0; }
+        &.stack-diamonds {
+            border-color: $accent-pink;
+            background-color: lighten($accent-pink, 40%);
+        }
+
+        &.stack-gold {
+            border-color: $accent-turmeric;
+            background-color: lighten($accent-turmeric, 35%);
+        }
+
+        &.stack-silver {
+            border-color: #95a5a6;
+            background-color: #f1f2f6;
+        }
+
+        &.stack-cloth {
+            border-color: $accent-terracotta;
+            background-color: lighten($accent-terracotta, 40%);
+        }
+
+        &.stack-spice {
+            border-color: $accent-indigo;
+            background-color: lighten($accent-indigo, 60%);
+        }
+
+        &.stack-leather {
+            border-color: #8b5a2b;
+            background-color: #f5ebe0;
+        }
 
         .token-stack-visual {
             display: inline-flex;
@@ -280,38 +303,6 @@ $accent-sand: #E6D7C3;
     cursor: pointer;
     user-select: none;
     transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-
-    &:hover {
-        transform: translate(-2px, -2px);
-    }
-
-    // High-fidelity selection transitions with colored glows
-    &.selected-take {
-        transform: translateY(-10px);
-        
-        .playing-card-face {
-            border-color: $accent-turmeric !important;
-            box-shadow: 0 0.8em 2.2em rgba(244, 196, 48, 0.45) !important;
-        }
-    }
-
-    &.selected-return {
-        transform: translateY(10px);
-
-        .playing-card-face {
-            border-color: $accent-terracotta !important;
-            box-shadow: 0 -0.4em 1.5em rgba(194, 90, 63, 0.45) !important;
-        }
-    }
-
-    &.selected-sell {
-        transform: translateY(-8px);
-
-        .playing-card-face {
-            border-color: $accent-indigo !important;
-            box-shadow: 0 0.8em 2.2em rgba(32, 64, 81, 0.45) !important;
-        }
-    }
 }
 
 // Player controls bottom panel
@@ -344,22 +335,6 @@ $accent-sand: #E6D7C3;
             .jaipur-card-wrapper {
                 margin-right: -10px;
                 transition: transform 0.2s, margin-right 0.2s;
-
-                &:hover {
-                    margin-right: 0px;
-                    transform: translateY(-5px);
-                }
-
-                // In the herd row, selection translates UPWARD to stay visible
-                &.selected-return {
-                    transform: translateY(-10px);
-                    margin-right: 0px;
-
-                    .playing-card-face {
-                        border-color: $accent-terracotta !important;
-                        box-shadow: 0 0.8em 2.2em rgba(194, 90, 63, 0.45) !important;
-                    }
-                }
             }
         }
     }
@@ -371,7 +346,7 @@ $accent-sand: #E6D7C3;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            
+
             span {
                 font-size: 0.8em;
                 color: #555;
@@ -491,61 +466,3 @@ $accent-sand: #E6D7C3;
         gap: 12px;
     }
 }
-
-// Card exit/entry animations
-@keyframes cardFadeOut {
-    0% {
-        opacity: 1;
-        transform: scale(1);
-        width: 68px;
-        min-width: 68px;
-        max-width: 68px;
-        padding: 6px 4px;
-        border-width: 3px;
-    }
-    100% {
-        opacity: 0;
-        transform: scale(0.3) translateY(-30px) rotate(-10deg);
-        width: 0;
-        min-width: 0;
-        max-width: 0;
-        padding: 0;
-        border-width: 0;
-        box-shadow: none;
-    }
-}
-
-@keyframes cardFadeIn {
-    0% {
-        opacity: 0;
-        transform: scale(0.3) translateY(30px) rotate(10deg);
-        width: 0;
-        min-width: 0;
-        max-width: 0;
-        padding: 0;
-        border-width: 0;
-        box-shadow: none;
-    }
-    100% {
-        opacity: 1;
-        transform: scale(1);
-        width: 68px;
-        min-width: 68px;
-        max-width: 68px;
-        padding: 6px 4px;
-        border-width: 3px;
-    }
-}
-
-.jaipur-card {
-    &.anim-disappearing {
-        animation: cardFadeOut 0.35s forwards ease-in-out;
-        pointer-events: none !important;
-    }
-
-    &.anim-appearing {
-        animation: cardFadeIn 0.35s forwards ease-in-out;
-        pointer-events: none !important;
-    }
-}
-

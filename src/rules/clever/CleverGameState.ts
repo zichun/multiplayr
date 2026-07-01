@@ -409,6 +409,10 @@ export class CleverGameState {
         }));
 
         this.data.rolledDice = rolled;
+        for (const rd of rolled) {
+            const pd = this.data.poolDice.find(d => d.color === rd.color);
+            if (pd) pd.value = rd.value;
+        }
         this.data.status = GameStatus.ActiveChoosing;
 
         const diceStr = rolled.map(d => `${d.color}:${d.value}`).join(', ');
@@ -437,6 +441,10 @@ export class CleverGameState {
         }));
 
         this.data.rolledDice = rolled;
+        for (const rd of rolled) {
+            const pd = this.data.poolDice.find(d => d.color === rd.color);
+            if (pd) pd.value = rd.value;
+        }
         this.data.status = GameStatus.ActiveChoosing;
 
         const diceStr = rolled.map(d => `${d.color}:${d.value}`).join(', ');
@@ -612,14 +620,9 @@ export class CleverGameState {
             throw new Error('Already confirmed your passive selection.');
         }
 
-        // If they already picked a die but haven't confirmed yet, they are changing their selection!
+        // Passive selection is permanent
         if (player.extraDicePickedThisTurn.length > 0) {
-            const snapshot = this.data.passiveStartPlayerStates?.[playerId];
-            if (snapshot) {
-                // Restore their player state completely from the start-of-passive snapshot!
-                this.data.players[playerId] = JSON.parse(JSON.stringify(snapshot));
-                player = this.data.players[playerId]; // Re-bind local reference!
-            }
+            throw new Error('Passive selection is permanent and cannot be changed.');
         }
 
         // Verify die source:
@@ -774,7 +777,11 @@ export class CleverGameState {
         const player = this.data.players[playerId];
         const isPassiveFreePicked = player.extraDicePickedThisTurn.length > 0;
         if (!isPassiveFreePicked) {
-            throw new Error('Must select a die before confirming');
+            const hasTrayMoves = this.has_any_legal_die_in_pool(playerId, this.data.trayDice);
+            if (hasTrayMoves) {
+                throw new Error('Must select a die before confirming');
+            }
+            player.draftPassiveLog = `${playerId} (passive) had no legal moves. Nothing is recorded.`;
         }
 
         player.hasConfirmedPassiveSelection = true;
@@ -809,7 +816,89 @@ export class CleverGameState {
                 }
             }
             this.data.gameLogs.push('All passive players have confirmed their selections.');
-            this.advance_turn_or_round();
+            if (this.data.isSolo) {
+                this.advance_turn_or_round();
+            } else {
+                const activePlayer = this.data.players[activePlayerId];
+                const activeExtraLeft = activePlayer.extraDiceTotal - activePlayer.extraDiceUsed;
+                if (activeExtraLeft > 0 && this.has_possible_extra_die(activePlayerId)) {
+                    this.data.status = GameStatus.TurnEnd;
+                    this.data.gameLogs.push(`Active player ${activePlayerId} may now spend remaining Extra Die actions.`);
+                } else {
+                    this.advance_turn_or_round();
+                }
+            }
+        }
+    }
+
+    private has_possible_extra_die(playerId: string): boolean {
+        const player = this.data.players[playerId];
+        if (!player) return false;
+
+        const activePlayerId = this.data.playerIds[this.data.activePlayerIndex];
+        const extraDiceSpentColors = playerId === activePlayerId
+            ? player.extraDicePickedThisTurn
+            : player.extraDicePickedThisTurn.slice(1);
+
+        const allDice = [...this.data.activePickedDice.filter(Boolean), ...this.data.trayDice];
+        return allDice.some(d => !extraDiceSpentColors.includes(d.color));
+    }
+
+    public skip_active_picking(playerId: string): void {
+        this.validate_active_player(playerId);
+        if (this.data.status !== GameStatus.ActiveChoosing && this.data.status !== GameStatus.ActiveRolling) {
+            throw new Error('Not in active selection phase');
+        }
+
+        this.data.gameLogs.push(`${playerId} ended active picking early. All remaining dice go to the Silver Tray.`);
+
+        // Move all poolDice and rolledDice to trayDice
+        const allRemaining = [...this.data.poolDice, ...this.data.rolledDice];
+        for (const d of allRemaining) {
+            if (!this.data.trayDice.some(td => td.color === d.color)) {
+                this.data.trayDice.push(d);
+            }
+        }
+
+        this.data.poolDice = [];
+        this.data.rolledDice = [];
+
+        // Transition to passive phase
+        if (this.data.isSolo) {
+            this.data.soloPassiveTurn = true;
+            this.data.status = GameStatus.PassiveChoosing;
+
+            // In Solo mode, we need to roll 6 dice and simulate
+            const rolled: Die[] = ['white', 'yellow', 'blue', 'green', 'orange', 'purple'].map(color => ({
+                color: color as DieColor,
+                value: Math.floor(Math.random() * 6) + 1
+            }));
+
+            const colorPriority: DieColor[] = ['white', 'yellow', 'blue', 'green', 'orange', 'purple'];
+            rolled.sort((a, b) => {
+                if (a.value !== b.value) {
+                    return a.value - b.value;
+                }
+                return colorPriority.indexOf(a.color) - colorPriority.indexOf(b.color);
+            });
+
+            this.data.trayDice = [rolled[0], rolled[1], rolled[2]];
+            this.data.activePickedDice = [rolled[3], rolled[4], rolled[5]];
+            this.data.gameLogs.push('--- Solo Mode Passive Turn Simulation ---');
+            this.data.gameLogs.push(`Rolled 6 dice: [${rolled.map(d => `${d.color}:${d.value}`).join(', ')}]`);
+            this.data.gameLogs.push(`The 3 lowest-value dice go to the Silver Tray: [${this.data.trayDice.map(d => `${d.color}:${d.value}`).join(', ')}]`);
+
+            this.data.passiveStartPlayerStates = {};
+            const aliceId = this.data.playerIds[0];
+            this.data.passiveStartPlayerStates[aliceId] = JSON.parse(JSON.stringify(this.data.players[aliceId]));
+        } else {
+            this.data.status = GameStatus.PassiveChoosing;
+            this.data.gameLogs.push('All passive players may now select one die from the Silver Tray simultaneously.');
+
+            this.data.passiveStartPlayerStates = {};
+            for (const id of this.data.playerIds) {
+                this.data.passiveStartPlayerStates[id] = JSON.parse(JSON.stringify(this.data.players[id]));
+            }
         }
     }
 

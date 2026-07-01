@@ -72,17 +72,34 @@ export class LobbyAvatarView extends React.Component<{
     }
 }
 export class LobbyNameView extends React.Component<{
-    name: string,
-    icon: number,
-    accent: string
+    name?: string,
+    icon?: number,
+    accent?: string,
+    clientId?: string,
+    clientIds?: string[],
+    clientIndex?: number,
+    names?: string[]
 }, {}> {
     public render() {
-        const avatar = React.createElement(
-            LobbyAvatarView,
-            this.props);
+        let i = undefined;
+        if (this.props.clientIndex !== undefined) {
+            i = this.props.clientIndex;
+        } else if (this.props.clientId !== undefined && this.props.clientIds !== undefined) {
+            for (i = 0; i < this.props.clientIds.length; i = i + 1) {
+                if (this.props.clientId === this.props.clientIds[i]) {
+                    break;
+                }
+            }
+        }
+
+        if (i === undefined || this.props.clientIds === undefined || i === this.props.clientIds.length || this.props.names === undefined) {
+            return (
+                <span>{this.props.name}</span>
+            );
+        }
 
         return (
-            <span>{this.props.name}</span>
+            <span>{this.props.names[i]}</span>
         );
     }
 }

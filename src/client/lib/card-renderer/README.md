@@ -220,6 +220,7 @@ export interface FooterRegion {
     align: 'left' | 'center' | 'right';
     verticalAlign: 'top' | 'center' | 'bottom';
     background?: string; // Optional background color or palette key
+    size?: number;       // Optional grid size multiplier (default: 1)
 }
 ```
 

@@ -112,26 +112,42 @@ interface CleverMainViewProps extends ViewPropsInterface {
 interface CleverScreenState {
     viewingPlayerId: string; // for multiplayer sheet switching
     whiteWildTargetColor: string | null; // active dropdown for white die selection
+    selectedWhiteWildValue: number | null; // value of white die currently selected
     bonusCardMinimized: boolean;
     pendingPassiveYellowColor: 'yellow' | 'white' | null;
     pendingExtraYellowColor: 'yellow' | 'white' | null;
     pendingActiveYellowColor: 'yellow' | 'white' | null;
+    playRollSound: boolean;
+    isSelectingExtraDie: boolean;
 }
 
 function MainPage(props: CleverMainViewProps) {
     return <CleverGameScreen {...props} />;
 }
 
+interface ScoresheetOption {
+    track: DieColor;
+    dieColor: DieColor;
+    dieValue: number;
+    yellowCoords?: { r: number, c: number };
+    blueIndex?: number;
+    textToShow: string;
+}
+
 class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreenState> {
+    private currentOptions: ScoresheetOption[] = [];
     constructor(props: CleverMainViewProps) {
         super(props);
         this.state = {
             viewingPlayerId: props.MP.clientId,
             whiteWildTargetColor: null,
+            selectedWhiteWildValue: null,
             bonusCardMinimized: false,
             pendingPassiveYellowColor: null,
             pendingExtraYellowColor: null,
-            pendingActiveYellowColor: null
+            pendingActiveYellowColor: null,
+            playRollSound: false,
+            isSelectingExtraDie: false
         };
     }
 
@@ -215,8 +231,26 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
         const myBonuses = bonusesToResolve || [];
         const hasPendingBonus = myBonuses.length > 0;
 
+        this.currentOptions = this.get_scoresheet_selectable_options(myId);
+
         return (
             <div className="clever-game-container">
+                <style>{`
+                    @keyframes scoresheet-box-pulse {
+                        0%, 100% { box-shadow: 0 0 4px var(--pulse-color, #f1c40f); transform: scale(1); opacity: 0.85; }
+                        50% { box-shadow: 0 0 12px var(--pulse-color, #f1c40f); transform: scale(1.03); opacity: 1; }
+                    }
+                    .pulsing-scoresheet-box {
+                        animation: scoresheet-box-pulse 1.8s infinite ease-in-out;
+                        cursor: pointer !important;
+                        position: relative;
+                        z-index: 5;
+                    }
+                    .pulsing-scoresheet-box-text {
+                        opacity: 0.5;
+                        font-weight: bold;
+                    }
+                `}</style>
                 {/* 1. Header indicators */}
                 {gameStatus !== GameStatus.GameOver && (
                     <div className="game-header-bar">
@@ -286,10 +320,50 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                             }}
                                         >
                                             {picked ? (
-                                                <div className={`clever-die static ${picked.color} ${extraDicePickedThisTurn[0] === picked.color ? 'selected' : ''}`}>
-                                                    {picked.value}
-                                                    {extraDicePickedThisTurn[0] === picked.color && <span className="selected-check">✔</span>}
-                                                </div>
+                                                (() => {
+                                                    const { isSelectingExtraDie } = this.state;
+                                                    const isPermissible = this.is_extra_die_permissible(myId, picked);
+                                                    const canPick = isSelectingExtraDie && this.is_extra_die_selectable(myId, picked, activePickedDice, trayDice);
+
+                                                    if (canPick) {
+                                                        return (
+                                                            <button
+                                                                className={`clever-die ${picked.color} ${canPick ? 'active-clickable' : 'static'}`}
+                                                                onClick={() => {
+                                                                    if (canPick) {
+                                                                        this.setState({ isSelectingExtraDie: false });
+                                                                        const isPermissible = this.is_extra_die_permissible(myId, picked);
+                                                                        if (picked.color === 'white') {
+                                                                            if (isPermissible) {
+                                                                                this.setState({ whiteWildTargetColor: 'extra_die_white_wild', selectedWhiteWildValue: picked.value });
+                                                                            } else {
+                                                                                MP.spendExtraDie('white', 'yellow');
+                                                                            }
+                                                                        } else if (picked.color === 'yellow') {
+                                                                            if (isPermissible) {
+                                                                                this.setState({ pendingExtraYellowColor: 'yellow' });
+                                                                            } else {
+                                                                                MP.spendExtraDie('yellow');
+                                                                            }
+                                                                        } else {
+                                                                            MP.spendExtraDie(picked.color);
+                                                                        }
+                                                                    }
+                                                                }}
+                                                            >
+                                                                {picked.value}
+                                                            </button>
+                                                        );
+                                                    }
+
+                                                    const isSelected = !isSelectingExtraDie && extraDicePickedThisTurn[0] === picked.color;
+                                                    return (
+                                                        <div className={`clever-die static ${picked.color} ${isSelected ? 'selected' : ''}`}>
+                                                            {picked.value}
+                                                            {isSelected && <span className="selected-check">✔</span>}
+                                                        </div>
+                                                    );
+                                                })()
                                             ) : (
                                                 `Pick ${idx + 1}`
                                             )}
@@ -302,24 +376,32 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                             <div className="dice-pool-list">
                                 {gameStatus === GameStatus.ActiveChoosing && rolledDice.length > 0 ? (
                                     rolledDice.map((die) => {
-                                        // Highlight if clickable
-                                        const canPick = isActiveRole && !hasPendingBonus;
+                                        const isSelectable = this.is_die_legally_selectable(myId, die, rolledDice, false);
+                                        const canPick = isActiveRole && !hasPendingBonus && isSelectable;
                                         return (
                                             <div key={die.color} style={{ position: 'relative' }}>
                                                 <button
-                                                    className={`clever-die ${die.color} ${canPick ? 'active-clickable' : ''}`}
+                                                    className={`clever-die ${die.color} ${canPick ? 'active-clickable' : 'static'}`}
                                                     onClick={() => {
-                                                        if (canPick) {
-                                                            if (die.color === 'white') {
-                                                                // Wild die dropdown selection
-                                                                this.setState({ whiteWildTargetColor: 'white' });
-                                                            } else if (die.color === 'yellow') {
-                                                                this.setState({ pendingActiveYellowColor: 'yellow' });
-                                                            } else {
-                                                                MP.pickActiveDie(die.color);
-                                                            }
-                                                        }
-                                                    }}
+                                                         if (canPick) {
+                                                             const isPermissible = this.is_die_permissible(myId, die);
+                                                             if (die.color === 'white') {
+                                                                 if (isPermissible) {
+                                                                     this.setState({ whiteWildTargetColor: 'white', selectedWhiteWildValue: die.value });
+                                                                 } else {
+                                                                     MP.pickActiveDie('white', 'yellow');
+                                                                 }
+                                                             } else if (die.color === 'yellow') {
+                                                                 if (isPermissible) {
+                                                                     this.setState({ pendingActiveYellowColor: 'yellow' });
+                                                                 } else {
+                                                                     MP.pickActiveDie('yellow');
+                                                                 }
+                                                             } else {
+                                                                 MP.pickActiveDie(die.color);
+                                                             }
+                                                         }
+                                                     }}
                                                 >
                                                     {die.value}
                                                 </button>
@@ -346,24 +428,80 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                         </button>
                                     )}
 
-                                    {gameStatus === GameStatus.ActiveChoosing && myRerollsLeft > 0 && (
-                                        <button
-                                            className="btn-reroll"
-                                            style={{ flexGrow: 1 }}
-                                            onClick={() => MP.rerollActiveDice()}
-                                        >
-                                            🔄 Reroll Pool ({myRerollsLeft} left)
-                                        </button>
+                                    {gameStatus === GameStatus.ActiveChoosing && (
+                                        <>
+                                            {myRerollsLeft > 0 && (
+                                                <button
+                                                    className="btn-reroll"
+                                                    style={{ flexGrow: 1 }}
+                                                    onClick={() => MP.rerollActiveDice()}
+                                                >
+                                                    🔄 Reroll Pool ({myRerollsLeft} left)
+                                                </button>
+                                            )}
+                                            {rolledDice.length > 0 && rolledDice.every(d => !this.is_die_permissible(myId, d)) && (
+                                                <button
+                                                    className="btn-roll"
+                                                    style={{ flexGrow: 1, backgroundColor: '#e67e22', color: 'white' }}
+                                                    onClick={() => MP.skipActivePicking()}
+                                                >
+                                                    🏁 Move to Passive
+                                                </button>
+                                            )}
+                                        </>
                                     )}
 
                                     {gameStatus === GameStatus.TurnEnd && (
-                                        <button
-                                            className="btn-roll"
-                                            style={{ flexGrow: 1, backgroundColor: '#9b59b6', color: 'white' }}
-                                            onClick={() => MP.endPlayerTurn()}
-                                        >
-                                            🏁 END TURN
-                                        </button>
+                                        <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                                            {this.state.isSelectingExtraDie ? (
+                                                <>
+                                                    <button
+                                                        className="btn-reroll"
+                                                        style={{ flexGrow: 1, backgroundColor: '#718096' }}
+                                                        onClick={() => this.setState({ isSelectingExtraDie: false })}
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                    <button
+                                                        className="btn-roll"
+                                                        style={{ flexGrow: 1, backgroundColor: '#9b59b6', color: 'white' }}
+                                                        onClick={() => {
+                                                            this.setState({ isSelectingExtraDie: false });
+                                                            MP.endPlayerTurn();
+                                                        }}
+                                                    >
+                                                        🏁 End Turn
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                myExtraDiceLeft > 0 && this.has_possible_extra_die(myId) ? (
+                                                    <>
+                                                        <button
+                                                            className="btn-reroll"
+                                                            style={{ flexGrow: 1 }}
+                                                            onClick={() => this.setState({ isSelectingExtraDie: true })}
+                                                        >
+                                                            ➕ Spend Extra Die (+1)
+                                                        </button>
+                                                        <button
+                                                            className="btn-roll"
+                                                            style={{ flexGrow: 1, backgroundColor: '#9b59b6', color: 'white' }}
+                                                            onClick={() => MP.endPlayerTurn()}
+                                                        >
+                                                            🏁 End Turn
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <button
+                                                        className="btn-roll"
+                                                        style={{ flexGrow: 1, backgroundColor: '#9b59b6', color: 'white' }}
+                                                        onClick={() => MP.endPlayerTurn()}
+                                                    >
+                                                        🏁 End Turn
+                                                    </button>
+                                                )
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             )}
@@ -383,26 +521,72 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                     <span style={{ color: '#718096', fontSize: '0.9em' }}>Tray is currently empty</span>
                                 ) : (
                                     trayDice.map((die) => {
-                                        // Check if passive player can legally choose this die
+                                        const { isSelectingExtraDie } = this.state;
+                                        if (isSelectingExtraDie) {
+                                            const isPermissible = this.is_extra_die_permissible(myId, die);
+                                            const canPick = this.is_extra_die_selectable(myId, die, activePickedDice, trayDice);
+
+                                            return (
+                                                <button
+                                                    key={die.color}
+                                                    className={`clever-die ${die.color} ${canPick ? 'active-clickable' : 'static'}`}
+                                                    onClick={() => {
+                                                        if (canPick) {
+                                                            this.setState({ isSelectingExtraDie: false });
+                                                            const isPermissible = this.is_extra_die_permissible(myId, die);
+                                                            if (die.color === 'white') {
+                                                                if (isPermissible) {
+                                                                    this.setState({ whiteWildTargetColor: 'extra_die_white_wild', selectedWhiteWildValue: die.value });
+                                                                } else {
+                                                                    MP.spendExtraDie('white', 'yellow');
+                                                                }
+                                                            } else if (die.color === 'yellow') {
+                                                                if (isPermissible) {
+                                                                    this.setState({ pendingExtraYellowColor: 'yellow' });
+                                                                } else {
+                                                                    MP.spendExtraDie('yellow');
+                                                                }
+                                                            } else {
+                                                                MP.spendExtraDie(die.color);
+                                                            }
+                                                        }
+                                                    }}
+                                                >
+                                                    {die.value}
+                                                </button>
+                                            );
+                                        }
+
+                                        // Normal (free passive pick) flow
                                         const alreadyConfirmed = hasConfirmedPassiveSelection;
                                         const isSelected = extraDicePickedThisTurn.length > 0 && extraDicePickedThisTurn[0] === die.color;
-                                        const canPick = gameStatus === GameStatus.PassiveChoosing && isPassiveRole && !hasPendingBonus && !alreadyConfirmed && !isSelected;
+                                        const isSelectable = this.is_die_legally_selectable(myId, die, trayDice, true);
+                                        const canPick = gameStatus === GameStatus.PassiveChoosing && isPassiveRole && !hasPendingBonus && !alreadyConfirmed && extraDicePickedThisTurn.length === 0 && isSelectable;
 
                                         return (
                                             <button
                                                 key={die.color}
-                                                className={`clever-die ${die.color} ${canPick ? 'active-clickable' : ''} ${isSelected ? 'selected' : ''}`}
+                                                className={`clever-die ${die.color} ${canPick && isSelectable ? 'active-clickable' : 'static'} ${isSelected ? 'selected' : ''}`}
                                                 onClick={() => {
-                                                    if (canPick) {
-                                                        if (die.color === 'white') {
-                                                            this.setState({ whiteWildTargetColor: 'white' });
-                                                        } else if (die.color === 'yellow') {
-                                                            this.setState({ pendingPassiveYellowColor: 'yellow' });
-                                                        } else {
-                                                            MP.pickPassiveDie(die.color);
-                                                        }
-                                                    }
-                                                }}
+                                                     if (canPick) {
+                                                         const isPermissible = this.is_die_permissible(myId, die);
+                                                         if (die.color === 'white') {
+                                                             if (isPermissible) {
+                                                                 this.setState({ whiteWildTargetColor: 'white', selectedWhiteWildValue: die.value });
+                                                             } else {
+                                                                 MP.pickPassiveDie('white', 'yellow');
+                                                             }
+                                                         } else if (die.color === 'yellow') {
+                                                             if (isPermissible) {
+                                                                 this.setState({ pendingPassiveYellowColor: 'yellow' });
+                                                             } else {
+                                                                 MP.pickPassiveDie('yellow');
+                                                             }
+                                                         } else {
+                                                             MP.pickPassiveDie(die.color);
+                                                         }
+                                                     }
+                                                 }}
                                             >
                                                 {die.value}
                                                 {isSelected && <span className="selected-check">✔</span>}
@@ -413,7 +597,7 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                             </div>
 
                             {/* Passive confirmation control */}
-                            {isPassiveRole && !hasPendingBonus && extraDicePickedThisTurn.length > 0 && gameStatus === GameStatus.PassiveChoosing && (
+                            {isPassiveRole && !hasPendingBonus && (extraDicePickedThisTurn.length > 0 || !this.props.trayDice.some(d => this.is_die_permissible(myId, d))) && gameStatus === GameStatus.PassiveChoosing && (
                                 hasConfirmedPassiveSelection ? (
                                     <div
                                         className="btn-roll"
@@ -432,13 +616,56 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                         ✔ Selection Confirmed (Waiting for others...)
                                     </div>
                                 ) : (
-                                    <button
-                                        className="btn-roll"
-                                        style={{ width: '100%', backgroundColor: '#3182ce', color: 'white' }}
-                                        onClick={() => MP.confirmPassiveSelection()}
-                                    >
-                                        👍 Confirm Passive Pick
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                                        {this.state.isSelectingExtraDie ? (
+                                            <>
+                                                <button
+                                                    className="btn-reroll"
+                                                    style={{ flexGrow: 1, backgroundColor: '#718096' }}
+                                                    onClick={() => this.setState({ isSelectingExtraDie: false })}
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    className="btn-roll"
+                                                    style={{ flexGrow: 1, backgroundColor: '#9b59b6', color: 'white' }}
+                                                    onClick={() => {
+                                                        this.setState({ isSelectingExtraDie: false });
+                                                        MP.confirmPassiveSelection();
+                                                    }}
+                                                >
+                                                    🏁 End Turn
+                                                </button>
+                                            </>
+                                        ) : (
+                                            myExtraDiceLeft > 0 && this.has_possible_extra_die(myId) ? (
+                                                <>
+                                                    <button
+                                                        className="btn-reroll"
+                                                        style={{ flexGrow: 1 }}
+                                                        onClick={() => this.setState({ isSelectingExtraDie: true })}
+                                                    >
+                                                        ➕ Spend Extra Die (+1)
+                                                    </button>
+                                                    <button
+                                                        className="btn-roll"
+                                                        style={{ flexGrow: 1, backgroundColor: '#9b59b6', color: 'white' }}
+                                                        onClick={() => MP.confirmPassiveSelection()}
+                                                    >
+                                                        🏁 End Turn
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <button
+                                                    className="btn-roll"
+                                                    style={{ flexGrow: 1, backgroundColor: '#9b59b6', color: 'white' }}
+                                                    onClick={() => MP.confirmPassiveSelection()}
+                                                >
+                                                    🏁 End Turn
+                                                </button>
+                                            )
+                                        )}
+                                    </div>
                                 )
                             )}
                         </div>
@@ -470,7 +697,11 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                             <h2>Select Track for Wild Die</h2>
                             <p>Choose which color area to apply the White die&apos;s value to:</p>
                             <div className="bonus-options">
-                                {['yellow', 'blue', 'green', 'orange', 'purple'].map(color => (
+                                {['yellow', 'blue', 'green', 'orange', 'purple'].filter(color => {
+                                    const colorVal = color as DieColor;
+                                    const val = this.state.selectedWhiteWildValue || 1;
+                                    return this.is_white_track_legal(myId, colorVal, val);
+                                }).map(color => (
                                     <button
                                         key={color}
                                         className={`btn-bonus-opt ${color}`}
@@ -577,21 +808,29 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                             row.map((cellVal, cIdx) => {
                                                 const isPremarked = cellVal === null;
                                                 const isMarked = targetPlayerState.yellow[rIdx][cIdx];
-
-                                                // Check if active player or bonus overlay can click it
                                                 const canMark = this.is_yellow_cell_clickable(myId, rIdx, cIdx, cellVal);
+                                                const yellowOpt = this.currentOptions?.find(opt => opt.track === 'yellow' && opt.yellowCoords?.r === rIdx && opt.yellowCoords?.c === cIdx);
 
                                                 return (
                                                     <div
                                                         key={`${rIdx}-${cIdx}`}
-                                                        className={`yellow-cell ${isPremarked ? 'premarked' : ''} ${isMarked && !isPremarked ? 'marked' : ''} ${canMark ? 'clickable' : ''}`}
+                                                        className={`yellow-cell ${isPremarked ? 'premarked' : ''} ${isMarked && !isPremarked ? 'marked' : ''} ${canMark ? 'clickable' : ''} ${yellowOpt ? 'pulsing-scoresheet-box' : ''}`}
+                                                        style={yellowOpt ? { '--pulse-color': '#f1c40f' } as any : {}}
                                                         onClick={() => {
-                                                            if (canMark) {
+                                                            if (yellowOpt) {
+                                                                this.handle_scoresheet_option_click(yellowOpt);
+                                                            } else if (canMark) {
                                                                 this.handle_yellow_click(rIdx, cIdx, cellVal);
                                                             }
                                                         }}
                                                     >
-                                                        {cellVal !== null && cellVal}
+                                                        {cellVal !== null && (
+                                                            yellowOpt ? (
+                                                                <span className="pulsing-scoresheet-box-text" style={{ color: '#d4ac0d' }}>✕</span>
+                                                            ) : (
+                                                                cellVal
+                                                            )
+                                                        )}
                                                     </div>
                                                 );
                                             })
@@ -671,14 +910,9 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                     {GREEN_MINIMUMS.map((min, idx) => {
                                         const isMarked = targetPlayerState.green > idx;
                                         const isNext = targetPlayerState.green === idx;
-
-                                        // Clickable if resolving green X bonus or picking green active/passive die
                                         const canMark = this.is_green_cell_clickable(myId, idx);
-
-                                        // Stars point indicators above cells
                                         const starVal = GREEN_POINTS[idx];
 
-                                        // Cell bonuses under cells
                                         let cellBonusText = '';
                                         if (idx === 3) cellBonusText = '+1';
                                         if (idx === 5) cellBonusText = '✕';
@@ -686,14 +920,18 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                         if (idx === 8) cellBonusText = '6';
                                         if (idx === 9) cellBonusText = '⟲';
 
+                                        const greenOpt = this.currentOptions?.find(opt => opt.track === 'green');
+
                                         return (
                                             <div key={idx} className="linear-cell-wrapper">
                                                 <div className="green-star-score">{starVal}</div>
                                                 <div
-                                                    className={`linear-cell ${isMarked ? 'marked' : ''} ${canMark ? 'clickable' : ''}`}
-                                                    style={isMarked ? { backgroundColor: HEX_COLORS.green, color: 'white' } : {}}
+                                                    className={`linear-cell ${isMarked ? 'marked' : ''} ${canMark ? 'clickable' : ''} ${isNext && greenOpt ? 'pulsing-scoresheet-box' : ''}`}
+                                                    style={(isNext && greenOpt) ? { '--pulse-color': '#2ecc71' } as any : (isMarked ? { backgroundColor: HEX_COLORS.green, color: 'white' } : {})}
                                                     onClick={() => {
-                                                        if (canMark) {
+                                                        if (isNext && greenOpt) {
+                                                            this.handle_scoresheet_option_click(greenOpt);
+                                                        } else if (canMark) {
                                                             this.handle_green_click();
                                                         }
                                                     }}
@@ -701,7 +939,11 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                                     {isMarked ? (
                                                         <span style={{ fontSize: '1.4em', color: 'red', fontWeight: 'bold' }}>✕</span>
                                                     ) : (
-                                                        <span className="req-label">≥{min}</span>
+                                                        (isNext && greenOpt) ? (
+                                                            <span className="pulsing-scoresheet-box-text" style={{ fontSize: '1.4em', color: '#27ae60' }}>✕</span>
+                                                        ) : (
+                                                            <span className="req-label">≥{min}</span>
+                                                        )
                                                     )}
                                                 </div>
                                                 {cellBonusText && (
@@ -724,13 +966,9 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                     {Array(11).fill(null).map((_, idx) => {
                                         const recordedVal = targetPlayerState.orange[idx];
                                         const isNext = targetPlayerState.orange.indexOf(null) === idx;
-
-                                        // Clickable if resolving orange num bonus or active/passive orange die
                                         const canMark = this.is_orange_cell_clickable(myId, idx);
-
                                         const multiplier = ORANGE_MULTIPLIERS[idx];
 
-                                        // Cell bonuses under cells
                                         let cellBonusText = '';
                                         if (idx === 2) cellBonusText = '⟲';
                                         if (idx === 4) cellBonusText = '✕';
@@ -738,13 +976,17 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                         if (idx === 7) cellBonusText = '🦊';
                                         if (idx === 9) cellBonusText = '6';
 
+                                        const orangeOpt = this.currentOptions?.find(opt => opt.track === 'orange');
+
                                         return (
                                             <div key={idx} className="linear-cell-wrapper">
                                                 <div
-                                                    className={`linear-cell ${recordedVal !== null ? 'marked' : ''} ${canMark ? 'clickable' : ''}`}
-                                                    style={recordedVal !== null ? { backgroundColor: HEX_COLORS.orange, color: 'white' } : {}}
+                                                    className={`linear-cell ${recordedVal !== null ? 'marked' : ''} ${canMark ? 'clickable' : ''} ${isNext && orangeOpt ? 'pulsing-scoresheet-box' : ''}`}
+                                                    style={(isNext && orangeOpt) ? { '--pulse-color': '#e67e22' } as any : (recordedVal !== null ? { backgroundColor: HEX_COLORS.orange, color: 'white' } : {})}
                                                     onClick={() => {
-                                                        if (canMark) {
+                                                        if (isNext && orangeOpt) {
+                                                            this.handle_scoresheet_option_click(orangeOpt);
+                                                        } else if (canMark) {
                                                             this.handle_orange_click(idx);
                                                         }
                                                     }}
@@ -753,7 +995,11 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                                     {recordedVal !== null ? (
                                                         <span className="cell-val">{recordedVal}</span>
                                                     ) : (
-                                                        <span style={{ fontSize: '0.8em', color: '#cbd5e0' }}>__</span>
+                                                        (isNext && orangeOpt) ? (
+                                                            <span className="pulsing-scoresheet-box-text" style={{ color: '#d35400' }}>{orangeOpt.textToShow}</span>
+                                                        ) : (
+                                                            <span style={{ fontSize: '0.8em', color: '#cbd5e0' }}>__</span>
+                                                        )
                                                     )}
                                                 </div>
                                                 {cellBonusText && (
@@ -776,11 +1022,8 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                     {Array(11).fill(null).map((_, idx) => {
                                         const recordedVal = targetPlayerState.purple[idx];
                                         const isNext = targetPlayerState.purple.indexOf(null) === idx;
-
-                                        // Clickable if resolving purple num bonus or active/passive purple die
                                         const canMark = this.is_purple_cell_clickable(myId, idx);
 
-                                        // Cell bonuses under cells
                                         let cellBonusText = '';
                                         if (idx === 2) cellBonusText = '⟲';
                                         if (idx === 3) cellBonusText = '✕';
@@ -792,13 +1035,17 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                         if (idx === 9) cellBonusText = '6';
                                         if (idx === 10) cellBonusText = '+1';
 
+                                        const purpleOpt = this.currentOptions?.find(opt => opt.track === 'purple');
+
                                         return (
                                             <div key={idx} className="linear-cell-wrapper">
                                                 <div
-                                                    className={`linear-cell ${recordedVal !== null ? 'marked' : ''} ${canMark ? 'clickable' : ''}`}
-                                                    style={recordedVal !== null ? { backgroundColor: HEX_COLORS.purple, color: 'white' } : {}}
+                                                    className={`linear-cell ${recordedVal !== null ? 'marked' : ''} ${canMark ? 'clickable' : ''} ${isNext && purpleOpt ? 'pulsing-scoresheet-box' : ''}`}
+                                                    style={(isNext && purpleOpt) ? { '--pulse-color': '#9b59b6' } as any : (recordedVal !== null ? { backgroundColor: HEX_COLORS.purple, color: 'white' } : {})}
                                                     onClick={() => {
-                                                        if (canMark) {
+                                                        if (isNext && purpleOpt) {
+                                                            this.handle_scoresheet_option_click(purpleOpt);
+                                                        } else if (canMark) {
                                                             this.handle_purple_click(idx);
                                                         }
                                                     }}
@@ -807,7 +1054,11 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                                     {recordedVal !== null ? (
                                                         <span className="cell-val">{recordedVal}</span>
                                                     ) : (
-                                                        <span style={{ fontSize: '0.8em', color: '#cbd5e0' }}>__</span>
+                                                        (isNext && purpleOpt) ? (
+                                                            <span className="pulsing-scoresheet-box-text" style={{ color: '#8e44ad' }}>{purpleOpt.textToShow}</span>
+                                                        ) : (
+                                                            <span style={{ fontSize: '0.8em', color: '#cbd5e0' }}>__</span>
+                                                        )
                                                     )}
                                                 </div>
                                                 {cellBonusText && (
@@ -1045,7 +1296,11 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                             <h2>Select Track for White Wild (+1)</h2>
                             <p>Choose which color area to apply the copied White wild die to:</p>
                             <div className="bonus-options">
-                                {['yellow', 'blue', 'green', 'orange', 'purple'].map(color => (
+                                {['yellow', 'blue', 'green', 'orange', 'purple'].filter(color => {
+                                    const colorVal = color as DieColor;
+                                    const val = this.state.selectedWhiteWildValue || 1;
+                                    return this.is_white_track_legal(myId, colorVal, val);
+                                }).map(color => (
                                     <button
                                         key={color}
                                         className={`btn-bonus-opt ${color}`}
@@ -1126,10 +1381,9 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
 
         // 5. Standard active choose
         if (gameStatus === GameStatus.ActiveChoosing && myId === currentPlayerId && !currentBonus) {
-            // Did we roll a yellow die or white die matching cellVal?
+            // Did we roll a yellow die matching cellVal?
             const hasYellow = rolledDice.some(d => d.color === 'yellow' && d.value === cellVal);
-            const hasWhite = rolledDice.some(d => d.color === 'white'); // White can copy yellow
-            return hasYellow || hasWhite;
+            return hasYellow;
         }
 
         return false;
@@ -1213,9 +1467,6 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
         const hasYellow = rolledDice.some(d => d.color === 'yellow' && d.value === cellVal);
         if (hasYellow) {
             MP.pickActiveDie('yellow', { r, c });
-        } else {
-            // Must be White
-            MP.pickActiveDie('white', { targetColor: 'yellow', r, c });
         }
     }
 
@@ -1229,17 +1480,26 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
         // Clickable checks
         const canMark = this.is_blue_cell_clickable(myId, sumIndex, sum);
 
+        const blueOpt = this.currentOptions?.find(opt => opt.track === 'blue' && opt.blueIndex === sumIndex);
+
         return (
             <div
                 key={sum}
-                className={`blue-cell ${isMarked ? 'marked' : ''} ${canMark ? 'clickable' : ''}`}
+                className={`blue-cell ${isMarked ? 'marked' : ''} ${canMark ? 'clickable' : ''} ${blueOpt ? 'pulsing-scoresheet-box' : ''}`}
+                style={blueOpt ? { '--pulse-color': '#3498db' } as any : {}}
                 onClick={() => {
-                    if (canMark) {
+                    if (blueOpt) {
+                        this.handle_scoresheet_option_click(blueOpt);
+                    } else if (canMark) {
                         this.handle_blue_click(sumIndex, sum);
                     }
                 }}
             >
-                {sum}
+                {blueOpt ? (
+                    <span className="pulsing-scoresheet-box-text" style={{ color: '#2980b9' }}>✕</span>
+                ) : (
+                    sum
+                )}
             </div>
         );
     }
@@ -1264,18 +1524,20 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
         if (gameStatus === GameStatus.ActiveChoosing && myId === currentPlayerId && !currentBonus) {
             // Coupling sum of Blue + White must match sum!
             const blueDie = rolledDice.find(d => d.color === 'blue');
-            const whiteDie = rolledDice.find(d => d.color === 'white');
+            if (!blueDie) return false;
 
-            if (!blueDie && !whiteDie) return false;
+            const whiteDie = rolledDice.find(d => d.color === 'white')
+                || this.props.activePickedDice.find(d => d.color === 'white')
+                || this.props.trayDice.find(d => d.color === 'white')
+                || this.props.poolDice.find(d => d.color === 'white');
 
-            const blueVal = blueDie ? blueDie.value : 1; // fallback
-            const whiteVal = whiteDie ? whiteDie.value : 1; // fallback
+            const blueVal = blueDie.value;
+            const whiteVal = whiteDie ? whiteDie.value : 1;
 
             const sumPair = blueVal + whiteVal;
             if (sumPair !== sum) return false;
 
-            // They can pick either Blue or White to trigger it
-            return rolledDice.some(d => d.color === 'blue' || d.color === 'white');
+            return true;
         }
 
         return false;
@@ -1288,12 +1550,10 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
         if (currentBonus && currentBonus.type === 'blue_X') {
             MP.resolvePendingBonus(sumIndex);
         } else {
-            // Find which color to pick: Blue or White
+            // Find which color to pick: Blue
             const hasBlue = rolledDice.some(d => d.color === 'blue');
             if (hasBlue) {
                 MP.pickActiveDie('blue');
-            } else {
-                MP.pickActiveDie('white', 'blue');
             }
         }
     }
@@ -1317,9 +1577,8 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
         if (gameStatus === GameStatus.ActiveChoosing && myId === currentPlayerId && !currentBonus) {
             const minRequired = GREEN_MINIMUMS[cellIndex];
             const hasGreen = rolledDice.some(d => d.color === 'green' && d.value >= minRequired);
-            const hasWhite = rolledDice.some(d => d.color === 'white' && d.value >= minRequired);
 
-            return hasGreen || hasWhite;
+            return hasGreen;
         }
 
         return false;
@@ -1338,8 +1597,6 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
             const hasGreen = rolledDice.some(d => d.color === 'green' && d.value >= minRequired);
             if (hasGreen) {
                 MP.pickActiveDie('green');
-            } else {
-                MP.pickActiveDie('white', 'green');
             }
         }
     }
@@ -1362,7 +1619,7 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
 
         // Standard active choose
         if (gameStatus === GameStatus.ActiveChoosing && myId === currentPlayerId && !currentBonus) {
-            return rolledDice.some(d => d.color === 'orange' || d.color === 'white');
+            return rolledDice.some(d => d.color === 'orange');
         }
 
         return false;
@@ -1378,8 +1635,6 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
             const hasOrange = rolledDice.some(d => d.color === 'orange');
             if (hasOrange) {
                 MP.pickActiveDie('orange');
-            } else {
-                MP.pickActiveDie('white', 'orange');
             }
         }
     }
@@ -1406,9 +1661,8 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
             const checkVal = lastVal === 6 ? 0 : lastVal; // 6 resets
 
             const hasPurple = rolledDice.some(d => d.color === 'purple' && d.value > checkVal);
-            const hasWhite = rolledDice.some(d => d.color === 'white' && d.value > checkVal);
 
-            return hasPurple || hasWhite;
+            return hasPurple;
         }
 
         return false;
@@ -1428,8 +1682,314 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
             const hasPurple = rolledDice.some(d => d.color === 'purple' && d.value > checkVal);
             if (hasPurple) {
                 MP.pickActiveDie('purple');
+            }
+        }
+    }
+
+    private is_white_track_legal(myId: string, track: DieColor, value: number): boolean {
+        const playerState = this.props.players[myId];
+        if (!playerState) return false;
+
+        if (track === 'yellow') {
+            const grid = [
+                [3, 6, 5, null],
+                [2, 1, null, 5],
+                [1, null, 2, 4],
+                [null, 3, 4, 6]
+            ];
+            let alreadyMarkedCount = 0;
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                    if (grid[r][c] === value && playerState.yellow[r][c]) {
+                        alreadyMarkedCount++;
+                    }
+                }
+            }
+            if (alreadyMarkedCount > 0) return false;
+
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                    if (grid[r][c] === value && !playerState.yellow[r][c]) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        if (track === 'blue') {
+            const blueDie = this.props.rolledDice.find(d => d.color === 'blue')
+                || this.props.activePickedDice.find(d => d.color === 'blue')
+                || this.props.trayDice.find(d => d.color === 'blue')
+                || this.props.poolDice.find(d => d.color === 'blue');
+            const whiteDie = this.props.rolledDice.find(d => d.color === 'white')
+                || this.props.activePickedDice.find(d => d.color === 'white')
+                || this.props.trayDice.find(d => d.color === 'white')
+                || this.props.poolDice.find(d => d.color === 'white');
+
+            const blueVal = blueDie ? blueDie.value : 1;
+            const whiteVal = whiteDie ? whiteDie.value : 1;
+
+            const sum = blueVal + whiteVal;
+            const sumIndex = sum - 2;
+            if (sumIndex < 0 || sumIndex > 10) return false;
+            return !playerState.blue[sumIndex];
+        }
+
+        if (track === 'green') {
+            if (playerState.green >= 11) return false;
+            return value >= GREEN_MINIMUMS[playerState.green];
+        }
+
+        if (track === 'orange') {
+            return playerState.orange.includes(null);
+        }
+
+        if (track === 'purple') {
+            const purpleIndex = playerState.purple.indexOf(null);
+            if (purpleIndex === -1) return false;
+            if (purpleIndex === 0) return true;
+            const lastVal = playerState.purple[purpleIndex - 1]!;
+            if (lastVal === 6) return true;
+            return value > lastVal;
+        }
+
+        return false;
+    }
+
+    private is_die_permissible(myId: string, die: Die): boolean {
+        const tracks: DieColor[] = ['yellow', 'blue', 'green', 'orange', 'purple'];
+        for (const track of tracks) {
+            if (die.color === 'white') {
+                if (this.is_white_track_legal(myId, track, die.value)) return true;
+            } else if (die.color === track) {
+                if (this.is_white_track_legal(myId, track, die.value)) return true;
+            }
+        }
+        return false;
+    }
+
+    private is_die_legally_selectable(myId: string, die: Die, pool: Die[], isPassive: boolean): boolean {
+        const playerState = this.props.players[myId];
+        if (!playerState) return false;
+
+        return this.is_die_permissible(myId, die);
+    }
+
+    private is_extra_die_permissible(myId: string, die: Die): boolean {
+        const tracks: DieColor[] = ['yellow', 'blue', 'green', 'orange', 'purple'];
+        if (die.color === 'white') {
+            return tracks.some(track => this.is_white_track_legal(myId, track, die.value));
+        } else {
+            return this.is_white_track_legal(myId, die.color, die.value);
+        }
+    }
+
+    private is_extra_die_selectable(myId: string, die: Die, activePickedDice: Die[], trayDice: Die[]): boolean {
+        const { extraDicePickedThisTurn, currentPlayerId } = this.props;
+        const extraDiceSpentColors = myId === currentPlayerId
+            ? extraDicePickedThisTurn
+            : extraDicePickedThisTurn.slice(1);
+        
+        const isUnspent = !extraDiceSpentColors.includes(die.color);
+        if (!isUnspent) return false;
+
+        if (this.is_extra_die_permissible(myId, die)) return true;
+
+        const allDice = [...activePickedDice.filter(Boolean), ...trayDice];
+        const hasAnyPermissibleUnspent = allDice.some(d => {
+            const unspent = !extraDiceSpentColors.includes(d.color);
+            return unspent && this.is_extra_die_permissible(myId, d);
+        });
+        return !hasAnyPermissibleUnspent;
+    }
+
+    private has_possible_extra_die(myId: string): boolean {
+        const { trayDice, activePickedDice, currentPlayerId, extraDicePickedThisTurn } = this.props;
+        const extraDiceSpentColors = myId === currentPlayerId
+            ? extraDicePickedThisTurn
+            : extraDicePickedThisTurn.slice(1);
+        
+        const allDice = [...activePickedDice.filter(Boolean), ...trayDice];
+        return allDice.some(d => !extraDiceSpentColors.includes(d.color));
+    }
+
+    private get_scoresheet_selectable_options(myId: string): ScoresheetOption[] {
+        const { gameStatus, currentPlayerId, rolledDice, trayDice, activePickedDice } = this.props;
+        const playerState = this.props.players[myId];
+        if (!playerState) return [];
+
+        const isViewingSelf = this.state.viewingPlayerId === myId;
+        if (!isViewingSelf) return [];
+
+        // Determine selection context
+        let context: 'active' | 'passive' | 'extra' | null = null;
+        let selectableDice: Die[] = [];
+
+        if (gameStatus === GameStatus.ActiveChoosing && myId === currentPlayerId) {
+            context = 'active';
+            selectableDice = rolledDice.filter(d => this.is_die_legally_selectable(myId, d, rolledDice, false));
+        } else if (gameStatus === GameStatus.PassiveChoosing && (myId !== currentPlayerId || this.props.isSolo) && this.props.extraDicePickedThisTurn.length === 0) {
+            context = 'passive';
+            selectableDice = trayDice.filter(d => this.is_die_permissible(myId, d));
+        } else if (this.state.isSelectingExtraDie) {
+            context = 'extra';
+            const allInPlay = [...activePickedDice.filter(Boolean), ...trayDice];
+            selectableDice = allInPlay.filter(d => this.is_extra_die_selectable(myId, d, activePickedDice, trayDice));
+        }
+
+        if (!context || selectableDice.length === 0) return [];
+
+        // Prioritize colored dice over white wild cards by processing colored dice first
+        selectableDice = [...selectableDice].sort((a, b) => (a.color === 'white' ? 1 : 0) - (b.color === 'white' ? 1 : 0));
+
+        const options: ScoresheetOption[] = [];
+
+        selectableDice.forEach(die => {
+            const val = die.value;
+
+            // 1. Yellow track options
+            if (die.color === 'yellow') {
+                const grid = [
+                    [3, 6, 5, null],
+                    [2, 1, null, 5],
+                    [1, null, 2, 4],
+                    [null, 3, 4, 6]
+                ];
+                for (let r = 0; r < 4; r++) {
+                    for (let c = 0; c < 4; c++) {
+                        const cellVal = grid[r][c];
+                        if (cellVal === val && !playerState.yellow[r][c]) {
+                            let alreadyMarkedCount = 0;
+                            for (let r2 = 0; r2 < 4; r2++) {
+                                for (let c2 = 0; c2 < 4; c2++) {
+                                    if (grid[r2][c2] === cellVal && playerState.yellow[r2][c2]) {
+                                        alreadyMarkedCount++;
+                                    }
+                                }
+                            }
+                            if (alreadyMarkedCount === 0) {
+                                options.push({
+                                    track: 'yellow',
+                                    dieColor: die.color,
+                                    dieValue: val,
+                                    yellowCoords: { r, c },
+                                    textToShow: '✕'
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. Blue track options
+            if (die.color === 'blue') {
+                const pairingColor: DieColor = 'white';
+                const pairingDie = rolledDice.find(d => d.color === pairingColor)
+                    || activePickedDice.find(d => d.color === pairingColor)
+                    || trayDice.find(d => d.color === pairingColor)
+                    || this.props.poolDice.find(d => d.color === pairingColor);
+                const pairingValue = pairingDie ? pairingDie.value : 1;
+                const sum = val + pairingValue;
+                const sumIndex = sum - 2;
+
+                if (sumIndex >= 0 && sumIndex <= 10 && !playerState.blue[sumIndex]) {
+                    options.push({
+                        track: 'blue',
+                        dieColor: die.color,
+                        dieValue: val,
+                        blueIndex: sumIndex,
+                        textToShow: '✕'
+                    });
+                }
+            }
+
+            // 3. Green track options
+            if (die.color === 'green') {
+                const nextGreenIndex = playerState.green;
+                if (nextGreenIndex < 11 && val >= GREEN_MINIMUMS[nextGreenIndex]) {
+                    options.push({
+                        track: 'green',
+                        dieColor: die.color,
+                        dieValue: val,
+                        textToShow: '✕'
+                    });
+                }
+            }
+
+            // 4. Orange track options
+            if (die.color === 'orange') {
+                const nextOrangeIndex = playerState.orange.indexOf(null);
+                if (nextOrangeIndex !== -1) {
+                    options.push({
+                        track: 'orange',
+                        dieColor: die.color,
+                        dieValue: val,
+                        textToShow: String(val)
+                    });
+                }
+            }
+
+            // 5. Purple track options
+            if (die.color === 'purple') {
+                const nextPurpleIndex = playerState.purple.indexOf(null);
+                if (nextPurpleIndex !== -1) {
+                    let isLegal = false;
+                    if (nextPurpleIndex === 0) {
+                        isLegal = true;
+                    } else {
+                        const lastVal = playerState.purple[nextPurpleIndex - 1]!;
+                        if (lastVal === 6 || val > lastVal) {
+                            isLegal = true;
+                        }
+                    }
+                    if (isLegal) {
+                        options.push({
+                            track: 'purple',
+                            dieColor: die.color,
+                            dieValue: val,
+                            textToShow: String(val)
+                        });
+                    }
+                }
+            }
+        });
+
+        return options;
+    }
+
+    private handle_scoresheet_option_click(option: ScoresheetOption) {
+        const { gameStatus, currentPlayerId, MP } = this.props;
+        const myId = MP.clientId;
+
+        this.setState({ isSelectingExtraDie: false });
+
+        if (this.state.isSelectingExtraDie || (gameStatus === GameStatus.PassiveChoosing && (myId !== currentPlayerId || this.props.isSolo))) {
+            const isExtra = this.state.isSelectingExtraDie;
+            if (isExtra) {
+                if (option.dieColor === 'white') {
+                    MP.spendExtraDie('white', option.track);
+                } else if (option.dieColor === 'yellow' && option.yellowCoords) {
+                    MP.spendExtraDie('yellow', option.yellowCoords);
+                } else {
+                    MP.spendExtraDie(option.dieColor);
+                }
             } else {
-                MP.pickActiveDie('white', 'purple');
+                if (option.dieColor === 'white') {
+                    MP.pickPassiveDie('white', option.track);
+                } else if (option.dieColor === 'yellow' && option.yellowCoords) {
+                    MP.pickPassiveDie('yellow', option.yellowCoords);
+                } else {
+                    MP.pickPassiveDie(option.dieColor);
+                }
+            }
+        } else if (gameStatus === GameStatus.ActiveChoosing && myId === currentPlayerId) {
+            if (option.dieColor === 'white') {
+                MP.pickActiveDie('white', option.track);
+            } else if (option.dieColor === 'yellow' && option.yellowCoords) {
+                MP.pickActiveDie('yellow', option.yellowCoords);
+            } else {
+                MP.pickActiveDie(option.dieColor);
             }
         }
     }

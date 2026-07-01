@@ -5,11 +5,11 @@
 import * as React from 'react';
 import { ViewPropsInterface } from '../../../common/interfaces';
 import { GameStatus, WrestlerColor, PlayRecord } from '../MaskmenGameState';
-import PassSound from '../../ito/sounds/pass.mp3';
 import { PlayingCard } from '../../../client/lib/card-renderer/PlayingCard';
 import { MASKMEN_PALETTES, MASKMEN_ICONS } from '../MaskmenAssets';
-import CardSound from '../../coup/sounds/card.mp3';
-import SuccessSound from '../../coup/sounds/coin2.mp3';
+import PassSound from '../../../sounds/softnotification.mp3';
+import CardSound from '../../../sounds/typewriter_ending_bell.mp3';
+import SuccessSound from '../../../sounds/coin_few.mp3';
 
 // Lobby Views
 export class MaskmenHostLobby extends React.Component<ViewPropsInterface, {}> {
@@ -195,7 +195,34 @@ export function findMaximalChains(edges: Array<[WrestlerColor, WrestlerColor]>):
         }
     }
 
-    return chains;
+    // Filter out any chain that is a subsequence of another chain
+    const filteredChains: WrestlerColor[][] = [];
+    function isSubsequence(c1: WrestlerColor[], c2: WrestlerColor[]): boolean {
+        let i = 0;
+        let j = 0;
+        while (i < c1.length && j < c2.length) {
+            if (c1[i] === c2[j]) {
+                i++;
+            }
+            j++;
+        }
+        return i === c1.length;
+    }
+
+    for (let i = 0; i < chains.length; i++) {
+        let isMaximal = true;
+        for (let j = 0; j < chains.length; j++) {
+            if (i !== j && isSubsequence(chains[i], chains[j])) {
+                isMaximal = false;
+                break;
+            }
+        }
+        if (isMaximal) {
+            filteredChains.push(chains[i]);
+        }
+    }
+
+    return filteredChains;
 }
 
 interface MaskmenViewState {
@@ -403,6 +430,12 @@ class MaskmenArenaView extends React.Component<MaskmenMainProps, MaskmenViewStat
                                                     showFrame: false,
                                                     scaling: 1.4,
                                                 },
+                                                footer: {
+                                                    size: 2,
+                                                    align: "center",
+                                                    verticalAlign: "center",
+                                                    text: MP.getPluginView('lobby', 'player-name', { clientId: play.playerId })
+                                                }
                                             }}
                                             customIcons={MASKMEN_ICONS}
                                             responsive={true}

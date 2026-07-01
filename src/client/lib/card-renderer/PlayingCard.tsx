@@ -4,7 +4,7 @@
  */
 
 import * as React from 'react';
-import { CardDefinition, Palette, IconObject, PrimitiveShape } from './types';
+import { CardDefinition, Palette, IconObject, PrimitiveShape, InteractionStyle } from './types';
 import { ExpressiveIcon } from './IconEngine';
 import { PALETTES, PRESET_ICONS } from './presets';
 import './PlayingCard.scss';
@@ -26,6 +26,12 @@ interface PlayingCardProps {
     hoverable?: boolean;
     selectable?: boolean;
     selected?: boolean;
+
+    selectedStyle?: InteractionStyle | InteractionStyle[];
+    hoverStyle?: InteractionStyle | InteractionStyle[];
+    selectedBorderWidth?: string | number;
+    selectedGlowColor?: string;
+    animation?: 'fade-out-down' | 'fade-in';
 }
 
 export const PlayingCard: React.FC<PlayingCardProps> = ({
@@ -43,7 +49,12 @@ export const PlayingCard: React.FC<PlayingCardProps> = ({
     height,
     hoverable = false,
     selectable = false,
-    selected = false
+    selected = false,
+    selectedStyle,
+    hoverStyle,
+    selectedBorderWidth,
+    selectedGlowColor,
+    animation
 }) => {
     // 1. Resolve Palette
     let palette: Palette = PALETTES.midCentury; // Fallback
@@ -61,6 +72,16 @@ export const PlayingCard: React.FC<PlayingCardProps> = ({
         ...customIcons
     };
 
+    // Resolve interaction styles
+    const resolveStyles = (styleVal: InteractionStyle | InteractionStyle[] | undefined, defaultStyles: InteractionStyle[]): InteractionStyle[] => {
+        if (styleVal === undefined) return defaultStyles;
+        if (Array.isArray(styleVal)) return styleVal;
+        return [styleVal];
+    };
+
+    const selStyles = resolveStyles(selectedStyle, ['offset', 'outline']);
+    const hovStyles = resolveStyles(hoverStyle, ['offset']);
+
     // 3. Resolve base dimensions
     const widthMm = card.widthMm ?? 63.5;
     const heightMm = card.heightMm ?? 88.9;
@@ -71,7 +92,7 @@ export const PlayingCard: React.FC<PlayingCardProps> = ({
     const cardBorderColor = card.borderColor ? resolveColorKey(card.borderColor, palette) : palette.border;
 
     // Flip States
-    const hasBackFace = !!card.backIconId;
+    const hasBackFace = !!card.backIconId || !!card.backBgColor;
     const flipped = hasBackFace && isFlipped;
     const backIconObj = card.backIconId ? allIcons[card.backIconId] : null;
 
@@ -119,7 +140,7 @@ export const PlayingCard: React.FC<PlayingCardProps> = ({
             width: `${designWidth}px`,
             height: `${designHeight}px`,
             fontSize: `${designWidth * 0.052}px`, // 5.2% of design width (12.48px)
-            transform: `scale(${scaleFactor}) ${flipped ? 'rotateY(180deg)' : 'rotateY(0deg)'}`,
+            transform: `scale(${scaleFactor}) translate(${designWidth / 2}px, ${designHeight / 2}px) ${flipped ? 'rotateY(180deg)' : 'rotateY(0deg)'} translate(-${designWidth / 2}px, -${designHeight / 2}px)`,
             transformOrigin: 'top left',
             position: 'absolute',
             top: 0,
@@ -168,6 +189,11 @@ export const PlayingCard: React.FC<PlayingCardProps> = ({
         (wrapperStyle as any)['--panel-bg'] = palette.panelBg;
     }
     (wrapperStyle as any)['--selected-outline-color'] = palette.border || palette.text || 'currentColor';
+    (wrapperStyle as any)['--card-border-width'] = cardBorderWidth;
+    (wrapperStyle as any)['--selected-glow-color'] = selectedGlowColor || palette.primary || palette.border || '#3498db';
+    if (selectedBorderWidth !== undefined) {
+        (wrapperStyle as any)['--selected-border-width'] = typeof selectedBorderWidth === 'number' ? `${selectedBorderWidth}em` : selectedBorderWidth;
+    }
 
     const dimensionsLabel = `${widthMm}mm x ${heightMm}mm (r: ${borderRadiusMm}mm)`;
 
@@ -200,7 +226,10 @@ export const PlayingCard: React.FC<PlayingCardProps> = ({
         isPixelScaled ? 'is-pixel-scaled' : '',
         hoverable ? 'is-hoverable' : '',
         selectable ? 'is-selectable' : '',
-        selected ? 'is-selected' : ''
+        selected ? 'is-selected' : '',
+        animation ? `anim-${animation}` : '',
+        ...selStyles.map(s => `selected-style-${s}`),
+        ...hovStyles.map(s => `hover-style-${s}`)
     ].filter(Boolean).join(' ');
 
     return (
@@ -382,7 +411,10 @@ export const PlayingCard: React.FC<PlayingCardProps> = ({
                     {card.footer && (
                         <div
                             className={`card-footer-region footer-valign-${card.footer.verticalAlign ?? 'center'}`}
-                            style={{ backgroundColor: resolveBg(card.footer.background, palette.panelBg ?? 'transparent') }}
+                            style={{ 
+                                fontSize: `${0.9 * (card.footer.size ?? 1)}em`,
+                                backgroundColor: resolveBg(card.footer.background, palette.panelBg ?? 'transparent') 
+                            }}
                         >
                             <div
                                 className={`card-footer-text footer-align-${card.footer.align ?? 'center'}`}

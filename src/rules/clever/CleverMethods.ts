@@ -95,6 +95,12 @@ export const CleverEndPlayerTurn = (mp: MPType, clientId: string) => {
     syncGameStateToMP(mp, gameState);
 };
 
+export const CleverSkipActivePicking = (mp: MPType, clientId: string) => {
+    const gameState = getGameState(mp);
+    gameState.skip_active_picking(clientId);
+    syncGameStateToMP(mp, gameState);
+};
+
 export const CleverRestartGame = (mp: MPType, clientId: string) => {
     if (clientId !== mp.hostId) {
         throw new Error('Only the host can restart the game');

@@ -44,6 +44,59 @@ export class CleverGameRules extends React.Component<{}, {}> {
                 </section>
 
                 <section style={{ marginBottom: '24px' }}>
+                    <h3 style={{ color: '#3498db', fontWeight: 800 }}>Game Structure & Round Bonuses</h3>
+                    <p>
+                        The number of rounds in the game depends on the number of players:
+                    </p>
+                    <ul style={{ paddingLeft: '20px', marginBottom: '12px' }}>
+                        <li><strong>1 Player (Solo) / 2 Players:</strong> 6 Rounds</li>
+                        <li><strong>3 Players:</strong> 5 Rounds</li>
+                        <li><strong>4 Players:</strong> 4 Rounds</li>
+                    </ul>
+                    <p>
+                        At the start of Rounds 1 to 4, all players receive an automatic round-start bonus:
+                    </p>
+                    <table style={{
+                        width: '100%',
+                        borderCollapse: 'collapse',
+                        marginTop: '12px',
+                        border: '2px solid #4a5568',
+                        background: '#2d3748'
+                    }}>
+                        <thead>
+                            <tr style={{ background: '#000', color: '#f1c40f' }}>
+                                <th style={{ padding: '8px', border: '1px solid #4a5568', textAlign: 'left' }}>Round</th>
+                                <th style={{ padding: '8px', border: '1px solid #4a5568', textAlign: 'left' }}>Bonus Received (All Players)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style={{ padding: '8px', border: '1px solid #4a5568', fontWeight: 'bold' }}>Round 1</td>
+                                <td style={{ padding: '8px', border: '1px solid #4a5568' }}>1 Reroll token 🔄</td>
+                            </tr>
+                            <tr>
+                                <td style={{ padding: '8px', border: '1px solid #4a5568', fontWeight: 'bold' }}>Round 2</td>
+                                <td style={{ padding: '8px', border: '1px solid #4a5568' }}>1 Extra Die (+1) token ➕</td>
+                            </tr>
+                            <tr>
+                                <td style={{ padding: '8px', border: '1px solid #4a5568', fontWeight: 'bold' }}>Round 3</td>
+                                <td style={{ padding: '8px', border: '1px solid #4a5568' }}>1 Reroll token 🔄</td>
+                            </tr>
+                            <tr>
+                                <td style={{ padding: '8px', border: '1px solid #4a5568', fontWeight: 'bold' }}>Round 4</td>
+                                <td style={{ padding: '8px', border: '1px solid #4a5568' }}>
+                                    <strong>Choice Bonus:</strong> Choose either an <strong>✕</strong> (mark Yellow, Blue, or Green) OR a <strong>6</strong> (write in Orange or Purple)
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style={{ padding: '8px', border: '1px solid #4a5568', fontWeight: 'bold' }}>Rounds 5–6</td>
+                                <td style={{ padding: '8px', border: '1px solid #4a5568', color: '#a0aec0' }}>No round-start bonuses</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section style={{ marginBottom: '24px' }}>
                     <h3 style={{ color: '#3498db', fontWeight: 800 }}>The Five Color Areas</h3>
                     <ul style={{ paddingLeft: '20px' }}>
                         <li style={{ marginBottom: '12px' }}>

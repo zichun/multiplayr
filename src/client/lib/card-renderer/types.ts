@@ -138,6 +138,7 @@ export interface FooterRegion {
     align: 'left' | 'center' | 'right';
     verticalAlign: 'top' | 'center' | 'bottom';
     background?: string; // Configurable background
+    size?: number; // Optional size multiplier (default: 1)
 }
 
 export interface OverlayLeaf {
@@ -173,3 +174,6 @@ export interface CardDefinition {
     footer?: FooterRegion;
     overlay?: OverlayLeaf;
 }
+
+export type InteractionStyle = 'offset' | 'border' | 'outline' | 'glow' | 'saturation' | 'none';
+

@@ -12,7 +12,7 @@ import { CardType } from './JaipurGameState';
 export const JAIPUR_PALETTES: Record<CardType, Palette> = {
     diamonds: {
         id: 'jaipur_diamonds',
-        name: 'Diamonds (Cyan)',
+        name: 'Diamond (Cyan)',
         background: '#f5fbff',      // Pale cyan-white
         border: '#3498db',          // Cobalt blue border
         primary: '#00d2ff',         // Radiant cyan
@@ -123,7 +123,7 @@ export const JAIPUR_PALETTES: Record<CardType, Palette> = {
 export const JAIPUR_ICONS: Record<string, IconObject> = {
     jaipurIcon_diamonds: {
         id: 'jaipurIcon_diamonds',
-        name: 'Diamonds Icon',
+        name: 'Diamond Icon',
         layers: [
             // Left facet (bold primary cyan color)
             { id: 'dia_left', type: 'bezier', x: 50, y: 50, fill: 'primary', customPath: 'M 0 -22 L -18 -22 L -25 -5 L 0 25 Z' },
@@ -240,7 +240,7 @@ export function getJaipurCardDefinition(type: CardType, isHerd?: boolean): CardD
     const hasHeader = !isHerd || type !== 'camels';
     
     const labels: Record<CardType, string> = {
-        diamonds: 'Diamonds',
+        diamonds: 'Diamond',
         gold: 'Gold',
         silver: 'Silver',
         cloth: 'Cloth',
@@ -258,6 +258,7 @@ export function getJaipurCardDefinition(type: CardType, isHerd?: boolean): CardD
         palette: JAIPUR_PALETTES[type],
         borderWidth: 0.25,
         borderColor: 'border',
+        backBgColor: '#E5E0F3',
         header: hasHeader ? {
             title: labels[type],
             background: 'none'

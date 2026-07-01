@@ -13,11 +13,11 @@
     perspective: 1200px;
     background-color: transparent !important;
     border: none !important;
-    box-shadow: none !important;
+    box-shadow: none;
     container-type: inline-size;
     
     // Smooth transitions for hover and selection lifting/scaling
-    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.2s ease;
 }
 
 .playing-card-container * {
@@ -49,7 +49,7 @@
     overflow: hidden; /* Clips child regions cleanly at the rounded borders */
     
     // Smooth transitions for interactive outlines and shadows
-    transition: box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), outline 0.2s ease, border-color 0.2s ease;
+    transition: box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), outline 0.2s ease, border-color 0.2s ease, border-width 0.2s ease;
 }
 
 .playing-card-face.face-front {
@@ -470,15 +470,36 @@
 .playing-card-container.is-selectable {
     cursor: pointer;
 
-    &:hover {
+    // Hover styles
+    &.hover-style-offset:hover {
         transform: translateY(-6px);
         
         .playing-card-face {
             box-shadow: 0 1.5em 3em rgba(0, 0, 0, 0.24);
         }
     }
+    
+    &.hover-style-border:hover {
+        .playing-card-face {
+            border-width: calc(var(--card-border-width, 0.22em) * 1.5) !important;
+        }
+    }
+    
+    &.hover-style-outline:hover {
+        outline: 2px solid var(--selected-outline-color, currentColor) !important;
+        outline-offset: 1px !important;
+    }
+    
+    &.hover-style-glow:hover {
+        box-shadow: 0 0 1.2em 0.3em var(--selected-glow-color, rgba(52, 152, 219, 0.45)) !important;
+    }
+    
+    &.hover-style-saturation:hover {
+        filter: saturate(1.3) brightness(1.02);
+    }
 
-    &:active {
+    // Active states
+    &.hover-style-offset:active {
         transform: translateY(2px);
         
         .playing-card-face {
@@ -487,12 +508,66 @@
     }
 }
 
+// Selected states
 .playing-card-container.is-selected {
-    transform: translateY(4px) !important; // Tactile pressed-down state
+    &.selected-style-offset {
+        transform: translateY(4px) !important; // Tactile pressed-down state
+        
+        .playing-card-face {
+            box-shadow: none !important;
+        }
+    }
     
-    .playing-card-face {
-        box-shadow: none !important;
+    &.selected-style-border {
+        .playing-card-face {
+            border-width: var(--selected-border-width, calc(var(--card-border-width, 0.22em) * 2)) !important;
+        }
+    }
+    
+    &.selected-style-outline {
         outline: 3px solid var(--selected-outline-color, currentColor) !important;
         outline-offset: 2px !important;
     }
+    
+    &.selected-style-glow {
+        box-shadow: 0 0 1.8em 0.6em var(--selected-glow-color, rgba(52, 152, 219, 0.65)) !important;
+    }
+    
+    &.selected-style-saturation {
+        filter: saturate(1.7) brightness(1.05);
+    }
 }
+
+// Generic card-renderer animations
+@keyframes fadeOutDown {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(2em);
+    }
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.playing-card-container {
+    &.anim-fade-out-down {
+        animation: fadeOutDown 0.4s forwards cubic-bezier(0.25, 0.8, 0.25, 1);
+        pointer-events: none !important;
+    }
+
+    &.anim-fade-in {
+        animation: fadeIn 0.35s forwards ease-in-out;
+        pointer-events: none !important;
+    }
+}
+

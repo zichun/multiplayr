@@ -24,7 +24,7 @@ export const goodsEmoji = (type: CardType): string => {
 
 export const goodsLabel = (type: CardType): string => {
     switch (type) {
-        case 'diamonds': return 'Diamonds';
+        case 'diamonds': return 'Diamond';
         case 'gold': return 'Gold';
         case 'silver': return 'Silver';
         case 'cloth': return 'Cloth';
@@ -147,7 +147,7 @@ export class JaipurRulesView extends React.Component<{}, {}> {
                         </thead>
                         <tbody>
                             <tr style={{ borderBottom: '2px solid #000' }}>
-                                <td style={{ borderRight: '2px solid #000', padding: '6px' }}>💎 Diamonds</td>
+                                <td style={{ borderRight: '2px solid #000', padding: '6px' }}>💎 Diamond</td>
                                 <td style={{ borderRight: '2px solid #000', padding: '6px', textAlign: 'center' }}>6</td>
                                 <td style={{ padding: '6px' }}>Expensive</td>
                             </tr>
@@ -205,7 +205,7 @@ export class JaipurRulesView extends React.Component<{}, {}> {
                         </thead>
                         <tbody>
                             <tr style={{ borderBottom: '2px solid #000' }}>
-                                <td style={{ borderRight: '2px solid #000', padding: '6px' }}>💎 Diamonds</td>
+                                <td style={{ borderRight: '2px solid #000', padding: '6px' }}>💎 Diamond</td>
                                 <td style={{ borderRight: '2px solid #000', padding: '6px', textAlign: 'center' }}>6</td>
                                 <td style={{ padding: '6px', fontFamily: 'monospace' }}>7, 7, 5, 5, 5, 5</td>
                             </tr>
@@ -275,7 +275,7 @@ export class JaipurRulesView extends React.Component<{}, {}> {
                         </li>
                         <li><strong>Sell Goods:</strong> Discard any number of cards of <strong>one</strong> goods type. Receive goods tokens from the top of the stack. If you sell 3, 4, or 5+ cards, draw the corresponding bonus token.
                             <ul>
-                                <li><strong>Constraint:</strong> Selling expensive goods (Diamonds 💎, Gold 🪙, Silver 🥈) requires selling a minimum of 2 cards.</li>
+                                <li><strong>Constraint:</strong> Selling expensive goods (Diamond 💎, Gold 🪙, Silver 🥈) requires selling a minimum of 2 cards.</li>
                                 <li><strong>Constraint:</strong> Cheap goods (Cloth 🧵, Spice 🌶️, Leather 👜) can be sold in single units.</li>
                             </ul>
                         </li>
@@ -435,6 +435,7 @@ interface JaipurViewState {
     displayMarket: Card[];
     disappearingCardIds: number[];
     appearingCardIds: number[];
+    flippedCardIds: number[];
     isAnimating: boolean;
 }
 
@@ -450,6 +451,7 @@ class JaipurArenaView extends React.Component<JaipurMainProps, JaipurViewState> 
             displayMarket: props.market || [],
             disappearingCardIds: [],
             appearingCardIds: [],
+            flippedCardIds: [],
             isAnimating: false
         };
     }
@@ -472,6 +474,7 @@ class JaipurArenaView extends React.Component<JaipurMainProps, JaipurViewState> 
                 displayMarket: this.props.market || [],
                 disappearingCardIds: [],
                 appearingCardIds: [],
+                flippedCardIds: [],
                 isAnimating: false
             });
         } else if (JSON.stringify(prevProps.market.map(c => c.id)) !== JSON.stringify(this.props.market.map(c => c.id))) {
@@ -502,68 +505,75 @@ class JaipurArenaView extends React.Component<JaipurMainProps, JaipurViewState> 
                 displayMarket: newMarket,
                 disappearingCardIds: [],
                 appearingCardIds: [],
+                flippedCardIds: [],
                 isAnimating: false
             });
             return;
         }
 
-        // Start animating removed cards out
+        // Phase 1: Immediately trigger fade-out-down for all removed cards simultaneously
         this.setState({
             displayMarket: [...oldMarket],
-            disappearingCardIds: [],
+            disappearingCardIds: removedCards.map(c => c.id),
             appearingCardIds: [],
+            flippedCardIds: [],
             isAnimating: true
         });
 
-        let delay = 0;
-        removedCards.forEach((card) => {
-            const timeoutId = window.setTimeout(() => {
-                this.setState(prevState => ({
-                    disappearingCardIds: [...prevState.disappearingCardIds, card.id]
-                }));
-            }, delay);
-            this.animationTimeouts.push(timeoutId);
-            delay += 300;
-        });
-
-        const disappearEndDelay = delay + 350; // Wait for the exit animation (350ms in CSS) to complete
+        const fadeOutDuration = 400; // 400ms to match card-renderer's fadeOutDown animation
 
         const transitionTimeoutId = window.setTimeout(() => {
             const retainedCards = oldMarket.filter(c => newIds.includes(c.id));
-            this.setState({
-                displayMarket: retainedCards,
-                disappearingCardIds: []
-            });
-
-            let addDelay = 0;
-            addedCards.forEach((card, index) => {
-                const addTimeoutId = window.setTimeout(() => {
-                    this.setState(prevState => {
-                        const appearedAddedCards = addedCards.slice(0, index + 1);
-                        const currentVisibleIds = [...retainedCards.map(c => c.id), ...appearedAddedCards.map(c => c.id)];
-                        const currentDisplayMarket = newMarket.filter(c => currentVisibleIds.includes(c.id));
-
-                        return {
-                            displayMarket: currentDisplayMarket,
-                            appearingCardIds: [...prevState.appearingCardIds, card.id]
-                        };
-                    });
-                }, addDelay);
-                this.animationTimeouts.push(addTimeoutId);
-                addDelay += 300;
-            });
-
-            const finalTimeoutId = window.setTimeout(() => {
-                this.setState({
-                    displayMarket: newMarket,
-                    appearingCardIds: [],
-                    isAnimating: false
-                });
-            }, addDelay + 350);
-            this.animationTimeouts.push(finalTimeoutId);
-
-        }, disappearEndDelay);
+            
+            // Phase 2: Add and flip new cards one by one sequentially
+            this.animateNewCardsSequential(retainedCards, addedCards, 0, newMarket);
+        }, fadeOutDuration);
         this.animationTimeouts.push(transitionTimeoutId);
+    }
+
+    private animateNewCardsSequential(retainedCards: Card[], addedCards: Card[], index: number, finalMarket: Card[]) {
+        if (index >= addedCards.length) {
+            // End of animation: Show final market and reset animation flags
+            this.setState({
+                displayMarket: finalMarket,
+                disappearingCardIds: [],
+                appearingCardIds: [],
+                flippedCardIds: [],
+                isAnimating: false
+            });
+            return;
+        }
+
+        const cardToAdd = addedCards[index];
+
+        // 1. Add the card in a flipped (face-down) state
+        this.setState(prevState => {
+            const alreadyAdded = addedCards.slice(0, index);
+            const currentVisible = [...retainedCards, ...alreadyAdded, cardToAdd];
+            // Filter from finalMarket to maintain correct layout order
+            const currentDisplay = finalMarket.filter(c => currentVisible.some(v => v.id === c.id));
+
+            return {
+                displayMarket: currentDisplay,
+                flippedCardIds: [...prevState.flippedCardIds, cardToAdd.id]
+            };
+        });
+
+        // Wait 300ms for the face-down card to appear
+        const appearTimeoutId = window.setTimeout(() => {
+            // 2. Flip the card to front (face-up)
+            this.setState(prevState => ({
+                flippedCardIds: prevState.flippedCardIds.filter(id => id !== cardToAdd.id)
+            }));
+
+            // Wait 600ms for the flip transition to complete before starting the next card
+            const flipTimeoutId = window.setTimeout(() => {
+                this.animateNewCardsSequential(retainedCards, addedCards, index + 1, finalMarket);
+            }, 600);
+            this.animationTimeouts.push(flipTimeoutId);
+
+        }, 300);
+        this.animationTimeouts.push(appearTimeoutId);
     }
 
     private toggleMarketSelect(cardId: number) {
@@ -702,7 +712,7 @@ class JaipurArenaView extends React.Component<JaipurMainProps, JaipurViewState> 
         const oppSummary = getSalesSummary(opponentTokens || []);
 
         const itemsToDisplay = [
-            { key: 'diamonds', label: '💎 Diamonds' },
+            { key: 'diamonds', label: '💎 Diamond' },
             { key: 'gold', label: '🪙 Gold' },
             { key: 'silver', label: '🥈 Silver' },
             { key: 'cloth', label: '🧵 Cloth' },
@@ -735,6 +745,8 @@ class JaipurArenaView extends React.Component<JaipurMainProps, JaipurViewState> 
             selectedMarketCardIds.length >= 2 &&
             selectedMarketCardIds.length === totalSelectedReturnCount;
 
+        let isExchangeHandSizeExceeded = false;
+
         if (isExchangeEnabled) {
             const takenCards = selectedMarketCardIds.map(id => market.find(c => c.id === id)!);
             const returnedCards = [
@@ -760,6 +772,7 @@ class JaipurArenaView extends React.Component<JaipurMainProps, JaipurViewState> 
             // Final hand size constraint check: hand.length + net change <= 7
             const netHandChange = takenCards.length - selectedHandCardIds.length;
             if (hand.length + netHandChange > 7) {
+                isExchangeHandSizeExceeded = true;
                 isExchangeEnabled = false;
             }
         }
@@ -767,7 +780,7 @@ class JaipurArenaView extends React.Component<JaipurMainProps, JaipurViewState> 
         // Sell validation:
         // 1. Must select at least 1 card in hand
         // 2. All selected cards must match same type (which is not camels)
-        // 3. Expensive cards (Diamonds, Gold, Silver) require min 2 cards
+        // 3. Expensive cards (Diamond, Gold, Silver) require min 2 cards
         let isSellEnabled = isMyTurn && !isAnimating && selectedHandCardIds.length > 0;
         let sellCategory: CardType | null = null;
 
@@ -852,21 +865,14 @@ class JaipurArenaView extends React.Component<JaipurMainProps, JaipurViewState> 
                         {displayMarket.map(card => {
                             const isTakeSelected = selectedMarketCardIds.includes(card.id);
                             const isDisappearing = disappearingCardIds.includes(card.id);
-                            const isAppearing = appearingCardIds.includes(card.id);
-
-                            let animClass = '';
-                            if (isDisappearing) {
-                                animClass = 'anim-disappearing';
-                            } else if (isAppearing) {
-                                animClass = 'anim-appearing';
-                            }
+                            const isFlipped = this.state.flippedCardIds.includes(card.id);
 
                             const cardDef = getJaipurCardDefinition(card.type);
 
                             return (
                                 <div
                                     key={card.id}
-                                    className={`jaipur-card-wrapper card-${card.type} ${isTakeSelected ? 'selected-take' : ''} ${animClass}`}
+                                    className={`jaipur-card-wrapper card-${card.type} ${isTakeSelected ? 'selected-take' : ''}`}
                                     onClick={() => this.toggleMarketSelect(card.id)}
                                 >
                                     <PlayingCard
@@ -875,6 +881,12 @@ class JaipurArenaView extends React.Component<JaipurMainProps, JaipurViewState> 
                                         customIcons={JAIPUR_ICONS}
                                         responsive={true}
                                         selectable={isMyTurn && !isAnimating}
+                                        selected={isTakeSelected}
+                                        selectedStyle={['border', 'saturation']}
+                                        selectedBorderWidth="12px"
+                                        hoverStyle="glow"
+                                        isFlipped={isFlipped}
+                                        animation={isDisappearing ? 'fade-out-down' : undefined}
                                     />
                                 </div>
                             );
@@ -923,6 +935,10 @@ class JaipurArenaView extends React.Component<JaipurMainProps, JaipurViewState> 
                                                 customIcons={JAIPUR_ICONS}
                                                 responsive={true}
                                                 selectable={isMyTurn && !isAnimating}
+                                                selected={isReturnSelected}
+                                                selectedStyle={['border', 'saturation']}
+                                                selectedBorderWidth="8px"
+                                                hoverStyle="glow"
                                             />
                                         </div>
                                     );
@@ -965,6 +981,10 @@ class JaipurArenaView extends React.Component<JaipurMainProps, JaipurViewState> 
                                                     customIcons={JAIPUR_ICONS}
                                                     responsive={true}
                                                     selectable={isMyTurn && !isAnimating}
+                                                    selected={isReturnSelected}
+                                                    selectedStyle={['border', 'saturation']}
+                                                    selectedBorderWidth="12px"
+                                                    hoverStyle="glow"
                                                 />
                                             </div>
                                         );
@@ -989,6 +1009,11 @@ class JaipurArenaView extends React.Component<JaipurMainProps, JaipurViewState> 
                             >
                                 Sell {sellCategory ? goodsLabel(sellCategory) : ''}
                             </button>
+                            {isExchangeHandSizeExceeded && (
+                                <div className="action-warning-msg" style={{ width: '100%', color: '#C25A3F', fontSize: '0.85em', fontWeight: 'bold', textAlign: 'center', marginTop: '4px' }}>
+                                    ⚠️ Exchange exceeds max hand size of 7 cards (returning too many camels).
+                                </div>
+                            )}
                         </div>
                     </div>
 
