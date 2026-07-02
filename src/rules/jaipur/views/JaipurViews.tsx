@@ -1256,13 +1256,16 @@ export class JaipurMainPage extends React.Component<ViewPropsInterface & JaipurM
             };
         }
 
+        const isMyTurn = gameStatus === GameStatus.Active && mp.clientId === this.props.currentPlayerId;
+
         return mp.getPluginView(
             'gameshell',
             'HostShell-Main',
             {
                 'links': links,
                 'gameName': 'Jaipur',
-                'topBarContent': `🏅 x${seals} | Round ${roundNumber}`
+                'topBarContent': `🏅 x${seals} | Round ${roundNumber}`,
+                'roomClassName': isMyTurn ? 'attention-bg' : ''
             }
         );
     }

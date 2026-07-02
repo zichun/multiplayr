@@ -135,6 +135,8 @@ export class DurianMainPage extends React.Component<DurianMainViewProps, {}> {
         const myPlayerState = this.props.players[mp.clientId];
         const myPoints = myPlayerState ? myPlayerState.points : 0;
 
+        const isMyTurn = (this.props.gameStatus === GameStatus.PlayerTurn || this.props.gameStatus === GameStatus.CardDrawn) && mp.clientId === this.props.currentPlayerId;
+
         return mp.getPluginView(
             'gameshell',
             'HostShell-Main',
@@ -145,7 +147,8 @@ export class DurianMainPage extends React.Component<DurianMainViewProps, {}> {
                     <span>
                         {myPoints > 0 ? '😡 ' + myPoints : '☺️'}
                     </span>
-                )
+                ),
+                'roomClassName': isMyTurn ? 'attention-bg' : ''
             }
         );
     }

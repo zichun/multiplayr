@@ -3,8 +3,8 @@
 	"version": "0.0.1",
 	"description": "A platform to play games",
 	"scripts": {
-		"build": "rm -rf build && npm run test && npx webpack --mode production",
-		"buildDev": "rm -rf build && npx webpack --mode development",
+		"build": "node -e \"require('fs').rmSync('build', { recursive: true, force: true })\" && npm run test && npx webpack --mode production",
+		"buildDev": "node -e \"require('fs').rmSync('build', { recursive: true, force: true })\" && npx webpack --mode development",
 		"buildStatic": "npx webpack --env static --mode production",
 		"deploy": "npx webpack --mode development",
 		"test": "npx ts-mocha -p ./tsconfig.json src/tests/test.ts  --require ./.mochaIgnoreStyle.js",

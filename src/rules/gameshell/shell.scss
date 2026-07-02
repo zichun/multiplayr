@@ -16,8 +16,8 @@ $panelExtendWidth: 180px;
 
     .shell-title {
         margin-left: 50px;
-        padding-top: 10px;
-        font-size: 2em;
+        line-height: $headerHeight;
+        font-size: 1.6em;
     }
 
     .shell-room {
@@ -527,5 +527,32 @@ $panelExtendWidth: 180px;
     .toast-icon {
         font-size: 1.2rem;
     }
+}
+
+@keyframes shell-bg-pulse {
+    0% {
+        background-color: #d35400;
+    }
+    100% {
+        background-color: #e67e22;
+    }
+}
+
+@keyframes shell-text-pulse {
+    0% {
+        color: rgba(255, 255, 255, 0.6);
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+    }
+    100% {
+        color: rgba(255, 255, 255, 1.0);
+        text-shadow: 1px 1px 6px rgba(255, 255, 255, 0.8), 1px 1px 2px rgba(0, 0, 0, 0.6);
+    }
+}
+
+.shell-room.attention-bg {
+    background-color: #e67e22 !important;
+    font-weight: bold;
+    animation: shell-bg-pulse 1.0s ease-in-out infinite alternate,
+               shell-text-pulse 0.8s ease-in-out infinite alternate;
 }
 

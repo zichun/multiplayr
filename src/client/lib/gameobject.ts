@@ -11,7 +11,6 @@ const NAMESPACE_DELIMITER = '_';
 import { ClientTransportInterface } from '../../common/interfaces';
 import DataExchange from './dxc';
 import Session from './session';
-import MPRULES from '../../rules/rules';
 
 import * as DOM from 'react-dom';
 import { createRoot } from 'react-dom/client';

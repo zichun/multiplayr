@@ -6,6 +6,20 @@ import * as React from 'react';
 import { ViewPropsInterface } from '../../../common/interfaces';
 import { CleverGameRules } from './CleverRules';
 import { GameStatus, DieColor, Die, PendingBonus, BLUE_SUMS, BLUE_POINTS, GREEN_MINIMUMS, GREEN_POINTS, ORANGE_MULTIPLIERS } from '../CleverGameState';
+import DiceRollSound from '../../../sounds/dice_roll.mp3';
+import ScratchSound from '../../../sounds/scratch.mp3';
+import BellSound from '../../../sounds/typewriter_ending_bell.mp3';
+
+const getSoundUrl = (sound: any): string => {
+    if (!sound) return '';
+    if (typeof sound === 'string') {
+        return sound;
+    }
+    if (typeof sound === 'object' && typeof sound.default === 'string') {
+        return sound.default;
+    }
+    return String(sound);
+};
 
 // Helper to map color to actual background/border color hex values
 export const HEX_COLORS: { [key in DieColor]: string } = {
@@ -117,7 +131,6 @@ interface CleverScreenState {
     pendingPassiveYellowColor: 'yellow' | 'white' | null;
     pendingExtraYellowColor: 'yellow' | 'white' | null;
     pendingActiveYellowColor: 'yellow' | 'white' | null;
-    playRollSound: boolean;
     isSelectingExtraDie: boolean;
 }
 
@@ -146,12 +159,48 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
             pendingPassiveYellowColor: null,
             pendingExtraYellowColor: null,
             pendingActiveYellowColor: null,
-            playRollSound: false,
             isSelectingExtraDie: false
         };
     }
 
     componentDidUpdate(prevProps: CleverMainViewProps) {
+        const myId = this.props.MP.clientId;
+
+        // Clear pending selection states if major props change (e.g. state synced from server after a pick/roll/bonus resolution)
+        const prevPickedLen = prevProps.activePickedDice ? prevProps.activePickedDice.length : 0;
+        const currPickedLen = this.props.activePickedDice ? this.props.activePickedDice.length : 0;
+        
+        const prevBonusLen = prevProps.bonusesToResolve ? prevProps.bonusesToResolve.length : 0;
+        const currBonusLen = this.props.bonusesToResolve ? this.props.bonusesToResolve.length : 0;
+
+        const getPassiveConfirmState = (pProps: CleverMainViewProps) => {
+            const p = pProps.players[myId];
+            return p ? p.hasConfirmedPassiveSelection : false;
+        };
+        const getPassivePickedLen = (pProps: CleverMainViewProps) => {
+            const p = pProps.players[myId];
+            return p && p.extraDicePickedThisTurn ? p.extraDicePickedThisTurn.length : 0;
+        };
+
+        if (
+            prevProps.currentPlayerId !== this.props.currentPlayerId ||
+            prevProps.round !== this.props.round ||
+            prevProps.gameStatus !== this.props.gameStatus ||
+            prevProps.rollCount !== this.props.rollCount ||
+            prevPickedLen !== currPickedLen ||
+            prevBonusLen !== currBonusLen ||
+            getPassiveConfirmState(prevProps) !== getPassiveConfirmState(this.props) ||
+            getPassivePickedLen(prevProps) !== getPassivePickedLen(this.props)
+        ) {
+            this.setState({
+                pendingActiveYellowColor: null,
+                pendingPassiveYellowColor: null,
+                pendingExtraYellowColor: null,
+                whiteWildTargetColor: null,
+                selectedWhiteWildValue: null
+            });
+        }
+
         // If the round or turn changed, reset sheet view back to ourselves
         if (prevProps.currentPlayerId !== this.props.currentPlayerId) {
             this.setState({ viewingPlayerId: this.props.MP.clientId });
@@ -163,17 +212,109 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
         const hasNewBonus = currBonuses.length > prevBonuses.length;
         const activeBonusChanged = currBonuses.length > 0 && (
             prevBonuses.length === 0 ||
-            JSON.stringify(currBonuses[0]) !== JSON.stringify(prevBonuses[0])
+            JSON.stringify(prevBonuses[0]) !== JSON.stringify(prevBonuses[0])
         );
 
         if (hasNewBonus || activeBonusChanged) {
             this.setState({ bonusCardMinimized: false });
         }
+
+        // Check if a roll or reroll happened (via game logs)
+        const prevLogsCount = prevProps.gameLogs ? prevProps.gameLogs.length : 0;
+        const currLogsCount = this.props.gameLogs ? this.props.gameLogs.length : 0;
+
+        if (currLogsCount > prevLogsCount) {
+            const newLog = this.props.gameLogs[currLogsCount - 1];
+            if (newLog && (newLog.includes('rolled:') || newLog.includes('spent a Reroll'))) {
+                // Only play roll sound from socket update if it's another player's turn
+                // (the local player already played it synchronously on click via MP Proxy)
+                const isMyTurn = myId === this.props.currentPlayerId;
+                if (!isMyTurn) {
+                    new Audio(getSoundUrl(DiceRollSound)).play().catch(e => console.warn("Failed to play roll sound:", e));
+                }
+            }
+        }
+
+        // Check if any player selected a die
+        const getPickedDiceSummary = (pProps: CleverMainViewProps) => {
+            let totalPassiveExtra = 0;
+            for (const id of pProps.playerIds) {
+                const p = pProps.players[id];
+                if (p && p.extraDicePickedThisTurn) {
+                    totalPassiveExtra += p.extraDicePickedThisTurn.length;
+                }
+            }
+            return {
+                activeCount: pProps.activePickedDice ? pProps.activePickedDice.length : 0,
+                passiveExtraCount: totalPassiveExtra
+            };
+        };
+
+        const prevSummary = getPickedDiceSummary(prevProps);
+        const currSummary = getPickedDiceSummary(this.props);
+
+        const diceSelected = currSummary.activeCount > prevSummary.activeCount || 
+                            currSummary.passiveExtraCount > prevSummary.passiveExtraCount;
+
+        if (diceSelected) {
+            // Only play selection sound if it was another player who made the selection
+            // (the local player already played it synchronously on click via MP Proxy)
+            const getLocalPickedDiceSummary = (pProps: CleverMainViewProps) => {
+                const p = pProps.players[myId];
+                const passiveExtraCount = p && p.extraDicePickedThisTurn ? p.extraDicePickedThisTurn.length : 0;
+                const activeCount = myId === pProps.currentPlayerId && pProps.activePickedDice ? pProps.activePickedDice.length : 0;
+                return activeCount + passiveExtraCount;
+            };
+
+            const prevLocalCount = getLocalPickedDiceSummary(prevProps);
+            const currLocalCount = getLocalPickedDiceSummary(this.props);
+
+            const localDiceSelected = currLocalCount > prevLocalCount;
+            if (!localDiceSelected) {
+                new Audio(getSoundUrl(ScratchSound)).play().catch(e => console.warn("Failed to play selection sound:", e));
+            }
+        }
+
+        // Check if any player unlocked a bonus (mid-round)
+        const getAllPlayersBonusesSummary = (pProps: CleverMainViewProps) => {
+            let rerolls = 0;
+            let extraDice = 0;
+            let foxes = 0;
+            let pending = 0;
+            for (const id of pProps.playerIds) {
+                const p = pProps.players[id];
+                if (p) {
+                    rerolls += p.rerollsTotal || 0;
+                    extraDice += p.extraDiceTotal || 0;
+                    foxes += p.foxesTotal || 0;
+                    pending += p.bonusesToResolve ? p.bonusesToResolve.length : 0;
+                }
+            }
+            return { rerolls, extraDice, foxes, pending };
+        };
+
+        const prevBonusSum = getAllPlayersBonusesSummary(prevProps);
+        const currBonusSum = getAllPlayersBonusesSummary(this.props);
+
+        const bonusUnlocked = (
+            currBonusSum.rerolls > prevBonusSum.rerolls ||
+            currBonusSum.extraDice > prevBonusSum.extraDice ||
+            currBonusSum.foxes > prevBonusSum.foxes ||
+            currBonusSum.pending > prevBonusSum.pending
+        );
+
+        const isMidRoundSelection = prevProps.round === this.props.round && 
+                                    this.props.gameStatus !== GameStatus.RoundStartBonus &&
+                                    prevProps.gameStatus !== GameStatus.RoundStartBonus;
+
+        if (bonusUnlocked && isMidRoundSelection) {
+            new Audio(getSoundUrl(BellSound)).play().catch(e => console.warn("Failed to play bonus sound:", e));
+        }
     }
 
     render() {
         const {
-            MP,
+            MP: rawMP,
             gameStatus,
             round,
             totalRounds,
@@ -198,6 +339,30 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
             names,
             clientIds
         } = this.props;
+
+        const MP = new Proxy(rawMP, {
+            get: (target: any, propKey: string | symbol) => {
+                const origMethod = target[propKey];
+                if (typeof origMethod === 'function') {
+                    return (...args: any[]) => {
+                        const methodName = String(propKey);
+                        if (methodName === 'rollActiveDice' || methodName === 'rerollActiveDice') {
+                            new Audio(getSoundUrl(DiceRollSound)).play().catch(e => console.warn("Failed to play roll sound on click:", e));
+                        } else if (
+                            methodName === 'pickActiveDie' ||
+                            methodName === 'pickPassiveDie' ||
+                            methodName === 'spendExtraDie' ||
+                            methodName === 'resolvePendingBonus' ||
+                            methodName === 'confirmPassiveSelection'
+                        ) {
+                            new Audio(getSoundUrl(ScratchSound)).play().catch(e => console.warn("Failed to play selection sound on click:", e));
+                        }
+                        return origMethod.apply(target, args);
+                    };
+                }
+                return origMethod;
+            }
+        });
 
         const formatLogLine = (log: string) => {
             let formatted = log;
@@ -2314,15 +2479,73 @@ export class CleverMainPage extends React.Component<CleverMainViewProps, {}> {
             };
         }
 
+        let topBarContent: any = '🏆';
+        let hasSomethingToDo = false;
+
+        if (this.props.gameStatus !== GameStatus.GameOver) {
+            const isSolo = this.props.isSolo;
+            const soloPassiveTurn = this.props.soloPassiveTurn;
+            const currentPlayerId = this.props.currentPlayerId;
+            const isMyTurn = myId === currentPlayerId;
+
+            // Determine if it is the current player's active turn
+            const isActiveTurn = isSolo ? !soloPassiveTurn : isMyTurn;
+            // Determine if it is the passive role
+            const isPassiveRole = isSolo ? soloPassiveTurn : !isMyTurn;
+
+            const isPassivePickPhase = this.props.gameStatus === GameStatus.PassiveChoosing;
+            const hasPendingBonus = !!(this.props.bonusesToResolve && this.props.bonusesToResolve.length > 0);
+
+            if (hasPendingBonus) {
+                topBarContent = (
+                    <span className="clever-pulsing-text">Make Bonus Pick</span>
+                );
+                hasSomethingToDo = true;
+            } else if (isPassivePickPhase && isPassiveRole) {
+                const confirmed = !!this.props.hasConfirmedPassiveSelection;
+                if (!confirmed) {
+                    topBarContent = (
+                        <span className="clever-pulsing-text">Make Passive Pick</span>
+                    );
+                    hasSomethingToDo = true;
+                } else {
+                    topBarContent = (
+                        <span>Make Passive Pick</span>
+                    );
+                    hasSomethingToDo = false;
+                }
+            } else if (isActiveTurn) {
+                if (isPassivePickPhase) {
+                    // Active player is waiting for others to make passive pick
+                    topBarContent = (
+                        <span>Your turn</span>
+                    );
+                    hasSomethingToDo = false;
+                } else {
+                    topBarContent = (
+                        <span className="clever-pulsing-text">Your turn</span>
+                    );
+                    hasSomethingToDo = true;
+                }
+            } else {
+                topBarContent = (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        {mp.getPluginView('lobby', 'player-tag', { clientId: currentPlayerId })}
+                        {"'s turn"}
+                    </span>
+                );
+                hasSomethingToDo = false;
+            }
+        }
+
         return mp.getPluginView(
             'gameshell',
             'HostShell-Main',
             {
                 'links': links,
                 'gameName': '',
-                'topBarContent': this.props.gameStatus === GameStatus.GameOver
-                    ? '🏆'
-                    : `⭐x${scoreText}`
+                'topBarContent': topBarContent,
+                'roomClassName': hasSomethingToDo ? 'clever-attention-bg' : ''
             });
     }
 }

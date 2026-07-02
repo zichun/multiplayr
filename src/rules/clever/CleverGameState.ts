@@ -603,7 +603,7 @@ export class CleverGameState {
             console.warn(`pick_passive_die: Not in Passive Choosing phase (current: ${this.data.status}), proceeding anyway for synchronization.`);
         }
 
-        let player = this.data.players[playerId];
+        const player = this.data.players[playerId];
 
         // Passive player cannot be the active player in multiplayer!
         if (!this.data.isSolo && playerId === this.data.playerIds[this.data.activePlayerIndex]) {
@@ -615,7 +615,7 @@ export class CleverGameState {
         // We can track this by checking player.extraDicePickedThisTurn vs their action use.
         // Distinguish between their "free" passive choice and "Extra Die (+1)" actions.
         const hasPickedFree = player.extraDicePickedThisTurn.includes('white' as any); // dummy check
-        
+
         if (player.hasConfirmedPassiveSelection) {
             throw new Error('Already confirmed your passive selection.');
         }
@@ -716,8 +716,8 @@ export class CleverGameState {
         // So the free pick color is exempt. Let's filter the free pick color from the check, or keep a separate list:
         // Since player.extraDicePickedThisTurn has the free color at index 0, any extra dice are from index 1 onwards.
         // Let's check:
-        const extraDiceSpentColors = isActivePlayer 
-            ? player.extraDicePickedThisTurn 
+        const extraDiceSpentColors = isActivePlayer
+            ? player.extraDicePickedThisTurn
             : player.extraDicePickedThisTurn.slice(1);
 
         if (extraDiceSpentColors.includes(color)) {
@@ -726,7 +726,7 @@ export class CleverGameState {
 
         // Extra Die can be picked from ANY of the 6 dice (whether on sheet, tray, or unrolled)
         // Find the die's value in the active rolls, picked fields, or tray:
-        let chosenDie: Die | undefined = this.data.trayDice.find(d => d.color === color) 
+        let chosenDie: Die | undefined = this.data.trayDice.find(d => d.color === color)
             || this.data.activePickedDice.find(d => d.color === color)
             || this.data.rolledDice.find(d => d.color === color);
 
@@ -1592,7 +1592,7 @@ export class CleverGameState {
             const nextBonus = player.bonusesToResolve[0];
             if (!this.has_legal_moves_for_bonus(playerId, nextBonus)) {
                 player.bonusesToResolve.shift();
-                
+
                 let bonusName: string = nextBonus.type;
                 if (nextBonus.value !== undefined) {
                     bonusName = `${bonusName} (${nextBonus.value})`;
@@ -1611,7 +1611,7 @@ export class CleverGameState {
         if (this.data.gameLogs.length > 25) {
             this.data.gameLogs = this.data.gameLogs.slice(-25);
         }
-        this.data.gameLogs.push = function(...items: string[]) {
+        this.data.gameLogs.push = function (...items: string[]) {
             const res = Array.prototype.push.apply(this, items);
             if (this.length > 25) {
                 this.splice(0, this.length - 25);

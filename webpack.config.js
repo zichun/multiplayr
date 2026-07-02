@@ -65,6 +65,14 @@ function DebuggerPages(outputPath) {
     };
 
     return {
+        name: 'debugger-pages',
+        cache: {
+            type: 'filesystem',
+            name: 'debugger-pages-dev',
+            buildDependencies: {
+                config: [__filename]
+            }
+        },
         entry: entry,
         output: {
             path: outputPath || path.resolve(__dirname, './build/client/'),
@@ -76,6 +84,10 @@ function DebuggerPages(outputPath) {
         devtool: 'source-map',
         mode: 'development',
         optimization: { minimize: false },
+        externals: {
+            react: 'React',
+            'react-dom': 'ReactDOM'
+        },
         resolve: {
             extensions: ['.tsx', '.ts', '.js'],
         },
@@ -154,6 +166,14 @@ function HostJoinPages(mode, outputPath, isStaticDist) {
     }
 
     return {
+        name: 'host-join-pages',
+        cache: {
+            type: 'filesystem',
+            name: 'host-join-pages-' + mode + (isStaticDist ? '-static' : ''),
+            buildDependencies: {
+                config: [__filename]
+            }
+        },
         entry: entry,
         output: {
             path: outputPath || path.resolve(__dirname, './build/client/'),
@@ -164,6 +184,10 @@ function HostJoinPages(mode, outputPath, isStaticDist) {
         target: 'web',
         module: WebModule(false),
         mode: mode,
+        externals: {
+            react: 'React',
+            'react-dom': 'ReactDOM'
+        },
         resolve: {
             extensions: ['.tsx', '.ts', '.js'],
         },
@@ -181,12 +205,20 @@ function HostJoinPages(mode, outputPath, isStaticDist) {
 }
 function AllRulesConfig(outputPath) {
     return {
+        name: 'all-rules',
+        cache: {
+            type: 'filesystem',
+            name: 'all-rules-prod',
+            buildDependencies: {
+                config: [__filename]
+            }
+        },
         entry: {
             rules: './src/rules/rules.ts'
         },
         output: {
             path: outputPath || path.resolve(__dirname, './build/client/'),
-            publicPath: '',
+            publicPath: 'auto',
             pathinfo: false,
             filename: '[name].bundle.js',
             library: {
@@ -212,6 +244,14 @@ function AllRulesConfig(outputPath) {
 
 function MultiplayrLibConfig(mode, outputPath) {
     return {
+        name: 'multiplayr-lib',
+        cache: {
+            type: 'filesystem',
+            name: 'multiplayr-lib-' + mode,
+            buildDependencies: {
+                config: [__filename]
+            }
+        },
         entry: {
             lib: './src/client/js/lib.ts',
             locallib: './src/client/js/locallib.ts',
@@ -247,7 +287,15 @@ function MultiplayrLibConfig(mode, outputPath) {
 
 function ExpressServerConfig(mode) {
     const entry = mode === 'production' ? 'app.ts' : 'app_dev.ts';
-    return ({
+    return {
+        name: 'express-server',
+        cache: {
+            type: 'filesystem',
+            name: 'express-server-' + mode,
+            buildDependencies: {
+                config: [__filename]
+            }
+        },
         entry: './src/' + entry,
         output: {
             path: path.resolve(__dirname, './build'),
@@ -260,7 +308,12 @@ function ExpressServerConfig(mode) {
             rules: [
                 {
                     test: /\.tsx?$/,
-                    use: 'ts-loader',
+                    use: {
+                        loader: 'ts-loader',
+                        options: {
+                            experimentalWatchApi: true,
+                        }
+                    },
                     exclude: /node_modules/,
                 }
             ]
@@ -271,7 +324,7 @@ function ExpressServerConfig(mode) {
         optimization: {
             minimize: false
         }
-    });
+    };
 }
 
 const tsconfigPath = path.resolve('./tsconfig.json');
@@ -308,7 +361,10 @@ const WebModule = (transpileOnly) => {
                     loader: 'ts-loader',
                     options: {
                         transpileOnly: transpileOnly,
-                        experimentalWatchApi: transpileOnly,
+                        experimentalWatchApi: true,
+                        compilerOptions: {
+                            module: "esnext"
+                        }
                     }
                 },
                 exclude: /node_modules/,

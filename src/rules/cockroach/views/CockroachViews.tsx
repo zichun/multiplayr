@@ -929,6 +929,8 @@ export class CockroachMainPage extends React.Component<CockroachMainProps, {}> {
             };
         }
 
+        const isMyTurn = this.props.gameStatus !== GameStatus.GameOver && mp.clientId === this.props.currentPlayerId;
+
         return mp.getPluginView(
             'gameshell',
             'HostShell-Main',
@@ -936,6 +938,7 @@ export class CockroachMainPage extends React.Component<CockroachMainProps, {}> {
                 'links': links,
                 'gameName': 'Cockroach Poker',
                 'topBarContent': `🎴 x${this.props.penaltyPileSize}`,
+                'roomClassName': isMyTurn ? 'attention-bg' : '',
                 'toastNotification': toastNotification
             });
     }

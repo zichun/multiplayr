@@ -33,6 +33,14 @@ export class MultiplayR {
         MultiplayR.gameRules = rules;
     }
 
+    public static ResolveRule(ruleDef: any): Promise<any> {
+        if (!ruleDef) return Promise.resolve(null);
+        if (typeof ruleDef.rule === 'function') {
+            return Promise.resolve(ruleDef.rule());
+        }
+        return Promise.resolve(ruleDef.rule);
+    }
+
     public static SetGamerulesPath(path: string) {
         MultiplayR.gamerulesPath = path;
     }
@@ -114,15 +122,17 @@ export class MultiplayR {
     ) {
         const ruleDef = MultiplayR.gameRules[ruleName];
 
-        const gameObj = new GameObject(transport,
-                                       container);
+        MultiplayR.ResolveRule(ruleDef).then((resolvedRule) => {
+            const gameObj = new GameObject(transport,
+                                           container);
 
-        gameObj.rehost(ruleName,
-                       ruleDef.rule,
-                       roomId,
-                       clientId,
-                       gameState,
-                       cb);
+            gameObj.rehost(ruleName,
+                           resolvedRule,
+                           roomId,
+                           clientId,
+                           gameState,
+                           cb);
+        }).catch(err => console.error("Error resolving rule:", err));
     }
 
     public static Host(
@@ -133,9 +143,11 @@ export class MultiplayR {
     ) {
         const ruleDef = MultiplayR.gameRules[ruleName];
 
-        const gameObj = new GameObject(transport,
-                                       container);
-        gameObj.host(ruleName, ruleDef.rule, cb);
+        MultiplayR.ResolveRule(ruleDef).then((resolvedRule) => {
+            const gameObj = new GameObject(transport,
+                                           container);
+            gameObj.host(ruleName, resolvedRule, cb);
+        }).catch(err => console.error("Error resolving rule:", err));
     }
 
     public static ReJoin(
@@ -157,9 +169,10 @@ export class MultiplayR {
                            const rule = res.message;
                            const ruleDef = MultiplayR.gameRules[rule];
 
-                           gameObj.setupRule(ruleDef.rule);
-
-                           return forwardReturnMessage(res, cb);
+                           MultiplayR.ResolveRule(ruleDef).then((resolvedRule) => {
+                               gameObj.setupRule(resolvedRule);
+                               return forwardReturnMessage(res, cb);
+                           }).catch(err => console.error("Error resolving rule:", err));
                        });
     }
 
@@ -169,7 +182,6 @@ export class MultiplayR {
         container: any,
         cb?: CallbackType<ReturnPacketType>
     ) {
-
         const gameObj = new GameObject(transport,
                                        container);
         gameObj.join(roomId, (res: ReturnPacketType) => {
@@ -180,9 +192,10 @@ export class MultiplayR {
             const rule = res.message;
             const ruleDef = MultiplayR.gameRules[rule];
 
-            gameObj.setupRule(ruleDef.rule);
-
-            return forwardReturnMessage(res, cb);
+            MultiplayR.ResolveRule(ruleDef).then((resolvedRule) => {
+                gameObj.setupRule(resolvedRule);
+                return forwardReturnMessage(res, cb);
+            }).catch(err => console.error("Error resolving rule:", err));
         });
     }
 

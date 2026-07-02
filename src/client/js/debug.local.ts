@@ -89,7 +89,9 @@ function getDebugConfigs(): Record<string, any> {
                         roomId,
                         (res: GetRuleReturnPacketType) => {
                             checkReturnMessage(res, 'rule');
-                            gameObj.setupRule(_mprules.MPRULES[res.message].rule);
+                            _mplib.MultiplayR.ResolveRule(_mprules.MPRULES[res.message]).then((resolvedRule) => {
+                                gameObj.setupRule(resolvedRule);
+                            }).catch(err => console.error("Error resolving rule for AI:", err));
                             return forwardReturnMessage(res);
                         }
                     );

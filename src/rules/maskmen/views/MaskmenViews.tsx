@@ -914,6 +914,8 @@ export class MaskmenMainPage extends React.Component<MaskmenMainProps, {}> {
             };
         }
 
+        const isMyTurn = this.props.gameStatus === GameStatus.Playing && mp.clientId === this.props.currentPlayerId;
+
         return mp.getPluginView(
             'gameshell',
             'HostShell-Main',
@@ -925,6 +927,7 @@ export class MaskmenMainPage extends React.Component<MaskmenMainProps, {}> {
                     : this.props.gameStatus === GameStatus.SeasonEnd
                         ? '📊'
                         : '🏆',
+                'roomClassName': isMyTurn ? 'attention-bg' : '',
                 'toastNotification': toastNotification
             });
     }

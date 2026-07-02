@@ -12,7 +12,7 @@ import {
 
 import { checkReturnMessage } from '../common/messages';
 import { LocalClientTransport } from '../client/lib/local.transport';
-import { MPRULES } from '../rules/rules';
+import { MPRULES } from '../rules/rules_sync';
 import { GameObject } from '../client/lib/gameobject';
 
 export class GameRuleTest {

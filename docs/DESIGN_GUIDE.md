@@ -178,6 +178,30 @@ export class MyGameMainPage extends React.Component<ViewPropsInterface & MyProps
 }
 ```
 
+### 5.3 Active Player Attention Indicator
+
+To guide the active player when it is their turn to take action, games should highlight the gameshell's room tag in the top-right corner using an orange pulsing animation. This keeps players alert, speeds up round times, and provides instant visual feedback without cluttering the main board view.
+
+**How to Implement**:
+1. Check if the active client has something to do or if it is currently their turn:
+   ```typescript
+   const isMyTurn = this.props.gameStatus === GameStatus.Active && mp.clientId === this.props.currentPlayerId;
+   ```
+2. Pass the `'attention-bg'` CSS class to the `'roomClassName'` property inside the gameshell plugin's options:
+   ```typescript
+   return mp.getPluginView(
+       'gameshell',
+       'HostShell-Main',
+       {
+           'links': links,
+           'gameName': 'MyGame',
+           'topBarContent': `Score: ${this.props.score}`,
+           'roomClassName': isMyTurn ? 'attention-bg' : ''
+       }
+   );
+   ```
+3. The gameshell's global stylesheet will automatically handle the pulsing orange background and text animations.
+
 ---
 
 ## 6. Action Feedback: Toast Notifications & Sound Cues

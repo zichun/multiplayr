@@ -690,6 +690,8 @@ export class StartupsMainPage extends React.Component<StartupsMainViewProps, {}>
             };
         }
 
+        const isMyTurn = (this.props.gameStatus === GameStatus.ActionPhase || this.props.gameStatus === GameStatus.DiscardOrInvestPhase) && mp.clientId === this.props.currentPlayerId;
+
         return mp.getPluginView(
             'gameshell',
             'HostShell-Main',
@@ -701,6 +703,7 @@ export class StartupsMainPage extends React.Component<StartupsMainViewProps, {}>
                     : this.props.gameStatus === GameStatus.GameOver
                         ? '🏆'
                         : `🪙x${this.props.coins1}`,
+                'roomClassName': isMyTurn ? 'attention-bg' : '',
                 'toastNotification': toastNotification
             });
     }
