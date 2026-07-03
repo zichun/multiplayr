@@ -51,8 +51,7 @@ export class JaipurHostLobby extends React.Component<ViewPropsInterface, {}> {
                         'icon': 'home',
                         'label': 'Lobby',
                         'view': (
-                            <div className="jaipur-rules-panel" style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
-                                <h2>Jaipur Lobby</h2>
+                            <div>
                                 {mp.getPluginView('lobby', 'SetNameWithLobby')}
                                 <div style={{ marginTop: '25px', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
                                     {playerCount !== 2 && (
@@ -524,7 +523,7 @@ class JaipurArenaView extends React.Component<JaipurMainProps, JaipurViewState> 
 
         const transitionTimeoutId = window.setTimeout(() => {
             const retainedCards = oldMarket.filter(c => newIds.includes(c.id));
-            
+
             // Phase 2: Add and flip new cards one by one sequentially
             this.animateNewCardsSequential(retainedCards, addedCards, 0, newMarket);
         }, fadeOutDuration);

@@ -11,34 +11,35 @@
   margin: 0 auto;
   padding: 10px;
   font-family: 'Outfit', 'Inter', sans-serif;
-  color: #000000;
+  color: #2b2440;
 }
 
-// Banners
+// Banners — flat, soft-tinted panels
 .brutalist-banner {
-  border: 3px solid #000;
-  box-shadow: 4px 4px 0px #000;
-  padding: 15px;
+  border: none;
+  border-radius: 12px;
+  box-shadow: none;
+  padding: 14px 16px;
   font-weight: 700;
   text-align: center;
   text-transform: uppercase;
-  font-size: 1.1em;
+  font-size: 1.05em;
   margin-bottom: 10px;
   transition: all 0.2s;
 
   &.ability-banner {
-    background-color: #a23cd6; // royal purple
-    color: #ffffff;
+    background-color: #ede7fb; // soft violet
+    color: #4530a3;
   }
 
   &.royal-banner {
-    background-color: #f6d32d; // golden yellow
-    color: #000000;
+    background-color: #fbeec2; // soft gold
+    color: #7a5a00;
   }
 
   &.discard-banner {
-    background-color: #e01b24; // warning red
-    color: #ffffff;
+    background-color: #fde3e3; // soft red
+    color: #a32d2d;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -46,8 +47,8 @@
   }
 
   &.stuck-banner {
-    background-color: #ff7f00; // alert orange
-    color: #ffffff;
+    background-color: #ffe8cf; // soft orange
+    color: #9a4a00;
   }
 
   .steal-buttons-row {
@@ -74,8 +75,9 @@
 
     .discard-summary {
       background-color: #ffffff;
-      color: #000000;
-      border: 2px solid #000;
+      color: #2b2440;
+      border: 1px solid #f0d5d5;
+      border-radius: 10px;
       padding: 10px 15px;
       display: flex;
       flex-direction: column;
@@ -93,21 +95,37 @@
       justify-content: center;
 
       .discard-token-badge {
-        display: inline-block;
-        width: 32px;
-        height: 32px;
-        line-height: 30px;
-        text-align: center;
-        border: 2px solid #000;
-        border-radius: 50%;
-        font-weight: bold;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
         cursor: pointer;
-        font-size: 0.9em;
+        transition: transform 0.1s;
+
+        .mp-icon {
+          width: 30px;
+          height: 30px;
+        }
 
         &:hover {
-          transform: scale(1.1);
+          transform: scale(1.12);
         }
       }
+    }
+  }
+
+  // Flat discard choice buttons (coin + counts); selected gets an accent ring
+  .discard-choice-btn {
+    .mp-icon {
+      width: 1.3em;
+      height: 1.3em;
+    }
+
+    &.is-selected {
+      background-color: #efe9fb;
+      box-shadow: inset 0 0 0 2px #6c5ce7;
+      color: #3f2fa3;
     }
   }
 }
@@ -139,37 +157,81 @@
   gap: 20px;
 }
 
-// Player Panels
+// Player Panels — flat, minimalist (matches the cards / board)
 .player-panel {
-  border: 3px solid #000;
-  box-shadow: 6px 6px 0px #000;
-  padding: 15px;
+  border: 1px solid #e3ddee;
+  border-radius: 14px;
+  box-shadow: none;
+  padding: 14px 16px;
   background-color: #ffffff;
   display: flex;
   flex-direction: column;
   gap: 12px;
 
+  // Shared inline vector-icon glyph (default size; overridden per context below)
+  .mp-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    vertical-align: middle;
+    width: 1.2em;
+    height: 1.2em;
+
+    .expressive-vector-icon {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  }
+
   &.active-player-panel {
-    border-color: #000000;
-    box-shadow: 6px 6px 0px #000000;
+    border-color: #c9bce6;
+  }
+
+  // Small full-width caption above the token / bonus groups
+  .panel-group-label {
+    flex: 1 0 100%;
+    font-size: 0.68em;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #8a86a0;
+    margin: 2px 0 -2px;
+
+    em {
+      font-style: normal;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+      color: #a7a3b6;
+    }
   }
 
   .panel-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
     font-weight: 800;
-    font-size: 1.2em;
-    border-bottom: 2px solid #000;
-    padding-bottom: 8px;
+    font-size: 1.1em;
+    border-bottom: 1px solid #ece8f2;
+    padding-bottom: 10px;
+
+    .panel-name {
+      color: #2b2440;
+    }
 
     .turn-indicator {
-      background-color: #000000;
+      background-color: #6c5ce7;
       color: #ffffff;
-      padding: 3px 8px;
-      font-size: 0.75em;
-      border-radius: 4px;
+      padding: 3px 10px;
+      font-size: 0.7em;
+      border-radius: 999px;
+      font-weight: 800;
       text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
     .panel-badges {
@@ -177,14 +239,20 @@
       gap: 6px;
 
       .badge {
-        border: 2px solid #000;
-        padding: 2px 6px;
+        border: none;
+        border-radius: 8px;
+        padding: 4px 10px;
         font-size: 0.85em;
         font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
 
-        &.prestige-badge { background-color: #f6d32d; }
-        &.crown-badge { background-color: #ffbe6f; }
-        &.privilege-badge { background-color: #c0caf5; }
+        .mp-icon { width: 1.4em; height: 1.4em; }
+
+        &.prestige-badge { background-color: #fbedc6; color: #7a5a00; }
+        &.crown-badge { background-color: #ffe2cb; color: #8a4712; }
+        &.privilege-badge { background-color: #e2e7fb; color: #303f78; }
       }
     }
   }
@@ -195,16 +263,22 @@
     gap: 8px;
 
     .token-count {
-      border: 2px solid #000;
-      padding: 4px 8px;
+      border: 1px solid #ece8f2;
+      border-radius: 10px;
+      padding: 4px 10px;
       font-size: 0.9em;
       display: flex;
       align-items: center;
-      gap: 4px;
-      background-color: #f6f5f4;
+      gap: 6px;
+      background-color: #f7f6fb;
+      color: #2b2440;
+
+      .mp-icon { width: 1.35em; height: 1.35em; }
 
       &.reserved-count {
-        background-color: #e2d5f0;
+        background-color: #f1eafa;
+        border-color: #e0d3f2;
+        color: #5b3c8a;
       }
     }
   }
@@ -214,30 +288,38 @@
     flex-wrap: wrap;
     gap: 6px;
 
+    // Permanent gem bonuses read as a distinct "card-granted" category (violet, gem-on-white icon)
     .bonus-icon-badge {
-      border: 2px solid #000;
-      padding: 2px 6px;
-      font-size: 0.85em;
+      border: 1px solid #d9cdf2;
+      border-radius: 999px;
+      padding: 3px 11px 3px 6px;
+      font-size: 0.9em;
       font-weight: 800;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
+      background-color: #efe9fb;
+      color: #4a3aa0;
+
+      .mp-icon { width: 1.5em; height: 1.5em; }
     }
   }
 }
 
-// Board controls
+// Board controls — flat
 .board-header-controls {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  border: 3px solid #000;
+  border: 1px solid #e3ddee;
+  border-radius: 12px;
   background-color: #ffffff;
-  padding: 12px;
+  padding: 12px 14px;
   font-weight: 700;
-  box-shadow: 4px 4px 0px #000;
+  color: #2b2440;
+  box-shadow: none;
 
   .board-actions {
     display: flex;
@@ -245,20 +327,21 @@
   }
 }
 
-// 5x5 Board Grid
+// 5x5 Board Grid — flat, minimalist, light (matches the cards)
 .board-container {
-  border: 4px solid #000;
-  box-shadow: 6px 6px 0px #000;
-  background-color: #1a1523; // Dark velvet backdrop
-  padding: 20px;
+  border: 1px solid #dcd7e6;
+  border-radius: 16px;
+  box-shadow: none;
+  background-color: #f1eef7; // Soft light panel (no black backdrop)
+  padding: 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 15px;
 
   .action-helper-text {
-    color: #f6d32d;
-    font-weight: bold;
+    color: #3a2f5c;
+    font-weight: 800;
     text-transform: uppercase;
     font-size: 0.9em;
     text-align: center;
@@ -274,63 +357,54 @@
   }
 
   .board-cell {
-    border: 3px solid #000;
-    border-radius: 8px;
-    background-color: #2b243a;
+    border: none;
+    border-radius: 12px;
+    background-color: #e5e1ee; // Recessed light slot
     position: relative;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     aspect-ratio: 1 / 1;
-    transition: all 0.2s;
-    box-shadow: 2px 2px 0px #000;
+    transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
     min-width: 44px;
     min-height: 44px;
 
     &:hover {
-      transform: translate(-1px, -1px);
-      box-shadow: 3px 3px 0px #000;
-      background-color: #3f3554;
+      background-color: #dcd7e8;
+      transform: translateY(-1px);
     }
 
     &:active {
-      transform: translate(1px, 1px);
-      box-shadow: 1px 1px 0px #000;
+      transform: translateY(1px);
     }
 
     &.cell-selected {
-      border-color: #f6d32d;
-      background-color: #4e3d64;
-      transform: scale(1.05);
+      background-color: #efe7cf;
+      box-shadow: inset 0 0 0 3px #eab308; // gold ring, no layout shift
+      transform: scale(1.04);
       z-index: 2;
     }
 
     &.gold-selected {
-      border-color: #f6d32d;
-      background-color: #554422;
-      transform: scale(1.05);
+      background-color: #f6edcf;
+      box-shadow: inset 0 0 0 3px #f2b705;
+      transform: scale(1.04);
       z-index: 2;
     }
 
     &.matching-highlight {
-      border-color: #2ec27e;
-      animation: pulse 1.5s infinite alternate;
+      box-shadow: inset 0 0 0 3px #2eb87a;
+      animation: pulse-ring 1.5s infinite alternate;
     }
 
     .board-gem-token {
-      width: 80%;
-      height: 80%;
-      border: 2px solid #000;
-      border-radius: 50%;
+      width: 84%;
+      height: 84%;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 2px 2px 0px #000;
-
-      .gem-emoji {
-        font-size: 1.3em;
-      }
+      // Flat coin icon fills this — no border, no shadow
     }
 
     .coords-debug {
@@ -360,7 +434,7 @@
       }
 
       .gold-tip {
-        color: #ffbe6f;
+        color: #b45309;
         font-weight: 700;
         font-size: 0.9em;
       }
@@ -373,12 +447,13 @@
   }
 }
 
-// Card Pyramid
+// Card Pyramid — flat
 .pyramid-container {
-  border: 3px solid #000;
-  box-shadow: 6px 6px 0px #000;
+  border: 1px solid #e3ddee;
+  border-radius: 16px;
+  box-shadow: none;
   background-color: #ffffff;
-  padding: 15px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -388,13 +463,13 @@
     gap: 15px;
     align-items: center;
     overflow-x: auto;
-    padding-bottom: 8px;
+    padding: 10px 4px 12px;
 
     &::-webkit-scrollbar {
       height: 6px;
     }
     &::-webkit-scrollbar-thumb {
-      background-color: #000;
+      background-color: #cfc7de;
       border-radius: 3px;
     }
   }
@@ -403,53 +478,17 @@
     flex: 0 0 100px;
   }
 
-  .deck-card-back {
-    width: 100px;
-    height: 140px;
-    border: 3px solid #000;
-    background-color: #241f31;
-    color: #ffffff;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    box-shadow: 3px 3px 0px #000;
-    position: relative;
-
-    .level-dots {
-      font-size: 1.1em;
-      letter-spacing: 2px;
-    }
-
-    .deck-count {
-      font-weight: 800;
-      font-size: 1.2em;
-    }
-
-    .reserve-blind-btn {
-      position: absolute;
-      bottom: 10px;
-      font-size: 0.7em;
-      padding: 2px 6px;
-      background-color: #f6d32d;
-      color: #000;
-      border-width: 2px;
-      font-weight: 700;
-      min-height: 24px;
-    }
-  }
-
   .pyramid-cards-row {
     display: flex;
     gap: 12px;
     flex-grow: 1;
 
     .card-empty-slot {
-      width: 110px;
-      height: 150px;
-      border: 3px dashed #bbb;
-      background-color: #f6f5f4;
+      width: 115px;
+      height: 155px;
+      border: 2px dashed #d6d0e2;
+      border-radius: 12px;
+      background-color: #f6f5fa;
     }
   }
 }
@@ -458,145 +497,62 @@
 .jewel-card {
   width: 115px;
   height: 155px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 8px;
   position: relative;
-  transition: all 0.2s;
+  border-radius: 8px;
+  transition: transform 0.2s;
   box-sizing: border-box;
 
-  &:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0px #000 !important;
-
-    .card-action-overlay {
-      opacity: 1;
-      visibility: visible;
-    }
+  // Soft pulsing glow flags a card you can afford and buy right now
+  &.is-buyable {
+    animation: pulse-green 1.4s infinite alternate;
   }
 
-  .card-top-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    width: 100%;
-
-    .card-prestige {
-      font-weight: 900;
-      font-size: 0.95em;
-    }
-
-    .card-crowns {
-      font-size: 0.85em;
-      letter-spacing: -1px;
-    }
-
-    .card-bonus {
-      .bonus-pill {
-        display: flex;
-        align-items: center;
-        gap: 2px;
-        padding: 1px 4px;
-        font-size: 0.7em;
-        font-weight: 800;
-        border-radius: 4px;
-      }
-    }
-  }
-
-  .card-ability-badge {
-    background-color: #7624b2;
-    color: #ffffff;
-    font-size: 0.6em;
-    font-weight: 800;
-    text-align: center;
-    padding: 2px 4px;
-    border: 1.5px solid #000;
-    text-transform: uppercase;
-    align-self: center;
-    max-width: 95%;
-  }
-
-  .card-bottom-area {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-
-    .cost-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 3px;
-      justify-content: flex-start;
-
-      .cost-bubble {
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.55em;
-        font-weight: 900;
-
-        &.cost-discounted {
-          opacity: 0.2;
-          text-decoration: line-through;
-        }
-      }
-    }
-  }
-
-  .card-action-overlay {
+  // Persistent, tap-friendly action buttons (always visible when actionable)
+  .card-actions {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(255, 255, 255, 0.9);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 6px;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s;
-    z-index: 3;
-
-    .card-buy-btn {
-      background-color: #2ec27e;
-      color: #ffffff;
-      font-size: 0.85em;
-      padding: 4px 10px;
-      min-height: 28px;
-    }
-
-    .card-reserve-btn {
-      background-color: #ffbe6f;
-      color: #000000;
-      font-size: 0.85em;
-      padding: 4px 10px;
-      min-height: 28px;
-    }
-  }
-
-  .card-level-indicator {
-    position: absolute;
-    bottom: 2px;
+    bottom: 6px;
     right: 6px;
-    font-size: 0.5em;
-    color: #888;
-    letter-spacing: 1px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 4;
+  }
+
+  .card-action-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    cursor: pointer;
+    padding: 0;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 56%;
+    box-shadow: 0 2px 5px rgba(30, 24, 48, 0.28);
+    transition: transform 0.1s, filter 0.15s;
+
+    &:hover { filter: brightness(1.06); }
+    &:active { transform: scale(0.92); }
+
+    &.buy {
+      background-color: #2eb87a;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 13 l4 4 L19 7'/%3E%3C/svg%3E");
+    }
+
+    &.reserve {
+      background-color: #e6a417;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M6 3 h12 a1 1 0 0 1 1 1 v17 l-7 -4 -7 4 v-17 a1 1 0 0 1 1 -1 Z'/%3E%3C/svg%3E");
+    }
   }
 }
 
-// Royals Pool
+// Royals Pool — flat
 .royals-pool-container {
-  border: 3px solid #000;
-  box-shadow: 6px 6px 0px #000;
+  border: 1px solid #e3ddee;
+  border-radius: 16px;
+  box-shadow: none;
   background-color: #ffffff;
-  padding: 15px;
+  padding: 16px;
 
   .royals-row {
     display: flex;
@@ -605,61 +561,128 @@
   }
 
   .royal-pool-card {
-    border: 3px solid #000;
-    background-color: #ffbe6f;
-    padding: 10px;
-    width: 90px;
-    height: 75px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    font-family: 'Outfit', sans-serif;
-    box-shadow: 3px 3px 0px #000;
-    transition: all 0.2s;
-
-    .royal-points {
-      font-weight: 800;
-      font-size: 1.1em;
-    }
-
-    .royal-ability {
-      background-color: #7624b2;
-      color: #ffffff;
-      font-size: 0.55em;
-      font-weight: 800;
-      padding: 2px 4px;
-      border: 1px solid #000;
-      text-transform: uppercase;
-      text-align: center;
-    }
-
-    .royal-label {
-      font-size: 0.55em;
-      font-weight: 700;
-      color: #666;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
+    width: 88px;
+    height: 121px;
+    position: relative;
+    border-radius: 6px;
+    transition: transform 0.2s;
+    box-sizing: border-box;
 
     &.clickable-royal {
       cursor: pointer;
-      border-color: #a23cd6;
-      animation: pulse-purple 1.5s infinite alternate;
+      animation: pulse-gold 1.5s infinite alternate;
 
       &:hover {
         transform: translate(-2px, -2px);
-        box-shadow: 5px 5px 0px #000;
       }
     }
   }
 }
 
-// Reserved Cards Container
+// Royal card: flat portrait layout with legible header / medallion / label.
+// Regions are absolutely positioned so the medallion SVG cannot inflate the layout.
+.royal-card {
+  .playing-card-container {
+    width: 100%;
+    height: 100%;
+    box-shadow: none !important;
+  }
+
+  .playing-card-inner {
+    width: 100% !important;
+    height: 100% !important;
+    transform: none !important;
+  }
+
+  .playing-card-face {
+    box-shadow: none;
+  }
+
+  .playing-card-face.face-front {
+    display: block !important;
+    position: relative;
+    padding: 0 !important;
+  }
+
+  .card-header-region {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2.7em;
+    min-height: 0;
+    padding: 0.3em 0.7em;
+    align-items: center;
+    border-bottom: none;
+    z-index: 2;
+
+    .card-header-title {
+      font-size: 1.7em !important;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+  }
+
+  .card-art-region {
+    position: absolute;
+    top: 2.7em;
+    bottom: 2.7em;
+    left: 0.3em;
+    right: 0.3em;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 1;
+
+    .card-art-frame {
+      width: 100%;
+      height: 100%;
+      background-color: transparent !important;
+      border: none !important;
+    }
+
+    .card-art-content {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .card-footer-region {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2.7em;
+    min-height: 0;
+    padding: 0.2em 0.3em;
+    align-items: center;
+    justify-content: center;
+    border-top: none;
+    z-index: 2;
+
+    .card-footer-text {
+      font-size: 1em;
+      font-weight: 800;
+      font-style: normal;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      text-align: center;
+      white-space: normal;
+      line-height: 1.05;
+      opacity: 1;
+    }
+  }
+}
+
+// Reserved Cards Container — flat
 .reserved-cards-container {
-  border: 3px solid #000;
-  box-shadow: 6px 6px 0px #000;
+  border: 1px solid #e3ddee;
+  border-radius: 16px;
+  box-shadow: none;
   background-color: #ffffff;
-  padding: 15px;
+  padding: 16px;
 
   .reserved-row {
     display: flex;
@@ -668,19 +691,20 @@
   }
 }
 
-// General Brutalist Styles
+// Buttons — flat pills
 .brutalist-button {
   background-color: #ffffff;
-  color: #000000;
-  border: 3px solid #000;
-  box-shadow: 3px 3px 0px #000;
+  color: #2b2440;
+  border: 1px solid #d8d1e6;
+  box-shadow: none;
+  border-radius: 10px;
   font-family: 'Outfit', 'Inter', sans-serif;
   font-weight: 800;
-  padding: 6px 14px;
+  padding: 7px 16px;
   text-transform: uppercase;
   font-size: 0.9em;
   cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.1s;
+  transition: transform 0.1s, background-color 0.15s, filter 0.15s;
   min-height: 40px;
   display: inline-flex;
   align-items: center;
@@ -688,33 +712,34 @@
   gap: 6px;
 
   &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0px #000;
+    transform: translateY(-1px);
+    filter: brightness(0.98);
+    background-color: #f7f6fb;
   }
 
   &:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0px #000;
+    transform: translateY(1px);
   }
 
   &:disabled {
-    background-color: #eee !important;
-    color: #999 !important;
-    border-color: #888 !important;
-    box-shadow: 1px 1px 0px #000 !important;
+    background-color: #f0eef4 !important;
+    color: #a8a2b8 !important;
+    border-color: #e3ddee !important;
+    box-shadow: none !important;
     transform: none !important;
     cursor: not-allowed !important;
+    filter: none !important;
   }
 }
 
-// Modals
+// Modals — flat with a soft elevation
 .brutalist-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: rgba(30, 24, 48, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -725,18 +750,19 @@
 
 .brutalist-modal {
   background-color: #ffffff;
-  border: 4px solid #000;
-  box-shadow: 8px 8px 0px #000;
-  padding: 25px;
+  border: 1px solid #e3ddee;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(30, 24, 48, 0.2);
+  padding: 24px;
   max-width: 450px;
   width: 100%;
   box-sizing: border-box;
 
   h3 {
     text-transform: uppercase;
-    font-size: 1.5em;
-    border-bottom: 3px solid #000;
-    padding-bottom: 8px;
+    font-size: 1.4em;
+    border-bottom: 1px solid #ece8f2;
+    padding-bottom: 10px;
     margin-top: 0;
     margin-bottom: 15px;
   }
@@ -755,36 +781,281 @@
   }
 }
 
-// Rules panels
+// Rules panels — flat
 .splendor-rules-panel {
   background-color: #ffffff;
-  border: 3px solid #000;
-  box-shadow: 4px 4px 0px #000;
+  border: 1px solid #e3ddee;
+  border-radius: 16px;
+  box-shadow: none;
   padding: 20px;
 
   h2, h3 {
     text-transform: uppercase;
-    border-bottom: 3px solid #000;
+    border-bottom: 1px solid #ece8f2;
     padding-bottom: 8px;
     margin-top: 0;
   }
 }
 
-// Animations
-@keyframes pulse {
+// Animations — flat pulsing rings (no hard shadows)
+// Board ability targets: inset green ring
+@keyframes pulse-ring {
   0% {
-    box-shadow: 2px 2px 0px #000, 0 0 0 0px rgba(46, 194, 126, 0.7);
+    box-shadow: inset 0 0 0 3px #2eb87a, 0 0 0 0px rgba(46, 194, 126, 0.5);
   }
   100% {
-    box-shadow: 2px 2px 0px #000, 0 0 0 8px rgba(46, 194, 126, 0);
+    box-shadow: inset 0 0 0 3px #2eb87a, 0 0 0 7px rgba(46, 194, 126, 0);
   }
 }
 
-@keyframes pulse-purple {
+// Claimable royal cards: soft blurred gold glow
+@keyframes pulse-gold {
   0% {
-    box-shadow: 3px 3px 0px #000, 0 0 0 0px rgba(162, 60, 214, 0.7);
+    box-shadow: 0 0 6px 1px rgba(217, 165, 32, 0.6);
   }
   100% {
-    box-shadow: 3px 3px 0px #000, 0 0 0 8px rgba(162, 60, 214, 0);
+    box-shadow: 0 0 13px 4px rgba(217, 165, 32, 0.16);
+  }
+}
+
+// Buyable jewel cards: soft blurred green glow
+@keyframes pulse-green {
+  0% {
+    box-shadow: 0 0 6px 1px rgba(46, 184, 122, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 13px 4px rgba(46, 184, 122, 0.16);
+  }
+}
+
+// Layout overrides for Splendor Duel PlayingCard to align with the board game style
+.jewel-card {
+  .playing-card-container {
+    width: 100%;
+    height: 100%;
+    box-shadow: none !important;
+  }
+
+  .playing-card-inner {
+    width: 100% !important;
+    height: 100% !important;
+    transform: none !important; /* Prevents 3D flip transform on fronts */
+  }
+
+  .playing-card-face.face-front {
+    display: block !important; /* Override vertical flex column */
+    position: relative;
+    padding: 0 !important;
+  }
+
+  /* 1. Header Region: full width bold color band at top */
+  .card-header-region {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5.4em;
+    padding: 0.7em 0.8em 1.1em 0.8em;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: none;
+    z-index: 2;
+    overflow: visible;
+
+    .card-header-text {
+      flex: none;
+      width: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.1em;
+    }
+
+    /* Prestige Points / Star scale */
+    .card-header-title {
+      font-size: 1.85em !important;
+      font-weight: 900;
+      color: #12181f !important;
+      text-shadow: none !important;
+      position: relative;
+      padding-left: 1.05em;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0.95em;
+        height: 0.95em;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M 50 8 L 63 37 L 94 37 L 69 57 L 79 88 L 50 68 L 21 88 L 31 57 L 6 37 L 37 37 Z' fill='%23ffce4d'/%3E%3C/svg%3E");
+        background-size: 100% 100%;
+        background-repeat: no-repeat;
+      }
+    }
+
+    /* Crowns row rendered as repeating crown glyphs beneath the points */
+    /* Crowns: solid flat glyphs (one per crown) under the points, dark to match the number */
+    .card-header-subtitle {
+      display: inline-block;
+      height: 0.95em;
+      vertical-align: middle;
+      color: transparent !important;
+      -webkit-text-fill-color: transparent !important;
+      text-shadow: none !important;
+      font-family: monospace;
+      font-size: 1.4em;
+      line-height: 1;
+      margin-top: 0.12em;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M 8 84 L 92 84 L 92 50 L 74 30 L 60 52 L 50 14 L 40 52 L 26 30 L 8 50 Z' fill='%2312181f'/%3E%3C/svg%3E");
+      background-size: 1.2ch 100%;
+      background-position: left center;
+      background-repeat: repeat-x;
+      letter-spacing: 0.2ch;
+      margin-left: 1.05em !important;
+    }
+
+    .card-header-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.3em;
+    }
+
+    /* Bonus gem: large flat token, knocked out against the color band */
+    .card-header-icon {
+      width: 3em;
+      height: 3em;
+    }
+  }
+
+  /* Castle silhouette skyline cutout shape at the bottom of the header */
+  .card-header-region::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 1.15em;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30' fill='%23ffffff'%3E%3Cpath d='M 0 30 L 100 30 L 100 10 L 85 10 L 85 0 L 73 0 L 73 10 L 59 10 L 59 0 L 41 0 L 41 10 L 27 10 L 27 0 L 15 0 L 15 10 L 0 10 Z' /%3E%3C/svg%3E");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    z-index: 10;
+  }
+
+  /* Tier towers: the number of merlons/towers in the header skyline encodes the level (1 / 2 / 3) */
+  &.level-1 .card-header-region::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30' fill='%23ffffff'%3E%3Cpath d='M 0 30 L 100 30 L 100 12 L 60 12 L 60 0 L 40 0 L 40 12 L 0 12 Z' /%3E%3C/svg%3E");
+  }
+
+  &.level-2 .card-header-region::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30' fill='%23ffffff'%3E%3Cpath d='M 0 30 L 100 30 L 100 12 L 76 12 L 76 0 L 60 0 L 60 12 L 40 12 L 40 0 L 24 0 L 24 12 L 0 12 Z' /%3E%3C/svg%3E");
+  }
+
+  &.level-3 .card-header-region::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30' fill='%23ffffff'%3E%3Cpath d='M 0 30 L 100 30 L 100 12 L 86 12 L 86 0 L 72 0 L 72 12 L 57 12 L 57 0 L 43 0 L 43 12 L 28 12 L 28 0 L 14 0 L 14 12 L 0 12 Z' /%3E%3C/svg%3E");
+  }
+
+  /* 2. Main Art Region: large watermark filling the lower-right body */
+  .card-art-region {
+    position: absolute;
+    top: 5.3em;
+    right: 0.1em;
+    width: 6.4em;
+    height: 6.7em;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+
+    .card-art-frame {
+      width: 100%;
+      height: 100%;
+      background-color: transparent !important;
+      border: none !important;
+      padding: 0;
+    }
+  }
+
+  /* 3. Cost/Data Region: left column vertically stacked, bigger gems */
+  .card-data-region {
+    position: absolute;
+    top: 5.65em;
+    left: 0.5em;
+    width: 5em;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.02em;
+    z-index: 2;
+
+    .card-data-row {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 0.3em;
+      border-bottom: none;
+      padding-bottom: 0;
+      margin: 0;
+      height: 1.75em;
+
+      /* Force cost circle and label size */
+      .card-data-label {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        opacity: 1;
+        width: 1.75em !important;
+        height: 1.75em !important;
+
+        span {
+          margin: 0 !important;
+          width: 1.75em !important; /* Force inline-styled span width */
+          height: 1.75em !important; /* Force inline-styled span height */
+        }
+
+        svg {
+          width: 100% !important;
+          height: 100% !important;
+          transform: none !important; /* Force SVG width/height scale */
+        }
+      }
+
+      /* Make cost numbers bold, dark and readable */
+      .card-data-value {
+        font-size: 1.4em;
+        font-weight: 900;
+        color: #12181f !important;
+      }
+    }
+  }
+
+  /* 4. Footer Region: ability badge centered at bottom */
+  .card-footer-region {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2.4em;
+    min-height: 0;
+    padding: 0.2em 0.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+
+    .card-footer-text {
+      font-size: 0.9em;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-style: normal;
+      letter-spacing: 0.05em;
+      color: #12181f !important;
+      opacity: 0.95;
+    }
   }
 }

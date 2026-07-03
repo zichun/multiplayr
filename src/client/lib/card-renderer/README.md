@@ -346,6 +346,48 @@ export interface Palette {
 
 ---
 
+## Reusable Glyphs & the Token Builder (`presets.ts`)
+
+To stop every game from re-drawing the same shapes, `PRESET_ICONS` ships flat, single-colour, palette-keyed glyphs. Because their fills are palette keys (`secondary`, `charcoal`, `background`, `danger`), they re-theme automatically for any card palette, and you can recolour them per-use with the icon's `color` (header/data) or `colorOverride`.
+
+| Icon id | Shape | Typical use |
+| :--- | :--- | :--- |
+| `star` | Five-point star (gold `secondary`) | Prestige / rating / score |
+| `crown` | Three-point crown (gold `secondary`) | Crowns / royalty milestones |
+| `lock` | Padlock (`charcoal`) | Reserved / hidden / locked |
+| `scroll` | Rolled scroll (parchment + `danger` ribbon) | Privilege / decree |
+
+### The `coinIcon` builder — flat token / cost pips
+
+The single most reused card pattern is a **solid colour disc with a glyph knocked out of it** (negative space). A solid disc reads clearly at any size, and the glyph — drawn in the card `background` colour (or white) — looks like a punched hole. Use the same disc icon for board tokens, card-cost pips, and player-panel counts so the whole game stays visually identical.
+
+```typescript
+import { coinIcon } from './presets';
+
+// A sapphire token: blue disc, three white circles knocked out.
+const sapphire = coinIcon('gem_blue', '#2f93c2', [
+    { id: 's1', type: 'circle', x: 50, y: 36, scaleX: 0.42, scaleY: 0.42, fill: '#ffffff' },
+    { id: 's2', type: 'circle', x: 36, y: 62, scaleX: 0.42, scaleY: 0.42, fill: '#ffffff' },
+    { id: 's3', type: 'circle', x: 64, y: 62, scaleX: 0.42, scaleY: 0.42, fill: '#ffffff' }
+]);
+
+// Pass game-specific icons via the customIcons prop; they merge over the presets.
+<PlayingCard card={def} customIcons={{ gem_blue: sapphire }} />
+```
+
+`coinIcon(id, discColor, glyph, name?)` prepends a disc (`circle`, `scale 1.9` ≈ fills the 100×100 box) under your glyph layers. Fill the glyph with `'#ffffff'` / `'background'` for a coloured coin on a light card, or with `'primary'` (the band colour) for a *white* disc whose glyph shows the band through it (a header bonus badge).
+
+---
+
+## Sizing Robustness & Layout Notes
+
+* **Vector icons cannot inflate a card.** An `ExpressiveIcon` `<svg>` has no intrinsic pixel size; as a growable flex child it used to force the art region to its ~150px fallback and blow the card up. The core `.card-art-region` now sets `min-height: 0; min-width: 0;` and clamps the icon to `max-width/height: 100%`, so the default (stacked header → art → footer) layout stays correct at any size **without per-game CSS**.
+* **Bespoke layouts** (a coloured header band, a cost column pinned left, art pinned right — e.g. tableau / engine-builder cards) are still done by scoping overrides under a wrapper class and **absolutely positioning** the regions inside `.playing-card-face.face-front` (`display: block; position: relative`). Pin `header`/`footer` to fixed `em` heights and let `art` fill the gap with `overflow: hidden`. This is the pattern in `SplendorDuel` (`.jewel-card` / `.royal-card`).
+* **Text is `em`-based and compounds.** `1em ≈ widthMm × 0.052` scaled by the pixel `width`; region sizes nest (e.g. the footer text is an `em` of the footer region's own `0.9 × footer.size em`). At small widths, boost `footer.size`, keep labels short, and allow wrapping rather than shipping sub-5px text.
+* **Pixel mode** (`width="Npx"`) disables the compact container-query that hides regions under 150px, and derives height from `heightMm/widthMm` (the `height` prop is ignored) — set card *shape* via mm and *size* via `width`.
+
+---
+
 ## Interactive Designer Sandbox
 
 An interactive visual designer is available to test, draft, and compile playing cards and vector icons:

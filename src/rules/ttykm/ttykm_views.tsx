@@ -10,25 +10,25 @@ const renderHatSVG = (playerColor: number, size: number = 24) => {
 
     return (
         <svg width={size} height={size} viewBox="0 0 32 32" style={{ display: 'inline-block', verticalAlign: 'middle', filter: 'drop-shadow(1.5px 1.5px 0px rgba(0,0,0,0.15))' }}>
-            <path 
-                d="M 8 20 L 10 6 L 22 6 L 24 20 Z" 
-                fill={crownColor} 
-                stroke={strokeColor} 
-                strokeWidth={strokeWidth} 
+            <path
+                d="M 8 20 L 10 6 L 22 6 L 24 20 Z"
+                fill={crownColor}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
                 strokeLinejoin="round"
             />
-            <path 
-                d="M 8.8 17.5 L 9.3 14 L 22.7 14 L 23.2 17.5 Z" 
-                fill={bandColor} 
-                stroke={strokeColor} 
-                strokeWidth={strokeWidth} 
+            <path
+                d="M 8.8 17.5 L 9.3 14 L 22.7 14 L 23.2 17.5 Z"
+                fill={bandColor}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
                 strokeLinejoin="round"
             />
-            <path 
-                d="M 4 20 C 4 20, 4 24, 16 24 C 28 24, 28 20, 28 20 Z" 
-                fill={crownColor} 
-                stroke={strokeColor} 
-                strokeWidth={strokeWidth} 
+            <path
+                d="M 4 20 C 4 20, 4 24, 16 24 C 28 24, 28 20, 28 20 Z"
+                fill={crownColor}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
                 strokeLinejoin="round"
             />
         </svg>
@@ -55,54 +55,54 @@ const renderStatueSVG = (statueType: number, size: number = 32) => {
 
     return (
         <svg width={size} height={size} viewBox="0 0 32 32" style={{ display: 'inline-block', verticalAlign: 'middle', filter: 'drop-shadow(1.5px 1.5px 0px rgba(0,0,0,0.15))' }}>
-            <polygon 
-                points="6,8 16,2 26,8" 
-                fill={primaryColor} 
-                stroke={strokeColor} 
-                strokeWidth={strokeWidth} 
+            <polygon
+                points="6,8 16,2 26,8"
+                fill={primaryColor}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
                 strokeLinejoin="round"
             />
-            <rect 
-                x="7" 
-                y="8" 
-                width="18" 
-                height="3" 
-                fill={accentColor} 
-                stroke={strokeColor} 
-                strokeWidth={strokeWidth} 
+            <rect
+                x="7"
+                y="8"
+                width="18"
+                height="3"
+                fill={accentColor}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
                 strokeLinejoin="round"
             />
             <rect x="9" y="11" width="2" height="11" fill={primaryColor} stroke={strokeColor} strokeWidth={strokeWidth} />
             <rect x="15" y="11" width="2" height="11" fill={primaryColor} stroke={strokeColor} strokeWidth={strokeWidth} />
             <rect x="21" y="11" width="2" height="11" fill={primaryColor} stroke={strokeColor} strokeWidth={strokeWidth} />
-            <rect 
-                x="7" 
-                y="22" 
-                width="18" 
-                height="2" 
-                fill={accentColor} 
-                stroke={strokeColor} 
-                strokeWidth={strokeWidth} 
+            <rect
+                x="7"
+                y="22"
+                width="18"
+                height="2"
+                fill={accentColor}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
                 strokeLinejoin="round"
             />
-            <rect 
-                x="5" 
-                y="24" 
-                width="22" 
-                height="2" 
-                fill={primaryColor} 
-                stroke={strokeColor} 
-                strokeWidth={strokeWidth} 
+            <rect
+                x="5"
+                y="24"
+                width="22"
+                height="2"
+                fill={primaryColor}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
                 strokeLinejoin="round"
             />
-            <rect 
-                x="3" 
-                y="26" 
-                width="26" 
-                height="3" 
-                fill={primaryColor} 
-                stroke={strokeColor} 
-                strokeWidth={strokeWidth} 
+            <rect
+                x="3"
+                y="26"
+                width="26"
+                height="3"
+                fill={primaryColor}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
                 strokeLinejoin="round"
             />
         </svg>
@@ -962,7 +962,7 @@ class TTYKMGameRules extends React.Component<{}, {}> {
                                 <li><strong>2023 Rules (No Rebound):</strong> The build simply fails to propagate to that future era.</li>
                             </ul>
                         </li>
-                        <li><strong>Pulling Statues:</strong> When moving your copy, you can voluntarily pull an adjacent statue of any color into your vacated space, propagating the statue's movement to future eras.</li>
+                        <li><strong>Pulling Statues:</strong> When moving your copy, you can voluntarily pull an adjacent statue of any color into your vacated space, propagating the statue&apos;s movement to future eras.</li>
                     </ul>
                 </section>
 

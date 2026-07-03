@@ -5,6 +5,15 @@
 import * as React from 'react';
 import { ViewPropsInterface } from '../../../common/interfaces';
 import { GameStatus, Card, RoyalCard, TokenColor, ActionPhase } from '../SplendorDuelGameState';
+import { PlayingCard } from '../../../client/lib/card-renderer/PlayingCard';
+import { ExpressiveIcon } from '../../../client/lib/card-renderer/IconEngine';
+import {
+    SPLENDOR_DUEL_ICONS,
+    getSplendorDuelCardDefinition,
+    getDeckBackDefinition,
+    getRoyalCardDefinition,
+    getSplendorDuelPalette
+} from '../SplendorDuelAssets';
 
 // Helper to map token colors to Emojis (icon-replacement ONLY)
 export const tokenEmoji = (color: TokenColor | 'wild'): string => {
@@ -68,21 +77,13 @@ export class SplendorDuelHostLobby extends React.Component<ViewPropsInterface, {
                 'icon': 'home',
                 'label': 'Lobby',
                 'view': (
-                    <div className="splendor-rules-panel" style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
-                        <h2>Splendor Duel Lobby</h2>
+                    <div>
                         {mp.getPluginView('lobby', 'SetNameWithLobby')}
                         <div style={{ marginTop: '25px', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
-                            {playerCount !== 2 ? (
+                            {playerCount !== 2 && (
                                 <p style={{ color: '#e01b24', fontWeight: 'bold', fontSize: '0.9em', textAlign: 'center' }}>
                                     ⚠️ Splendor Duel is strictly a 2-player game. Currently {playerCount} player(s) in lobby.
                                 </p>
-                            ) : (
-                                <button 
-                                    className="brutalist-button start-btn"
-                                    onClick={() => mp.startGame()}
-                                >
-                                    Start Game ⚔️
-                                </button>
                             )}
                         </div>
                     </div>
@@ -120,15 +121,15 @@ export class SplendorDuelClientLobby extends React.Component<ViewPropsInterface,
                 'icon': 'id-card',
                 'label': 'Lobby',
                 'view': (
-                    <div className="splendor-rules-panel" style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
-                        <h2>Splendor Duel Lobby</h2>
+                    <div>
                         {mp.getPluginView('lobby', 'SetNameWithLobby')}
                         <div style={{
-                            backgroundColor: '#f6d32d',
-                            color: '#000',
+                            backgroundColor: '#fbeec2',
+                            color: '#7a5a00',
                             padding: '15px',
-                            border: '3px solid #000',
-                            boxShadow: '4px 4px 0px #000',
+                            border: 'none',
+                            borderRadius: '12px',
+                            boxShadow: 'none',
                             fontWeight: 700,
                             textAlign: 'center',
                             marginTop: '20px',
@@ -159,22 +160,46 @@ export class SplendorDuelClientLobby extends React.Component<ViewPropsInterface,
 
 // Rules Reference View
 export class SplendorDuelRulesView extends React.Component<{}, {}> {
-    public render() {
+    // Render one of the game's actual vector card glyphs (not an emoji) for the legend.
+    private glyph(iconId: string, size: string = '1.7em', color: TokenColor | 'wild' | null = null, colorOverride?: string) {
+        const icon = SPLENDOR_DUEL_ICONS[iconId];
+        if (!icon) return null;
         return (
-            <div className="splendor-rules-panel" style={{ padding: '20px', overflowY: 'auto', maxHeight: '80vh' }}>
-                <div className="rules-section" style={{ marginBottom: '20px' }}>
-                    <h3>Three Ways to Win 🏆</h3>
-                    <ul style={{ paddingLeft: '20px', lineHeight: '1.6' }}>
+            <span style={{ display: 'inline-flex', width: size, height: size, flex: '0 0 auto', alignItems: 'center', justifyContent: 'center' }}>
+                <ExpressiveIcon icon={icon} palette={getSplendorDuelPalette(color)} colorOverride={colorOverride} />
+            </span>
+        );
+    }
+
+    public render() {
+        // A representative jewel card used to illustrate the anatomy legend.
+        const anatomyCard: Card = {
+            id: 'anatomy-sample',
+            level: 3,
+            color: 'red',
+            points: 3,
+            crowns: 2,
+            bonus_color: 'red',
+            bonus_count: 1,
+            ability: null,
+            cost: { blue: 5, green: 3, black: 3 }
+        };
+
+        return (
+            <div className="splendor-rules-panel" style={{ padding: '20px', overflowY: 'auto', maxHeight: '80vh', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div className="rules-section" style={{ backgroundColor: '#fff', border: '1px solid #e3ddee', boxShadow: 'none', padding: '15px', borderRadius: '12px' }}>
+                    <h3 style={{ marginTop: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Three Ways to Win</h3>
+                    <ul style={{ paddingLeft: '20px', lineHeight: '1.6', margin: 0 }}>
                         <li><strong>Condition 1:</strong> Acquire <strong>20+ total Prestige points</strong>.</li>
                         <li><strong>Condition 2:</strong> Collect <strong>10+ Crowns</strong> (crowns are printed on some Jewel cards).</li>
                         <li><strong>Condition 3:</strong> Accumulate <strong>10+ Prestige points</strong> on cards of a <strong>single color</strong> (wild/jokers count as their assigned color; gray cards without bonuses do not count).</li>
                     </ul>
                 </div>
 
-                <div className="rules-section" style={{ marginBottom: '20px' }}>
-                    <h3>On Your Turn 🔄</h3>
-                    <p>Optionally perform actions 1 & 2 (in order), then perform exactly ONE mandatory action:</p>
-                    <ol style={{ paddingLeft: '20px', lineHeight: '1.6' }}>
+                <div className="rules-section" style={{ backgroundColor: '#fff', border: '1px solid #e3ddee', boxShadow: 'none', padding: '15px', borderRadius: '12px' }}>
+                    <h3 style={{ marginTop: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>On Your Turn</h3>
+                    <p style={{ margin: '0 0 10px 0' }}>Optionally perform actions 1 & 2 (in order), then perform exactly ONE mandatory action:</p>
+                    <ol style={{ paddingLeft: '20px', lineHeight: '1.6', margin: 0 }}>
                         <li><strong>[Optional] Use Privilege:</strong> Spend a scroll to take 1 non-gold token from the board.</li>
                         <li><strong>[Optional] Replenish Board:</strong> Refill empty board spaces from the bag (opponent gets 1 Privilege).</li>
                         <li><strong>[Mandatory A] Take Tokens:</strong> Take up to 3 adjacent Gem/Pearl tokens forming an uninterrupted straight line (no gold, no empty spaces between them). Taking 3 same-colored or 2 pearls gives your opponent 1 Privilege.</li>
@@ -183,34 +208,91 @@ export class SplendorDuelRulesView extends React.Component<{}, {}> {
                     </ol>
                 </div>
 
-                <div className="rules-section" style={{ marginBottom: '20px' }}>
-                    <h3>Card Abilities (Immediate) ✨</h3>
-                    <table className="brutalist-table" style={{ width: '100%', borderCollapse: 'collapse', border: '3px solid #000' }}>
+                <div className="rules-section" style={{ backgroundColor: '#fff', border: '1px solid #e3ddee', boxShadow: 'none', padding: '15px', borderRadius: '12px' }}>
+                    <h3 style={{ marginTop: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tokens & The Bag</h3>
+                    <ul style={{ paddingLeft: '20px', lineHeight: '1.6', margin: 0 }}>
+                        <li><strong>The Bag:</strong> Spent tokens (paid for card purchases) and discarded tokens return to the shared bag. Replenishing the board draws tokens randomly from this bag.</li>
+                        <li><strong>10-Token Limit:</strong> You may hold a maximum of <strong>10 tokens</strong> (gems, pearls, and gold combined) in your hand at any time.</li>
+                        <li><strong>Exceeding the Limit:</strong> If your turn ends and you have more than 10 tokens, you must immediately choose and discard the excess tokens back into the bag until your hand size is exactly 10.</li>
+                    </ul>
+                </div>
+
+                <div className="rules-section" style={{ backgroundColor: '#fff', border: '1px solid #e3ddee', boxShadow: 'none', padding: '15px', borderRadius: '12px' }}>
+                    <h3 style={{ marginTop: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Card Anatomy</h3>
+                    <p style={{ margin: '0 0 14px 0' }}>Every Jewel Card packs its information into a few fixed spots. Here is a real card and what each part means:</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'flex-start' }}>
+                        <div className="jewel-card level-3 color-red" style={{ width: '150px', height: '210px', flex: '0 0 auto' }}>
+                            <PlayingCard
+                                card={getSplendorDuelCardDefinition(anatomyCard, {})}
+                                width="150px"
+                                customIcons={SPLENDOR_DUEL_ICONS}
+                            />
+                        </div>
+                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '14px', flex: '1 1 240px', minWidth: '220px', lineHeight: '1.4' }}>
+                            <li style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                {this.glyph('star')}
+                                <span><strong>Prestige points</strong> (top-left) &mdash; the large number. First player to <strong>20</strong> total points wins.</span>
+                            </li>
+                            <li style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                {this.glyph('crown', '1.9em', null, '#12181f')}
+                                <span><strong>Crowns</strong> (just under the points) &mdash; one glyph per crown. Collect <strong>10</strong> to win; your 3rd &amp; 6th crown each let you claim a Royal.</span>
+                            </li>
+                            <li style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                {this.glyph('gem_red_bonus', '1.8em', 'red')}
+                                <span><strong>Colour bonus</strong> (top-right) &mdash; a permanent gem. It discounts every future purchase of that colour and counts toward the single-colour win.</span>
+                            </li>
+                            <li style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                <span style={{ display: 'inline-flex', gap: '3px', flex: '0 0 auto' }}>
+                                    {this.glyph('gem_blue_coin', '1.5em')}
+                                    {this.glyph('gem_green_coin', '1.5em')}
+                                </span>
+                                <span><strong>Cost</strong> (left column) &mdash; the tokens you pay to buy it. Matching colour bonuses reduce it; Gold pays for any colour.</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <p style={{ margin: '14px 0 0 0', fontStyle: 'italic', color: '#5f5e6a' }}>
+                        Some cards also carry an immediate <strong>ability</strong>, shown as a label across the bottom &mdash; see the Abilities table below.
+                    </p>
+                </div>
+
+                <div className="rules-section" style={{ backgroundColor: '#fff', border: '1px solid #e3ddee', boxShadow: 'none', padding: '15px', borderRadius: '12px' }}>
+                    <h3 style={{ marginTop: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Royal Cards & Milestones</h3>
+                    <p style={{ margin: '0 0 10px 0' }}>Royal cards are special rewards set aside from the main pyramid:</p>
+                    <ul style={{ paddingLeft: '20px', lineHeight: '1.6', margin: 0 }}>
+                        <li><strong>How to claim:</strong> As soon as you acquire your <strong>3rd Crown</strong> and your <strong>6th Crown</strong> across your purchased cards, you immediately trigger a milestone. On the same turn, you must choose 1 Royal card from the pool to add to your area.</li>
+                        <li><strong>Benefits:</strong> Royal cards do not have a cost. They grant <strong>2 or 3 Prestige points</strong> and often feature immediate abilities like Steal, Privilege, or Extra Turn.</li>
+                    </ul>
+                </div>
+
+                <div className="rules-section" style={{ backgroundColor: '#fff', border: '1px solid #e3ddee', boxShadow: 'none', padding: '15px', borderRadius: '12px' }}>
+                    <h3 style={{ marginTop: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Card Abilities (Immediate)</h3>
+                    <p style={{ margin: '0 0 10px 0' }}>Triggered immediately when purchasing a card (Jewel or Royal):</p>
+                    <table className="brutalist-table" style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e3ddee', borderRadius: '10px', overflow: 'hidden' }}>
                         <thead>
-                            <tr style={{ backgroundColor: '#f6d32d', borderBottom: '3px solid #000', color: '#000' }}>
-                                <th style={{ borderRight: '2px solid #000', padding: '8px', textAlign: 'left' }}>Ability</th>
+                            <tr style={{ backgroundColor: '#fbeec2', borderBottom: '1px solid #ece8f2', color: '#7a5a00' }}>
+                                <th style={{ borderRight: '1px solid #ece8f2', padding: '8px', textAlign: 'left' }}>Ability</th>
                                 <th style={{ padding: '8px', textAlign: 'left' }}>Effect</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr style={{ borderBottom: '2px solid #000' }}>
-                                <td style={{ borderRight: '2px solid #000', padding: '8px', fontWeight: 'bold' }}>Extra Turn</td>
+                            <tr style={{ borderBottom: '1px solid #ece8f2' }}>
+                                <td style={{ borderRight: '1px solid #ece8f2', padding: '8px', fontWeight: 'bold' }}>Extra Turn</td>
                                 <td style={{ padding: '8px' }}>Take another full turn immediately after this turn ends.</td>
                             </tr>
-                            <tr style={{ borderBottom: '2px solid #000' }}>
-                                <td style={{ borderRight: '2px solid #000', padding: '8px', fontWeight: 'bold' }}>Take Matching</td>
+                            <tr style={{ borderBottom: '1px solid #ece8f2' }}>
+                                <td style={{ borderRight: '1px solid #ece8f2', padding: '8px', fontWeight: 'bold' }}>Take Matching</td>
                                 <td style={{ padding: '8px' }}>Take 1 token from the board matching this card&apos;s bonus color.</td>
                             </tr>
-                            <tr style={{ borderBottom: '2px solid #000' }}>
-                                <td style={{ borderRight: '2px solid #000', padding: '8px', fontWeight: 'bold' }}>Steal</td>
+                            <tr style={{ borderBottom: '1px solid #ece8f2' }}>
+                                <td style={{ borderRight: '1px solid #ece8f2', padding: '8px', fontWeight: 'bold' }}>Steal</td>
                                 <td style={{ padding: '8px' }}>Take 1 gem or pearl token from your opponent (cannot steal gold).</td>
                             </tr>
-                            <tr style={{ borderBottom: '2px solid #000' }}>
-                                <td style={{ borderRight: '2px solid #000', padding: '8px', fontWeight: 'bold' }}>Privilege</td>
+                            <tr style={{ borderBottom: '1px solid #ece8f2' }}>
+                                <td style={{ borderRight: '1px solid #ece8f2', padding: '8px', fontWeight: 'bold' }}>Privilege</td>
                                 <td style={{ padding: '8px' }}>Gain 1 Privilege scroll (steal one from opponent if pool is empty).</td>
                             </tr>
                             <tr>
-                                <td style={{ borderRight: '2px solid #000', padding: '8px', fontWeight: 'bold' }}>Joker / Wild</td>
+                                <td style={{ borderRight: '1px solid #ece8f2', padding: '8px', fontWeight: 'bold' }}>Joker / Wild</td>
                                 <td style={{ padding: '8px' }}>Assign permanently to copy one of your existing owned bonus colors. Must own a bonus card to buy.</td>
                             </tr>
                         </tbody>
@@ -302,7 +384,7 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
         const mp = this.props.MP;
         const { currentPlayerId, actionPhase, pendingAbilityInfo } = this.props;
 
-        if (currentPlayerId !== mp.myId) return;
+        if (currentPlayerId !== mp.clientId) return;
 
         // 1. Privilege scroll spend mode
         if (this.state.isPrivilegeMode) {
@@ -338,9 +420,9 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
 
         if (token === 'gold') {
             // Select Gold for reservation
-            const isSelected = this.state.selectedGoldCoord && 
-                             this.state.selectedGoldCoord[0] === r && 
-                             this.state.selectedGoldCoord[1] === c;
+            const isSelected = this.state.selectedGoldCoord &&
+                this.state.selectedGoldCoord[0] === r &&
+                this.state.selectedGoldCoord[1] === c;
             this.setState({
                 selectedGoldCoord: isSelected ? null : [r, c],
                 selectedCells: [] // clear gem selections
@@ -376,7 +458,7 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
         const sorted = [...coords].sort((p1, p2) => p1[0] - p2[0] || p1[1] - p2[1]);
         const [r1, c1] = sorted[0];
         const [r2, c2] = sorted[1];
-        
+
         const dr = r2 - r1;
         const dc = c2 - c1;
 
@@ -433,8 +515,23 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
         }
     }
 
+    // Flat vector icon (gem coin, star, crown, scroll, lock) for panel elements.
+    // Sizing is controlled per-context via the `.mp-icon` rules in the stylesheet.
+    // `color` selects the palette (so palette-keyed fills like 'primary' resolve to that gem);
+    // `colorOverride` forces every layer to one colour (for solid legend/badge glyphs).
+    private mpIcon(iconId: string, color: TokenColor | 'wild' | null = null, colorOverride?: string) {
+        const icon = SPLENDOR_DUEL_ICONS[iconId];
+        if (!icon) return null;
+        return (
+            <span className="mp-icon">
+                <ExpressiveIcon icon={icon} palette={getSplendorDuelPalette(color)} colorOverride={colorOverride} />
+            </span>
+        );
+    }
+
     public render() {
         const mp = this.props.MP;
+        const myId = mp.clientId;
         const {
             gameStatus, actionPhase, currentPlayerId, board, bagSize, deckSizes,
             pyramid, royalsPool, privilegesAboveBoard, winnerId, lastMove,
@@ -445,11 +542,11 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
             playerNames
         } = this.props;
 
-        const isMyTurn = currentPlayerId === mp.myId;
+        const isMyTurn = currentPlayerId === myId;
 
         // 1. Game Over View
         if (gameStatus === GameStatus.GameOver) {
-            const isWinner = winnerId === mp.myId;
+            const isWinner = winnerId === myId;
             return (
                 <div className="splendor-game-arena game-over-screen" style={{ textAlign: 'center', padding: '40px 20px' }}>
                     <h1 style={{ fontSize: '3rem', textTransform: 'uppercase' }}>
@@ -463,7 +560,7 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
                     <div style={{ marginTop: '40px', display: 'flex', gap: '15px', justifyContent: 'center' }}>
                         {this.props.isHost && (
                             <button className="brutalist-button reset-btn" onClick={() => mp.restartGame()}>
-                                Play Again ⚔️
+                                Play Again
                             </button>
                         )}
                         {this.props.isHost && (
@@ -504,8 +601,8 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
                                         const count = opponentTokens[color] || 0;
                                         if (count <= 0) return null;
                                         return (
-                                            <button 
-                                                key={color} 
+                                            <button
+                                                key={color}
                                                 className="brutalist-button steal-btn"
                                                 onClick={() => mp.resolveSteal(color)}
                                                 style={{ backgroundColor: getBgColor(color as any), color: getTextColor(color as any) }}
@@ -520,13 +617,13 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
 
                         {isMyTurn && actionPhase === 'SelectRoyal' && (
                             <div className="brutalist-banner royal-banner">
-                                👑 CROWN MILESTONE: Choose <strong>{pendingRoyalCount}</strong> Royal card(s) from the pool below the board.
+                                CROWN MILESTONE: Choose <strong>{pendingRoyalCount}</strong> Royal card(s) from the pool below the board.
                             </div>
                         )}
 
                         {isMyTurn && actionPhase === 'Discard' && (
                             <div className="brutalist-banner discard-banner">
-                                🎒 BAG OVERFLOW: You have {totalTokens} tokens. Select exactly <strong>{excessTokens}</strong> token(s) to discard:
+                                TOKENS OVERFLOW: You have {totalTokens} tokens. Select exactly {excessTokens} token{excessTokens > 1 && 's'} to discard:
                                 <div className="discard-selection-area">
                                     <div className="hand-selection">
                                         {Object.keys(tokens).map(cKey => {
@@ -535,13 +632,12 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
                                             if (count <= 0) return null;
                                             const selectedCount = this.state.discardSelections.filter(c => c === color).length;
                                             return (
-                                                <button 
-                                                    key={color} 
-                                                    className="brutalist-button discard-choice-btn"
+                                                <button
+                                                    key={color}
+                                                    className={`brutalist-button discard-choice-btn ${selectedCount > 0 ? 'is-selected' : ''}`}
                                                     onClick={() => this.handleDiscardToggle(color)}
-                                                    style={{ backgroundColor: getBgColor(color), color: getTextColor(color) }}
                                                 >
-                                                    {tokenEmoji(color)} x{count} ({selectedCount} selected)
+                                                    {this.mpIcon(`gem_${color}_coin`)}x{count}
                                                 </button>
                                             );
                                         })}
@@ -550,18 +646,18 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
                                         <strong>Selected to Discard:</strong>
                                         <div className="discard-bag-row">
                                             {this.state.discardSelections.map((color, idx) => (
-                                                <span 
-                                                    key={idx} 
+                                                <span
+                                                    key={idx}
                                                     className="discard-token-badge"
                                                     onClick={() => this.handleRemoveDiscard(color)}
-                                                    style={{ backgroundColor: getBgColor(color), color: getTextColor(color) }}
+                                                    title="Click to remove"
                                                 >
-                                                    {tokenEmoji(color)}
+                                                    {this.mpIcon(`gem_${color}_coin`)}
                                                 </span>
                                             ))}
                                         </div>
                                         {this.state.discardSelections.length === excessTokens && (
-                                            <button 
+                                            <button
                                                 className="brutalist-button confirm-discard-btn"
                                                 onClick={() => {
                                                     mp.discardTokens(this.state.discardSelections);
@@ -585,44 +681,6 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
                         <div className="arena-split-columns">
                             {/* Left Column: Opponent Dashboard, Main Board, My Dashboard */}
                             <div className="left-game-column">
-                                {/* Opponent Panel */}
-                                <div className="player-panel opponent-panel">
-                                    <div className="panel-header">
-                                        <span>👤 {playerNames[opponentId] || 'Opponent'}</span>
-                                        <div className="panel-badges">
-                                            <span className="badge prestige-badge">⭐ {opponentPrestige}</span>
-                                            <span className="badge crown-badge">👑 {opponentCrowns}</span>
-                                            <span className="badge privilege-badge">📜 {opponentPrivileges}</span>
-                                        </div>
-                                    </div>
-                                    <div className="panel-tokens">
-                                        {Object.keys(opponentTokens).map(cKey => {
-                                            const color = cKey as TokenColor;
-                                            const count = opponentTokens[color] || 0;
-                                            return (
-                                                <div key={color} className="token-count" style={{ borderColor: getBgColor(color) }}>
-                                                    {tokenEmoji(color)} <strong>x{count}</strong>
-                                                </div>
-                                            );
-                                        })}
-                                        <div className="token-count reserved-count" style={{ borderColor: '#8a2be2' }}>
-                                            🔒 Reserved: <strong>x{opponentReservedCount}</strong>
-                                        </div>
-                                    </div>
-                                    <div className="panel-bonuses">
-                                        {Object.keys(opponentBonuses).map(cKey => {
-                                            const color = cKey as TokenColor;
-                                            const count = opponentBonuses[color] || 0;
-                                            if (count <= 0) return null;
-                                            return (
-                                                <span key={color} className="bonus-icon-badge" style={{ backgroundColor: getBgColor(color), color: getTextColor(color) }}>
-                                                    {tokenEmoji(color)} +{count}
-                                                </span>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
                                 {/* Shared Pool / Board Controls */}
                                 <div className="board-header-controls">
                                     <div className="pool-scrolls">
@@ -633,7 +691,7 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
                                     </div>
                                     <div className="board-actions">
                                         {isMyTurn && actionPhase === 'Normal' && (
-                                            <button 
+                                            <button
                                                 className="brutalist-button use-privilege-toggle"
                                                 onClick={() => this.setState({ isPrivilegeMode: !this.state.isPrivilegeMode, selectedCells: [], selectedGoldCoord: null })}
                                                 style={{ backgroundColor: this.state.isPrivilegeMode ? '#f6d32d' : '', color: this.state.isPrivilegeMode ? '#000' : '' }}
@@ -643,7 +701,7 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
                                             </button>
                                         )}
                                         {isMyTurn && actionPhase === 'Normal' && (
-                                            <button 
+                                            <button
                                                 className="brutalist-button replenish-board-btn"
                                                 onClick={() => mp.replenishBoard(isStuck)}
                                                 disabled={bagSize <= 0}
@@ -667,27 +725,27 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
                                         </div>
                                     )}
                                     <div className="grid-5x5">
-                                        {board.map((row: any[], r: number) => 
+                                        {board.map((row: any[], r: number) =>
                                             row.map((token: TokenColor | null, c: number) => {
                                                 const isSelected = this.state.selectedCells.some(cell => cell[0] === r && cell[1] === c);
-                                                const isGoldSelected = this.state.selectedGoldCoord && 
-                                                                     this.state.selectedGoldCoord[0] === r && 
-                                                                     this.state.selectedGoldCoord[1] === c;
-                                                const isMatchingHighlight = actionPhase === 'SelectMatchingToken' && 
-                                                                           token === pendingAbilityInfo?.targetColor;
+                                                const isGoldSelected = this.state.selectedGoldCoord &&
+                                                    this.state.selectedGoldCoord[0] === r &&
+                                                    this.state.selectedGoldCoord[1] === c;
+                                                const isMatchingHighlight = actionPhase === 'SelectMatchingToken' &&
+                                                    token === pendingAbilityInfo?.targetColor;
 
                                                 return (
-                                                    <div 
-                                                        key={`${r}-${c}`} 
+                                                    <div
+                                                        key={`${r}-${c}`}
                                                         className={`board-cell ${isSelected ? 'cell-selected' : ''} ${isGoldSelected ? 'gold-selected' : ''} ${isMatchingHighlight ? 'matching-highlight' : ''}`}
                                                         onClick={() => this.handleCellClick(r, c, token)}
                                                     >
                                                         {token && (
-                                                            <div 
-                                                                className="board-gem-token"
-                                                                style={{ background: getBgColor(token) }}
-                                                            >
-                                                                <span className="gem-emoji">{tokenEmoji(token)}</span>
+                                                            <div className="board-gem-token">
+                                                                <ExpressiveIcon
+                                                                    icon={SPLENDOR_DUEL_ICONS[`gem_${token}_coin`]}
+                                                                    palette={getSplendorDuelPalette(token as any)}
+                                                                />
                                                             </div>
                                                         )}
                                                         <span className="coords-debug">{r},{c}</span>
@@ -702,7 +760,7 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
                                             {this.state.selectedCells.length > 0 && (
                                                 <div className="execution-panel">
                                                     {lineCheck.valid ? (
-                                                        <button 
+                                                        <button
                                                             className="brutalist-button execute-take-btn"
                                                             onClick={() => {
                                                                 mp.takeTokens(this.state.selectedCells);
@@ -712,13 +770,13 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
                                                             Take {this.state.selectedCells.length} Selected Tokens
                                                         </button>
                                                     ) : (
-                                                        <span className="invalid-warning">⚠️ {lineCheck.reason}</span>
+                                                        <span className="invalid-warning">{lineCheck.reason}</span>
                                                     )}
                                                 </div>
                                             )}
                                             {this.state.selectedGoldCoord && (
                                                 <div className="execution-panel">
-                                                     <span className="gold-tip">🪙 Gold token selected! Select a card from the pyramid (or click &quot;Reserve Blind&quot; on a deck level) to reserve it + claim the Gold.</span>
+                                                    <span className="gold-tip">Gold token selected! Select a card from the pyramid (or click &quot;Reserve Blind&quot; on a deck level) to reserve it + claim the Gold.</span>
                                                 </div>
                                             )}
                                         </div>
@@ -728,33 +786,79 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
                                 {/* Active Player Panel */}
                                 <div className="player-panel my-panel active-player-panel">
                                     <div className="panel-header">
-                                        <span>👤 {playerNames[mp.myId]} (You)</span>
-                                        {isMyTurn && <span className="turn-indicator">Your Turn ⚔️</span>}
+                                        <span className="panel-name">{playerNames[myId]} (You)</span>
+                                        {isMyTurn && <span className="turn-indicator">Your Turn</span>}
                                         <div className="panel-badges">
-                                            <span className="badge prestige-badge">⭐ {prestige}</span>
-                                            <span className="badge crown-badge">👑 {crowns}</span>
-                                            <span className="badge privilege-badge">📜 {privileges}</span>
+                                            <span className="badge prestige-badge">{this.mpIcon('star', null, '#7a5a00')} {prestige}</span>
+                                            <span className="badge crown-badge">{this.mpIcon('crown', null, '#8a4712')} {crowns}</span>
+                                            <span className="badge privilege-badge">{this.mpIcon('scroll', null, '#303f78')} {privileges}</span>
                                         </div>
                                     </div>
                                     <div className="panel-tokens">
+                                        <span className="panel-group-label">Spendable tokens</span>
                                         {Object.keys(tokens).map(cKey => {
                                             const color = cKey as TokenColor;
                                             const count = tokens[color] || 0;
                                             return (
-                                                <div key={color} className="token-count" style={{ borderColor: getBgColor(color) }}>
-                                                    {tokenEmoji(color)} <strong>x{count}</strong>
+                                                <div key={color} className="token-count">
+                                                    {this.mpIcon(`gem_${color}_coin`)} <strong>x{count}</strong>
                                                 </div>
                                             );
                                         })}
                                     </div>
                                     <div className="panel-bonuses">
+                                        {Object.values(bonuses).some((c: number) => c > 0) && (
+                                            <span className="panel-group-label">Permanent bonuses <em>(from cards)</em></span>
+                                        )}
                                         {Object.keys(bonuses).map(cKey => {
                                             const color = cKey as TokenColor;
                                             const count = bonuses[color] || 0;
                                             if (count <= 0) return null;
                                             return (
-                                                <span key={color} className="bonus-icon-badge" style={{ backgroundColor: getBgColor(color), color: getTextColor(color) }}>
-                                                    {tokenEmoji(color)} +{count}
+                                                <span key={color} className="bonus-icon-badge">
+                                                    {this.mpIcon(`gem_${color}_coin`)} +{count}
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Opponent Panel — kept last so it sits at the bottom of the mobile stack */}
+                                <div className="player-panel opponent-panel">
+                                    <div className="panel-header">
+                                        <span className="panel-name">{playerNames[opponentId] || 'Opponent'}</span>
+                                        <div className="panel-badges">
+                                            <span className="badge prestige-badge">{this.mpIcon('star', null, '#7a5a00')} {opponentPrestige}</span>
+                                            <span className="badge crown-badge">{this.mpIcon('crown', null, '#8a4712')} {opponentCrowns}</span>
+                                            <span className="badge privilege-badge">{this.mpIcon('scroll', null, '#303f78')} {opponentPrivileges}</span>
+                                        </div>
+                                    </div>
+                                    <div className="panel-tokens">
+                                        <span className="panel-group-label">Spendable tokens</span>
+                                        {Object.keys(opponentTokens).map(cKey => {
+                                            const color = cKey as TokenColor;
+                                            const count = opponentTokens[color] || 0;
+                                            return (
+                                                <div key={color} className="token-count">
+                                                    {this.mpIcon(`gem_${color}_coin`)} <strong>x{count}</strong>
+                                                </div>
+                                            );
+                                        })}
+                                        <div className="token-count reserved-count">
+                                            {this.mpIcon('lock')} Reserved <strong>x{opponentReservedCount}</strong>
+                                        </div>
+                                    </div>
+                                    <div className="panel-bonuses">
+                                        {Object.values(opponentBonuses).some((c: number) => c > 0) && (
+                                            <span className="panel-group-label">Permanent bonuses <em>(from cards)</em></span>
+                                        )}
+                                        {Object.keys(opponentBonuses).map(cKey => {
+                                            const color = cKey as TokenColor;
+                                            const count = opponentBonuses[color] || 0;
+                                            if (count <= 0) return null;
+                                            return (
+                                                <span key={color} className="bonus-icon-badge">
+                                                    {this.mpIcon(`gem_${color}_coin`)} +{count}
                                                 </span>
                                             );
                                         })}
@@ -766,23 +870,58 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
                             <div className="right-game-column">
                                 {/* Jewel Cards Pyramid */}
                                 <div className="pyramid-container">
-                                    <h3 style={{ borderBottom: '3px solid #000', paddingBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Jewel Cards Pyramid</h3>
-                                    
+                                    <h3 style={{ paddingBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', color: '#2b2440' }}>Jewel Cards Pyramid</h3>
+
                                     {[3, 2, 1].map(level => {
                                         const row = pyramid[level as 1 | 2 | 3] || [];
                                         const deckSize = deckSizes[level as 1 | 2 | 3] || 0;
                                         return (
                                             <div key={level} className={`pyramid-row level-${level}`}>
-                                                {/* Blind Deck Slot */}
-                                                <div className="deck-card-slot">
-                                                    <div className="deck-card-back">
-                                                        <span className="level-dots">
-                                                            {Array(level).fill('●').join('')}
-                                                        </span>
-                                                        <span className="deck-count">x{deckSize}</span>
+                                                {/* Face Up Cards */}
+                                                <div className="pyramid-cards-row">
+                                                    {row.map((card: Card | null, idx: number) => {
+                                                        if (!card) return <div key={idx} className="card-empty-slot" />;
+                                                        return this.renderCardComponent(card, true, isMyTurn && actionPhase === 'Normal');
+                                                    })}
+                                                </div>
+
+                                                {/* Blind Deck Slot (right of the face-up cards) */}
+                                                <div className="deck-card-slot" style={{ position: 'relative', width: '100px', height: '140px' }}>
+                                                    <PlayingCard
+                                                        card={getDeckBackDefinition(level)}
+                                                        width="100px"
+                                                        height="140px"
+                                                        customIcons={SPLENDOR_DUEL_ICONS}
+                                                        isFlipped={true}
+                                                    />
+                                                    <div className="deck-back-overlay" style={{
+                                                        position: 'absolute',
+                                                        top: 0,
+                                                        left: 0,
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        justifyContent: 'flex-end',
+                                                        alignItems: 'center',
+                                                        padding: '8px',
+                                                        boxSizing: 'border-box',
+                                                        color: '#ffffff',
+                                                        zIndex: 3,
+                                                        pointerEvents: 'none'
+                                                    }}>
+                                                        <span className="deck-count" style={{
+                                                            fontSize: '0.95em',
+                                                            fontWeight: 800,
+                                                            letterSpacing: '0.03em',
+                                                            backgroundColor: 'rgba(20, 16, 32, 0.55)',
+                                                            borderRadius: '6px',
+                                                            padding: '2px 9px'
+                                                        }}>×{deckSize}</span>
                                                         {isMyTurn && actionPhase === 'Normal' && this.state.selectedGoldCoord && deckSize > 0 && (
-                                                            <button 
+                                                            <button
                                                                 className="brutalist-button reserve-blind-btn"
+                                                                style={{ pointerEvents: 'auto', position: 'absolute', top: '50%', transform: 'translateY(-50%)' }}
                                                                 onClick={() => {
                                                                     mp.reserveCard(null, level, this.state.selectedGoldCoord);
                                                                     this.setState({ selectedGoldCoord: null });
@@ -793,14 +932,6 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
                                                         )}
                                                     </div>
                                                 </div>
-
-                                                {/* Face Up Cards */}
-                                                <div className="pyramid-cards-row">
-                                                    {row.map((card: Card | null, idx: number) => {
-                                                        if (!card) return <div key={idx} className="card-empty-slot" />;
-                                                        return this.renderCardComponent(card, true, isMyTurn && actionPhase === 'Normal');
-                                                    })}
-                                                </div>
                                             </div>
                                         );
                                     })}
@@ -808,7 +939,7 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
 
                                 {/* Royals Pool */}
                                 <div className="royals-pool-container">
-                                    <h3 style={{ borderBottom: '3px solid #000', paddingBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Royal Cards Pool</h3>
+                                    <h3 style={{ paddingBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', color: '#2b2440' }}>Royal Cards Pool</h3>
                                     <div className="royals-row">
                                         {royalsPool.length === 0 ? (
                                             <p style={{ fontStyle: 'italic', color: '#a0a0a0' }}>Royal cards pool is empty</p>
@@ -816,14 +947,18 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
                                             royalsPool.map((royal: RoyalCard) => {
                                                 const canClaim = isMyTurn && actionPhase === 'SelectRoyal';
                                                 return (
-                                                    <div 
-                                                        key={royal.id} 
-                                                        className={`royal-pool-card ${canClaim ? 'clickable-royal' : ''}`}
+                                                    <div
+                                                        key={royal.id}
+                                                        className={`royal-pool-card royal-card ${canClaim ? 'clickable-royal' : ''}`}
                                                         onClick={() => canClaim && mp.selectRoyal(royal.id)}
+                                                        style={{ position: 'relative', width: '88px', height: '121px' }}
                                                     >
-                                                        <span className="royal-points">⭐ {royal.points}</span>
-                                                        {royal.ability && <span className="royal-ability">⚡ {royal.ability}</span>}
-                                                        <span className="royal-label">ROYAL</span>
+                                                        <PlayingCard
+                                                            card={getRoyalCardDefinition(royal)}
+                                                            width="88px"
+                                                            customIcons={SPLENDOR_DUEL_ICONS}
+                                                            hoverable={canClaim}
+                                                        />
                                                     </div>
                                                 );
                                             })
@@ -833,7 +968,7 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
 
                                 {/* Reserved Cards (Secret Info) */}
                                 <div className="reserved-cards-container">
-                                    <h3 style={{ borderBottom: '3px solid #000', paddingBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>My Reserved Cards ({reserved.length}/3)</h3>
+                                    <h3 style={{ paddingBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', color: '#2b2440' }}>My Reserved Cards ({reserved.length}/3)</h3>
                                     <div className="reserved-row">
                                         {reserved.length === 0 ? (
                                             <p style={{ fontStyle: 'italic', color: '#a0a0a0' }}>No reserved cards</p>
@@ -847,15 +982,15 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
                                 {this.state.selectedJokerCardId && (
                                     <div className="brutalist-overlay">
                                         <div className="brutalist-modal">
-                                            <h3>Assign Joker Color 🌈</h3>
+                                            <h3>Assign Joker Color</h3>
                                             <p>Select which of your owned bonus colors this joker will copy:</p>
                                             <div className="joker-color-choices">
                                                 {['blue', 'white', 'green', 'black', 'red'].map(col => {
                                                     const count = bonuses[col as TokenColor] || 0;
                                                     if (count <= 0) return null; // must own a bonus of that color
                                                     return (
-                                                        <button 
-                                                            key={col} 
+                                                        <button
+                                                            key={col}
                                                             className="brutalist-button color-choice-btn"
                                                             onClick={() => {
                                                                 mp.purchaseCard(this.state.selectedJokerCardId, col);
@@ -868,7 +1003,7 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
                                                     );
                                                 })}
                                             </div>
-                                            <button 
+                                            <button
                                                 className="brutalist-button cancel-btn"
                                                 onClick={() => this.setState({ selectedJokerCardId: null })}
                                                 style={{ marginTop: '20px' }}
@@ -897,8 +1032,9 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
                         {lastMove ? (
                             <div className="brutalist-log-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '65vh', overflowY: 'auto' }}>
                                 <div style={{
-                                    backgroundColor: '#f2f2f2',
-                                    border: '2px solid #000',
+                                    backgroundColor: '#f7f6fb',
+                                    border: '1px solid #e3ddee',
+                                    borderRadius: '10px',
                                     padding: '10px',
                                     fontWeight: 'bold'
                                 }}>
@@ -938,7 +1074,8 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
             {
                 'links': links,
                 'gameName': 'Splendor Duel',
-                'topBarContent': isMyTurn ? `Your Turn ⚔️` : `Waiting for opponent...`
+                'topBarContent': isMyTurn ? `Your Turn` : `Waiting`,
+                'roomClassName': isMyTurn ? 'attention-bg' : ''
             }
         );
     }
@@ -975,107 +1112,52 @@ export class SplendorDuelMainPage extends React.Component<SplendorDuelProps, Mai
         const reserveEnabled = canInteract && isFromPyramid && this.state.selectedGoldCoord && this.props.reserved.length < 3;
 
         return (
-            <div 
-                key={card.id} 
-                className={`jewel-card level-${card.level} color-${card.color || 'gray'}`}
+            <div
+                key={card.id}
+                className={`jewel-card level-${card.level} color-${card.color || 'gray'} ${buyEnabled ? 'is-buyable' : ''}`}
                 style={{
-                    border: '3px solid #000',
-                    boxShadow: '4px 4px 0px #000',
-                    background: card.color === 'wild' ? getBgColor('wild') : '#ffffff'
+                    position: 'relative'
                 }}
             >
-                {/* Top Section */}
-                <div className="card-top-row">
-                    <span className="card-prestige" style={{ color: card.color === 'wild' ? '#ffffff' : '#000000' }}>
-                        {card.points > 0 ? `⭐ ${card.points}` : ''}
-                    </span>
-                    <span className="card-crowns">
-                        {card.crowns > 0 ? Array(card.crowns).fill('👑').join('') : ''}
-                    </span>
-                    <span className="card-bonus">
-                        {card.bonus_color && (
-                            <span 
-                                className="bonus-pill"
-                                style={{
-                                    backgroundColor: getBgColor(card.bonus_color),
-                                    color: getTextColor(card.bonus_color),
-                                    border: '2px solid #000'
-                                }}
-                            >
-                                {tokenEmoji(card.bonus_color)}
-                                {card.bonus_count > 1 ? ` x${card.bonus_count}` : ''}
-                            </span>
-                        )}
-                    </span>
-                </div>
+                <PlayingCard
+                    card={getSplendorDuelCardDefinition(card, bonuses)}
+                    width="115px"
+                    height="155px"
+                    customIcons={SPLENDOR_DUEL_ICONS}
+                    hoverable={canInteract}
+                />
 
-                {/* Middle Ability badge */}
-                {card.ability && (
-                    <div className="card-ability-badge">
-                        ⚡ {card.ability.toUpperCase().replace('_', ' ')}
+                {/* Persistent, tap-friendly action buttons (always visible when actionable) */}
+                {canInteract && (buyEnabled || reserveEnabled) && (
+                    <div className="card-actions">
+                        {reserveEnabled && (
+                            <button
+                                className="card-action-btn reserve"
+                                title="Reserve card"
+                                aria-label="Reserve card"
+                                onClick={() => {
+                                    mp.reserveCard(card.id, null, this.state.selectedGoldCoord);
+                                    this.setState({ selectedGoldCoord: null });
+                                }}
+                            />
+                        )}
+                        {buyEnabled && (
+                            <button
+                                className="card-action-btn buy"
+                                title="Buy card"
+                                aria-label="Buy card"
+                                onClick={() => {
+                                    if (card.color === 'wild') {
+                                        // Open assigning joker popup
+                                        this.setState({ selectedJokerCardId: card.id });
+                                    } else {
+                                        mp.purchaseCard(card.id);
+                                    }
+                                }}
+                            />
+                        )}
                     </div>
                 )}
-
-                {/* Bottom Cost and Actions */}
-                <div className="card-bottom-area">
-                    <div className="cost-row">
-                        {Object.keys(card.cost).map(cKey => {
-                            const color = cKey as TokenColor;
-                            const amt = card.cost[color] || 0;
-                            const discount = color === 'pearl' ? 0 : (bonuses[color] || 0);
-                            const effectiveCost = Math.max(0, amt - discount);
-
-                            return (
-                                <div 
-                                    key={color} 
-                                    className={`cost-bubble ${effectiveCost === 0 ? 'cost-discounted' : ''}`}
-                                    style={{
-                                        backgroundColor: getBgColor(color),
-                                        color: getTextColor(color),
-                                        border: '2px solid #000'
-                                    }}
-                                >
-                                    {tokenEmoji(color)} {amt}
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* Action buttons overlay */}
-                    {canInteract && (
-                        <div className="card-action-overlay">
-                            {buyEnabled && (
-                                <button 
-                                    className="brutalist-button card-buy-btn"
-                                    onClick={() => {
-                                        if (card.color === 'wild') {
-                                            // Open assigning joker popup
-                                            this.setState({ selectedJokerCardId: card.id });
-                                        } else {
-                                            mp.purchaseCard(card.id);
-                                        }
-                                    }}
-                                >
-                                    Buy 💰
-                                </button>
-                            )}
-                            {reserveEnabled && (
-                                <button 
-                                    className="brutalist-button card-reserve-btn"
-                                    onClick={() => {
-                                        mp.reserveCard(card.id, null, this.state.selectedGoldCoord);
-                                        this.setState({ selectedGoldCoord: null });
-                                    }}
-                                >
-                                    Reserve
-                                </button>
-                            )}
-                        </div>
-                    )}
-                </div>
-                <div className="card-level-indicator">
-                    {Array(card.level).fill('●').join('')}
-                </div>
             </div>
         );
     }

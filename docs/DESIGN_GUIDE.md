@@ -357,3 +357,90 @@ Games and rules should **NOT** try to apply additional styling, overrides, or la
   * Pass `selected={true}` to draw a perfectly color-coordinated selection outline and apply tactile pressed translations.
 This ensures all playing cards behave consistently across the platform and prevents visual conflicts or layout breakage in different viewports.
 
+> [!NOTE]
+> The "no overrides" rule above is the default path for generic cards. When a game must **faithfully reproduce a specific real board game's card faces** (custom header bands, cost columns, bespoke gems, tier markers, medallions), you will legitimately need custom icons and scoped layout overrides. See **Section 10** for the required patterns, text-sizing rules, and the gotchas that will otherwise bite you. `SplendorDuel` (`src/rules/splendorduel/`) is the reference implementation.
+
+---
+
+## 10. Custom Card Layouts & Vector Iconography (Advanced)
+
+When the default card path (Section 9.3–9.4) isn't enough — i.e. you are recreating a real game's cards, tokens, and player boards with a specific look — build on the three layers below. `SplendorDuel` is the worked example; these are the hard-won learnings from it.
+
+### 10.1 The three layers of a custom card
+1. **Palette + definition builder** (`<Game>Assets.ts`): pure functions returning `CardDefinition` objects — choose icon IDs, header/data/footer content, dimensions, palette.
+2. **Custom icons** (`IconObject` map in the same file, passed via `customIcons={…}`): your geometric vector glyphs.
+3. **Scoped layout overrides** (`<game>.scss`): CSS under a wrapper class you add on the card (`.jewel-card`, `.royal-card`, …). Never restyle `.playing-card-*` globally — always scope under the wrapper so other games are unaffected.
+
+### 10.2 Vector iconography with the IconEngine
+- An icon is a list of primitive layers drawn in a **0–100 viewBox**. Each primitive renders centered at the origin (`circle` r=25, `rectangle` 50×50, `triangle`, `arch`) and is then transformed by `x`/`y` (translate within 0–100), `scaleX`/`scaleY`, and `rotation`.
+- A disc that fills a coin/token cell = `circle` at `x:50, y:50` with `scaleX/scaleY ≈ 1.9` (r ≈ 47.5, ~95% of the box).
+- **Fills**: palette keys (`'primary'`, `'background'`, `'border'`, `'accent'`…) resolve against the card's palette and follow it; **literal hex** (`'#2f93c2'`) stays fixed regardless of palette. Use literals for brand gem colors that must never shift; use keys when the shape should follow the band/card color.
+- `fill: 'none'` + `stroke` + `strokeWidth` draws rings/outlines.
+- Complex outlines (e.g. a 5-point star) use `type: 'bezier'` with a `customPath` authored directly in 0–100 space, with the layer at `x:0, y:0, scale:1`.
+- Boolean `subtract` exists but **nested booleans are fragile** (operand-consumption tracking). Prefer stacking solid shapes over boolean ops.
+
+### 10.3 The "coin / negative-space" pattern (flat + legible)
+
+> [!TIP]
+> This pattern is now built into the library: use `coinIcon(id, discColor, glyphLayers)` from `card-renderer/presets.ts` instead of hand-assembling the disc. Common glyphs (`star`, `crown`, `lock`, `scroll`) also ship in `PRESET_ICONS` — don't redraw them per game.
+
+The most reusable idea: a **solid colored disc with the glyph knocked out**. Render the *same glyph geometry* three ways to keep a game visually unified:
+- **Coin** (card costs, board tokens, panel counts): colored disc + glyph in **white** (or `'background'`) → on a white card the glyph reads as a punched hole. Bold and legible.
+- **On-band bonus** (header over a colored band): **white disc** + glyph filled `'primary'` (the band color) → the band shows through the glyph.
+- **Watermark** (decoration only): faint disc (`opacity ≈ 0.2`) + white glyph. **Never** use this for information the player must read — white-on-light is nearly invisible. (This was the royal-card bug: the ability art used the faint watermark and disappeared.)
+- **Contrast beats habit**: a dark glyph on a mid/gold disc (`#4a3608` on `#d9a520`) reads far better than white-on-gold. Choose glyph color for contrast against its disc, not by reflex.
+
+### 10.4 SVG sizing in regions — now guarded by the library
+`ExpressiveIcon` renders an `<svg>` with **no intrinsic pixel size**. Historically, in a growable flex child (the default art region is `flex: 1`) the browser sized the flex item to the SVG's ~150px fallback and the card ballooned past its box (royal medallions once rendered ~2.5× oversized).
+
+This is now fixed in the core: `.card-art-region` sets `min-height: 0; min-width: 0;` and the icon is clamped to `max-width/height: 100%`. **The default stacked layout is safe at any size — you no longer need per-game CSS just to avoid this.**
+
+You still absolutely-position regions when you want a **bespoke layout** (a coloured header band, a cost column pinned left, art pinned right), because the default is a simple vertical stack. To do that, scope overrides under a wrapper class exactly like `.jewel-card`/`.royal-card`:
+```scss
+.my-card {
+  .playing-card-face.face-front { display: block !important; position: relative; padding: 0 !important; }
+  .card-header-region { position: absolute; top: 0; left: 0; width: 100%; height: 2.7em; }
+  .card-art-region    { position: absolute; top: 2.7em; bottom: 2.7em; left: .3em; right: .3em; overflow: hidden; }
+  .card-footer-region { position: absolute; bottom: 0; left: 0; width: 100%; height: 2.7em; }
+}
+```
+This clamps the art to a fixed box. **Never leave a custom-icon art region as a growable flex item.**
+
+### 10.5 Text size & the em-compounding trap
+- The card base font is roughly `1em ≈ widthMm * 0.052`, scaled by the pixel `width`. At `width="88px"`, `1em ≈ 4.6px` — small.
+- **Region font-sizes compound.** The footer region renders at `0.9 * footer.size em`, and `.card-footer-text` is another `em` on top of that. A footer `size: 1.0` with `.card-footer-text { font-size: 0.92em }` ends up ≈ 0.83em of the card base — frequently illegible. Boost the definition's footer `size` (e.g. `1.3`), keep labels **short** (`PRIVILEGE`, not `TAKE PRIVILEGE`), and set `white-space: normal` so they wrap instead of clipping.
+- **Minimum legibility**: keep primary numbers ≳ 1.5em and body labels effectively ≳ 1.1em of the card base. If text won't fit, enlarge the card slightly or shorten the text — never ship 4px labels.
+- Let icons carry meaning: a clear medallion + a one-word label beats a cramped sentence.
+
+### 10.6 Inline styles beat CSS — pick one source of truth
+An inline `style={{ width, height }}` on an element **wins over any stylesheet rule**. If you size an icon span inline, your per-context `.scss` sizes are silently ignored. Choose one: either size icons via a class in SCSS (set **no** inline size), or size inline and don't fight it in CSS. (In SplendorDuel we moved all panel-icon sizing into SCSS by dropping the inline width/height.)
+
+### 10.7 Pixel-scaled mode (`width="Npx"`)
+- Adds `.is-pixel-scaled`, which **disables** the compact-mode container query (the one that hides header/data/footer under 150px). Your regions stay visible even on small cards.
+- Rendered height comes from `heightMm/widthMm × width`; the `height` **prop is ignored**. Set card *shape* (portrait vs landscape) via `widthMm`/`heightMm`, set *size* via the `width` prop, and match the wrapper `<div>` CSS to the computed size.
+
+### 10.8 Alignment & spacing
+- Use the absolutely-positioned regions from 10.4 for pixel control: a fixed-`em` header band, a cost column pinned left, a watermark pinned right, a footer pinned bottom.
+- A **bolder color accent = a taller header band** (as a proportion of the card). Keep dark title text legible on it.
+- Tighten dense lists: small `gap`, row-height ≈ icon size, and hairline (or no) separators.
+- Match placeholder/empty-slot sizes to the real card size so grids don't jump.
+- **Encode tiers/variants** with icon variants + CSS level classes: e.g. `castle_1/2/3` (tower count = tier) plus `.level-N .card-header-region::after` for a per-tier skyline. **Connect sub-shapes** (towers overlapping the wall base) so nothing floats with random gaps.
+
+### 10.9 Consistency across the whole game
+Reuse **one** icon set everywhere — cards, board tokens, and player-panel counts should render the *same* coin icons and the *same* palette. In SplendorDuel the board cells and panel token counts render the exact `gem_${color}_coin` used on card costs, so shape and color are identical platform-wide. Replace emoji with these vector icons (emoji beside vector cards looked inconsistent).
+
+### 10.10 Flat vs Neo-Brutalist — choose one skin per game
+The platform default is Neo-Brutalist (Sections 1–4: black borders, hard offset shadows). A game reproducing a modern, flat/pastel board game may instead adopt a **Flat Minimalist skin** (SplendorDuel):
+- Hairline borders (`1px` light) + soft radius (12–16px); **no** offset shadows.
+- Flat fills; show selection with an **inset ring** (`box-shadow: inset 0 0 0 3px <accent>`) so there's no layout shift, and pulse without a hard black shadow.
+- Light panels instead of black/velvet backdrops.
+
+Apply the chosen skin **consistently** to cards, board, and player panels. Don't mix a flat board with brutalist panels — a half-converted UI looks broken (we had to unify them across several passes).
+
+### 10.11 Verify at true rendered size
+Card styling can't be trusted from code alone. Two fast loops:
+- Add a **temporary** debugger webpack entry that imports the game's `.scss` and real card definitions, renders a gallery, and screenshot it (SplendorDuel used a throwaway `splendor.preview` entry, then removed it).
+- Or just run the game.
+
+Either way, verify at the **actual pixel size** — the em-compounding (10.5) and SVG-inflation (10.4) bugs only appear at true scale. Always run `tsc --noEmit` and compile the `.scss` (`sass <file>`) after asset/style edits; the webpack build fails on TS/lint/Sass errors.
+

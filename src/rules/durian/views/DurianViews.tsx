@@ -135,7 +135,13 @@ export class DurianMainPage extends React.Component<DurianMainViewProps, {}> {
         const myPlayerState = this.props.players[mp.clientId];
         const myPoints = myPlayerState ? myPlayerState.points : 0;
 
-        const isMyTurn = (this.props.gameStatus === GameStatus.PlayerTurn || this.props.gameStatus === GameStatus.CardDrawn) && mp.clientId === this.props.currentPlayerId;
+        const statusStr = String(this.props.gameStatus);
+        const isMyTurn = (
+            statusStr === '0' ||
+            statusStr === '1' ||
+            statusStr === 'PlayerTurn' ||
+            statusStr === 'CardDrawn'
+        ) && mp.clientId === this.props.currentPlayerId;
 
         return mp.getPluginView(
             'gameshell',
@@ -295,14 +301,14 @@ class DurianGameBoard extends React.Component<DurianMainViewProps, {}> {
                 <div className="durian-layout-section action-section">
                     {isMyTurn ? (
                         <div className="active-turn-actions anim-fade-in">
-                            <h4 className="turn-indicator pulse-glow">🟢 Your Turn! Make a Decision</h4>
+                            <h4 className="turn-indicator pulse-glow">Your Turn! Make a Decision</h4>
                             {this.props.gameStatus === GameStatus.PlayerTurn && (
                                 <div className="turn-choices">
                                     <button
                                         className="durian-btn action-btn draw-btn"
                                         onClick={() => mp.drawCard()}
                                     >
-                                        🎴 Draw Order Card
+                                        Draw Order Card
                                     </button>
                                     <button
                                         className={`durian-btn action-btn bell-btn ${this.props.orders.length > 0 ? 'pulsing-bell' : 'disabled'}`}
@@ -310,7 +316,7 @@ class DurianGameBoard extends React.Component<DurianMainViewProps, {}> {
                                         onClick={() => mp.ringBell()}
                                         title={this.props.orders.length === 0 ? "Cannot ring the bell on the first turn of the round" : ""}
                                     >
-                                        🔔 Ring the Bell!
+                                        Ring the Bell!
                                     </button>
                                 </div>
                             )}
@@ -337,7 +343,7 @@ class DurianGameBoard extends React.Component<DurianMainViewProps, {}> {
                     ) : (
                         <div className="waiting-turn-panel">
                             <h4 className="waiting-indicator">
-                                ⏳ Waiting for <strong style={{ color: activeClerk.color }}>{activeClerk.name}</strong> to make a move...
+                                Waiting for <strong style={{ color: activeClerk.color }}>{activeClerk.name}</strong> to make a move...
                             </h4>
                             <p className="sub-text">
                                 {this.props.gameStatus === GameStatus.CardDrawn

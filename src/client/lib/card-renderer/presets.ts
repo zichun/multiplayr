@@ -3,7 +3,7 @@
  * Predefined palettes, icons, and card templates.
  */
 
-import { Palette, IconObject, CardDefinition } from './types';
+import { Palette, IconObject, CardDefinition, IconLayer } from './types';
 
 // ==========================================
 // 1. Color Palettes
@@ -651,8 +651,83 @@ export const PRESET_ICONS: Record<string, IconObject> = {
                 opacity: 0.95
             }
         ]
+    },
+
+    // --------------------------------------------------------------------
+    // Generic flat game glyphs (single-colour, palette-keyed so they theme).
+    // Override the colour per-use with `colorOverride` on the header/data icon.
+    // --------------------------------------------------------------------
+
+    // Five-point star (prestige / rating). Authored directly in 0-100 space.
+    star: {
+        id: 'star',
+        name: 'Star',
+        layers: [
+            { id: 'star_shape', type: 'bezier', x: 0, y: 0, scaleX: 1, scaleY: 1, fill: 'secondary', customPath: 'M 50 8 L 63 37 L 94 37 L 69 57 L 79 88 L 50 68 L 21 88 L 31 57 L 6 37 L 37 37 Z' }
+        ]
+    },
+
+    // Three-point crown (crowns / royalty milestones).
+    crown: {
+        id: 'crown',
+        name: 'Crown',
+        layers: [
+            { id: 'cr_base', type: 'rectangle', x: 50, y: 66, scaleX: 0.66, scaleY: 0.12, fill: 'secondary' },
+            { id: 'cr_p1', type: 'triangle', x: 22, y: 52, scaleX: 0.22, scaleY: 0.34, fill: 'secondary' },
+            { id: 'cr_p2', type: 'triangle', x: 50, y: 44, scaleX: 0.26, scaleY: 0.5, fill: 'secondary' },
+            { id: 'cr_p3', type: 'triangle', x: 78, y: 52, scaleX: 0.22, scaleY: 0.34, fill: 'secondary' }
+        ]
+    },
+
+    // Padlock (reserved / hidden / locked state).
+    lock: {
+        id: 'lock',
+        name: 'Lock',
+        layers: [
+            { id: 'lk_body', type: 'rectangle', x: 50, y: 62, scaleX: 0.5, scaleY: 0.34, fill: 'charcoal' },
+            { id: 'lk_shackle', type: 'arch', x: 50, y: 42, scaleX: 0.3, scaleY: 0.34, fill: 'none', stroke: 'charcoal', strokeWidth: 7 },
+            { id: 'lk_hole', type: 'circle', x: 50, y: 60, scaleX: 0.12, scaleY: 0.12, fill: 'background' }
+        ]
+    },
+
+    // Rolled scroll (privilege / decree / parchment).
+    scroll: {
+        id: 'scroll',
+        name: 'Scroll',
+        layers: [
+            { id: 'sc_body', type: 'rectangle', x: 50, y: 50, scaleX: 0.5, scaleY: 0.64, fill: 'background' },
+            { id: 'sc_top', type: 'rectangle', x: 50, y: 20, scaleX: 0.6, scaleY: 0.12, fill: 'charcoal' },
+            { id: 'sc_bottom', type: 'rectangle', x: 50, y: 80, scaleX: 0.6, scaleY: 0.12, fill: 'charcoal' },
+            { id: 'sc_ribbon', type: 'rectangle', x: 50, y: 50, scaleX: 0.54, scaleY: 0.1, fill: 'danger' }
+        ]
     }
 };
+
+// ==========================================
+// 2b. Icon builders
+// ==========================================
+
+/**
+ * Build a flat "coin / token" icon: a solid colour disc with a glyph knocked out
+ * of it (negative space). This is the reusable pattern behind tableau tokens and
+ * card-cost pips — a solid disc reads clearly at any size and the glyph, drawn in
+ * the card background colour (or white), looks like a punched hole.
+ *
+ * @param id         unique icon id
+ * @param discColor  hex or palette key for the disc (e.g. '#2f93c2' or 'primary')
+ * @param glyph      the symbol layers, typically filled '#ffffff' / 'background'
+ * @param name       optional display name
+ */
+export function coinIcon(id: string, discColor: string, glyph: IconLayer[], name?: string): IconObject {
+    return {
+        id,
+        name: name ?? id,
+        layers: [
+            { id: `${id}_disc`, type: 'circle', x: 50, y: 50, scaleX: 1.9, scaleY: 1.9, fill: discColor },
+            ...glyph
+        ]
+    };
+}
 
 // ==========================================
 // 3. Card Presets

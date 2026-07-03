@@ -1,17 +1,20 @@
 /**
- * durian.scss - Stylesheet for the Durian Oink board game
+ * durian.scss - Flat, Pastel Redesign for the Durian Oink board game
  */
 
-// Harmony Color Palette (Oink Games inspiration)
-$bg-color: #ffffff; // White background
-$wood-plate: #d39e5e; // Warm light wood stand base
-$wood-dark: #8c5a2b; // Dark wood slot
-$card-front: #faf9f6; // Crisp clean off-white card face
-$card-back-pattern: #0a1f14; // Dark green jungle pattern for card backs
-$accent-orange: #ff6f3c; // Punchy signature orange
-$accent-yellow: #ffc93c; // Banana/grapefruit yellow
-$text-light: #faf9f6;
-$text-dark: #2d3748;
+// Flat Soft Pastel Color Palette
+$bg-color: #fbfbf9; // Soft warm paper cream background
+$wood-plate: #e2dbc9; // Flat warm sand-cream base
+$wood-dark: #cbbfa8; // Flat warm grey-brown slot
+$card-front: #ffffff; // Flat clean white card face
+$card-back-pattern: #e6f0fa; // Soft pastel ice blue for card back
+$accent-orange: #ffb396; // Soft pastel peach-orange
+$accent-yellow: #ffeaa7; // Soft pastel banana-yellow
+$accent-green: #a8e6cf; // Soft pastel mint-green
+$accent-red: #ff8b94; // Soft pastel coral-red
+$accent-blue: #a1c4fd; // Soft pastel sky-blue
+$text-light: #ffffff;
+$text-dark: #475569; // Soft slate dark text
 
 .durian-game-board,
 .manager-resolution-scene,
@@ -19,84 +22,81 @@ $text-dark: #2d3748;
     background-color: $bg-color;
     color: $text-dark;
     font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    //min-height: calc(100vh - 60px);
-    padding: 16px;
+    padding: 32px 24px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 32px;
     max-width: 1200px;
     margin: 0 auto;
 
     h2,
     h3,
     h4 {
-        margin: 0 0 10px 0;
+        margin: 0 0 12px 0;
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
 }
 
-// 1. REVERSED LAYOUT SPECIFICATION
-// Section Layout Ordering: Actions at top, Order Board middle, Stands bottom.
 .durian-layout-section {
     width: 100%;
     box-sizing: border-box;
 }
 
-// Global button styling (Vibrant flat color modern styling)
+// Global button styling (Flat modern styling)
 .durian-btn {
-    border: none;
-    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 6px;
     padding: 12px 24px;
     font-size: 1rem;
     font-weight: 800;
     text-transform: uppercase;
     cursor: pointer;
     transition: all 0.2s ease-in-out;
-    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+    box-shadow: none;
 
     &:active {
-        transform: translateY(2px);
-        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+        transform: scale(0.98);
     }
 }
 
 .action-btn {
     background-color: $accent-orange;
-    color: $text-light;
+    color: $text-dark;
 
     &:hover {
         background-color: lighten($accent-orange, 5%);
     }
 
     &.secondary {
-        background-color: #4a5568;
+        background-color: #cbd5e0;
+        color: $text-dark;
 
         &:hover {
-            background-color: #718096;
+            background-color: #cbd5e0;
         }
     }
 
     &.danger {
-        background-color: #e53e3e;
+        background-color: $accent-red;
+        color: $text-dark;
 
         &:hover {
-            background-color: #fc8181;
+            background-color: lighten($accent-red, 5%);
         }
     }
 }
 
-// Glassmorphism helper (Updated for white light mode background)
+// Flat panel helper
 .glassmorphic-panel {
-    background: rgba(0, 0, 0, 0.02);
-    backdrop-filter: blur(8px);
-    border-radius: 16px;
+    background: #ffffff;
+    border-radius: 8px;
     border: 1px solid rgba(0, 0, 0, 0.08);
-    padding: 20px;
+    padding: 24px;
     box-sizing: border-box;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    box-shadow: none;
 }
 
 // TOP BAR STATS
@@ -109,21 +109,20 @@ $text-dark: #2d3748;
 
     .manager-mood {
         padding: 4px 10px;
-        border-radius: 8px;
-        color: #fff;
+        border-radius: 4px;
+        color: $text-dark;
         font-size: 0.85rem;
 
         &.calm {
-            background-color: #2f855a;
+            background-color: $accent-green;
         }
 
         &.suspicious {
-            background-color: #c05621;
+            background-color: $accent-yellow;
         }
 
         &.furious {
-            background-color: #9b2c2c;
-            animation: pulse-glow 1s infinite alternate;
+            background-color: $accent-red;
         }
     }
 }
@@ -132,16 +131,16 @@ $text-dark: #2d3748;
    SECTION 1: ACTION CONTROLS (TOP OF BOARD)
    ======================================================== */
 .action-section {
-    background: rgba(0, 0, 0, 0.02);
-    border-radius: 16px;
-    padding: 16px;
-    border: 2px dashed rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 24px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
 
     .turn-indicator {
-        color: $accent-orange;
+        color: darken($accent-orange, 15%);
         text-align: center;
         font-size: 1.1rem;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
     }
 
     .turn-choices {
@@ -156,23 +155,19 @@ $text-dark: #2d3748;
         color: $text-dark;
 
         &:hover {
-            background-color: lighten($accent-yellow, 10%);
+            background-color: lighten($accent-yellow, 5%);
         }
     }
 
-    // PULSING GOLD HANDBELL
+    // Flat handbell button
     .bell-btn {
-        background: radial-gradient(circle, #f6e05e 0%, #d69e2e 100%);
+        background: $accent-orange;
         color: $text-dark;
-        border: 2px solid #ecc94b;
+        border: 1px solid rgba(0, 0, 0, 0.08);
         font-size: 1.1rem;
 
-        &.pulsing-bell {
-            animation: breathing-ring 1.5s infinite ease-in-out;
-        }
-
         &:hover {
-            animation: jiggle-bell 0.5s ease-in-out infinite;
+            background-color: lighten($accent-orange, 5%);
         }
     }
 
@@ -182,13 +177,13 @@ $text-dark: #2d3748;
 
         .waiting-indicator {
             font-size: 1.1rem;
-            color: rgba(0, 0, 0, 0.8);
+            color: $text-dark;
         }
 
         .sub-text {
             font-size: 0.9rem;
-            color: rgba(0, 0, 0, 0.5);
-            margin: 4px 0 0 0;
+            color: lighten($text-dark, 20%);
+            margin: 6px 0 0 0;
         }
     }
 }
@@ -213,25 +208,25 @@ $text-dark: #2d3748;
     .side-card-choice {
         background-color: $card-front;
         color: $text-dark;
-        padding: 20px;
-        border-radius: 16px;
+        padding: 24px;
+        border-radius: 8px;
         width: 140px;
         display: flex;
         flex-direction: column;
         align-items: center;
         cursor: pointer;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-        border: 4px solid transparent;
+        box-shadow: none;
+        border: 2px solid rgba(0, 0, 0, 0.08);
         transition: all 0.2s ease;
 
         &:hover {
-            transform: translateY(-5px) scale(1.03);
+            transform: translateY(-2px);
             border-color: $accent-orange;
         }
 
         .side-label {
             font-size: 0.8rem;
-            color: #718096;
+            color: lighten($text-dark, 15%);
             text-transform: uppercase;
             font-weight: 800;
         }
@@ -254,24 +249,25 @@ $text-dark: #2d3748;
             padding: 6px 12px;
             font-size: 0.75rem;
             background-color: $bg-color;
-            color: $text-light;
+            color: $text-dark;
+            border-radius: 4px;
         }
     }
 
     .side-separator {
         font-weight: 900;
         font-size: 1.2rem;
-        color: rgba(255, 255, 255, 0.4);
+        color: rgba(0, 0, 0, 0.2);
     }
 }
 
 // Gorilla mischief select panel
 .gorilla-flip-panel {
     text-align: center;
-    background: rgba(229, 62, 62, 0.1);
-    border: 2px solid rgba(229, 62, 62, 0.3);
-    border-radius: 16px;
-    padding: 16px;
+    background: rgba(229, 62, 62, 0.03);
+    border: 1px solid rgba(229, 62, 62, 0.1);
+    border-radius: 8px;
+    padding: 20px;
 
     .gorilla-card-drawn-header {
         display: flex;
@@ -287,9 +283,10 @@ $text-dark: #2d3748;
         }
 
         .badge-mischief {
-            background-color: #e53e3e;
+            background-color: $accent-red;
+            color: $text-dark;
             padding: 4px 8px;
-            border-radius: 8px;
+            border-radius: 4px;
             font-size: 0.8rem;
             font-weight: 800;
             text-transform: uppercase;
@@ -297,7 +294,7 @@ $text-dark: #2d3748;
     }
 
     .sub-instruction {
-        color: rgba(255, 255, 255, 0.7);
+        color: lighten($text-dark, 15%);
         font-size: 0.9rem;
     }
 
@@ -313,13 +310,12 @@ $text-dark: #2d3748;
             font-weight: 800;
             text-transform: uppercase;
             font-size: 0.9rem;
-            background-color: rgba(0, 0, 0, 0.3);
+            background-color: rgba(0, 0, 0, 0.05);
             padding: 8px 16px;
-            border-radius: 8px;
+            border-radius: 4px;
         }
     }
 }
-
 
 /* ========================================================
    SECTION 2: MIDDLE ORDER BOARD
@@ -328,32 +324,32 @@ $text-dark: #2d3748;
     width: 100%;
 
     .order-clipboard {
-        background-color: #9b6a43; // Clipboard hardboard backing
-        border-radius: 20px;
-        padding: 24px 16px 16px 16px;
+        background-color: #f7f5f0; // Very soft flat warm backing
+        border-radius: 10px;
+        padding: 28px 20px 20px 20px;
         position: relative;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
-        border: 4px solid #704728;
+        box-shadow: none;
+        border: 1px solid rgba(0, 0, 0, 0.08);
     }
 
     .clipboard-clip {
         width: 100px;
         height: 35px;
-        background-color: #bdc3c7; // Silver clipboard clip
-        border: 4px solid #7f8c8d;
-        border-radius: 8px;
+        background-color: #e2e8f0; // Flat light grey clip
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
         position: absolute;
         top: -12px;
         left: 50%;
         transform: translateX(-50%);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        box-shadow: none;
         z-index: 2;
 
         &::after {
             content: '';
             width: 14px;
             height: 14px;
-            background-color: #7f8c8d;
+            background-color: #cbd5e0;
             border-radius: 50%;
             position: absolute;
             top: 50%;
@@ -363,21 +359,22 @@ $text-dark: #2d3748;
     }
 
     .clipboard-paper {
-        background-color: #faf9f6; // Clean high quality check paper
+        background-color: #ffffff;
         color: $text-dark;
-        border-radius: 12px;
-        padding: 20px;
+        border-radius: 6px;
+        padding: 24px;
         min-height: 140px;
-        box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+        box-shadow: none;
+        border: 1px solid rgba(0, 0, 0, 0.04);
     }
 
     .order-board-header {
         display: flex;
         align-items: center;
         gap: 10px;
-        border-bottom: 2px dashed #cbd5e0;
-        padding-bottom: 10px;
-        margin-bottom: 16px;
+        border-bottom: 1px dashed #e2e8f0;
+        padding-bottom: 12px;
+        margin-bottom: 20px;
 
         h3 {
             color: $text-dark;
@@ -385,8 +382,8 @@ $text-dark: #2d3748;
         }
 
         .green-checkmark {
-            background-color: #38a169;
-            color: #fff;
+            background-color: $accent-green;
+            color: $text-dark;
             width: 26px;
             height: 26px;
             border-radius: 50%;
@@ -400,7 +397,7 @@ $text-dark: #2d3748;
 
     .no-orders {
         text-align: center;
-        color: #a0aec0;
+        color: lighten($text-dark, 20%);
         padding: 24px 0;
         font-weight: 600;
     }
@@ -409,35 +406,35 @@ $text-dark: #2d3748;
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        gap: 12px;
+        gap: 16px;
         padding-bottom: 8px;
     }
 
     // Placed Order Card Tickets on Clipboard
     .order-ticket {
         flex: 0 0 auto;
-        background-color: #fff;
-        border: 2px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 10px 14px;
+        background-color: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 6px;
+        padding: 12px 14px;
         width: 90px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        box-shadow: none;
         cursor: pointer;
         position: relative;
         transition: all 0.2s ease;
 
         &:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+            border-color: $accent-orange;
         }
 
         &.selected-for-flip {
-            border: 3px solid $accent-orange;
+            border: 2px solid $accent-orange;
             background-color: #fffaf0;
-            box-shadow: 0 0 10px rgba(255, 111, 60, 0.4);
+            box-shadow: none;
         }
 
         .ticket-header {
@@ -446,16 +443,16 @@ $text-dark: #2d3748;
             justify-content: space-between;
             align-items: center;
             font-size: 0.7rem;
-            color: #a0aec0;
+            color: lighten($text-dark, 25%);
             font-weight: 800;
             margin-bottom: 6px;
         }
 
         .gorilla-marker {
-            background-color: #e53e3e;
-            color: #fff;
+            background-color: $accent-red;
+            color: $text-dark;
             padding: 1px 3px;
-            border-radius: 4px;
+            border-radius: 3px;
             font-size: 0.55rem;
             font-weight: 800;
             text-transform: uppercase;
@@ -477,7 +474,7 @@ $text-dark: #2d3748;
         // Flipped state visuals
         &.flipped-order {
             background-color: #fffdf5;
-            border-color: #ecc94b;
+            border-color: $accent-yellow;
 
             &::before {
                 content: 'FLIPPED';
@@ -487,8 +484,8 @@ $text-dark: #2d3748;
                 transform: rotate(-15deg);
                 font-size: 0.65rem;
                 font-weight: 900;
-                color: rgba(229, 62, 62, 0.7);
-                border: 2px solid rgba(229, 62, 62, 0.7);
+                color: darken($accent-red, 15%);
+                border: 1px solid darken($accent-red, 15%);
                 padding: 1px 3px;
                 border-radius: 3px;
                 background-color: rgba(255, 255, 255, 0.9);
@@ -511,18 +508,18 @@ $text-dark: #2d3748;
     .summary-fruits-row {
         display: flex;
         justify-content: space-between;
-        gap: 8px;
+        gap: 12px;
     }
 
     .summary-fruit-item {
         flex: 1;
-        background: rgba(0, 0, 0, 0.3);
-        padding: 8px;
-        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.03);
+        padding: 10px;
+        border-radius: 6px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.05);
 
         .icon {
             font-size: 1.8rem;
@@ -531,7 +528,7 @@ $text-dark: #2d3748;
         .qty {
             font-size: 1.1rem;
             font-weight: 800;
-            color: $accent-yellow;
+            color: $text-dark;
             margin-top: 4px;
         }
     }
@@ -543,29 +540,28 @@ $text-dark: #2d3748;
 .player-stands-section {
     h3 {
         font-size: 1.1rem;
-        margin-bottom: 16px;
+        margin-bottom: 20px;
     }
 
-    // Grid layout supporting horizontal swiping on small screens, stable grid on large
     .stands-grid {
         display: flex;
-        gap: 16px;
+        gap: 20px;
         overflow-x: auto;
         padding: 12px 4px;
         scroll-snap-type: x mandatory;
 
         &::-webkit-scrollbar {
-            height: 8px;
+            height: 6px;
         }
 
         &::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.04);
+            border-radius: 3px;
         }
 
         &::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 3px;
         }
 
         @media (min-width: 768px) {
@@ -582,19 +578,20 @@ $text-dark: #2d3748;
         display: flex;
         flex-direction: column;
         align-items: center;
-        perspective: 1000px; // Smooth 3D flips
+        perspective: 1000px;
 
         &.active-clerk-glow {
             .wooden-stand-base {
-                box-shadow: 0 0 15px rgba(255, 201, 60, 0.6);
+                border-color: $accent-orange;
+                background-color: lighten($wood-plate, 5%);
             }
         }
     }
 
-    // 3D Styled Stands
+    // Flat 3D Stands
     .wooden-stand-slot {
         background-color: $wood-dark;
-        border-radius: 8px 8px 0 0;
+        border-radius: 4px 4px 0 0;
         width: 100px;
         height: 120px;
         display: flex;
@@ -603,15 +600,17 @@ $text-dark: #2d3748;
         position: relative;
         padding-bottom: 8px;
         box-sizing: border-box;
-        box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+        box-shadow: none;
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
     .wooden-stand-base {
         background-color: $wood-plate;
         width: 124px;
         padding: 10px 4px;
-        border-radius: 4px 4px 12px 12px;
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        border-radius: 4px;
+        box-shadow: none;
+        border: 1px solid rgba(0, 0, 0, 0.08);
         box-sizing: border-box;
         text-align: center;
         transition: all 0.2s ease;
@@ -623,7 +622,6 @@ $text-dark: #2d3748;
         align-items: center;
         gap: 6px;
 
-        // Force lobby tag to fit nicely
         .lobby-player-tag {
             padding: 2px 6px;
             max-width: 110px;
@@ -643,7 +641,7 @@ $text-dark: #2d3748;
         font-weight: 800;
 
         .chip-count {
-            color: rgba(0, 0, 0, 0.55);
+            color: lighten($text-dark, 15%);
             font-size: 0.9rem;
             margin-left: 2px;
         }
@@ -653,8 +651,8 @@ $text-dark: #2d3748;
     .fruit-card {
         width: 80px;
         height: 110px;
-        border-radius: 8px;
-        box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.3), 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+        box-shadow: none;
         position: absolute;
         bottom: 12px;
         box-sizing: border-box;
@@ -664,7 +662,7 @@ $text-dark: #2d3748;
         &.face-up {
             background-color: $card-front;
             color: $text-dark;
-            border: 3px solid #2d3748;
+            border: 2px solid $text-dark;
 
             .card-inner {
                 height: 100%;
@@ -687,15 +685,15 @@ $text-dark: #2d3748;
                 font-size: 0.65rem;
                 font-weight: 800;
                 text-transform: uppercase;
-                color: #4a5568;
+                color: $text-dark;
                 text-align: center;
             }
         }
 
         &.gorilla-face-up {
-            background-color: #2d3748;
+            background-color: $text-dark;
             color: #fff;
-            border: 3px solid #e53e3e;
+            border: 2px solid $accent-red;
 
             .card-inner {
                 height: 100%;
@@ -720,10 +718,10 @@ $text-dark: #2d3748;
             }
         }
 
-        // YOUR CARD IN STAND (Secret card back facing you)
+        // YOUR CARD IN STAND
         &.card-back {
-            background-color: $card-back-pattern;
-            border: 3px solid $accent-orange;
+            background-color: $accent-blue;
+            border: 2px solid $accent-orange;
 
             .card-inner {
                 height: 100%;
@@ -733,7 +731,6 @@ $text-dark: #2d3748;
                 align-items: center;
                 position: relative;
 
-                // leaf pattern mock overlay
                 &::before {
                     content: '🌿';
                     font-size: 3rem;
@@ -745,9 +742,9 @@ $text-dark: #2d3748;
             .mysterious-mark {
                 font-size: 2.8rem;
                 font-weight: 900;
-                color: $accent-orange;
+                color: darken($accent-orange, 15%);
                 z-index: 1;
-                text-shadow: 0 0 10px rgba(255, 111, 60, 0.4);
+                text-shadow: none;
                 animation: bounce-slow 2s infinite alternate;
             }
 
@@ -755,7 +752,7 @@ $text-dark: #2d3748;
                 font-size: 0.55rem;
                 font-weight: 900;
                 letter-spacing: 0.1em;
-                color: rgba(255, 255, 255, 0.6);
+                color: lighten($text-dark, 15%);
                 margin: 4px 0 0 0;
                 z-index: 1;
             }
@@ -764,7 +761,7 @@ $text-dark: #2d3748;
         &.face-up.double-sided {
             background-color: $card-front;
             color: $text-dark;
-            border: 3px solid #2d3748;
+            border: 2px solid $text-dark;
 
             .card-inner.split {
                 display: flex;
@@ -810,7 +807,7 @@ $text-dark: #2d3748;
                         font-size: 0.55rem;
                         font-weight: 800;
                         text-transform: uppercase;
-                        color: #4a5568;
+                        color: lighten($text-dark, 10%);
                         line-height: 1;
                     }
                 }
@@ -851,28 +848,27 @@ $text-dark: #2d3748;
     }
 }
 
-
 /* ========================================================
-   SECTION 4: CONFRONTATION SCENE (REPRESENTING AUDIT TABLE)
+   SECTION 4: CONFRONTATION SCENE
    ======================================================== */
 .manager-resolution-scene {
     .gorilla-angry-banner {
         text-align: center;
-        background-color: #9b2c2c;
-        border: 4px solid #742a2a;
-        padding: 16px;
-        border-radius: 16px;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        background-color: $accent-red;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: none;
 
         h2 {
             margin: 0 0 4px 0;
             font-size: 1.5rem;
-            color: #fff;
+            color: $text-dark;
         }
 
         .subtitle {
             margin: 0;
-            color: rgba(255, 255, 255, 0.8);
+            color: lighten($text-dark, 10%);
             font-size: 0.95rem;
         }
     }
@@ -880,26 +876,27 @@ $text-dark: #2d3748;
     .resolution-layout {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 24px;
 
         @media (min-width: 768px) {
             grid-template-columns: 3fr 2fr;
         }
     }
 
-    // Slide-in glassmorphic ledger receipt
+    // Flat ledger receipt
     .resolution-ledger {
-        background-color: #fffaf0; // Soft vintage cream receipt paper color
+        background-color: #fffaf0; // Soft cream ledger
         color: $text-dark;
-        border-radius: 20px;
-        border: 4px solid #e2e8f0;
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: none;
+        padding: 24px;
 
         h3 {
             color: $text-dark;
-            border-bottom: 2px dashed #cbd5e0;
+            border-bottom: 1px dashed #cbd5e0;
             padding-bottom: 12px;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
         .ledger-table {
@@ -916,7 +913,7 @@ $text-dark: #2d3748;
 
             th {
                 text-transform: uppercase;
-                color: #718096;
+                color: lighten($text-dark, 15%);
                 font-weight: 800;
                 font-size: 0.75rem;
             }
@@ -938,34 +935,34 @@ $text-dark: #2d3748;
 
             .exceeded-row {
                 background-color: #fff5f5;
-                color: #c53030;
+                color: darken($accent-red, 20%);
 
                 td {
-                    border-bottom: 2px solid #feb2b2;
+                    border-bottom: 2px solid $accent-red;
                 }
             }
 
             .verdict {
                 padding: 4px 8px;
-                border-radius: 6px;
+                border-radius: 4px;
                 font-size: 0.75rem;
                 display: inline-block;
 
                 &.error {
-                    background-color: #fed7d7;
-                    color: #9b2c2c;
+                    background-color: $accent-red;
+                    color: $text-dark;
                 }
 
                 &.success {
-                    background-color: #c6f6d5;
-                    color: #22543d;
+                    background-color: $accent-green;
+                    color: $text-dark;
                 }
             }
 
             .negation-tally {
                 display: block;
                 font-size: 0.7rem;
-                color: #a0aec0;
+                color: lighten($text-dark, 20%);
                 font-weight: normal;
             }
         }
@@ -973,12 +970,12 @@ $text-dark: #2d3748;
         .gorilla-discounts-applied {
             margin-top: 16px;
             padding: 12px;
-            background-color: rgba(229, 62, 62, 0.05);
-            border: 1px dashed rgba(229, 62, 62, 0.2);
-            border-radius: 12px;
+            background-color: rgba(229, 62, 62, 0.02);
+            border: 1px dashed rgba(229, 62, 62, 0.1);
+            border-radius: 6px;
 
             h4 {
-                color: #c53030;
+                color: darken($accent-red, 20%);
                 margin-bottom: 6px;
                 font-size: 0.8rem;
             }
@@ -987,7 +984,7 @@ $text-dark: #2d3748;
                 margin: 0;
                 padding-left: 16px;
                 font-size: 0.8rem;
-                color: #4a5568;
+                color: $text-dark;
                 font-weight: 600;
             }
         }
@@ -995,41 +992,46 @@ $text-dark: #2d3748;
 
     .confrontation-dashboard {
         text-align: center;
-        padding: 16px;
-        border-radius: 16px;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-        background-color: rgba(0, 0, 0, 0.3);
+        padding: 24px;
+        border-radius: 8px;
+        box-shadow: none;
+        background-color: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
 
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
         justify-content: center;
         align-items: center;
 
         .verdict-bubble {
-            background-color: rgba(0, 0, 0, 0.3);
-            border-radius: 16px;
-            padding: 16px;
+            background-color: rgba(0, 0, 0, 0.02);
+            border-radius: 8px;
+            padding: 20px;
             width: 100%;
             box-sizing: border-box;
+            border: 1px solid rgba(0, 0, 0, 0.05);
 
             p {
                 margin: 6px 0 0 0;
                 font-size: 0.9rem;
-                color: rgba(255, 255, 255, 0.7);
+                color: lighten($text-dark, 10%);
             }
 
             .text-green {
-                color: $accent-yellow;
+                color: darken($accent-green, 20%);
             }
 
             .text-red {
-                color: #fc8181;
+                color: darken($accent-red, 20%);
             }
         }
 
         .blame-card {
-            background-color: #2d3748;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 20px;
+            background-color: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 8px;
+            padding: 24px;
             width: 100%;
             box-sizing: border-box;
 
@@ -1043,11 +1045,11 @@ $text-dark: #2d3748;
                 display: inline-block;
                 background-color: $accent-orange;
                 padding: 10px 24px;
-                border-radius: 12px;
+                border-radius: 4px;
                 font-size: 1.4rem;
                 font-weight: 900;
-                color: #fff;
-                box-shadow: 0 4px 10px rgba(255, 111, 60, 0.4);
+                color: $text-dark;
+                box-shadow: none;
                 margin-top: 8px;
             }
         }
@@ -1059,7 +1061,7 @@ $text-dark: #2d3748;
             font-size: 1.1rem;
 
             &:hover {
-                background-color: lighten($accent-yellow, 10%);
+                background-color: lighten($accent-yellow, 5%);
             }
         }
     }
@@ -1067,17 +1069,17 @@ $text-dark: #2d3748;
     // Revealed inventories row
     .revealed-stands-area {
         margin-top: 24px;
-        border-top: 2px solid rgba(255, 255, 255, 0.1);
-        padding-top: 20px;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        padding-top: 24px;
 
         h3 {
             font-size: 1.1rem;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
         .stands-grid {
             display: flex;
-            gap: 16px;
+            gap: 20px;
             overflow-x: auto;
             padding: 12px 4px;
 
@@ -1111,7 +1113,7 @@ $text-dark: #2d3748;
                 width: 72px;
                 height: 95px;
                 bottom: 8px;
-                border: 3px solid #2d3748 !important;
+                border: 2px solid $text-dark !important;
 
                 .visible-fruit {
                     font-size: 1.8rem;
@@ -1129,7 +1131,6 @@ $text-dark: #2d3748;
     }
 }
 
-
 /* ========================================================
    SECTION 5: GAME OVER & LEADERBOARD
    ======================================================== */
@@ -1137,30 +1138,31 @@ $text-dark: #2d3748;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 24px;
+    gap: 28px;
     padding: 32px 16px;
 
     .victory-celebration {
         h2 {
             font-size: 2rem;
-            color: $accent-yellow;
+            color: darken($accent-yellow, 15%);
             margin: 0;
-            text-shadow: 0 0 15px rgba(255, 201, 60, 0.4);
+            text-shadow: none;
         }
 
         .subtitle {
             margin: 6px 0 0 0;
-            color: rgba(255, 255, 255, 0.7);
+            color: lighten($text-dark, 15%);
         }
     }
 
     .winner-podium {
-        background-color: #2d3748;
-        border: 3px solid $accent-yellow;
+        background-color: #ffffff;
+        border: 2px solid $accent-yellow;
+        border-radius: 8px;
         padding: 30px;
         width: 100%;
         max-width: 450px;
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        box-shadow: none;
 
         .crown {
             font-size: 3.5rem;
@@ -1170,20 +1172,21 @@ $text-dark: #2d3748;
         }
 
         h3 {
-            color: rgba(255, 255, 255, 0.7);
+            color: lighten($text-dark, 15%);
             font-size: 0.95rem;
             margin-bottom: 12px;
         }
 
         .winner-tag {
-            color: #fff;
+            color: $text-dark;
             padding: 12px 24px;
-            border-radius: 12px;
+            border-radius: 6px;
             font-size: 1.5rem;
             font-weight: 900;
             text-transform: uppercase;
             display: inline-block;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: none;
+            background-color: $accent-orange;
             margin-bottom: 12px;
         }
 
@@ -1192,7 +1195,7 @@ $text-dark: #2d3748;
             font-size: 0.95rem;
 
             strong {
-                color: $accent-orange;
+                color: darken($accent-orange, 15%);
                 font-size: 1.2rem;
             }
         }
@@ -1210,16 +1213,17 @@ $text-dark: #2d3748;
         }
 
         .leaderboard-item {
-            background-color: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
+            background-color: rgba(0, 0, 0, 0.02);
+            border-radius: 6px;
             padding: 12px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             font-size: 0.95rem;
+            border: 1px solid rgba(0, 0, 0, 0.04);
 
             .rank {
-                color: rgba(255, 255, 255, 0.4);
+                color: lighten($text-dark, 20%);
             }
 
             .name {
@@ -1228,7 +1232,7 @@ $text-dark: #2d3748;
             }
 
             .score {
-                color: $accent-yellow;
+                color: darken($accent-yellow, 15%);
             }
         }
     }
@@ -1246,18 +1250,18 @@ $text-dark: #2d3748;
     }
 }
 
-
 /* ========================================================
    SECTION 6: HOW TO PLAY RULES SLIDER STYLE
    ======================================================== */
 .durian-rules-container {
     color: $text-dark;
-    background-color: #faf9f6;
-    padding: 20px;
-    border-radius: 16px;
+    background-color: #ffffff;
+    padding: 24px;
+    border-radius: 8px;
     max-width: 450px;
     margin: 0 auto;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    box-shadow: none;
+    border: 1px solid rgba(0, 0, 0, 0.08);
     min-height: 380px;
     display: flex;
     flex-direction: column;
@@ -1265,7 +1269,7 @@ $text-dark: #2d3748;
 
     h2 {
         color: $text-dark;
-        border-bottom: 2px dashed #cbd5e0;
+        border-bottom: 1px dashed #cbd5e0;
         padding-bottom: 8px;
         margin-top: 0;
         font-size: 1.25rem;
@@ -1282,7 +1286,7 @@ $text-dark: #2d3748;
             animation: slide-right-in 0.3s ease;
 
             h3 {
-                color: $accent-orange;
+                color: darken($accent-orange, 15%);
                 font-size: 1.05rem;
                 margin-top: 0;
             }
@@ -1290,14 +1294,14 @@ $text-dark: #2d3748;
             p {
                 font-size: 0.9rem;
                 line-height: 1.5;
-                color: #4a5568;
+                color: $text-dark;
                 margin: 8px 0;
 
                 &.highlight {
                     background-color: #feebc8;
                     border-left: 4px solid $accent-orange;
                     padding: 8px;
-                    border-radius: 0 8px 8px 0;
+                    border-radius: 0 4px 4px 0;
                     color: $text-dark;
                     font-weight: 600;
                 }
@@ -1307,7 +1311,7 @@ $text-dark: #2d3748;
                 padding-left: 20px;
                 margin: 8px 0;
                 font-size: 0.85rem;
-                color: #4a5568;
+                color: $text-dark;
                 line-height: 1.4;
 
                 li {
@@ -1328,9 +1332,9 @@ $text-dark: #2d3748;
         button {
             border: none;
             background-color: $wood-dark;
-            color: $text-light;
+            color: $text-dark;
             font-weight: 800;
-            border-radius: 8px;
+            border-radius: 4px;
             padding: 6px 12px;
             font-size: 0.8rem;
             cursor: pointer;
@@ -1338,7 +1342,7 @@ $text-dark: #2d3748;
 
             &:disabled {
                 background-color: #cbd5e0;
-                color: #a0aec0;
+                color: lighten($text-dark, 20%);
                 cursor: not-allowed;
             }
         }
@@ -1346,7 +1350,7 @@ $text-dark: #2d3748;
         span {
             font-size: 0.85rem;
             font-weight: 800;
-            color: #718096;
+            color: lighten($text-dark, 15%);
         }
     }
 }
@@ -1362,21 +1366,20 @@ $text-dark: #2d3748;
     gap: 12px;
 }
 
-
 /* ========================================================
-   KEYFRAME ANIMATIONS (MICRO-INTERACTIONS)
+   KEYFRAME ANIMATIONS
    ======================================================== */
 @keyframes breathing-ring {
     0% {
-        box-shadow: 0 0 0 0 rgba(236, 201, 75, 0.7);
+        box-shadow: 0 0 0 0 rgba(255, 179, 150, 0.7);
     }
 
     70% {
-        box-shadow: 0 0 0 10px rgba(236, 201, 75, 0);
+        box-shadow: 0 0 0 10px rgba(255, 179, 150, 0);
     }
 
     100% {
-        box-shadow: 0 0 0 0 rgba(236, 201, 75, 0);
+        box-shadow: 0 0 0 0 rgba(255, 179, 150, 0);
     }
 }
 
@@ -1411,18 +1414,6 @@ $text-dark: #2d3748;
 
     100% {
         transform: rotate(0);
-    }
-}
-
-@keyframes pulse-glow {
-    from {
-        opacity: 0.85;
-        box-shadow: 0 0 4px rgba(229, 62, 62, 0.4);
-    }
-
-    to {
-        opacity: 1;
-        box-shadow: 0 0 14px rgba(229, 62, 62, 0.8);
     }
 }
 

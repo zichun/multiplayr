@@ -169,7 +169,7 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
         // Clear pending selection states if major props change (e.g. state synced from server after a pick/roll/bonus resolution)
         const prevPickedLen = prevProps.activePickedDice ? prevProps.activePickedDice.length : 0;
         const currPickedLen = this.props.activePickedDice ? this.props.activePickedDice.length : 0;
-        
+
         const prevBonusLen = prevProps.bonusesToResolve ? prevProps.bonusesToResolve.length : 0;
         const currBonusLen = this.props.bonusesToResolve ? this.props.bonusesToResolve.length : 0;
 
@@ -253,8 +253,8 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
         const prevSummary = getPickedDiceSummary(prevProps);
         const currSummary = getPickedDiceSummary(this.props);
 
-        const diceSelected = currSummary.activeCount > prevSummary.activeCount || 
-                            currSummary.passiveExtraCount > prevSummary.passiveExtraCount;
+        const diceSelected = currSummary.activeCount > prevSummary.activeCount ||
+            currSummary.passiveExtraCount > prevSummary.passiveExtraCount;
 
         if (diceSelected) {
             // Only play selection sound if it was another player who made the selection
@@ -303,9 +303,9 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
             currBonusSum.pending > prevBonusSum.pending
         );
 
-        const isMidRoundSelection = prevProps.round === this.props.round && 
-                                    this.props.gameStatus !== GameStatus.RoundStartBonus &&
-                                    prevProps.gameStatus !== GameStatus.RoundStartBonus;
+        const isMidRoundSelection = prevProps.round === this.props.round &&
+            this.props.gameStatus !== GameStatus.RoundStartBonus &&
+            prevProps.gameStatus !== GameStatus.RoundStartBonus;
 
         if (bonusUnlocked && isMidRoundSelection) {
             new Audio(getSoundUrl(BellSound)).play().catch(e => console.warn("Failed to play bonus sound:", e));
@@ -548,25 +548,25 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                                 <button
                                                     className={`clever-die ${die.color} ${canPick ? 'active-clickable' : 'static'}`}
                                                     onClick={() => {
-                                                         if (canPick) {
-                                                             const isPermissible = this.is_die_permissible(myId, die);
-                                                             if (die.color === 'white') {
-                                                                 if (isPermissible) {
-                                                                     this.setState({ whiteWildTargetColor: 'white', selectedWhiteWildValue: die.value });
-                                                                 } else {
-                                                                     MP.pickActiveDie('white', 'yellow');
-                                                                 }
-                                                             } else if (die.color === 'yellow') {
-                                                                 if (isPermissible) {
-                                                                     this.setState({ pendingActiveYellowColor: 'yellow' });
-                                                                 } else {
-                                                                     MP.pickActiveDie('yellow');
-                                                                 }
-                                                             } else {
-                                                                 MP.pickActiveDie(die.color);
-                                                             }
-                                                         }
-                                                     }}
+                                                        if (canPick) {
+                                                            const isPermissible = this.is_die_permissible(myId, die);
+                                                            if (die.color === 'white') {
+                                                                if (isPermissible) {
+                                                                    this.setState({ whiteWildTargetColor: 'white', selectedWhiteWildValue: die.value });
+                                                                } else {
+                                                                    MP.pickActiveDie('white', 'yellow');
+                                                                }
+                                                            } else if (die.color === 'yellow') {
+                                                                if (isPermissible) {
+                                                                    this.setState({ pendingActiveYellowColor: 'yellow' });
+                                                                } else {
+                                                                    MP.pickActiveDie('yellow');
+                                                                }
+                                                            } else {
+                                                                MP.pickActiveDie(die.color);
+                                                            }
+                                                        }
+                                                    }}
                                                 >
                                                     {die.value}
                                                 </button>
@@ -589,7 +589,7 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                             style={{ flexGrow: 1 }}
                                             onClick={() => MP.rollActiveDice()}
                                         >
-                                            🎲 ROLL DICE
+                                            Roll Dice
                                         </button>
                                     )}
 
@@ -601,7 +601,7 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                                     style={{ flexGrow: 1 }}
                                                     onClick={() => MP.rerollActiveDice()}
                                                 >
-                                                    🔄 Reroll Pool ({myRerollsLeft} left)
+                                                    Reroll Pool ({myRerollsLeft} left)
                                                 </button>
                                             )}
                                             {rolledDice.length > 0 && rolledDice.every(d => !this.is_die_permissible(myId, d)) && (
@@ -610,7 +610,7 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                                     style={{ flexGrow: 1, backgroundColor: '#e67e22', color: 'white' }}
                                                     onClick={() => MP.skipActivePicking()}
                                                 >
-                                                    🏁 Move to Passive
+                                                    Move to Passive
                                                 </button>
                                             )}
                                         </>
@@ -635,7 +635,7 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                                             MP.endPlayerTurn();
                                                         }}
                                                     >
-                                                        🏁 End Turn
+                                                        End Turn
                                                     </button>
                                                 </>
                                             ) : (
@@ -646,14 +646,14 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                                             style={{ flexGrow: 1 }}
                                                             onClick={() => this.setState({ isSelectingExtraDie: true })}
                                                         >
-                                                            ➕ Spend Extra Die (+1)
+                                                            Spend Extra Die (+1)
                                                         </button>
                                                         <button
                                                             className="btn-roll"
                                                             style={{ flexGrow: 1, backgroundColor: '#9b59b6', color: 'white' }}
                                                             onClick={() => MP.endPlayerTurn()}
                                                         >
-                                                            🏁 End Turn
+                                                            End Turn
                                                         </button>
                                                     </>
                                                 ) : (
@@ -662,7 +662,7 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                                         style={{ flexGrow: 1, backgroundColor: '#9b59b6', color: 'white' }}
                                                         onClick={() => MP.endPlayerTurn()}
                                                     >
-                                                        🏁 End Turn
+                                                        End Turn
                                                     </button>
                                                 )
                                             )}
@@ -733,25 +733,25 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                                 key={die.color}
                                                 className={`clever-die ${die.color} ${canPick && isSelectable ? 'active-clickable' : 'static'} ${isSelected ? 'selected' : ''}`}
                                                 onClick={() => {
-                                                     if (canPick) {
-                                                         const isPermissible = this.is_die_permissible(myId, die);
-                                                         if (die.color === 'white') {
-                                                             if (isPermissible) {
-                                                                 this.setState({ whiteWildTargetColor: 'white', selectedWhiteWildValue: die.value });
-                                                             } else {
-                                                                 MP.pickPassiveDie('white', 'yellow');
-                                                             }
-                                                         } else if (die.color === 'yellow') {
-                                                             if (isPermissible) {
-                                                                 this.setState({ pendingPassiveYellowColor: 'yellow' });
-                                                             } else {
-                                                                 MP.pickPassiveDie('yellow');
-                                                             }
-                                                         } else {
-                                                             MP.pickPassiveDie(die.color);
-                                                         }
-                                                     }
-                                                 }}
+                                                    if (canPick) {
+                                                        const isPermissible = this.is_die_permissible(myId, die);
+                                                        if (die.color === 'white') {
+                                                            if (isPermissible) {
+                                                                this.setState({ whiteWildTargetColor: 'white', selectedWhiteWildValue: die.value });
+                                                            } else {
+                                                                MP.pickPassiveDie('white', 'yellow');
+                                                            }
+                                                        } else if (die.color === 'yellow') {
+                                                            if (isPermissible) {
+                                                                this.setState({ pendingPassiveYellowColor: 'yellow' });
+                                                            } else {
+                                                                MP.pickPassiveDie('yellow');
+                                                            }
+                                                        } else {
+                                                            MP.pickPassiveDie(die.color);
+                                                        }
+                                                    }
+                                                }}
                                             >
                                                 {die.value}
                                                 {isSelected && <span className="selected-check">✔</span>}
@@ -799,7 +799,7 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                                         MP.confirmPassiveSelection();
                                                     }}
                                                 >
-                                                    🏁 End Turn
+                                                    End Turn
                                                 </button>
                                             </>
                                         ) : (
@@ -810,14 +810,14 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                                         style={{ flexGrow: 1 }}
                                                         onClick={() => this.setState({ isSelectingExtraDie: true })}
                                                     >
-                                                        ➕ Spend Extra Die (+1)
+                                                        Spend Extra Die (+1)
                                                     </button>
                                                     <button
                                                         className="btn-roll"
                                                         style={{ flexGrow: 1, backgroundColor: '#9b59b6', color: 'white' }}
                                                         onClick={() => MP.confirmPassiveSelection()}
                                                     >
-                                                        🏁 End Turn
+                                                        End Turn
                                                     </button>
                                                 </>
                                             ) : (
@@ -826,7 +826,7 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
                                                     style={{ flexGrow: 1, backgroundColor: '#9b59b6', color: 'white' }}
                                                     onClick={() => MP.confirmPassiveSelection()}
                                                 >
-                                                    🏁 End Turn
+                                                    End Turn
                                                 </button>
                                             )
                                         )}
@@ -1955,7 +1955,7 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
         const extraDiceSpentColors = myId === currentPlayerId
             ? extraDicePickedThisTurn
             : extraDicePickedThisTurn.slice(1);
-        
+
         const isUnspent = !extraDiceSpentColors.includes(die.color);
         if (!isUnspent) return false;
 
@@ -1974,7 +1974,7 @@ class CleverGameScreen extends React.Component<CleverMainViewProps, CleverScreen
         const extraDiceSpentColors = myId === currentPlayerId
             ? extraDicePickedThisTurn
             : extraDicePickedThisTurn.slice(1);
-        
+
         const allDice = [...activePickedDice.filter(Boolean), ...trayDice];
         return allDice.some(d => !extraDiceSpentColors.includes(d.color));
     }
