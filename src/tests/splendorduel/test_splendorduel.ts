@@ -206,6 +206,45 @@ describe('Splendor Duel Game Logic', () => {
                 assert.ok(pState.cards.some(c => c.id === 'TARGET-CARD'));
             });
 
+            it('should return the correct NUMBER of spent tokens to the bag (regression)', () => {
+                const players = ['alice', 'bob'];
+                const game = new GameState(players);
+                game.start_game('alice');
+
+                const data = game.get_data();
+                // Alice holds exactly 3 white (diamond) tokens, nothing else
+                data.players['alice'].tokens = {
+                    blue: 0, white: 3, green: 0, black: 0, red: 0, pearl: 0, gold: 0
+                };
+
+                // Card costs 3 white with no matching discount
+                const targetCard: Card = {
+                    id: 'DIAMOND-3',
+                    level: 1,
+                    color: 'red',
+                    points: 1,
+                    crowns: 0,
+                    bonus_color: 'red',
+                    bonus_count: 1,
+                    ability: null,
+                    cost: { white: 3 }
+                };
+                data.pyramid[1][0] = targetCard;
+
+                const bagBefore = data.bag.length;
+                const whiteInBagBefore = data.bag.filter((c: TokenColor) => c === 'white').length;
+
+                const mockedGame = GameState.from_data(data, players);
+                mockedGame.purchase_card('alice', 'DIAMOND-3');
+
+                const nextData = mockedGame.get_data();
+                const whiteInBagAfter = nextData.bag.filter((c: TokenColor) => c === 'white').length;
+
+                assert.strictEqual(nextData.players['alice'].tokens.white, 0, 'All 3 white tokens spent');
+                assert.strictEqual(nextData.bag.length, bagBefore + 3, 'Exactly 3 tokens returned to the bag');
+                assert.strictEqual(whiteInBagAfter, whiteInBagBefore + 3, 'All 3 spent whites returned to the bag');
+            });
+
             it('should auto-spend Gold when player has deficit', () => {
                 const players = ['alice', 'bob'];
                 const game = new GameState(players);

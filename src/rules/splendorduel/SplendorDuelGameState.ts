@@ -4,6 +4,21 @@
 
 export type TokenColor = 'blue' | 'white' | 'green' | 'black' | 'red' | 'pearl' | 'gold';
 
+// Human-friendly gem names for logs / notifications (never expose raw colours to players).
+export function gemName(color: TokenColor | 'wild'): string {
+    switch (color) {
+        case 'blue': return 'Sapphire';
+        case 'white': return 'Diamond';
+        case 'green': return 'Emerald';
+        case 'black': return 'Onyx';
+        case 'red': return 'Ruby';
+        case 'pearl': return 'Pearl';
+        case 'gold': return 'Gold';
+        case 'wild': return 'Joker';
+        default: return String(color);
+    }
+}
+
 export interface Card {
     id: string;
     level: 1 | 2 | 3;
@@ -32,7 +47,7 @@ export enum GameStatus {
     GameOver = 'GameOver'
 }
 
-export type ActionPhase = 
+export type ActionPhase =
     | 'Normal'
     | 'SelectMatchingToken' // take matching token ability
     | 'StealToken'          // steal ability
@@ -75,6 +90,11 @@ export interface GameStateData {
         playerId: string;
         desc: string;
         moveId: number;
+        card?: Card;                 // the card involved (e.g. purchased) for rich rendering
+        assignedColor?: TokenColor;  // joker's assigned colour, if any
+        reservedCard?: Card;         // a publicly-reserved pyramid card (safe to reveal)
+        reservedLevel?: number;      // the level of a reserved card (both pyramid and blind)
+        reservedBlind?: boolean;     // true when reserved face-down from a deck (hidden card)
     } | null;
     pendingAbilityInfo: {
         ability: 'take_matching' | 'steal';
@@ -99,80 +119,80 @@ const JEWEL_CARDS_DB: Card[] = [
     { id: "L1-GRE-T1", level: 1, color: "green", points: 0, crowns: 0, bonus_color: "green", bonus_count: 1, ability: null, cost: { blue: 1, white: 1, black: 1, red: 1 } },
     { id: "L1-BLU-T1", level: 1, color: "blue", points: 0, crowns: 0, bonus_color: "blue", bonus_count: 1, ability: null, cost: { white: 1, black: 1, red: 1, green: 1 } },
     { id: "L1-WHI-T1", level: 1, color: "white", points: 0, crowns: 0, bonus_color: "white", bonus_count: 1, ability: null, cost: { black: 1, red: 1, green: 1, blue: 1 } },
-    
+
     { id: "L1-BLA-T2", level: 1, color: "black", points: 0, crowns: 0, bonus_color: "black", bonus_count: 1, ability: "extra_turn", cost: { pearl: 1, blue: 2, white: 2 } },
     { id: "L1-RED-T2", level: 1, color: "red", points: 0, crowns: 0, bonus_color: "red", bonus_count: 1, ability: "extra_turn", cost: { pearl: 1, white: 2, black: 2 } },
     { id: "L1-GRE-T2", level: 1, color: "green", points: 0, crowns: 0, bonus_color: "green", bonus_count: 1, ability: "extra_turn", cost: { pearl: 1, black: 2, red: 2 } },
     { id: "L1-BLU-T2", level: 1, color: "blue", points: 0, crowns: 0, bonus_color: "blue", bonus_count: 1, ability: "extra_turn", cost: { pearl: 1, red: 2, green: 2 } },
     { id: "L1-WHI-T2", level: 1, color: "white", points: 0, crowns: 0, bonus_color: "white", bonus_count: 1, ability: "extra_turn", cost: { pearl: 1, green: 2, blue: 2 } },
-    
+
     { id: "L1-BLA-T3", level: 1, color: "black", points: 0, crowns: 0, bonus_color: "black", bonus_count: 1, ability: "take_matching", cost: { red: 2, green: 2 } },
     { id: "L1-RED-T3", level: 1, color: "red", points: 0, crowns: 0, bonus_color: "red", bonus_count: 1, ability: "take_matching", cost: { green: 2, blue: 2 } },
     { id: "L1-GRE-T3", level: 1, color: "green", points: 0, crowns: 0, bonus_color: "green", bonus_count: 1, ability: "take_matching", cost: { blue: 2, white: 2 } },
     { id: "L1-BLU-T3", level: 1, color: "blue", points: 0, crowns: 0, bonus_color: "blue", bonus_count: 1, ability: "take_matching", cost: { white: 2, black: 2 } },
     { id: "L1-WHI-T3", level: 1, color: "white", points: 0, crowns: 0, bonus_color: "white", bonus_count: 1, ability: "take_matching", cost: { black: 2, red: 2 } },
-    
+
     { id: "L1-BLA-T4", level: 1, color: "black", points: 1, crowns: 0, bonus_color: "black", bonus_count: 1, ability: null, cost: { green: 3, blue: 2 } },
     { id: "L1-RED-T4", level: 1, color: "red", points: 1, crowns: 0, bonus_color: "red", bonus_count: 1, ability: null, cost: { blue: 3, white: 2 } },
     { id: "L1-GRE-T4", level: 1, color: "green", points: 1, crowns: 0, bonus_color: "green", bonus_count: 1, ability: null, cost: { white: 3, black: 2 } },
     { id: "L1-BLU-T4", level: 1, color: "blue", points: 1, crowns: 0, bonus_color: "blue", bonus_count: 1, ability: null, cost: { black: 3, red: 2 } },
     { id: "L1-WHI-T4", level: 1, color: "white", points: 1, crowns: 0, bonus_color: "white", bonus_count: 1, ability: null, cost: { red: 3, green: 2 } },
-    
+
     { id: "L1-BLA-T5", level: 1, color: "black", points: 0, crowns: 1, bonus_color: "black", bonus_count: 1, ability: null, cost: { white: 3 } },
     { id: "L1-RED-T5", level: 1, color: "red", points: 0, crowns: 1, bonus_color: "red", bonus_count: 1, ability: null, cost: { black: 3 } },
     { id: "L1-GRE-T5", level: 1, color: "green", points: 0, crowns: 1, bonus_color: "green", bonus_count: 1, ability: null, cost: { red: 3 } },
     { id: "L1-BLU-T5", level: 1, color: "blue", points: 0, crowns: 1, bonus_color: "blue", bonus_count: 1, ability: null, cost: { green: 3 } },
     { id: "L1-WHI-T5", level: 1, color: "white", points: 0, crowns: 1, bonus_color: "white", bonus_count: 1, ability: null, cost: { blue: 3 } },
-    
+
     { id: "L1-POINTS-1", level: 1, color: null, points: 3, crowns: 0, bonus_color: null, bonus_count: 0, ability: null, cost: { pearl: 1, red: 4 } },
     { id: "L1-JOKER-2", level: 1, color: "wild", points: 1, crowns: 0, bonus_color: "wild", bonus_count: 1, ability: null, cost: { pearl: 1, black: 4 } },
     { id: "L1-JOKER-3", level: 1, color: "wild", points: 0, crowns: 1, bonus_color: "wild", bonus_count: 1, ability: null, cost: { pearl: 1, white: 4 } },
     { id: "L1-JOKER-4", level: 1, color: "wild", points: 1, crowns: 0, bonus_color: "wild", bonus_count: 1, ability: null, cost: { pearl: 1, black: 1, green: 2, white: 2 } },
     { id: "L1-JOKER-5", level: 1, color: "wild", points: 1, crowns: 0, bonus_color: "wild", bonus_count: 1, ability: null, cost: { pearl: 1, black: 1, red: 2, blue: 2 } },
-    
+
     // Level 2
     { id: "L2-BLA-T1", level: 2, color: "black", points: 1, crowns: 0, bonus_color: "black", bonus_count: 1, ability: "steal", cost: { green: 3, white: 4 } },
     { id: "L2-RED-T1", level: 2, color: "red", points: 1, crowns: 0, bonus_color: "red", bonus_count: 1, ability: "steal", cost: { blue: 3, black: 4 } },
     { id: "L2-GRE-T1", level: 2, color: "green", points: 1, crowns: 0, bonus_color: "green", bonus_count: 1, ability: "steal", cost: { white: 3, red: 4 } },
     { id: "L2-BLU-T1", level: 2, color: "blue", points: 1, crowns: 0, bonus_color: "blue", bonus_count: 1, ability: "steal", cost: { black: 3, green: 4 } },
     { id: "L2-WHI-T1", level: 2, color: "white", points: 1, crowns: 0, bonus_color: "white", bonus_count: 1, ability: "steal", cost: { red: 3, blue: 4 } },
-    
+
     { id: "L2-BLA-T2", level: 2, color: "black", points: 1, crowns: 0, bonus_color: "black", bonus_count: 2, ability: null, cost: { blue: 2, white: 5 } },
     { id: "L2-RED-T2", level: 2, color: "red", points: 1, crowns: 0, bonus_color: "red", bonus_count: 2, ability: null, cost: { white: 2, black: 5 } },
     { id: "L2-GRE-T2", level: 2, color: "green", points: 1, crowns: 0, bonus_color: "green", bonus_count: 2, ability: null, cost: { black: 2, red: 5 } },
     { id: "L2-BLU-T2", level: 2, color: "blue", points: 1, crowns: 0, bonus_color: "blue", bonus_count: 2, ability: null, cost: { red: 2, green: 5 } },
     { id: "L2-WHI-T2", level: 2, color: "white", points: 1, crowns: 0, bonus_color: "white", bonus_count: 2, ability: null, cost: { green: 2, blue: 5 } },
-    
+
     { id: "L2-BLA-T3", level: 2, color: "black", points: 2, crowns: 1, bonus_color: "black", bonus_count: 1, ability: null, cost: { pearl: 1, red: 2, green: 2, blue: 2 } },
     { id: "L2-RED-T3", level: 2, color: "red", points: 2, crowns: 1, bonus_color: "red", bonus_count: 1, ability: null, cost: { pearl: 1, green: 2, blue: 2, white: 2 } },
     { id: "L2-GRE-T3", level: 2, color: "green", points: 2, crowns: 1, bonus_color: "green", bonus_count: 1, ability: null, cost: { pearl: 1, blue: 2, white: 2, black: 2 } },
     { id: "L2-BLU-T3", level: 2, color: "blue", points: 2, crowns: 1, bonus_color: "blue", bonus_count: 1, ability: null, cost: { pearl: 1, white: 2, black: 2, red: 2 } },
     { id: "L2-WHI-T3", level: 2, color: "white", points: 2, crowns: 1, bonus_color: "white", bonus_count: 1, ability: null, cost: { pearl: 1, black: 2, red: 2, green: 2 } },
-    
+
     { id: "L2-BLA-T4", level: 2, color: "black", points: 2, crowns: 0, bonus_color: "black", bonus_count: 1, ability: "take_privilege", cost: { pearl: 1, black: 4, red: 2 } },
     { id: "L2-RED-T4", level: 2, color: "red", points: 2, crowns: 0, bonus_color: "red", bonus_count: 1, ability: "take_privilege", cost: { pearl: 1, red: 4, green: 2 } },
     { id: "L2-GRE-T4", level: 2, color: "green", points: 2, crowns: 0, bonus_color: "green", bonus_count: 1, ability: "take_privilege", cost: { pearl: 1, green: 4, blue: 2 } },
     { id: "L2-BLU-T4", level: 2, color: "blue", points: 2, crowns: 0, bonus_color: "blue", bonus_count: 1, ability: "take_privilege", cost: { pearl: 1, blue: 4, white: 2 } },
     { id: "L2-WHI-T4", level: 2, color: "white", points: 2, crowns: 0, bonus_color: "white", bonus_count: 1, ability: "take_privilege", cost: { pearl: 1, white: 4, black: 2 } },
-    
+
     { id: "L2-POINTS-1", level: 2, color: null, points: 5, crowns: 0, bonus_color: null, bonus_count: 0, ability: null, cost: { pearl: 1, blue: 6 } },
     { id: "L2-JOKER-2", level: 2, color: "wild", points: 2, crowns: 0, bonus_color: "wild", bonus_count: 1, ability: null, cost: { pearl: 1, green: 6 } },
     { id: "L2-JOKER-3", level: 2, color: "wild", points: 0, crowns: 2, bonus_color: "wild", bonus_count: 1, ability: null, cost: { pearl: 1, green: 6 } },
     { id: "L2-JOKER-4", level: 2, color: "wild", points: 0, crowns: 2, bonus_color: "wild", bonus_count: 1, ability: null, cost: { pearl: 1, blue: 6 } },
-    
+
     // Level 3
     { id: "L3-BLA-T1", level: 3, color: "black", points: 3, crowns: 2, bonus_color: "black", bonus_count: 1, ability: null, cost: { pearl: 1, red: 3, green: 5, white: 3 } },
     { id: "L3-RED-T1", level: 3, color: "red", points: 3, crowns: 2, bonus_color: "red", bonus_count: 1, ability: null, cost: { pearl: 1, green: 3, blue: 5, black: 3 } },
     { id: "L3-GRE-T1", level: 3, color: "green", points: 3, crowns: 2, bonus_color: "green", bonus_count: 1, ability: null, cost: { pearl: 1, blue: 3, white: 5, red: 3 } },
     { id: "L3-BLU-T1", level: 3, color: "blue", points: 3, crowns: 2, bonus_color: "blue", bonus_count: 1, ability: null, cost: { pearl: 1, white: 3, black: 5, green: 3 } },
     { id: "L3-WHI-T1", level: 3, color: "white", points: 3, crowns: 2, bonus_color: "white", bonus_count: 1, ability: null, cost: { pearl: 1, black: 3, red: 5, blue: 3 } },
-    
+
     { id: "L3-BLA-T2", level: 3, color: "black", points: 4, crowns: 0, bonus_color: "black", bonus_count: 1, ability: null, cost: { black: 6, red: 2, white: 2 } },
     { id: "L3-RED-T2", level: 3, color: "red", points: 4, crowns: 0, bonus_color: "red", bonus_count: 1, ability: null, cost: { red: 6, green: 2, black: 2 } },
     { id: "L3-GRE-T2", level: 3, color: "green", points: 4, crowns: 0, bonus_color: "green", bonus_count: 1, ability: null, cost: { green: 6, blue: 2, red: 2 } },
     { id: "L3-BLU-T2", level: 3, color: "blue", points: 4, crowns: 0, bonus_color: "blue", bonus_count: 1, ability: null, cost: { blue: 6, white: 2, green: 2 } },
     { id: "L3-WHI-T2", level: 3, color: "white", points: 4, crowns: 0, bonus_color: "white", bonus_count: 1, ability: null, cost: { white: 6, black: 2, blue: 2 } },
-    
+
     { id: "L3-POINTS-1", level: 3, color: null, points: 6, crowns: 0, bonus_color: null, bonus_count: 0, ability: null, cost: { white: 8 } },
     { id: "L3-JOKER-2", level: 3, color: "wild", points: 0, crowns: 3, bonus_color: "wild", bonus_count: 1, ability: null, cost: { black: 8 } },
     { id: "L3-JOKER-3", level: 3, color: "wild", points: 3, crowns: 0, bonus_color: "wild", bonus_count: 1, ability: "extra_turn", cost: { red: 8 } }
@@ -337,7 +357,7 @@ export class SplendorDuelGameState {
         this.data.board[r][c] = null;
         pState.tokens[token]++;
 
-        this.log_move(playerId, `spent a Privilege scroll to take 1 ${token}`);
+        this.log_move(playerId, `spent a Privilege scroll to take 1 ${gemName(token)}`);
     }
 
     // Optional Action 2: Replenish the board from the bag
@@ -400,7 +420,7 @@ export class SplendorDuelGameState {
             const sorted = [...coords].sort((p1, p2) => p1[0] - p2[0] || p1[1] - p2[1]);
             const [r1, c1] = sorted[0];
             const [r2, c2] = sorted[1];
-            
+
             const dr = r2 - r1;
             const dc = c2 - c1;
 
@@ -430,7 +450,7 @@ export class SplendorDuelGameState {
         // - if you take 3 of the same colour OR 2 Pearls, your opponent takes 1 Privilege
         const opponentId = this.get_opponent_id(playerId);
         const pearlCount = tokens.filter(t => t === 'pearl').length;
-        
+
         let triggersPenalty = false;
         let penaltyReason = '';
 
@@ -439,7 +459,7 @@ export class SplendorDuelGameState {
             const allSameColor = tokens.every(t => t === firstColor);
             if (allSameColor) {
                 triggersPenalty = true;
-                penaltyReason = `took 3 same-colored ${firstColor} tokens`;
+                penaltyReason = `took 3 matching ${gemName(firstColor)} tokens`;
             }
         }
 
@@ -452,7 +472,7 @@ export class SplendorDuelGameState {
             this.award_privilege_scroll(opponentId);
         }
 
-        const tokensDesc = tokens.join(', ');
+        const tokensDesc = tokens.map(t => gemName(t)).join(', ');
         const penaltyMsg = triggersPenalty ? `; opponent gains 1 Privilege (${penaltyReason})` : '';
         this.log_move(playerId, `took ${tokens.length} tokens [${tokensDesc}] from the board${penaltyMsg}`);
 
@@ -507,7 +527,7 @@ export class SplendorDuelGameState {
             }
 
             reservedCard = this.data.pyramid[foundLevel][foundIndex]!;
-            
+
             // Remove from pyramid and replace
             this.data.pyramid[foundLevel][foundIndex] = this.data.decks[foundLevel].pop() || null;
 
@@ -532,7 +552,19 @@ export class SplendorDuelGameState {
         pState.reserved.push(reservedCard);
 
         const cardDesc = cardId ? `pyramid card ${cardId}` : `a blind card from Deck Level ${deckLevel}`;
-        this.log_move(playerId, `took 1 Gold and reserved ${cardDesc}`);
+        if (cardId) {
+            // Pyramid reserve: the card was face-up, so it is safe to reveal in the log.
+            this.log_move(playerId, `took 1 Gold and reserved ${cardDesc}`, {
+                reservedCard: { ...reservedCard },
+                reservedLevel: reservedCard.level
+            });
+        } else {
+            // Blind deck reserve: the card is hidden — only reveal its level.
+            this.log_move(playerId, `took 1 Gold and reserved ${cardDesc}`, {
+                reservedBlind: true,
+                reservedLevel: deckLevel as number
+            });
+        }
 
         this.complete_mandatory_action(playerId);
     }
@@ -589,14 +621,14 @@ export class SplendorDuelGameState {
             }
             // Check that the player actually owns a bonus of that color
             if ((ownedBonusesCount[jokerColor] || 0) <= 0) {
-                throw new Error(`Cannot assign joker to ${jokerColor} because you own no cards providing that bonus color`);
+                throw new Error(`Cannot assign joker to ${gemName(jokerColor)} because you own no cards providing that bonus color`);
             }
         }
 
         // 3. Cost calculation and affordability check
         const bonuses = this.calculate_player_bonuses(playerId);
         const costToPay: Partial<Record<TokenColor, number>> = {};
-        
+
         let goldNeeded = 0;
         const requiredTokensToSpend: Record<TokenColor, number> = {
             blue: 0, white: 0, green: 0, black: 0, red: 0, pearl: 0, gold: 0
@@ -631,7 +663,10 @@ export class SplendorDuelGameState {
             const amount = requiredTokensToSpend[color];
             if (amount > 0) {
                 pState.tokens[color] -= amount;
-                this.data.bag.push(color);
+                // Return one token to the bag per unit spent (not just a single token)
+                for (let i = 0; i < amount; i++) {
+                    this.data.bag.push(color);
+                }
             }
         }
 
@@ -653,8 +688,11 @@ export class SplendorDuelGameState {
 
         // 8. Log purchase
         const source = isFromPyramid ? 'pyramid' : 'reserve';
-        const jokerDesc = card.color === 'wild' ? ` (assigned color: ${jokerColor})` : '';
-        this.log_move(playerId, `purchased card ${cardId} from ${source}${jokerDesc}`);
+        const jokerDesc = card.color === 'wild' ? ` (assigned: ${gemName(jokerColor)})` : '';
+        this.log_move(playerId, `purchased card ${cardId} from ${source}${jokerDesc}`, {
+            card: { ...card },
+            assignedColor: card.color === 'wild' ? jokerColor : undefined
+        });
 
         // 9. Resolve immediate card ability (if any)
         if (card.ability) {
@@ -725,7 +763,7 @@ export class SplendorDuelGameState {
                 }
 
                 if (!hasTokenOnBoard) {
-                    this.log_move(playerId, `matching token ability ignored: no ${matchingColor} tokens on the board`);
+                    this.log_move(playerId, `matching token ability ignored: no ${gemName(matchingColor)} tokens on the board`);
                     this.check_crown_crossings(playerId);
                 } else {
                     // Switch to pending ability phase so player can choose which token to take
@@ -785,14 +823,14 @@ export class SplendorDuelGameState {
         const opponentId = this.get_opponent_id(playerId);
         const oppState = this.data.players[opponentId];
         if ((oppState.tokens[color] || 0) <= 0) {
-            throw new Error(`Opponent does not have any ${color} tokens to steal`);
+            throw new Error(`Opponent does not have any ${gemName(color)} tokens to steal`);
         }
 
         // Transfer token
         oppState.tokens[color]--;
         this.data.players[playerId].tokens[color]++;
 
-        this.log_move(playerId, `stole 1 ${color} token from opponent`);
+        this.log_move(playerId, `stole 1 ${gemName(color)} token from opponent`);
 
         // Clear ability phase and check crowns
         this.data.status = GameStatus.Active;
@@ -821,14 +859,14 @@ export class SplendorDuelGameState {
 
         const token = this.data.board[r][c];
         if (token !== targetColor) {
-            throw new Error(`Must select a ${targetColor} token from the board`);
+            throw new Error(`Must select a ${gemName(targetColor)} token from the board`);
         }
 
         // Take token
         this.data.board[r][c] = null;
         this.data.players[playerId].tokens[targetColor]++;
 
-        this.log_move(playerId, `took 1 matching ${targetColor} token from the board`);
+        this.log_move(playerId, `took 1 matching ${gemName(targetColor)} token from the board`);
 
         // Clear ability phase and check crowns
         this.data.status = GameStatus.Active;
@@ -1011,7 +1049,7 @@ export class SplendorDuelGameState {
         const tempCounts = { ...pState.tokens };
         for (const col of colorsToDiscard) {
             if ((tempCounts[col] || 0) <= 0) {
-                throw new Error(`You do not have enough ${col} tokens to discard`);
+                throw new Error(`You do not have enough ${gemName(col)} tokens to discard`);
             }
             tempCounts[col]--;
         }
@@ -1022,7 +1060,7 @@ export class SplendorDuelGameState {
             this.data.bag.push(col);
         }
 
-        const discardDesc = colorsToDiscard.join(', ');
+        const discardDesc = colorsToDiscard.map(c => gemName(c)).join(', ');
         this.log_move(playerId, `discarded ${colorsToDiscard.length} tokens [${discardDesc}]`);
 
         // Clear discard phase and end turn
@@ -1049,11 +1087,11 @@ export class SplendorDuelGameState {
         if (this.data.extraTurnPending) {
             this.data.extraTurnPending = false;
             // Current player retains active turn!
-            this.log_move(playerId, `starts their Extra Turn`);
+            // this.log_move(playerId, `starts their Extra Turn`);
         } else {
             const nextPlayer = this.get_opponent_id(playerId);
             this.data.currentPlayerId = nextPlayer;
-            this.log_move(nextPlayer, `starts their turn`);
+            // this.log_move(nextPlayer, `starts their turn`);
         }
 
         this.data.status = GameStatus.Active;
@@ -1177,11 +1215,12 @@ export class SplendorDuelGameState {
         return this.playerIds.find(pid => pid !== playerId) || '';
     }
 
-    private log_move(playerId: string, desc: string) {
+    private log_move(playerId: string, desc: string, extra?: { card?: Card; assignedColor?: TokenColor; reservedCard?: Card; reservedLevel?: number; reservedBlind?: boolean }) {
         this.data.lastMove = {
             playerId,
             desc,
-            moveId: ++this.data.moveCounter
+            moveId: ++this.data.moveCounter,
+            ...(extra || {})
         };
     }
 

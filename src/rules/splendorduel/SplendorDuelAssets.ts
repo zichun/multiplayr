@@ -309,8 +309,15 @@ export const SPLENDOR_DUEL_ICONS: Record<string, IconObject> = {
         id: 'gem_wild_silhouette',
         name: 'Joker Silhouette',
         layers: [
+            // Watermark: faint circle + a white jester-hat silhouette
             { id: 'bg', type: 'circle', x: 50, y: 50, scaleX: 1.6, scaleY: 1.6, fill: 'primary', opacity: 0.22 },
-            { id: 'w1', type: 'circle', x: 50, y: 50, scaleX: 0.8, scaleY: 0.8, fill: '#ffffff' }
+            { id: 'pt_l', type: 'triangle', x: 30, y: 49, scaleX: 0.22, scaleY: 0.56, rotation: -26, fill: '#ffffff' },
+            { id: 'pt_r', type: 'triangle', x: 70, y: 49, scaleX: 0.22, scaleY: 0.56, rotation: 26, fill: '#ffffff' },
+            { id: 'pt_c', type: 'triangle', x: 50, y: 47, scaleX: 0.26, scaleY: 0.62, rotation: 0, fill: '#ffffff' },
+            { id: 'band', type: 'rectangle', x: 50, y: 66, scaleX: 0.66, scaleY: 0.14, fill: '#ffffff' },
+            { id: 'bell_c', type: 'circle', x: 50, y: 27, scaleX: 0.1, scaleY: 0.1, fill: '#ffffff' },
+            { id: 'bell_l', type: 'circle', x: 23, y: 33, scaleX: 0.09, scaleY: 0.09, fill: '#ffffff' },
+            { id: 'bell_r', type: 'circle', x: 77, y: 33, scaleX: 0.09, scaleY: 0.09, fill: '#ffffff' }
         ]
     },
     star_silhouette: {
@@ -364,7 +371,7 @@ export const SPLENDOR_DUEL_ICONS: Record<string, IconObject> = {
     gem_black_coin: {
         id: 'gem_black_coin', name: 'Onyx Coin',
         layers: [
-            { id: 'disc', type: 'circle', x: 50, y: 50, scaleX: 1.9, scaleY: 1.9, fill: '#4a4363' },
+            { id: 'disc', type: 'circle', x: 50, y: 50, scaleX: 1.9, scaleY: 1.9, fill: '#7a5fb0' },
             { id: 'd1', type: 'rectangle', x: 50, y: 50, scaleX: 0.5, scaleY: 0.72, rotation: 45, fill: '#ffffff' }
         ]
     },
@@ -440,9 +447,15 @@ export const SPLENDOR_DUEL_ICONS: Record<string, IconObject> = {
     gem_wild_bonus: {
         id: 'gem_wild_bonus', name: 'Joker Bonus',
         layers: [
+            // White coin + a multi-colour jester hat (three belled points) = "wild / joker"
             { id: 'disc', type: 'circle', x: 50, y: 50, scaleX: 1.9, scaleY: 1.9, fill: '#ffffff' },
-            { id: 'st1', type: 'triangle', x: 50, y: 44, scaleX: 0.5, scaleY: 0.5, rotation: 0, fill: 'primary' },
-            { id: 'st2', type: 'triangle', x: 50, y: 56, scaleX: 0.5, scaleY: 0.5, rotation: 180, fill: 'primary' }
+            { id: 'pt_l', type: 'triangle', x: 30, y: 49, scaleX: 0.22, scaleY: 0.56, rotation: -26, fill: '#e0433f' },
+            { id: 'pt_r', type: 'triangle', x: 70, y: 49, scaleX: 0.22, scaleY: 0.56, rotation: 26, fill: '#3d9dc4' },
+            { id: 'pt_c', type: 'triangle', x: 50, y: 47, scaleX: 0.26, scaleY: 0.62, rotation: 0, fill: '#2eb87a' },
+            { id: 'band', type: 'rectangle', x: 50, y: 66, scaleX: 0.66, scaleY: 0.14, fill: '#3a2b4d' },
+            { id: 'bell_c', type: 'circle', x: 50, y: 27, scaleX: 0.1, scaleY: 0.1, fill: '#f6c026' },
+            { id: 'bell_l', type: 'circle', x: 23, y: 33, scaleX: 0.09, scaleY: 0.09, fill: '#f6c026' },
+            { id: 'bell_r', type: 'circle', x: 77, y: 33, scaleX: 0.09, scaleY: 0.09, fill: '#f6c026' }
         ]
     },
 
@@ -607,7 +620,11 @@ export const SPLENDOR_DUEL_ICONS: Record<string, IconObject> = {
 // 3. Dynamic Card Definition Builders
 // ==========================================
 
-export function getSplendorDuelCardDefinition(card: Card, bonuses: Partial<Record<TokenColor, number>>): CardDefinition {
+export function getSplendorDuelCardDefinition(
+    card: Card,
+    bonuses: Partial<Record<TokenColor, number>>,
+    tokens?: Partial<Record<TokenColor, number>>
+): CardDefinition {
     const visualColor = getCardVisualColor(card);
     const palette = getSplendorDuelPalette(visualColor);
 
@@ -644,15 +661,29 @@ export function getSplendorDuelCardDefinition(card: Card, bonuses: Partial<Recor
         const discount = color === 'pearl' ? 0 : (bonuses[color] || 0);
         const effectiveCost = Math.max(0, amt - discount);
 
+        // When we know the player's hand, show "cost ▶ shortfall": how many of this
+        // colour they still need after permanent bonuses + spendable tokens of that
+        // colour. Gold is deliberately NOT counted. If they have none of it (no bonus,
+        // no tokens), just show the raw cost.
+        let value = String(amt);
+        let opacity = effectiveCost === 0 ? 0.25 : 1;
+        if (tokens) {
+            const spendable = tokens[color] || 0;
+            if (discount > 0 || spendable > 0) {
+                const shortfall = Math.max(0, amt - discount - spendable);
+                value = `${amt} ▶ ${shortfall}`;
+            }
+            opacity = 1;
+        }
+
         return {
             iconId: `gem_${color}_coin`,
             label: '',
-            value: String(amt),
+            value,
             // Leave color undefined so that the cost number text is rendered in the dark palette text color (legible!)
             color: undefined,
             scaling: 1.0,
-            // If discounted fully, make it look muted
-            opacity: effectiveCost === 0 ? 0.25 : 1
+            opacity
         } as DataRow;
     });
 
@@ -748,12 +779,12 @@ export function getRoyalCardDefinition(royal: RoyalCard): CardDefinition {
             id: 'splendor_royal',
             name: 'Royal Gold',
             background: '#ffffff',
-            border: '#e0be5a',
-            primary: '#f4e3b0', // Light gold header band
+            border: '#d3a92f',
+            primary: '#e3b52e', // Rich gold header band (white star reads as negative space)
             secondary: '#d9a520',
             accent: '#d9a520',
             charcoal: '#4a3608',
-            text: '#4a3608',
+            text: '#3f2f06',
             panelBg: '#faf1d6',
             tertiary: '#ffd3b6',
             success: '#2ec27e',

@@ -154,32 +154,9 @@ export const SplendorDuelRule: GameRuleInterface = {
         });
         setViewProps(mp.hostId);
 
-        // Push toast notification if moves happened
-        const lastMove = stateData.lastMove;
-        if (lastMove) {
-            const idx = stateData.playerIds.indexOf(lastMove.playerId);
-            const accents = stateData.playerIds.map(pid => {
-                if (pid === mp.hostId) {
-                    return (mp.getData('lobby_accent') as string) || '#8a2be2'; // beautiful royal violet
-                } else {
-                    return (mp.getPlayerData(pid, 'lobby_accent') as string) || '#e25822'; // bright flame orange
-                }
-            });
-
-            const playerAccent = accents[idx] || '#2c3e50';
-            const text = `${playerNames[lastMove.playerId]} ${lastMove.desc}`;
-            
-            const notify = (clientId: string) => {
-                mp.setViewProps(clientId, 'toastNotification', {
-                    id: lastMove.moveId,
-                    message: text,
-                    bgColor: playerAccent,
-                    duration: 4000
-                });
-            };
-            mp.playersForEach(notify);
-            notify(mp.hostId);
-        }
+        // Note: the toast notification is built in the main-page view and passed to the
+        // gameshell via getPluginView. Setting it here as a top-level viewProp would never
+        // reach the gameshell plugin (it only receives its own namespaced props).
 
         // Set the view routing
         mp.setView(mp.hostId, 'mainpage');

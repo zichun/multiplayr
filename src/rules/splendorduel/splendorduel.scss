@@ -157,6 +157,23 @@
   gap: 20px;
 }
 
+// Shared inline vector-icon glyph (default size; overridden per context)
+.mp-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  vertical-align: middle;
+  width: 1.2em;
+  height: 1.2em;
+
+  .expressive-vector-icon {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+}
+
 // Player Panels — flat, minimalist (matches the cards / board)
 .player-panel {
   border: 1px solid #e3ddee;
@@ -167,23 +184,6 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-
-  // Shared inline vector-icon glyph (default size; overridden per context below)
-  .mp-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-    vertical-align: middle;
-    width: 1.2em;
-    height: 1.2em;
-
-    .expressive-vector-icon {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-  }
 
   &.active-player-panel {
     border-color: #c9bce6;
@@ -324,6 +324,45 @@
   .board-actions {
     display: flex;
     gap: 8px;
+  }
+}
+
+// Reminder hints: which token-takes hand a scroll to the opponent
+.board-rule-hints {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  margin-top: -8px;
+  padding: 8px 14px;
+  background-color: #f7f2fe;
+  border: 1px dashed #e0d3f2;
+  border-radius: 10px;
+  font-size: 0.8em;
+  font-weight: 700;
+  color: #5b3c8a;
+
+  .hint-lead {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #4a3aa0;
+  }
+
+  .hint-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .hint-coins {
+    display: inline-flex;
+    gap: 2px;
+  }
+
+  .mp-icon {
+    width: 1.4em;
+    height: 1.4em;
   }
 }
 
@@ -620,6 +659,25 @@
       font-size: 1.7em !important;
       font-weight: 900;
       letter-spacing: 0;
+      position: relative;
+      padding-left: 1.05em;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+
+      /* Prestige star — white, so it reads as negative space on the gold band */
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0.95em;
+        height: 0.95em;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M 50 8 L 63 37 L 94 37 L 69 57 L 79 88 L 50 68 L 21 88 L 31 57 L 6 37 L 37 37 Z' fill='%23ffffff'/%3E%3C/svg%3E");
+        background-size: 100% 100%;
+        background-repeat: no-repeat;
+      }
     }
   }
 
@@ -776,7 +834,21 @@
     .color-choice-btn {
       width: 100%;
       justify-content: flex-start;
-      padding: 10px 20px;
+      gap: 10px;
+      padding: 10px 16px;
+      text-transform: none;
+
+      .mp-icon {
+        width: 1.6em;
+        height: 1.6em;
+      }
+
+      .jc-count {
+        margin-left: auto;
+        font-size: 0.8em;
+        font-weight: 700;
+        color: #6c5ce7;
+      }
     }
   }
 }
@@ -959,6 +1031,11 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30' fill='%23ffffff'%3E%3Cpath d='M 0 30 L 100 30 L 100 12 L 86 12 L 86 0 L 72 0 L 72 12 L 57 12 L 57 0 L 43 0 L 43 12 L 28 12 L 28 0 L 14 0 L 14 12 L 0 12 Z' /%3E%3C/svg%3E");
   }
 
+  // Wild / joker cards get a rainbow gradient header band instead of a flat colour
+  &.color-wild .card-header-region {
+    background: linear-gradient(105deg, #ff6b6b 0%, #ffa94d 20%, #ffe066 38%, #63e6be 58%, #74c0fc 78%, #b197fc 100%) !important;
+  }
+
   /* 2. Main Art Region: large watermark filling the lower-right body */
   .card-art-region {
     position: absolute;
@@ -986,7 +1063,7 @@
     position: absolute;
     top: 5.65em;
     left: 0.5em;
-    width: 5em;
+    width: 7.4em;
     padding: 0;
     display: flex;
     flex-direction: column;
@@ -1025,11 +1102,13 @@
         }
       }
 
-      /* Make cost numbers bold, dark and readable */
+      /* Make cost numbers bold, dark and readable; "cost ▶ shortfall" must not wrap */
       .card-data-value {
-        font-size: 1.4em;
+        font-size: 1.2em;
         font-weight: 900;
         color: #12181f !important;
+        white-space: nowrap;
+        letter-spacing: 0.02em;
       }
     }
   }
@@ -1057,5 +1136,217 @@
       color: #12181f !important;
       opacity: 0.95;
     }
+  }
+}
+
+// ==========================================
+// Tableau tab — each player's cards stacked by colour
+// ==========================================
+.splendor-tableau {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 6px;
+  max-height: 82vh;
+  overflow-y: auto;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  color: #2b2440;
+}
+
+.tableau-player {
+  background-color: #ffffff;
+  border: 1px solid #e3ddee;
+  border-radius: 14px;
+  padding: 14px 16px;
+
+  &.is-you {
+    border-color: #c9bce6;
+  }
+}
+
+.tableau-player-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 1px solid #ece8f2;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+
+  .tp-name {
+    font-weight: 800;
+    font-size: 1.1em;
+    color: #2b2440;
+  }
+
+  .tp-badges {
+    display: flex;
+    gap: 6px;
+  }
+
+  .tp-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 0.85em;
+    font-weight: 800;
+
+    &.tp-prestige { background-color: #fbedc6; color: #7a5a00; }
+    &.tp-crown { background-color: #ffe2cb; color: #8a4712; }
+    &.tp-cards { background-color: #eef1f4; color: #4a5568; }
+  }
+}
+
+.tableau-stacks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.tableau-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tableau-stack-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  font-size: 0.82em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #4a5568;
+
+  .stack-title {
+    color: #2b2440;
+  }
+
+  .stack-bonus {
+    color: #6c5ce7;
+    font-weight: 900;
+  }
+}
+
+.tableau-stack-cards {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100px;
+
+  // The fanned cards themselves are static (no hover lift / glow needed here)
+  .jewel-card,
+  .royal-card {
+    transition: none;
+  }
+}
+
+// Tableau: spendable tokens row
+.tableau-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 14px;
+
+  .tt-label {
+    font-size: 0.72em;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #8a86a0;
+  }
+
+  .tt-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tt-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background-color: #f7f6fb;
+    border: 1px solid #ece8f2;
+    border-radius: 999px;
+    padding: 2px 9px 2px 4px;
+    font-size: 0.85em;
+    font-weight: 800;
+    color: #2b2440;
+  }
+}
+
+// Steal ability buttons (flat coin + count)
+.steal-btn {
+  .mp-icon {
+    width: 1.4em;
+    height: 1.4em;
+  }
+
+  .steal-avail {
+    opacity: 0.6;
+    font-weight: 700;
+  }
+}
+
+// Game over — flat in-arena banner (victory / defeat), arena stays reviewable
+.game-over-banner {
+  border-radius: 14px;
+  border: 1px solid;
+  padding: 20px 22px;
+  text-align: center;
+
+  .go-title {
+    font-size: 2em;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    line-height: 1;
+  }
+
+  .go-sub {
+    margin-top: 8px;
+    font-weight: 700;
+    font-size: 1.05em;
+
+    .go-desc {
+      font-weight: 500;
+      font-style: italic;
+      opacity: 0.7;
+    }
+  }
+
+  .go-hint {
+    margin-top: 6px;
+    font-size: 0.85em;
+    opacity: 0.75;
+  }
+
+  .go-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  &.victory {
+    background-color: #e6f7f0;
+    border-color: #bfe8d6;
+    color: #0f6e42;
+    .go-title { color: #0f8a52; }
+  }
+
+  &.defeat {
+    background-color: #f5edf0;
+    border-color: #e4cdd6;
+    color: #7a3b52;
+    .go-title { color: #9c3b5e; }
   }
 }
