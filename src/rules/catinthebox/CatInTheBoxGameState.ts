@@ -44,6 +44,15 @@ export interface TrickPlay {
     color: CatColor;
 }
 
+// A resolved trick, recorded for the history log.
+export interface CompletedTrick {
+    round: number;         // 0-indexed round
+    trickNumber: number;   // 1-indexed within the round
+    ledColor: CatColor | null;
+    plays: TrickPlay[];
+    winnerId: string;
+}
+
 export interface PlayerState {
     hand: number[];
     discard: number | null;      // the buried card (private, never revealed)
@@ -91,8 +100,18 @@ export interface GameStateData {
     predictionOrder: string[];   // clockwise from round start player
     players: Record<string, PlayerState>;
 
+    // Set while a completed trick is being shown/animated; nothing advances until
+    // finish_trick() is called. The winner is already known (for the glow).
+    resolvingTrick: {
+        plays: TrickPlay[];
+        winnerId: string;
+        trickNumber: number;
+        resolveId: number;
+    } | null;
+
     paradoxPlayerId: string | null;
     lastTrickWinnerId: string | null;
+    trickHistory: CompletedTrick[]; // every resolved trick this game (across rounds)
     winnerId: string | null;     // set at GameOver (may be shared -> first of tie)
     revealedTwoPlayer: number[]; // the 3 revealed numbers used to seed 2p observed tokens
 
@@ -153,8 +172,10 @@ export class CatInTheBoxGameState {
             completedTricks: 0,
             predictionOrder: [],
             players: {},
+            resolvingTrick: null,
             paradoxPlayerId: null,
             lastTrickWinnerId: null,
+            trickHistory: [],
             winnerId: null,
             revealedTwoPlayer: [],
             lastMove: null,
@@ -182,6 +203,7 @@ export class CatInTheBoxGameState {
         }
 
         this.data.round = 0;
+        this.data.trickHistory = [];
         for (const pid of this.playerIds) {
             this.data.players[pid] = this.freshPlayerState();
         }
@@ -220,6 +242,7 @@ export class CatInTheBoxGameState {
         this.data.completedTricks = 0;
         this.data.ledColor = null;
         this.data.currentTrick = [];
+        this.data.resolvingTrick = null;
         this.data.paradoxPlayerId = null;
         this.data.lastTrickWinnerId = null;
         this.data.revealedTwoPlayer = [];
@@ -486,7 +509,7 @@ export class CatInTheBoxGameState {
         };
 
         if (this.data.currentTrick.length === this.data.numPlayers) {
-            this.resolve_trick();
+            this.begin_trick_resolution();
         } else {
             const nextIdx = (this.playerIndex(playerId) + 1) % this.data.numPlayers;
             this.data.currentPlayerId = this.playerIds[nextIdx];
@@ -494,8 +517,8 @@ export class CatInTheBoxGameState {
         }
     }
 
-    // Determine the winner of a completed trick and set up the next one.
-    private resolve_trick() {
+    // Highest card among the contenders (Red trumps; otherwise the led colour).
+    private compute_trick_winner(): TrickPlay {
         const plays = this.data.currentTrick;
         const reds = plays.filter(pl => pl.color === 'red');
         const contenders = reds.length > 0
@@ -506,17 +529,50 @@ export class CatInTheBoxGameState {
         for (const c of contenders) {
             if (c.number > winner.number) winner = c;
         }
+        return winner;
+    }
 
-        this.data.players[winner.playerId].tricksWon += 1;
-        this.data.lastTrickWinnerId = winner.playerId;
+    // The trick is complete: freeze it (winner known) so the UI can play the
+    // reveal/flip/collapse animation. Nothing advances until finish_trick().
+    private begin_trick_resolution() {
+        const winner = this.compute_trick_winner();
+        this.data.resolvingTrick = {
+            plays: [...this.data.currentTrick],
+            winnerId: winner.playerId,
+            trickNumber: this.data.trickNumber,
+            resolveId: ++this.data.moveCounter
+        };
+        this.data.currentPlayerId = ''; // no one acts during the animation
+    }
+
+    // Apply the frozen trick result and set up the next trick / round. Idempotent:
+    // a second call once already resolved is a no-op (guards against animation races).
+    public finish_trick(_playerId?: string) {
+        const rt = this.data.resolvingTrick;
+        if (!rt) return;
+        this.data.resolvingTrick = null;
+
+        this.data.players[rt.winnerId].tricksWon += 1;
+        this.data.lastTrickWinnerId = rt.winnerId;
         this.data.completedTricks += 1;
 
+        this.data.trickHistory.push({
+            round: this.data.round,
+            trickNumber: rt.trickNumber,
+            ledColor: this.data.ledColor,
+            plays: rt.plays,
+            winnerId: rt.winnerId
+        });
+
         this.data.lastMove = {
-            playerId: winner.playerId,
-            desc: `won trick ${this.data.trickNumber}`,
+            playerId: rt.winnerId,
+            desc: `won trick ${rt.trickNumber}`,
             moveId: ++this.data.moveCounter,
             kind: 'trick'
         };
+
+        this.data.currentTrick = [];
+        this.data.ledColor = null;
 
         if (this.data.completedTricks >= this.data.totalTricks) {
             this.end_round();
@@ -524,11 +580,9 @@ export class CatInTheBoxGameState {
         }
 
         // Winner leads the next trick.
-        this.data.currentTrick = [];
-        this.data.ledColor = null;
         this.data.trickNumber += 1;
-        this.data.trickStartPlayerId = winner.playerId;
-        this.data.currentPlayerId = winner.playerId;
+        this.data.trickStartPlayerId = rt.winnerId;
+        this.data.currentPlayerId = rt.winnerId;
         this.maybe_paradox();
     }
 

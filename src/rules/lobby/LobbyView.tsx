@@ -32,6 +32,38 @@ function setCookie(name: string, value: string, days = 365) {
     document.cookie = `${name}=${encodeURIComponent(value)};${expires};path=/;SameSite=Lax`;
 }
 
+function isDebugger(): boolean {
+    if (typeof window === 'undefined') return false;
+    const filename = window.location.pathname.split('/').pop() || '';
+    return filename.indexOf('debug') !== -1;
+}
+
+function getTakenColors(props: any): string[] {
+    const taken = [];
+    const myClientId = props.MP.clientId;
+    if (props.accents && props.clientIds) {
+        for (let i = 0; i < props.clientIds.length; i++) {
+            if (props.clientIds[i] !== myClientId) {
+                taken.push(props.accents[i]);
+            }
+        }
+    }
+    return taken;
+}
+
+function getTakenIcons(props: any): number[] {
+    const taken = [];
+    const myClientId = props.MP.clientId;
+    if (props.icons && props.clientIds) {
+        for (let i = 0; i < props.clientIds.length; i++) {
+            if (props.clientIds[i] !== myClientId) {
+                taken.push(props.icons[i]);
+            }
+        }
+    }
+    return taken;
+}
+
 const colors_default = ['#0074D9', '#7FDBFF', '#39CCCC', '#3D9970', '#2ECC40', '#01FF70', '#EEAB00', '#FF851B', '#FF4136',
     '#F012BE', '#B10DC9'];
 
@@ -43,7 +75,11 @@ interface LobbyViewInterface extends ViewPropsInterface {
 }
 interface LobbySetNameViewInterface extends ViewPropsInterface {
     name: string,
-    colors?: string[]
+    colors?: string[],
+    uniqueColorAndIcon?: boolean,
+    clientIds?: string[],
+    accents?: string[],
+    icons?: number[]
 }
 
 function namesAllFilled(names: string[]): boolean {
@@ -209,10 +245,12 @@ export class LobbySetNameView extends React.Component<LobbySetNameViewInterface,
     constructor(props: LobbySetNameViewInterface) {
         super(props);
         let initialName = this.props.name;
-        const savedName = getCookie('mp_player_name');
-        if (savedName && savedName.trim() !== '') {
-            if (!initialName || initialName.trim() === '' || initialName === 'Host') {
-                initialName = savedName;
+        if (!isDebugger()) {
+            const savedName = getCookie('mp_player_name');
+            if (savedName && savedName.trim() !== '') {
+                if (!initialName || initialName.trim() === '' || initialName === 'Host') {
+                    initialName = savedName;
+                }
             }
         }
         this.state = { name: initialName };
@@ -220,11 +258,13 @@ export class LobbySetNameView extends React.Component<LobbySetNameViewInterface,
     }
 
     public componentDidMount() {
-        const savedName = getCookie('mp_player_name');
-        if (savedName && savedName.trim() !== '') {
-            const currentName = this.props.name;
-            if (!currentName || currentName.trim() === '' || currentName === 'Host') {
-                this.props.MP.setName(savedName);
+        if (!isDebugger()) {
+            const savedName = getCookie('mp_player_name');
+            if (savedName && savedName.trim() !== '') {
+                const currentName = this.props.name;
+                if (!currentName || currentName.trim() === '' || currentName === 'Host') {
+                    this.props.MP.setName(savedName);
+                }
             }
         }
     }
@@ -233,7 +273,9 @@ export class LobbySetNameView extends React.Component<LobbySetNameViewInterface,
         const val = e.target.value;
         this.setState({ name: val });
         this.props.MP.setName(val);
-        setCookie('mp_player_name', val);
+        if (!isDebugger()) {
+            setCookie('mp_player_name', val);
+        }
         return true;
     }
 
@@ -255,12 +297,26 @@ export class LobbySetNameView extends React.Component<LobbySetNameViewInterface,
     }
 }
 
-export class LobbySelectAccentView extends React.Component<ViewPropsInterface & { accent: string, colors?: string[] }, { accent: string }> {
+export class LobbySelectAccentView extends React.Component<ViewPropsInterface & { accent: string, colors?: string[], uniqueColorAndIcon?: boolean, clientIds?: string[], accents?: string[] }, { accent: string }> {
     constructor(props: any) {
         super(props);
         const colors = this.props.colors || colors_default;
         if (!this.props.accent) {
-            const accent = colors[Math.floor(colors.length * Math.random())];
+            const savedAccent = !isDebugger() ? getCookie('mp_player_accent') : '';
+            let accent = (savedAccent && colors.indexOf(savedAccent) !== -1)
+                ? savedAccent
+                : colors[Math.floor(colors.length * Math.random())];
+
+            if (this.props.uniqueColorAndIcon) {
+                const takenColors = getTakenColors(this.props);
+                if (takenColors.indexOf(accent) !== -1) {
+                    const availableColors = colors.filter(c => takenColors.indexOf(c) === -1);
+                    if (availableColors.length > 0) {
+                        accent = availableColors[Math.floor(Math.random() * availableColors.length)];
+                    }
+                }
+            }
+
             this.state = { accent: accent };
             this._setAccent(accent);
         } else {
@@ -268,15 +324,40 @@ export class LobbySelectAccentView extends React.Component<ViewPropsInterface & 
         }
     }
 
+    public componentDidMount() {
+        if (this.props.uniqueColorAndIcon) {
+            const colors = this.props.colors || colors_default;
+            const takenColors = getTakenColors(this.props);
+            if (takenColors.indexOf(this.state.accent) !== -1) {
+                const availableColors = colors.filter(c => takenColors.indexOf(c) === -1);
+                if (availableColors.length > 0) {
+                    const newAccent = availableColors[Math.floor(Math.random() * availableColors.length)];
+                    this.setState({ accent: newAccent });
+                    this._setAccent(newAccent);
+                }
+            }
+        }
+    }
+
+    public componentDidUpdate(prevProps: any) {
+        if (prevProps.accent !== this.props.accent) {
+            this.setState({ accent: this.props.accent });
+        }
+    }
+
     private _setAccent(accent: string) {
         this.props.MP.setAccent(accent);
         this.setState({ accent: accent });
+        if (!isDebugger()) {
+            setCookie('mp_player_accent', accent);
+        }
         return true;
     }
 
     public render() {
         const tr = [];
         const colors = this.props.colors || colors_default;
+        const takenColors = getTakenColors(this.props);
 
         for (let i = 0; i < colors.length; i = i + 1) {
             let className = 'lobby-select-accent';
@@ -285,10 +366,15 @@ export class LobbySelectAccentView extends React.Component<ViewPropsInterface & 
                 className += ' selected';
             }
 
+            const isTaken = this.props.uniqueColorAndIcon && takenColors.indexOf(colors[i]) !== -1;
+            if (isTaken) {
+                className += ' disabled';
+            }
+
             tr.push(
                 <div className={className}
                     style={{ backgroundColor: colors[i] }}
-                    onClick={this._setAccent.bind(this, colors[i])}
+                    onClick={isTaken ? undefined : this._setAccent.bind(this, colors[i])}
                     key={'accent' + i}>
                 </div>
             );
@@ -303,20 +389,63 @@ export class LobbySelectAccentView extends React.Component<ViewPropsInterface & 
     }
 }
 
-export class LobbySelectIconView extends React.Component<ViewPropsInterface & { icon: number, accent: string }, { icon: number }> {
+export class LobbySelectIconView extends React.Component<ViewPropsInterface & { icon: number, accent: string, uniqueColorAndIcon?: boolean, clientIds?: string[], icons?: number[] }, { icon: number }> {
     constructor(props: any) {
         super(props);
         this.state = { icon: this.props.icon };
     }
 
+    public componentDidMount() {
+        let desiredIcon = this.props.icon;
+        if (!isDebugger()) {
+            const savedIconStr = getCookie('mp_player_icon');
+            if (savedIconStr !== '') {
+                const savedIcon = parseInt(savedIconStr, 10);
+                if (!isNaN(savedIcon) && savedIcon >= 0 && savedIcon < icons.length) {
+                    desiredIcon = savedIcon;
+                }
+            }
+        }
+
+        if (this.props.uniqueColorAndIcon) {
+            const takenIcons = getTakenIcons(this.props);
+            if (takenIcons.indexOf(desiredIcon) !== -1) {
+                const availableIcons = [];
+                for (let i = 0; i < icons.length; i++) {
+                    if (takenIcons.indexOf(i) === -1) {
+                        availableIcons.push(i);
+                    }
+                }
+                if (availableIcons.length > 0) {
+                    desiredIcon = availableIcons[Math.floor(Math.random() * availableIcons.length)];
+                }
+            }
+        }
+
+        if (this.props.icon !== desiredIcon) {
+            this.props.MP.setIcon(desiredIcon);
+            this.setState({ icon: desiredIcon });
+        }
+    }
+
+    public componentDidUpdate(prevProps: any) {
+        if (prevProps.icon !== this.props.icon) {
+            this.setState({ icon: this.props.icon });
+        }
+    }
+
     private _setIcon(icon: number) {
         this.props.MP.setIcon(icon);
         this.setState({ icon: icon });
+        if (!isDebugger()) {
+            setCookie('mp_player_icon', icon.toString());
+        }
         return true;
     }
 
     public render() {
         const tr = [];
+        const takenIcons = getTakenIcons(this.props);
 
         for (let i = 0; i < icons.length; i = i + 1) {
             let className = 'lobby-select-icon-icon';
@@ -325,10 +454,15 @@ export class LobbySelectIconView extends React.Component<ViewPropsInterface & { 
                 className += ' selected';
                 style = { 'color': this.props.accent };
             }
+            const isTaken = this.props.uniqueColorAndIcon && takenIcons.indexOf(i) !== -1;
+            let iconContainerClassName = 'lobby-select-icon';
+            if (isTaken) {
+                iconContainerClassName += ' disabled';
+            }
             tr.push(
-                <div className='lobby-select-icon'
+                <div className={iconContainerClassName}
                     key={'select-icon-' + i}
-                    onClick={this._setIcon.bind(this, i)}>
+                    onClick={isTaken ? undefined : this._setIcon.bind(this, i)}>
 
                     <FontAwesomeIcon icon={icons[i]}
                         size='2x'

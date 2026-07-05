@@ -3,9 +3,11 @@
  */
 
 import * as React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ViewPropsInterface } from '../../../common/interfaces';
+import { icons as LOBBY_ICONS } from '../../lobby/LobbyView';
 import {
-    Phase, CatColor, CAT_COLORS, OBSERVED, TrickPlay, LastMove, colorName
+    Phase, CatColor, CAT_COLORS, OBSERVED, TrickPlay, CompletedTrick, LastMove, colorName
 } from '../CatInTheBoxGameState';
 import { PlayingCard } from '../../../client/lib/card-renderer/PlayingCard';
 import { ExpressiveIcon } from '../../../client/lib/card-renderer/IconEngine';
@@ -16,8 +18,6 @@ import {
     CAT_COLOR_HEX,
     CAT_COLOR_TEXT
 } from '../CatInTheBoxAssets';
-import BellSound from '../../../sounds/microwave_bell.mp3';
-import CoinSound from '../../../sounds/coin_few.mp3';
 
 interface PublicPlayer {
     xSlots: Record<CatColor, boolean>;
@@ -47,6 +47,12 @@ interface CatProps extends ViewPropsInterface {
     roundStartId: string;
     ledColor: CatColor | null;
     currentTrick: TrickPlay[];
+    resolvingTrick: {
+        plays: TrickPlay[];
+        winnerId: string;
+        trickNumber: number;
+        resolveId: number;
+    } | null;
     paradoxPlayerId: string | null;
     winnerId: string | null;
     lastMove: LastMove | null;
@@ -57,11 +63,23 @@ interface CatProps extends ViewPropsInterface {
     isHost: boolean;
     myHand: number[];
     legalPlays: TrickPlay[];
+    playerIcons: Record<string, number>;
+    trickHistory: CompletedTrick[];
 }
+
+type ResolveStage = 'glow' | 'flip' | 'collapse' | 'fade';
 
 interface MainState {
     selectedCardIdx: number | null;
+    resolveStage: ResolveStage | null;
+    resolveKey: number | null; // resolveId of the trick currently being animated
 }
+
+// Animation stage timeline (ms from the start of resolution).
+const STAGE_FLIP = 2000;      // pulse the winner (2s), then flip all cards to their backs
+const STAGE_COLLAPSE = 2700;  // slide the backs together into a single pile
+const STAGE_FADE = 3200;      // fade the pile out
+const STAGE_FINISH = 3550;    // host advances the game state
 
 // ---- shared small vector helpers -------------------------------------------------
 
@@ -81,17 +99,20 @@ function catChip(color: CatColor | 'neutral', size = '1.4em') {
 function catCard(
     number: number,
     color: CatColor | 'neutral',
-    opts: { selected?: boolean; onClick?: () => void; selectable?: boolean; width?: number } = {}
+    opts: { selected?: boolean; onClick?: () => void; selectable?: boolean; width?: number; flipped?: boolean; back?: boolean } = {}
 ) {
+    // Only two-sided (flip-capable) cards get a back face — see getCatCardDefinition:
+    // a back face breaks click hit-testing, so selectable hand cards stay single-sided.
     return (
         <div className="cat-card">
             <PlayingCard
-                card={getCatCardDefinition(number, color)}
+                card={getCatCardDefinition(number, color, opts.back)}
                 customIcons={CAT_ICONS}
                 width={opts.width || 54}
                 selectable={opts.selectable}
                 selected={opts.selected}
                 selectedStyle="outline"
+                isFlipped={opts.flipped}
                 onClick={opts.onClick}
             />
         </div>
@@ -234,9 +255,16 @@ export class CatInTheBoxRulesView extends React.Component<{}, {}> {
 // Main page
 // ================================================================================
 export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
+    private resolveTimers: ReturnType<typeof setTimeout>[] = [];
+    private finishScheduledKey: number | null = null;
+
     constructor(props: CatProps) {
         super(props);
-        this.state = { selectedCardIdx: null };
+        this.state = { selectedCardIdx: null, resolveStage: null, resolveKey: null };
+    }
+
+    public componentDidMount() {
+        if (this.props.resolvingTrick) this.startResolveAnimation();
     }
 
     public componentDidUpdate(prev: CatProps) {
@@ -247,6 +275,42 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
                 this.setState({ selectedCardIdx: null });
             }
         }
+
+        const rt = this.props.resolvingTrick;
+        if (rt && rt.resolveId !== this.state.resolveKey) {
+            // A new trick just completed — kick off the reveal → flip → collapse → fade.
+            this.startResolveAnimation();
+        } else if (!rt && this.state.resolveStage !== null) {
+            // Resolution finished (state advanced) — reset the local animation.
+            this.clearResolveTimers();
+            this.setState({ resolveStage: null, resolveKey: null });
+        }
+    }
+
+    public componentWillUnmount() {
+        this.clearResolveTimers();
+    }
+
+    private clearResolveTimers() {
+        this.resolveTimers.forEach(t => clearTimeout(t));
+        this.resolveTimers = [];
+    }
+
+    private startResolveAnimation() {
+        const rt = this.props.resolvingTrick;
+        if (!rt) return;
+        this.clearResolveTimers();
+        this.setState({ resolveStage: 'glow', resolveKey: rt.resolveId });
+
+        this.resolveTimers.push(setTimeout(() => this.setState({ resolveStage: 'flip' }), STAGE_FLIP));
+        this.resolveTimers.push(setTimeout(() => this.setState({ resolveStage: 'collapse' }), STAGE_COLLAPSE));
+        this.resolveTimers.push(setTimeout(() => this.setState({ resolveStage: 'fade' }), STAGE_FADE));
+
+        // The host alone advances the game once the animation has played out.
+        if (this.props.isHost && this.finishScheduledKey !== rt.resolveId) {
+            this.finishScheduledKey = rt.resolveId;
+            this.resolveTimers.push(setTimeout(() => this.props.MP.finishTrick(), STAGE_FINISH));
+        }
     }
 
     private name(id: string) {
@@ -254,6 +318,16 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
     }
     private accent(id: string) {
         return this.props.playerAccents[id] || '#7c8aa5';
+    }
+
+    // A player indicator: their lobby icon rendered in their lobby colour.
+    private badge(id: string, className = 'pp-dot') {
+        const iconName = LOBBY_ICONS[this.props.playerIcons[id] ?? 0] || 'circle';
+        return (
+            <span className={className}>
+                <FontAwesomeIcon icon={iconName} style={{ color: this.accent(id) }} />
+            </span>
+        );
     }
 
     // ---- interactions ----
@@ -282,7 +356,7 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
 
     // ---- sub-renders ----
     private renderBoard() {
-        const { board, maxNum, playerAccents } = this.props;
+        const { board, maxNum } = this.props;
         const cols = [];
         for (let n = 1; n <= maxNum; n++) cols.push(n);
 
@@ -306,8 +380,8 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
                                 cls += ' cell-observed';
                             } else if (cell) {
                                 cls += ' cell-owned';
-                                style.background = playerAccents[cell] || '#7c8aa5';
-                                inner = <span className="cell-token" />;
+                                style.borderColor = this.accent(cell);
+                                inner = this.badge(cell, 'cell-token');
                             } else {
                                 style.background = 'transparent';
                             }
@@ -320,21 +394,44 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
     }
 
     private renderTrick() {
-        const { currentTrick, ledColor, trickStartPlayerId } = this.props;
-        if (currentTrick.length === 0) {
+        const { currentTrick, ledColor, trickStartPlayerId, resolvingTrick } = this.props;
+        const stage = this.state.resolveStage;
+
+        // During resolution render from the frozen plays (currentTrick may already be cleared).
+        const plays = resolvingTrick ? resolvingTrick.plays : currentTrick;
+        if (plays.length === 0) {
             const leader = this.name(trickStartPlayerId);
             return <div className="trick-empty">Waiting for {leader} to lead…</div>;
         }
+
+        const winnerId = resolvingTrick ? resolvingTrick.winnerId : null;
+        const flipped = stage === 'flip' || stage === 'collapse' || stage === 'fade';
+        const containerCls = [
+            'trick-plays',
+            resolvingTrick ? 'resolving' : '',
+            stage === 'collapse' || stage === 'fade' ? 'collapsing' : '',
+            stage === 'fade' ? 'fading' : ''
+        ].filter(Boolean).join(' ');
+
         return (
-            <div className="trick-plays">
-                {currentTrick.map((p, i) => (
-                    <div className={`trick-play ${p.color === ledColor ? 'is-led' : ''}`} key={i}>
-                        {catCard(p.number, p.color, { width: 48 })}
-                        <div className="trick-play-name" style={{ color: this.accent(p.playerId) }}>
-                            {this.name(p.playerId)}
+            <div className={containerCls}>
+                {plays.map((p, i) => {
+                    const isWinner = winnerId === p.playerId;
+                    const cls = [
+                        'trick-play',
+                        p.color === ledColor ? 'is-led' : '',
+                        isWinner && stage === 'glow' ? 'is-winner' : '',
+                        isWinner ? 'winner-card' : ''
+                    ].filter(Boolean).join(' ');
+                    return (
+                        <div className={cls} key={i}>
+                            {catCard(p.number, p.color, { width: 48, flipped, back: true })}
+                            <div className="trick-play-name" style={{ color: this.accent(p.playerId) }}>
+                                {this.name(p.playerId)}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         );
     }
@@ -354,7 +451,7 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
                     return (
                         <div className={`player-panel ${active ? 'active' : ''} ${id === paradoxPlayerId ? 'paradox' : ''}`} key={id}>
                             <div className="pp-head">
-                                <span className="pp-dot" style={{ background: this.accent(id) }} />
+                                {this.badge(id)}
                                 <span className="pp-name">{this.name(id)}</span>
                                 {id === roundStartId && <span className="pp-badge">lead</span>}
                             </div>
@@ -411,7 +508,7 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
     }
 
     private renderPredictControls(myId: string) {
-        const { currentPlayerId, allowedPredictions } = this.props;
+        const { currentPlayerId, allowedPredictions, myHand } = this.props;
         const myTurn = currentPlayerId === myId;
         return (
             <div className="phase-controls">
@@ -428,6 +525,16 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
                 ) : (
                     <div className="phase-note">Waiting for {this.name(currentPlayerId)} to predict…</div>
                 )}
+
+                {/* Keep the hand visible so players can weigh their prediction. */}
+                <div className="section-label hand-label">Your Hand</div>
+                <div className="hand-row">
+                    {myHand.map((num, idx) => (
+                        <div className="hand-card" key={idx}>
+                            {catCard(num, 'neutral')}
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }
@@ -447,7 +554,9 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
                     {ledColor && <span className="led-tag" style={{ background: CAT_COLOR_HEX[ledColor], color: CAT_COLOR_TEXT[ledColor] }}>Led: {colorName(ledColor)}</span>}
                 </div>
 
-                {myTurn ? (
+                {this.props.resolvingTrick ? (
+                    <div className="phase-note">Resolving trick…</div>
+                ) : myTurn ? (
                     <div className="phase-note turn-note">
                         {isLeading ? 'You lead this trick — pick a card, then declare its colour.'
                             : 'Your turn — pick a card, then declare its colour.'}
@@ -520,7 +629,7 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
                             const p = publicPlayers[id];
                             return (
                                 <tr key={id} className={id === paradoxPlayerId ? 'paradox-row' : ''}>
-                                    <td><span className="pp-dot" style={{ background: this.accent(id) }} /> {this.name(id)}</td>
+                                    <td>{this.badge(id)} {this.name(id)}</td>
                                     <td>{p.tricksWon}</td>
                                     <td>{p.prediction === null ? '—' : p.prediction}</td>
                                     <td>{p.roundBonus > 0 ? `+${p.roundBonus}` : '—'}</td>
@@ -542,6 +651,56 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
         );
     }
 
+    // History of every resolved trick this game, most recent first, grouped by round.
+    private renderHistory() {
+        const { trickHistory, totalRounds } = this.props;
+        if (!trickHistory || trickHistory.length === 0) {
+            return <div className="trick-history"><div className="phase-note">No tricks played yet.</div></div>;
+        }
+
+        // Group by round, newest round first, newest trick first.
+        const byRound: Record<number, CompletedTrick[]> = {};
+        for (const t of trickHistory) {
+            (byRound[t.round] = byRound[t.round] || []).push(t);
+        }
+        const rounds = Object.keys(byRound).map(Number).sort((a, b) => b - a);
+
+        return (
+            <div className="trick-history">
+                {rounds.map(r => (
+                    <div className="history-round" key={r}>
+                        <div className="history-round-title">Round {r + 1} / {totalRounds}</div>
+                        {[...byRound[r]].sort((a, b) => b.trickNumber - a.trickNumber).map(t => (
+                            <div className="history-trick" key={t.trickNumber}>
+                                <div className="history-trick-head">
+                                    <span className="ht-index">Trick {t.trickNumber}</span>
+                                    {t.ledColor && (
+                                        <span className="ht-led" style={{ background: CAT_COLOR_HEX[t.ledColor], color: CAT_COLOR_TEXT[t.ledColor] }}>
+                                            Led {colorName(t.ledColor)}
+                                        </span>
+                                    )}
+                                    <span className="ht-winner">
+                                        {this.badge(t.winnerId, 'pp-dot')} {this.name(t.winnerId)} won
+                                    </span>
+                                </div>
+                                <div className="history-trick-cards">
+                                    {t.plays.map((p, i) => (
+                                        <div className={`ht-card ${p.playerId === t.winnerId ? 'ht-card-winner' : ''}`} key={i}>
+                                            {catCard(p.number, p.color, { width: 40 })}
+                                            <span className="ht-card-name" style={{ color: this.accent(p.playerId) }}>
+                                                {this.name(p.playerId)}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
     private renderGameOver() {
         const { playerOrder, publicPlayers, winnerId, isHost } = this.props;
         const sorted = [...playerOrder].sort((a, b) => publicPlayers[b].totalScore - publicPlayers[a].totalScore);
@@ -557,7 +716,7 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
                         {sorted.map((id, i) => (
                             <tr key={id} className={id === winnerId ? 'winner-row' : ''}>
                                 <td>{i === 0 ? '🏆' : i + 1}</td>
-                                <td><span className="pp-dot" style={{ background: this.accent(id) }} /> {this.name(id)}</td>
+                                <td>{this.badge(id)} {this.name(id)}</td>
                                 <td><strong>{publicPlayers[id].totalScore}</strong></td>
                             </tr>
                         ))}
@@ -576,7 +735,7 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
     public render() {
         const mp = this.props.MP;
         const myId = mp.clientId;
-        const { gameStatus, round, totalRounds, currentPlayerId, lastMove } = this.props;
+        const { gameStatus, round, totalRounds, currentPlayerId } = this.props;
 
         const isMyTurn = currentPlayerId === myId &&
             (gameStatus === Phase.Play || gameStatus === Phase.Predict);
@@ -592,6 +751,9 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
 
         const showArena = gameStatus === Phase.Play || gameStatus === Phase.Predict ||
             gameStatus === Phase.Discard;
+        // After the round/game ends, keep the board + hand on screen for review.
+        const showEnd = gameStatus === Phase.RoundEnd || gameStatus === Phase.GameOver;
+        const myHand = this.props.myHand;
 
         const arena = (
             <div className="cat-arena">
@@ -614,6 +776,24 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
                         {this.renderPlayers()}
                     </React.Fragment>
                 )}
+
+                {showEnd && (
+                    <React.Fragment>
+                        <div className="section-label">Research Board</div>
+                        {this.renderBoard()}
+
+                        {myHand.length > 0 && (
+                            <React.Fragment>
+                                <div className="section-label">Your Hand</div>
+                                <div className="hand-row">
+                                    {myHand.map((num, idx) => (
+                                        <div className="hand-card" key={idx}>{catCard(num, 'neutral')}</div>
+                                    ))}
+                                </div>
+                            </React.Fragment>
+                        )}
+                    </React.Fragment>
+                )}
             </div>
         );
 
@@ -622,6 +802,11 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
                 'icon': 'gamepad',
                 'label': 'Arena',
                 'view': arena
+            },
+            'history': {
+                'icon': 'history',
+                'label': 'History',
+                'view': this.renderHistory()
             },
             'rules': {
                 'icon': 'book',
@@ -643,19 +828,6 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
             };
         }
 
-        // Toast for opponents' moves.
-        let toastNotification = null;
-        if (lastMove && lastMove.playerId !== myId) {
-            const heavy = lastMove.kind === 'paradox' || lastMove.kind === 'trick';
-            toastNotification = {
-                id: lastMove.moveId,
-                message: `${this.name(lastMove.playerId)} ${lastMove.desc}`,
-                bgColor: this.accent(lastMove.playerId),
-                sound: heavy ? BellSound : CoinSound,
-                duration: 3200
-            };
-        }
-
         // isMyTurn / needDiscard are already false outside the active phases.
         const attention = isMyTurn || needDiscard;
 
@@ -663,8 +835,7 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
             'links': links,
             'gameName': 'Cat in the Box',
             'topBarContent': this.topBar(myId),
-            'roomClassName': attention ? 'attention-bg' : '',
-            'toastNotification': toastNotification
+            'roomClassName': attention ? 'attention-bg' : ''
         });
     }
 
@@ -685,6 +856,7 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
             return this.props.winnerId === myId ? 'Victory' : 'Game Over';
         }
         if (gameStatus === Phase.RoundEnd) return 'Scoring';
+        if (this.props.resolvingTrick) return 'Resolving…';
         if (gameStatus === Phase.Discard) {
             const mine = this.props.publicPlayers[myId];
             return mine && mine.hasDiscarded ? 'Waiting' : 'Bury a card';

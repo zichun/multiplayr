@@ -192,6 +192,8 @@ $c-green: #76c4a0;
         &.turn-note { color: #6a5bb0; font-weight: 700; }
         &.warn { color: #e0554f; font-weight: 700; }
     }
+
+    .hand-label { margin-top: 12px; }
 }
 
 .predict-buttons, .cp-buttons {
@@ -293,6 +295,23 @@ $c-green: #76c4a0;
         gap: 12px;
         justify-content: safe center;
         width: 100%;
+        transition: opacity 0.4s ease;
+
+        // Collapse the cards together into a single pile.
+        &.collapsing {
+            flex-wrap: nowrap;
+            justify-content: center;
+
+            .trick-play {
+                margin-left: -38px;   // overlap into a stack
+                transform: translateY(0) rotate(-3deg);
+                &:first-child { margin-left: 0; }
+                &:nth-child(even) { transform: translateY(0) rotate(4deg); }
+            }
+            .trick-play-name { opacity: 0; }
+        }
+
+        &.fading { opacity: 0; }
     }
 
     .trick-play {
@@ -300,8 +319,17 @@ $c-green: #76c4a0;
         flex-direction: column;
         align-items: center;
         gap: 4px;
+        // Smooth the collapse (margin + transform); the flip itself is handled
+        // internally by the card-renderer.
+        transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), margin 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 
         &.is-led { transform: translateY(-2px); }
+
+        // Winning card pulses with a warm glow before the flip.
+        &.is-winner {
+            z-index: 2;
+            animation: cat-winner-pulse 0.6s ease-in-out infinite alternate;
+        }
 
         .trick-play-name {
             font-size: 0.72em;
@@ -310,7 +338,19 @@ $c-green: #76c4a0;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            transition: opacity 0.3s ease;
         }
+    }
+}
+
+@keyframes cat-winner-pulse {
+    from {
+        transform: translateY(-2px) scale(1.0);
+        filter: drop-shadow(0 0 2px rgba(255, 199, 92, 0.5));
+    }
+    to {
+        transform: translateY(-8px) scale(1.09);
+        filter: drop-shadow(0 0 12px rgba(255, 190, 60, 0.95));
     }
 }
 
@@ -355,13 +395,21 @@ $c-green: #76c4a0;
             background: repeating-linear-gradient(45deg, #d9dee6, #d9dee6 3px, #eef1f5 3px, #eef1f5 6px);
             border-color: #cfd5de;
         }
-        &.cell-owned { border: none; }
+        // Owned: white cell with the owner's lobby icon in their lobby colour.
+        &.cell-owned {
+            background: #ffffff;
+            border-width: 2px;
+            border-style: solid;
+        }
 
         .cell-token {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            line-height: 1;
+
+            svg { width: 1em; height: 1em; }
         }
     }
 }
@@ -447,13 +495,18 @@ $c-green: #76c4a0;
     }
 }
 
+// Player indicator: the lobby icon in the lobby colour (no filled swatch).
 .pp-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
     flex: 0 0 auto;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15em;
+    height: 1.15em;
+    font-size: 1em;
     vertical-align: middle;
+
+    svg { width: 100%; height: 100%; }
 }
 
 // ---- Round end / game over --------------------------------------------------
@@ -524,6 +577,91 @@ $c-green: #76c4a0;
     padding: 18px;
     max-width: 320px;
     margin: 0 auto;
+}
+
+// ---- Trick history ----------------------------------------------------------
+.trick-history {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-width: 720px;
+    margin: 0 auto;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+
+    .history-round-title {
+        font-size: 0.74em;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: $muted;
+        border-bottom: 2px solid $line;
+        padding-bottom: 6px;
+        margin-bottom: 10px;
+    }
+
+    .history-trick {
+        background: $panel;
+        border: 1px solid $line;
+        border-radius: 14px;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+
+        &:last-child { margin-bottom: 0; }
+    }
+
+    .history-trick-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+        font-size: 0.86em;
+
+        .ht-index { font-weight: 800; }
+        .ht-led {
+            font-size: 0.82em;
+            font-weight: 700;
+            padding: 2px 9px;
+            border-radius: 999px;
+        }
+        .ht-winner {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+        }
+    }
+
+    .history-trick-cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .ht-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        opacity: 0.85;
+
+        &.ht-card-winner {
+            opacity: 1;
+            .cat-card { filter: drop-shadow(0 0 5px rgba(255, 190, 60, 0.9)); }
+        }
+
+        .ht-card-name {
+            font-size: 0.68em;
+            font-weight: 700;
+            max-width: 52px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
 }
 
 // ---- Rules ------------------------------------------------------------------

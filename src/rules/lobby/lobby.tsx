@@ -37,7 +37,8 @@ export const Lobby: GameRuleInterface = {
         },
         accent: () => {
             return '';
-        }
+        },
+        uniqueColorAndIcon: true
     },
 
     playerData: {
@@ -67,6 +68,7 @@ export const Lobby: GameRuleInterface = {
         const playersConnection = [];
 
         const showHost = mp.parent && mp.parent.hostAsPlayer;
+        const uniqueColorAndIcon = mp.getData('uniqueColorAndIcon') !== false;
 
         mp.playersForEach((client, i) => {
             clientIds.push(client);
@@ -93,6 +95,7 @@ export const Lobby: GameRuleInterface = {
             mp.setViewProps(client, 'icons', orderedIcons);
             mp.setViewProps(client, 'accents', orderedAccents);
             mp.setViewProps(client, 'showHost', showHost);
+            mp.setViewProps(client, 'uniqueColorAndIcon', uniqueColorAndIcon);
         });
 
         mp.setViewProps(mp.hostId, 'name', mp.getData('name'));
@@ -106,6 +109,7 @@ export const Lobby: GameRuleInterface = {
         mp.setViewProps(mp.hostId, 'playerCount', mp.playersCount());
         mp.setViewProps(mp.hostId, 'playersConnection', playersConnection);
         mp.setViewProps(mp.hostId, 'showHost', showHost);
+        mp.setViewProps(mp.hostId, 'uniqueColorAndIcon', uniqueColorAndIcon);
 
         return false;
     },

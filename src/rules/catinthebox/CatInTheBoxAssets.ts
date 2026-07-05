@@ -211,11 +211,17 @@ function catCardPalette(color: CatColor | 'neutral'): Palette {
 }
 
 // Build the card-renderer definition for a cat card (number + watermark cat).
+// `withBack` adds a flip back face — ONLY for the trick-resolution animation.
+// A back face forces the card-renderer's 3D flip context (transform-style:
+// preserve-3d + backface-visibility:hidden), which breaks pointer hit-testing on
+// these small pixel-scaled cards. Hand cards must stay single-sided so they remain
+// clickable for selection.
 export function getCatCardDefinition(
     number: number,
-    color: CatColor | 'neutral' = 'neutral'
+    color: CatColor | 'neutral' = 'neutral',
+    withBack = false
 ): CardDefinition {
-    return {
+    const def: CardDefinition = {
         id: `cat-${color}-${number}`,
         name: 'Cat Card',
         widthMm: 63.5,
@@ -232,4 +238,14 @@ export function getCatCardDefinition(
             frameStyle: 'none'
         }
     };
+
+    if (withBack) {
+        // Uniform-ish card back: the watermark-toned cat reads as a light
+        // silhouette on the deep slate back.
+        def.backIconId = 'cat_solid';
+        def.backIconScaling = 1.2;
+        def.backBgColor = '#4a4363';
+    }
+
+    return def;
 }

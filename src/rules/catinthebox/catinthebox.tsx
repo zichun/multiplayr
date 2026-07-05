@@ -22,6 +22,7 @@ import {
     CatInTheBoxDiscardCard,
     CatInTheBoxMakePrediction,
     CatInTheBoxPlayCard,
+    CatInTheBoxFinishTrick,
     CatInTheBoxNextRound,
     CatInTheBoxRestartGame,
     CatInTheBoxBackToLobby
@@ -67,9 +68,10 @@ export const CatInTheBoxRule: GameRuleInterface = {
 
         const stateData = gameState.get_data();
 
-        // Player name + accent maps (never expose raw client ids to the UI).
+        // Player name / accent / lobby-icon maps (never expose raw client ids to the UI).
         const playerNames: { [id: string]: string } = {};
         const playerAccents: { [id: string]: string } = {};
+        const playerIcons: { [id: string]: number } = {};
         const resolveName = (id: string, fallbackIndex: number) => {
             const raw = id === mp.hostId
                 ? (mp.getData('lobby_name') as string)
@@ -82,9 +84,16 @@ export const CatInTheBoxRule: GameRuleInterface = {
                 : (mp.getPlayerData(id, 'lobby_accent') as string);
             return raw && raw.trim().length > 0 ? raw : '#7c8aa5';
         };
+        const resolveIcon = (id: string) => {
+            const raw = id === mp.hostId
+                ? (mp.getData('lobby_icon') as number)
+                : (mp.getPlayerData(id, 'lobby_icon') as number);
+            return typeof raw === 'number' ? raw : 0;
+        };
         stateData.playerIds.forEach((id, idx) => {
             playerNames[id] = resolveName(id, idx);
             playerAccents[id] = resolveAccent(id);
+            playerIcons[id] = resolveIcon(id);
         });
 
         // Public per-player snapshot (hides hands / buried cards from everyone).
@@ -122,13 +131,16 @@ export const CatInTheBoxRule: GameRuleInterface = {
             mp.setViewProps(clientId, 'roundStartId', stateData.playerIds[stateData.roundStartIndex]);
             mp.setViewProps(clientId, 'ledColor', stateData.ledColor);
             mp.setViewProps(clientId, 'currentTrick', stateData.currentTrick);
+            mp.setViewProps(clientId, 'resolvingTrick', stateData.resolvingTrick);
             mp.setViewProps(clientId, 'paradoxPlayerId', stateData.paradoxPlayerId);
+            mp.setViewProps(clientId, 'trickHistory', stateData.trickHistory);
             mp.setViewProps(clientId, 'winnerId', stateData.winnerId);
             mp.setViewProps(clientId, 'lastMove', stateData.lastMove);
             mp.setViewProps(clientId, 'allowedPredictions', allowedPredictions);
             mp.setViewProps(clientId, 'publicPlayers', publicPlayers);
             mp.setViewProps(clientId, 'playerNames', playerNames);
             mp.setViewProps(clientId, 'playerAccents', playerAccents);
+            mp.setViewProps(clientId, 'playerIcons', playerIcons);
             mp.setViewProps(clientId, 'isHost', clientId === mp.hostId);
 
             // Private: only this client's own hand + their legal plays (when active).
@@ -156,6 +168,7 @@ export const CatInTheBoxRule: GameRuleInterface = {
         'discardCard': CatInTheBoxDiscardCard,
         'makePrediction': CatInTheBoxMakePrediction,
         'playCard': CatInTheBoxPlayCard,
+        'finishTrick': CatInTheBoxFinishTrick,
         'nextRound': CatInTheBoxNextRound,
         'restartGame': CatInTheBoxRestartGame,
         'backToLobby': CatInTheBoxBackToLobby,

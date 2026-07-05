@@ -216,10 +216,21 @@ describe('Cat in the Box Game Logic', () => {
                     d.players['bob'].hand = [4, 5];
                 });
                 g.play_card('alice', 2, 'blue'); // led blue 2
-                g.play_card('bob', 4, 'blue');   // blue 4 beats blue 2
+                g.play_card('bob', 4, 'blue');   // blue 4 beats blue 2 (completes trick)
+                // Two-phase: the completed trick is frozen for the reveal animation.
+                let mid = g.get_data();
+                assert.ok(mid.resolvingTrick, 'trick is frozen for resolution');
+                assert.strictEqual(mid.resolvingTrick!.winnerId, 'bob');
+                assert.strictEqual(mid.players['bob'].tricksWon, 0, 'not yet applied');
+                g.finish_trick();
                 const d = g.get_data();
+                assert.strictEqual(d.resolvingTrick, null);
                 assert.strictEqual(d.players['bob'].tricksWon, 1);
                 assert.strictEqual(d.trickStartPlayerId, 'bob'); // winner leads next
+                // The resolved trick is recorded in history.
+                assert.strictEqual(d.trickHistory.length, 1);
+                assert.strictEqual(d.trickHistory[0].winnerId, 'bob');
+                assert.deepStrictEqual(d.trickHistory[0].plays.map(p => p.number), [2, 4]);
             });
 
             it('lets Red trump the led colour regardless of number', () => {
@@ -231,6 +242,7 @@ describe('Cat in the Box Game Logic', () => {
                 });
                 g.play_card('alice', 5, 'blue'); // led blue 5 (highest)
                 g.play_card('bob', 2, 'red');    // red 2 trumps blue 5
+                g.finish_trick();
                 const d = g.get_data();
                 assert.strictEqual(d.players['bob'].tricksWon, 1);
             });
@@ -275,7 +287,8 @@ describe('Cat in the Box Game Logic', () => {
 
                 // Bob follows off-colour and loses; alice wins the trick, then leads next
                 // with only card "2" and no legal play anywhere -> paradox.
-                g.play_card('bob', 4, 'green');
+                g.play_card('bob', 4, 'green'); // completes the trick
+                g.finish_trick();               // apply the win, then alice is stuck
                 const d = g.get_data();
 
                 assert.strictEqual(d.status, Phase.RoundEnd);
@@ -325,7 +338,8 @@ describe('Cat in the Box Game Logic', () => {
 
                 g2.play_card('a', 6, 'blue');   // led blue 6
                 g2.play_card('b', 2, 'green');  // off-colour, loses
-                g2.play_card('c', 3, 'green');  // off-colour, loses -> a wins, round ends
+                g2.play_card('c', 3, 'green');  // off-colour, loses -> a wins (completes trick)
+                g2.finish_trick();              // apply the win -> round ends
 
                 const nd = g2.get_data();
                 assert.strictEqual(nd.status, Phase.RoundEnd);

@@ -62,6 +62,17 @@ export const CatInTheBoxPlayCard = (
     sync(mp, gameState);
 };
 
+// Advance past the trick-resolution animation. Host-driven (the host schedules
+// this once the animation has played); idempotent on the game-state side.
+export const CatInTheBoxFinishTrick = (mp: MPType, clientId: string) => {
+    if (clientId !== mp.hostId) {
+        return; // only the host advances the animation, to avoid races
+    }
+    const gameState = getGameState(mp);
+    gameState.finish_trick(clientId);
+    sync(mp, gameState);
+};
+
 export const CatInTheBoxNextRound = (mp: MPType, clientId: string) => {
     const gameState = getGameState(mp);
     gameState.next_round(clientId);
