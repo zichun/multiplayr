@@ -578,6 +578,12 @@ export class GameObject {
     ) {
         if (this.isHost) {
 
+            // The client may already have been removed entirely (e.g. host pressed
+            // "Remove"), in which case a late transport 'close' event has nothing to do.
+            if (!this.clientsData[clientId]) {
+                return this;
+            }
+
             if (!this.parent) {
                 console.log('Client[' + clientId + '] disconnected');
             }
@@ -628,11 +634,17 @@ export class GameObject {
         console.log('Client[' + clientId + '] removed');
         //            }
 
+        const clientIndex = this.clients.indexOf(clientId);
+        if (clientIndex === -1) {
+            // Already removed; avoid splice(-1) which would drop an unrelated client.
+            return this;
+        }
+
         forEach(this.plugins, (plugin) => {
             this.plugins[plugin].rootRemoveClient(clientId);
         });
 
-        this.clients.splice(this.clients.indexOf(clientId), 1);
+        this.clients.splice(clientIndex, 1);
         delete this.clientsData[clientId];
 
         return this;

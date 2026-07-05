@@ -388,6 +388,31 @@ const sapphire = coinIcon('gem_blue', '#2f93c2', [
 
 ---
 
+## Card Recipes in the Wild
+
+The same primitives produce very different cards depending on how the regions are laid out. Two worked examples ship in this repo; use them as templates rather than reinventing the layout maths.
+
+### A. Tableau / engine-builder card — `SplendorDuel` (`.jewel-card`, `.royal-card`)
+
+The "rich" card: a coloured **header band** carrying a title + bonus badge, a **cost column/list**, a framed **art** panel, and a **footer** label. Faithfully reproduces a physical game face.
+
+- **Definition** (`SplendorDuelAssets.ts` → `getSplendorDuelCardDefinition`): a per-gem `Palette` (brand hex kept as literals so gems never re-theme), `header.background: 'primary'` for the coloured band, `data.rows` of `gem_*_coin` cost pips, `mainArt` a faint gem/ability silhouette, optional `footer` ability label.
+- **Layout** (`splendorduel.scss` → `.jewel-card`): scope overrides under the wrapper and **absolutely position** the regions inside `.playing-card-face.face-front` (`display:block; position:relative; padding:0`). Pin `.card-header-region` / `.card-footer-region` to fixed `em` heights (e.g. `2.7em`), let `.card-art-region` fill the gap with `overflow:hidden`. Tier is encoded with icon variants (`castle_1/2/3`) plus `&.level-N .card-header-region::after` skyline pseudo-elements.
+- Use this recipe whenever a card has **multiple distinct data zones** (title, cost, art, description).
+
+### B. Full-bleed "mono" card — `CatInTheBox` (`.cat-card`)
+
+The minimal card: the **entire face is one flat colour**, dominated by an **oversized number**, with a **watermark icon** tucked into a corner. Ideal when the card is essentially a single value (a trick-taking rank, a bid, a token count).
+
+- **Definition** (`CatInTheBoxAssets.ts` → `getCatCardDefinition`): a per-card `Palette` where `background` = the mono fill, `text` = the (high-contrast) number ink, and `primary` = the watermark tone (the `cat_solid` icon fills `'primary'`). `header.title` holds the number with `header.background: 'none'` (no band → the card stays mono); `mainArt.iconId` is the watermark glyph with `frameStyle: 'none'`.
+- **Layout** (`catinthebox.scss` → `.cat-card`): scope overrides under the wrapper; make `.card-header-region` and `.card-art-region` both `position:absolute; inset:0` so they **overlap** (number on top, `z-index:2`; watermark behind, `z-index:1`). Blow the number up with `.card-header-title { font-size: 14em !important }` (≈ 50% of card height). Hide `.card-header-meta`.
+- **Watermark placement gotcha:** `ExpressiveIcon` renders `viewBox="0 0 100 100"` with `preserveAspectRatio="xMidYMid meet"`, so a **non-square** art box letter-boxes the glyph and makes CSS offsets counter-intuitive. Make the art content box **square in pixels** (for the 63.5×88.9mm card, `width:100%; height:71%` is square since the aspect is ≈1.4) — then the glyph fills it with no letter-boxing and `right`/`bottom` offsets move it predictably. `CatInTheBox` offsets it to the bottom-right (`right:-20%; bottom:-14%`) so the cat bleeds slightly off the corner, and overrides the base `.card-art-content .expressive-vector-icon { max-width/height }` clamp with `max-width:none; width:100%`.
+- Selection uses the native `selectable`/`selected` props with `selectedStyle="outline"` for a flat ring (no offset shadow), so nothing bespoke is needed for interaction.
+
+> **Verify at true size.** Both recipes were tuned by rendering the real `PlayingCard` to static HTML with the compiled `PlayingCard.scss` + game `.scss`, then screenshotting at the actual pixel `width`. The `em`-compounding (§ *Sizing*) and the SVG letter-box gotcha above only show up at real scale.
+
+---
+
 ## Interactive Designer Sandbox
 
 An interactive visual designer is available to test, draft, and compile playing cards and vector icons:

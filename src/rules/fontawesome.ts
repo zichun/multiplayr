@@ -101,6 +101,7 @@ import { faTrophy } from "@fortawesome/free-solid-svg-icons/faTrophy";
 import { faUmbrella } from "@fortawesome/free-solid-svg-icons/faUmbrella";
 import { faUnlock } from "@fortawesome/free-solid-svg-icons/faUnlock";
 import { faUserCircle } from "@fortawesome/free-solid-svg-icons/faUserCircle";
+import { faUserSlash } from "@fortawesome/free-solid-svg-icons/faUserSlash";
 import { faUsers } from "@fortawesome/free-solid-svg-icons/faUsers";
 import { faWrench } from "@fortawesome/free-solid-svg-icons/faWrench";
 
@@ -218,6 +219,7 @@ library.add(faTrophy);
 library.add(faUmbrella);
 library.add(faUnlock);
 library.add(faUserCircle);
+library.add(faUserSlash);
 library.add(faUsers);
 library.add(faWrench);
 library.add(faTelegram);

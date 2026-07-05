@@ -1,0 +1,87 @@
+/**
+ * CatInTheBoxMethods.ts - RPC methods for Cat in the Box.
+ * Executed only on the host: rehydrate the game state, mutate it, persist it back.
+ */
+
+import { MPType } from '../../common/interfaces';
+import { CatInTheBoxGameState, GameStateData, CatColor } from './CatInTheBoxGameState';
+
+export const getGameState = (mp: MPType): CatInTheBoxGameState => {
+    let raw = mp.getData('gameState');
+    if (!raw) {
+        throw new Error('Game state not found');
+    }
+    if (typeof raw.get_data !== 'function') {
+        const data = raw.data as GameStateData;
+        const playerIds = raw.playerIds as string[];
+        raw = CatInTheBoxGameState.from_data(data, playerIds);
+        mp.setData('gameState', raw);
+    }
+    return raw;
+};
+
+const sync = (mp: MPType, gameState: CatInTheBoxGameState) => {
+    mp.setData('gameState', gameState);
+};
+
+export const CatInTheBoxStartGame = (mp: MPType) => {
+    const players = [mp.hostId];
+    mp.playersForEach((clientId) => players.push(clientId));
+
+    if (players.length < 2 || players.length > 5) {
+        throw new Error('Cat in the Box requires 2 to 5 players.');
+    }
+
+    const gameState = new CatInTheBoxGameState(players);
+    gameState.start_game(players[0]);
+
+    sync(mp, gameState);
+    mp.setData('lobby_started', true);
+};
+
+export const CatInTheBoxDiscardCard = (mp: MPType, clientId: string, cardNumber: number) => {
+    const gameState = getGameState(mp);
+    gameState.discard_card(clientId, cardNumber);
+    sync(mp, gameState);
+};
+
+export const CatInTheBoxMakePrediction = (mp: MPType, clientId: string, value: number) => {
+    const gameState = getGameState(mp);
+    gameState.make_prediction(clientId, value);
+    sync(mp, gameState);
+};
+
+export const CatInTheBoxPlayCard = (
+    mp: MPType,
+    clientId: string,
+    cardNumber: number,
+    color: CatColor
+) => {
+    const gameState = getGameState(mp);
+    gameState.play_card(clientId, cardNumber, color);
+    sync(mp, gameState);
+};
+
+export const CatInTheBoxNextRound = (mp: MPType, clientId: string) => {
+    const gameState = getGameState(mp);
+    gameState.next_round(clientId);
+    sync(mp, gameState);
+};
+
+export const CatInTheBoxRestartGame = (mp: MPType, clientId: string) => {
+    if (clientId !== mp.hostId) {
+        throw new Error('Only the host can restart the game');
+    }
+    const players = [mp.hostId];
+    mp.playersForEach((cid) => players.push(cid));
+    const gameState = new CatInTheBoxGameState(players);
+    gameState.start_game(players[0]);
+    sync(mp, gameState);
+};
+
+export const CatInTheBoxBackToLobby = (mp: MPType, clientId: string) => {
+    if (clientId !== mp.hostId) {
+        throw new Error('Only the host can return to the lobby');
+    }
+    mp.setData('lobby_started', false);
+};

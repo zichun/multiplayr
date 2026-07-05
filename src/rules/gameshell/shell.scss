@@ -389,16 +389,14 @@ $panelExtendWidth: 180px;
         }
 
         .player-card-actions {
-            width: 90px;
             display: flex;
             justify-content: flex-end;
             align-items: center;
             flex-shrink: 0;
+            gap: 8px;
 
-            .player-kick-btn {
-                background: #fdf2f2;
-                color: #e74c3c;
-                border: 1px solid #f9d5d5;
+            .player-kick-btn,
+            .player-remove-btn {
                 padding: 6px 12px;
                 border-radius: 6px;
                 font-size: 0.85rem;
@@ -406,17 +404,39 @@ $panelExtendWidth: 180px;
                 cursor: pointer;
                 display: inline-flex;
                 align-items: center;
+                white-space: nowrap;
                 transition: all 0.2s ease;
+
+                &:active {
+                    transform: scale(0.95);
+                }
+            }
+
+            // "Disconnect": milder, amber. Player stays in the game.
+            .player-kick-btn {
+                background: #fef9e7;
+                color: #d68910;
+                border: 1px solid #f9e4b7;
+
+                &:hover {
+                    background: #f39c12;
+                    color: #ffffff;
+                    border-color: #f39c12;
+                    transform: scale(1.05);
+                }
+            }
+
+            // "Remove": destructive, red. Removes the player entirely.
+            .player-remove-btn {
+                background: #fdf2f2;
+                color: #e74c3c;
+                border: 1px solid #f9d5d5;
 
                 &:hover {
                     background: #e74c3c;
                     color: #ffffff;
                     border-color: #e74c3c;
                     transform: scale(1.05);
-                }
-
-                &:active {
-                    transform: scale(0.95);
                 }
             }
 
@@ -487,8 +507,9 @@ $panelExtendWidth: 180px;
                 padding-top: 10px;
                 margin-top: 4px;
 
-                .player-kick-btn {
-                    width: 100%;
+                .player-kick-btn,
+                .player-remove-btn {
+                    flex: 1;
                     justify-content: center;
                     padding: 8px;
                 }

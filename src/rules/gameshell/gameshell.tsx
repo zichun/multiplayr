@@ -641,19 +641,41 @@ export const Shell: GameRuleInterface = {
                             </div>
 
                             <div className="player-card-actions">
-                                <button 
-                                    className="player-kick-btn"
-                                    title="Disconnect client device"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (confirm(`Are you sure you want to disconnect this device?`)) {
-                                            mp.disconnectClientDevice(clientId);
-                                        }
-                                    }}
-                                >
-                                    <FontAwesomeIcon icon="trash" style={{ marginRight: '6px' }} />
-                                    Kick
-                                </button>
+                                {clientId === mp.hostId ? (
+                                    <span className="player-host-lock" title="This is the host and cannot be disconnected or removed">
+                                        <FontAwesomeIcon icon="unlock" style={{ opacity: 0.5 }} />
+                                    </span>
+                                ) : (
+                                    <>
+                                        <button
+                                            className="player-kick-btn"
+                                            title="Disconnect this player's device. The player stays in the game and can reconnect."
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (confirm(`Disconnect ${name}'s device? They will remain in the game and can reconnect.`)) {
+                                                    mp.disconnectClientDevice(clientId);
+                                                }
+                                            }}
+                                        >
+                                            <FontAwesomeIcon icon="plug" style={{ marginRight: '6px' }} />
+                                            Disconnect
+                                        </button>
+                                        <button
+                                            className="player-remove-btn"
+                                            title="Remove this player from the game entirely and disconnect their device."
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (confirm(`Remove ${name} from the game entirely? This cannot be undone.`)) {
+                                                    mp.disconnectClientDevice(clientId);
+                                                    mp.removeClient(clientId);
+                                                }
+                                            }}
+                                        >
+                                            <FontAwesomeIcon icon="user-slash" style={{ marginRight: '6px' }} />
+                                            Remove
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </div>
                     );

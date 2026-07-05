@@ -1,0 +1,562 @@
+/**
+ * catinthebox.scss - Flat minimalist skin (soft pastels, hairline borders, no
+ * hard offset shadows) for "Cat in the Box".
+ */
+
+$ink: #2b3240;
+$muted: #7c8aa5;
+$line: #e4e8ee;
+$panel: #ffffff;
+$bg: #f6f7fa;
+
+$c-red: #f08a86;
+$c-blue: #83aee0;
+$c-yellow: #f2cf6b;
+$c-green: #76c4a0;
+
+.cat-waiting {
+    background: #f0eefb;
+    color: #5a4fa0;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+// ---- Arena ------------------------------------------------------------------
+.cat-arena {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+    padding: 12px 14px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 860px;
+    margin: 0 auto;
+
+    .arena-topline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+
+        .round-pill, .phase-pill {
+            font-size: 0.82em;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 999px;
+            letter-spacing: 0.4px;
+        }
+        .round-pill { background: #eef1f6; color: $muted; }
+        .phase-pill { background: #efeafb; color: #6a5bb0; text-transform: uppercase; }
+    }
+
+    .section-label {
+        font-size: 0.72em;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: $muted;
+        margin-top: 4px;
+    }
+}
+
+// ---- Cat chips / cards ------------------------------------------------------
+.cat-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    vertical-align: middle;
+
+    .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+}
+
+// Mono cat card, rendered by the card-renderer. Scoped overrides turn the default
+// stacked (header -> art -> footer) layout into two overlapping absolute regions:
+// a big centred number on top of a large, bottom-right-offset watermark cat.
+.cat-card {
+    display: inline-flex;
+
+    .playing-card-face.face-front {
+        display: block !important;
+        position: relative;
+        padding: 0 !important;
+        overflow: hidden;
+    }
+
+    // Watermark cat fills the card and bleeds off the bottom-right corner.
+    .card-art-region {
+        position: absolute;
+        inset: 0;
+        margin: 0;
+        z-index: 1;
+        overflow: hidden;
+    }
+    .card-art-frame {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        overflow: visible;
+    }
+    // width:100% + height:71% is ~square in px (card aspect ≈ 1.4), so the square
+    // SVG fills the box with no letter-boxing — placement is then predictable.
+    // Sized/placed so the whole cat sits in the bottom-right, bleeding slightly off.
+    .card-art-content {
+        position: absolute;
+        width: 100%;
+        height: 71%;
+        right: -20%;
+        bottom: -14%;
+        top: auto;
+        left: auto;
+
+        .expressive-vector-icon {
+            max-width: none;
+            max-height: none;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    }
+
+    // Big number, centred on top of the watermark.
+    .card-header-region {
+        position: absolute;
+        inset: 0;
+        min-height: 0;
+        padding: 0;
+        background: transparent !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+    }
+    .card-header-text {
+        flex: none;
+        align-items: center;
+        justify-content: center;
+    }
+    .card-header-title {
+        font-size: 14em !important;
+        font-weight: 900;
+        text-transform: none;
+        letter-spacing: -0.03em;
+        line-height: 1;
+        overflow: visible;
+    }
+    .card-header-meta { display: none; }
+}
+
+.hand-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 4px;
+    justify-content: safe center;
+
+    .hand-card { flex: 0 0 auto; }
+}
+
+// ---- Phase controls ---------------------------------------------------------
+.phase-controls {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 14px 16px;
+
+    .phase-title {
+        font-weight: 800;
+        font-size: 1.05em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+
+        .led-tag {
+            font-size: 0.72em;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+        }
+    }
+
+    .phase-note {
+        color: $muted;
+        font-size: 0.9em;
+        margin: 8px 0;
+
+        &.turn-note { color: #6a5bb0; font-weight: 700; }
+        &.warn { color: #e0554f; font-weight: 700; }
+    }
+}
+
+.predict-buttons, .cp-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.predict-btn {
+    min-width: 48px;
+    min-height: 48px;
+    border-radius: 14px;
+    border: 1px solid $line;
+    background: #fff;
+    font-size: 1.2em;
+    font-weight: 800;
+    color: $ink;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.12s;
+
+    &:hover { background: #f2eefc; transform: translateY(-2px); }
+    &:active { transform: translateY(0); }
+}
+
+.color-picker {
+    margin-top: 10px;
+    border-top: 1px dashed $line;
+    padding-top: 10px;
+
+    .cp-label {
+        font-size: 0.85em;
+        font-weight: 700;
+        color: $muted;
+        margin-bottom: 4px;
+    }
+}
+
+.cp-btn {
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 800;
+    font-size: 0.92em;
+    cursor: pointer;
+    transition: transform 0.12s, filter 0.12s;
+
+    &:hover:not(.disabled) { transform: translateY(-2px); filter: brightness(1.03); }
+    &.disabled { cursor: not-allowed; opacity: 0.6; }
+}
+
+.primary-btn {
+    min-height: 46px;
+    padding: 0 22px;
+    border-radius: 14px;
+    border: none;
+    background: #6a5bb0;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: transform 0.12s, filter 0.12s;
+    margin-top: 8px;
+
+    &:hover { transform: translateY(-2px); filter: brightness(1.05); }
+}
+
+.ghost-btn {
+    min-height: 46px;
+    padding: 0 22px;
+    border-radius: 14px;
+    border: 1px solid $line;
+    background: #fff;
+    color: $muted;
+    font-weight: 700;
+    font-size: 0.95em;
+    cursor: pointer;
+    margin-top: 8px;
+
+    &:hover { background: #f2f4f8; }
+}
+
+// ---- Current trick ----------------------------------------------------------
+.trick-zone {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 12px;
+    min-height: 82px;
+    display: flex;
+    align-items: center;
+
+    .trick-empty { color: $muted; font-size: 0.9em; width: 100%; text-align: center; }
+
+    .trick-plays {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: safe center;
+        width: 100%;
+    }
+
+    .trick-play {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+
+        &.is-led { transform: translateY(-2px); }
+
+        .trick-play-name {
+            font-size: 0.72em;
+            font-weight: 700;
+            max-width: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+}
+
+// ---- Research board ---------------------------------------------------------
+.research-board {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 10px;
+    overflow-x: auto;
+
+    .board-row {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 4px;
+        &:last-child { margin-bottom: 0; }
+    }
+
+    .board-corner, .board-colhead, .board-rowhead, .board-cell {
+        width: 30px;
+        height: 30px;
+        flex: 0 0 auto;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.82em;
+        font-weight: 800;
+    }
+
+    .board-colhead { color: $muted; }
+    .board-corner { background: transparent; }
+
+    .board-rowhead { border-radius: 8px; }
+
+    .board-cell {
+        background: #f2f4f8;
+        border: 1px solid $line;
+        box-sizing: border-box;
+
+        &.cell-observed {
+            background: repeating-linear-gradient(45deg, #d9dee6, #d9dee6 3px, #eef1f5 3px, #eef1f5 6px);
+            border-color: #cfd5de;
+        }
+        &.cell-owned { border: none; }
+
+        .cell-token {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.85);
+        }
+    }
+}
+
+// ---- Player panels ----------------------------------------------------------
+.player-panels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .player-panel {
+        flex: 1 1 150px;
+        min-width: 0;
+        background: $panel;
+        border: 1px solid $line;
+        border-radius: 14px;
+        padding: 10px 12px;
+        transition: border-color 0.15s, box-shadow 0.15s;
+
+        &.active {
+            border-color: #6a5bb0;
+            box-shadow: inset 0 0 0 2px rgba(106, 91, 176, 0.35);
+        }
+        &.paradox {
+            border-color: #e0554f;
+            box-shadow: inset 0 0 0 2px rgba(224, 85, 79, 0.3);
+        }
+
+        .pp-head {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            .pp-name {
+                font-weight: 800;
+                font-size: 0.92em;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .pp-badge {
+                margin-left: auto;
+                font-size: 0.62em;
+                font-weight: 800;
+                text-transform: uppercase;
+                background: #efeafb;
+                color: #6a5bb0;
+                padding: 2px 6px;
+                border-radius: 6px;
+            }
+        }
+
+        .pp-stats {
+            display: flex;
+            gap: 10px;
+            margin: 8px 0;
+            font-size: 0.85em;
+            font-weight: 700;
+            color: $ink;
+            flex-wrap: wrap;
+
+            .pp-stat { white-space: nowrap; }
+        }
+
+        .pp-xslots {
+            display: flex;
+            gap: 5px;
+
+            .pp-x {
+                width: 20px;
+                height: 20px;
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.7em;
+                font-weight: 900;
+                color: #fff;
+
+                &.locked { color: #9aa2af; }
+            }
+        }
+    }
+}
+
+.pp-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+// ---- Round end / game over --------------------------------------------------
+.round-end, .game-over {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 16px 18px;
+    text-align: center;
+
+    .re-title, .go-title {
+        font-size: 1.3em;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+    }
+    .re-paradox {
+        color: #e0554f;
+        font-weight: 800;
+        margin: 6px 0;
+    }
+    .go-cat {
+        width: 84px;
+        height: 84px;
+        margin: 4px auto 8px;
+
+        .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+    }
+
+    .re-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 14px 0;
+        font-size: 0.88em;
+
+        th {
+            text-align: center;
+            color: $muted;
+            font-size: 0.82em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 6px 4px;
+            border-bottom: 2px solid $line;
+        }
+        td {
+            padding: 8px 4px;
+            border-bottom: 1px solid $line;
+            text-align: center;
+        }
+        td:first-child, th:first-child { text-align: left; }
+
+        .neg { color: #e0554f; font-weight: 800; }
+        .paradox-row { background: #fdeeee; }
+        .winner-row { background: #eef8f2; }
+    }
+
+    .go-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+.settings-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px;
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+// ---- Rules ------------------------------------------------------------------
+.cat-rules-panel {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 80vh;
+    overflow-y: auto;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+
+    .rules-section {
+        background: #fff;
+        border: 1px solid $line;
+        border-radius: 14px;
+        padding: 14px 16px;
+
+        h3 {
+            margin: 0 0 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.95em;
+        }
+        p { margin: 0; line-height: 1.55; font-size: 0.9em; }
+        ul {
+            margin: 0;
+            padding-left: 18px;
+            line-height: 1.7;
+            font-size: 0.9em;
+        }
+        li { margin-bottom: 3px; }
+        .cat-chip { vertical-align: -0.25em; }
+    }
+}

@@ -19,5 +19,6 @@ import './maskmen/test_maskmen';
 import './cockroach/test_cockroach';
 import './jaipur/test_jaipur';
 import './splendorduel/test_splendorduel';
+import './catinthebox/test_catinthebox';
 import './test_cards';
 

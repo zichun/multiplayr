@@ -23,6 +23,7 @@ import { MaskmenRule } from './maskmen/maskmen';
 import { CockroachRule } from './cockroach/cockroach';
 import { JaipurRule } from './jaipur/jaipur';
 import { SplendorDuelRule } from './splendorduel/splendorduel';
+import { CatInTheBoxRule } from './catinthebox/catinthebox';
 
 
 const CoupDebugger = NewDebuggerRule(
@@ -148,6 +149,14 @@ const JaipurDebugger = NewDebuggerRule(
 const SplendorDuelDebugger = NewDebuggerRule(
     'splendorduel',
     SplendorDuelRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const CatInTheBoxDebugger = NewDebuggerRule(
+    'catinthebox',
+    CatInTheBoxRule,
     {
         HistoryBufferSize: 10,
         HistoryInSessionStorage: true
@@ -441,6 +450,23 @@ export const MPRULES = {
         icon: '💎',
         minPlayers: 2,
         maxPlayers: 2
+    },
+    'catinthebox': {
+        description: 'Cat in the Box - Quantum Trick-Taking Game',
+        rules: ['lobby', 'gameshell', 'catinthebox'],
+        rule: CatInTheBoxRule,
+        icon: '🐱',
+        minPlayers: 2,
+        maxPlayers: 5
+    },
+    'catinthebox-debug': {
+        description: 'Cat in the Box (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'catinthebox', 'debugger'],
+        rule: CatInTheBoxDebugger,
+        icon: '🐱',
+        minPlayers: 2,
+        maxPlayers: 5
     }
 };
 

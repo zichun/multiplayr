@@ -366,6 +366,29 @@ export const MPRULES = {
         minPlayers: 2,
         maxPlayers: 2
     },
+    'catinthebox': {
+        description: 'Cat in the Box - Quantum Trick-Taking Game',
+        rules: ['lobby', 'gameshell', 'catinthebox'],
+        rule: () => import('./catinthebox/catinthebox').then(m => m.CatInTheBoxRule),
+        icon: '🐱',
+        minPlayers: 2,
+        maxPlayers: 5
+    },
+    'catinthebox-debug': {
+        description: 'Cat in the Box (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'catinthebox', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./catinthebox/catinthebox')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('catinthebox', orig.CatInTheBoxRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🐱',
+        minPlayers: 2,
+        maxPlayers: 5
+    },
     'splendorduel-debug': {
         description: 'Splendor Duel (Debug)',
         debug: true,
