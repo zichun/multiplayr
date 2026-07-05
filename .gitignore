@@ -1,4 +1,6 @@
+buildcache/*
 node_modules/*
+.claude/*
 out/*
 build/*
 dist/*

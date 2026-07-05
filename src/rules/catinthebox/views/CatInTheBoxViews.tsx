@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ViewPropsInterface } from '../../../common/interfaces';
 import { icons as LOBBY_ICONS } from '../../lobby/LobbyView';
 import {
-    Phase, CatColor, CAT_COLORS, OBSERVED, TrickPlay, CompletedTrick, LastMove, colorName
+    Phase, CatColor, CAT_COLORS, OBSERVED, TrickPlay, CompletedTrick, LastMove, colorName, getRoundConfig
 } from '../CatInTheBoxGameState';
 import { PlayingCard } from '../../../client/lib/card-renderer/PlayingCard';
 import { ExpressiveIcon } from '../../../client/lib/card-renderer/IconEngine';
@@ -192,7 +192,64 @@ export class CatInTheBoxClientLobby extends React.Component<ViewPropsInterface, 
 // ================================================================================
 // Rules reference
 // ================================================================================
-export class CatInTheBoxRulesView extends React.Component<{}, {}> {
+export class CatInTheBoxRulesView extends React.Component<{ players?: number }, {}> {
+    // Game setup per player count, derived from the actual round config so it can
+    // never drift from the game logic.
+    private renderSetup() {
+        const current = this.props.players;
+        const rows = [2, 3, 4, 5].map(n => {
+            const cfg = getRoundConfig(n);
+            const tricks = cfg.handSize - 1;
+            const prediction = cfg.predictions === null
+                ? 'none · bonus if ≤4 tricks'
+                : cfg.predictions.join(', ');
+            return { n, range: `1–${cfg.maxNum}`, total: cfg.maxNum * 5, dealt: cfg.dealt, hand: cfg.handSize, tricks, prediction };
+        });
+
+        return (
+            <div className="rules-section">
+                <h3>Game Setup by Players</h3>
+                <p style={{ marginTop: 0 }}>
+                    The game lasts one round per player. Everyone is dealt cards, then buries
+                    <strong> 1 card face-down</strong>; the board has 4 colour rows × the number range.
+                </p>
+                <div className="setup-table-wrap">
+                    <table className="setup-table">
+                        <thead>
+                            <tr>
+                                <th>Players</th>
+                                <th>Card range</th>
+                                <th>Deck</th>
+                                <th>Dealt</th>
+                                <th>Hand</th>
+                                <th>Tricks</th>
+                                <th>Prediction</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {rows.map(r => (
+                                <tr key={r.n} className={current === r.n ? 'setup-current' : ''}>
+                                    <td>{r.n}{current === r.n ? ' ◂' : ''}</td>
+                                    <td>{r.range}</td>
+                                    <td>{r.total}</td>
+                                    <td>{r.dealt}</td>
+                                    <td>{r.hand}</td>
+                                    <td>{r.tricks}</td>
+                                    <td>{r.prediction}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                <p className="setup-note">
+                    <strong>2 players:</strong> no predictions — 3 cards are revealed from the
+                    leftover pile to pre-block board spaces, and you earn the bonus for winning
+                    4 or fewer tricks. <strong>3 players:</strong> predictions are limited to 1, 3 or 4.
+                </p>
+            </div>
+        );
+    }
+
     public render() {
         return (
             <div className="cat-rules-panel">
@@ -205,6 +262,8 @@ export class CatInTheBoxRulesView extends React.Component<{}, {}> {
                         no two cards can share one.
                     </p>
                 </div>
+
+                {this.renderSetup()}
 
                 <div className="rules-section">
                     <h3>Colour Strength</h3>
@@ -811,7 +870,7 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
             'rules': {
                 'icon': 'book',
                 'label': 'Rules',
-                'view': <CatInTheBoxRulesView />
+                'view': <CatInTheBoxRulesView players={this.props.numPlayers} />
             }
         };
 

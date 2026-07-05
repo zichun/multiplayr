@@ -697,4 +697,46 @@ $c-green: #76c4a0;
         li { margin-bottom: 3px; }
         .cat-chip { vertical-align: -0.25em; }
     }
+
+    // Game-setup table (per player count).
+    .setup-table-wrap {
+        overflow-x: auto;
+        margin: 10px 0 6px;
+    }
+
+    .setup-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82em;
+        white-space: nowrap;
+
+        th {
+            text-align: center;
+            color: $muted;
+            font-size: 0.86em;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            font-weight: 800;
+            padding: 6px 8px;
+            border-bottom: 2px solid $line;
+        }
+        td {
+            text-align: center;
+            padding: 7px 8px;
+            border-bottom: 1px solid $line;
+        }
+        td:first-child, th:first-child { font-weight: 800; }
+        td:last-child, th:last-child { text-align: left; }
+
+        .setup-current {
+            background: #efeafb;
+            td { color: #5a4fa0; font-weight: 800; }
+        }
+    }
+
+    .setup-note {
+        font-size: 0.82em !important;
+        color: $muted;
+        line-height: 1.5 !important;
+    }
 }
