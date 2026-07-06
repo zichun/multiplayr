@@ -75,6 +75,10 @@ export class WebRTCTransport implements ClientTransportInterface {
 
     // Reconnection state
     private isReconnecting = false;
+    // True while a connection attempt (initial or reconnect) is in flight, i.e. a
+    // connection has been created but has not yet opened. Prevents the liveness monitor
+    // (or any other caller) from clobbering an in-progress handshake.
+    private connecting = false;
     private reconnectTimeout: any = null;
     private reconnectAttempts = 0;
     private connectTimeout: any = null;
@@ -308,9 +312,12 @@ export class WebRTCTransport implements ClientTransportInterface {
             return;
         }
 
-        // Self-heal: if we are not connected and not already reconnecting, make sure a
-        // reconnection is in flight. This covers cases where no close/error ever fired.
-        if (!this.isHostLinkAlive() && !this.isReconnecting && !this.reconnectTimeout) {
+        // Self-heal: if we are not connected and no attempt is already in flight, make
+        // sure a reconnection is scheduled. This covers cases where no close/error ever
+        // fired. Crucially this must NOT fire while a connection is still being
+        // established (this.connecting), otherwise it would tear down the in-progress
+        // initial handshake used by the join/rejoin flow.
+        if (!this.isHostLinkAlive() && !this.connecting && !this.isReconnecting && !this.reconnectTimeout) {
             this.attemptReconnectToHost();
         }
     }
@@ -437,6 +444,7 @@ export class WebRTCTransport implements ClientTransportInterface {
         this.roomId = hostPeerId;
         console.log(`Connecting directly to Host Peer ID: ${hostPeerId}`);
 
+        this.connecting = true;
         const conn = this.peer.connect(hostPeerId, {
             reliable: true
         });
@@ -448,6 +456,7 @@ export class WebRTCTransport implements ClientTransportInterface {
 
         conn.on('open', () => {
             this.clearConnectTimeout();
+            this.connecting = false;
             console.log('WebRTC connection to host successfully established!');
             this.hostConnected = true;
             this.lastHostSeen = Date.now();
@@ -470,12 +479,14 @@ export class WebRTCTransport implements ClientTransportInterface {
 
         conn.on('close', () => {
             console.warn('Disconnected from Host.');
+            this.connecting = false;
             this.markHostDisconnected();
             this.attemptReconnectToHost();
         });
 
         conn.on('error', (err: any) => {
             console.error('WebRTC host connection error:', err);
+            this.connecting = false;
             this.markHostDisconnected();
             if (cb) returnError(cb, err.toString());
             this.attemptReconnectToHost();
@@ -621,6 +632,7 @@ export class WebRTCTransport implements ClientTransportInterface {
                 } catch (e) {
                     // Ignore
                 }
+                this.connecting = false;
                 this.isReconnecting = false;
                 this.scheduleReconnect();
             }
@@ -640,6 +652,7 @@ export class WebRTCTransport implements ClientTransportInterface {
     private attemptReconnectToHost() {
         if (this.session && this.session.isHost()) return; // Host doesn't reconnect to itself
         if (this.kicked) return;
+        if (this.connecting) return; // A connection attempt (initial or reconnect) is already in flight
         if (this.isReconnecting) return;
         if (!this.roomId) return;
 
@@ -658,6 +671,7 @@ export class WebRTCTransport implements ClientTransportInterface {
         }
 
         this.isReconnecting = true;
+        this.connecting = true;
         this.reconnectAttempts++;
         console.log(`Reconnection attempt #${this.reconnectAttempts} to Host Room ${this.roomId}...`);
 
@@ -678,6 +692,7 @@ export class WebRTCTransport implements ClientTransportInterface {
 
         conn.on('open', () => {
             this.clearConnectTimeout();
+            this.connecting = false;
             console.log('WebRTC reconnection to host successfully established!');
             this.isReconnecting = false;
             this.hostConnected = true;
@@ -705,6 +720,7 @@ export class WebRTCTransport implements ClientTransportInterface {
 
         conn.on('close', () => {
             console.warn('WebRTC reconnection closed.');
+            this.connecting = false;
             this.markHostDisconnected();
             this.isReconnecting = false;
             this.scheduleReconnect();
@@ -712,6 +728,7 @@ export class WebRTCTransport implements ClientTransportInterface {
 
         conn.on('error', (err: any) => {
             console.error('WebRTC reconnection error:', err);
+            this.connecting = false;
             this.markHostDisconnected();
             this.isReconnecting = false;
             this.scheduleReconnect();

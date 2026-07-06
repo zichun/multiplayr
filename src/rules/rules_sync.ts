@@ -24,6 +24,7 @@ import { CockroachRule } from './cockroach/cockroach';
 import { JaipurRule } from './jaipur/jaipur';
 import { SplendorDuelRule } from './splendorduel/splendorduel';
 import { CatInTheBoxRule } from './catinthebox/catinthebox';
+import { TrioRule } from './trio/trio';
 
 
 const CoupDebugger = NewDebuggerRule(
@@ -157,6 +158,14 @@ const SplendorDuelDebugger = NewDebuggerRule(
 const CatInTheBoxDebugger = NewDebuggerRule(
     'catinthebox',
     CatInTheBoxRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const TrioDebugger = NewDebuggerRule(
+    'trio',
+    TrioRule,
     {
         HistoryBufferSize: 10,
         HistoryInSessionStorage: true
@@ -467,6 +476,23 @@ export const MPRULES = {
         icon: '🐱',
         minPlayers: 2,
         maxPlayers: 5
+    },
+    'trio': {
+        description: 'Trio - Memory & Deduction Number Game',
+        rules: ['lobby', 'gameshell', 'trio'],
+        rule: TrioRule,
+        icon: '🔺',
+        minPlayers: 3,
+        maxPlayers: 6
+    },
+    'trio-debug': {
+        description: 'Trio (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'trio', 'debugger'],
+        rule: TrioDebugger,
+        icon: '🔺',
+        minPlayers: 3,
+        maxPlayers: 6
     }
 };
 

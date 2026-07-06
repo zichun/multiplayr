@@ -403,6 +403,29 @@ export const MPRULES = {
         icon: '💎',
         minPlayers: 2,
         maxPlayers: 2
+    },
+    'trio': {
+        description: 'Trio - Memory & Deduction Number Game',
+        rules: ['lobby', 'gameshell', 'trio'],
+        rule: () => import('./trio/trio').then(m => m.TrioRule),
+        icon: '🔺',
+        minPlayers: 3,
+        maxPlayers: 6
+    },
+    'trio-debug': {
+        description: 'Trio (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'trio', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./trio/trio')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('trio', orig.TrioRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🔺',
+        minPlayers: 3,
+        maxPlayers: 6
     }
 };
 

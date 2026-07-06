@@ -20,5 +20,6 @@ import './cockroach/test_cockroach';
 import './jaipur/test_jaipur';
 import './splendorduel/test_splendorduel';
 import './catinthebox/test_catinthebox';
+import './trio/test_trio';
 import './test_cards';
 

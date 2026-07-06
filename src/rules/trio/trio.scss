@@ -1,0 +1,720 @@
+/**
+ * trio.scss - Flat minimalist skin (soft pastels, hairline borders, no hard
+ * offset shadows) for "Trio".
+ */
+
+$ink: #2b3240;
+$muted: #7c8aa5;
+$line: #e4e8ee;
+$panel: #ffffff;
+$bg: #f6f7fa;
+$accent: #6a5bb0;
+
+.trio-waiting {
+    background: #f0eefb;
+    color: #5a4fa0;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9em;
+}
+
+// ---- Lobby mode toggle ------------------------------------------------------
+.trio-mode-toggle {
+    margin-top: 20px;
+    background: #fff;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 14px 16px;
+    font-family: 'Outfit', 'Inter', sans-serif;
+
+    .tmt-label {
+        font-size: 0.72em;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: $muted;
+        margin-bottom: 10px;
+    }
+    .tmt-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .tmt-btn {
+        flex: 1 1 140px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 2px solid $line;
+        background: #fff;
+        cursor: pointer;
+        text-align: left;
+        transition: border-color 0.15s, transform 0.12s, background 0.15s;
+
+        .tmt-name { font-weight: 800; font-size: 1.02em; color: $ink; }
+        .tmt-desc { font-size: 0.82em; color: $muted; }
+
+        &:hover { transform: translateY(-2px); }
+        &.active {
+            border-color: $accent;
+            background: #f4f1fc;
+            .tmt-name { color: $accent; }
+        }
+    }
+    .tmt-note {
+        margin-top: 10px;
+        font-size: 0.82em;
+        color: $muted;
+    }
+}
+
+// ---- Arena ------------------------------------------------------------------
+.trio-arena {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+    padding: 12px 14px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 900px;
+    margin: 0 auto;
+
+    .arena-topline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+
+        .mode-pill, .turn-pill {
+            font-size: 0.82em;
+            font-weight: 800;
+            padding: 5px 14px;
+            border-radius: 999px;
+            letter-spacing: 0.4px;
+        }
+        .mode-pill {
+            text-transform: uppercase;
+            &.simple { background: #eef1f6; color: $muted; }
+            &.spicy { background: #fde8e2; color: #c65a3c; }
+        }
+        .turn-pill { background: #efeafb; color: $accent; }
+    }
+
+    .section-label {
+        font-size: 0.72em;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: $muted;
+        margin-top: 4px;
+    }
+
+    .empty-note {
+        color: $muted;
+        font-size: 0.88em;
+        background: $panel;
+        border: 1px dashed $line;
+        border-radius: 12px;
+        padding: 12px 14px;
+        text-align: center;
+    }
+}
+
+// ---- Trio glyph chips / pills ----------------------------------------------
+.trio-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    vertical-align: middle;
+
+    .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+}
+
+.trio-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.7em;
+    height: 1.7em;
+    padding: 0 0.4em;
+    border-radius: 8px;
+    font-weight: 900;
+    font-size: 0.92em;
+    line-height: 1;
+    margin: 2px;
+
+    &.win {
+        box-shadow: 0 0 0 2px #f5b942, 0 0 8px rgba(245, 185, 66, 0.7);
+    }
+    &.seven::after {
+        content: '★';
+        font-size: 0.6em;
+        margin-left: 2px;
+        opacity: 0.8;
+    }
+}
+
+// ---- Mono trio card (card-renderer overrides; mirror of CatInTheBox .cat-card)
+.trio-card {
+    display: inline-flex;
+
+    .playing-card-face.face-front {
+        display: block !important;
+        position: relative;
+        padding: 0 !important;
+        overflow: hidden;
+    }
+
+    // Watermark trio glyph fills the card, bleeding off the bottom-right corner.
+    .card-art-region {
+        position: absolute;
+        inset: 0;
+        margin: 0;
+        z-index: 1;
+        overflow: hidden;
+    }
+    .card-art-frame {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        overflow: visible;
+    }
+    // width:100% + height:71% is ~square in px (card aspect ≈ 1.4), so the square
+    // SVG fills the box with no letter-boxing — placement is predictable.
+    .card-art-content {
+        position: absolute;
+        width: 100%;
+        height: 71%;
+        right: -22%;
+        bottom: -12%;
+        top: auto;
+        left: auto;
+
+        .expressive-vector-icon {
+            max-width: none;
+            max-height: none;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    }
+
+    // Big number, centred on top of the watermark.
+    .card-header-region {
+        position: absolute;
+        inset: 0;
+        min-height: 0;
+        padding: 0;
+        background: transparent !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+    }
+    .card-header-text {
+        flex: none;
+        align-items: center;
+        justify-content: center;
+    }
+    .card-header-title {
+        font-size: 13em !important;
+        font-weight: 900;
+        text-transform: none;
+        letter-spacing: -0.03em;
+        line-height: 1;
+        overflow: visible;
+    }
+    .card-header-meta { display: none; }
+}
+
+// ---- Reveal tape ------------------------------------------------------------
+.reveal-tape {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 12px 14px;
+    min-height: 96px;
+    transition: background 0.25s, border-color 0.25s;
+
+    &.idle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .rt-prompt { color: $muted; font-size: 0.92em; font-weight: 600; text-align: center; }
+    }
+
+    &.outcome-trio { border-color: #8fd3ae; background: #eef9f2; }
+    &.outcome-mismatch { border-color: #f0b3ab; background: #fdeeec; }
+
+    // The "This turn" cards fade away after flipping back on a mismatch.
+    .rt-cards { transition: opacity 0.4s ease; }
+    &.fading .rt-cards { opacity: 0; }
+
+    .rt-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+
+        .rt-target {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 800;
+            font-size: 0.9em;
+            color: $ink;
+        }
+        .rt-progress {
+            font-size: 0.78em;
+            font-weight: 800;
+            color: $muted;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    }
+
+    .rt-cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 4px 2px;
+        // Top-align so every card face sits at the same height whether or not it
+        // has a label beneath it (middle cards have none).
+        align-items: flex-start;
+
+        .rt-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+
+            &.bad .trio-card { filter: drop-shadow(0 0 5px rgba(224, 85, 79, 0.7)); }
+
+            .rt-card-label {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                max-width: 92px;
+                font-size: 0.68em;
+                font-weight: 700;
+                color: $muted;
+                white-space: nowrap;
+
+                .rt-src-icon {
+                    flex: 0 0 auto;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 1.15em;
+                    height: 1.15em;
+                    svg { width: 100%; height: 100%; }
+                }
+                .rt-src-name {
+                    flex: 0 1 auto;
+                    min-width: 0;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    color: $ink;
+                }
+                .rt-src-end {
+                    flex: 0 0 auto;
+                    text-transform: uppercase;
+                    letter-spacing: 0.3px;
+                }
+            }
+        }
+    }
+
+    .rt-banner {
+        margin-top: 10px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 0.9em;
+        text-align: center;
+
+        &.trio { background: #d8f0e2; color: #1f7a4d; }
+        &.mismatch { background: #f8dcd7; color: #c0392b; }
+    }
+}
+
+// ---- Middle grid ------------------------------------------------------------
+.trio-middle {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 14px 16px;
+    // Fixed grid (columns set inline from the card count) so every slot keeps a
+    // stable position all game long. Centred within the panel.
+    display: grid;
+    gap: 10px;
+    justify-content: center;
+    justify-items: center;
+
+    .trio-middle-slot {
+        border-radius: 8px;
+        transition: transform 0.15s;
+
+        &.clickable {
+            cursor: pointer;
+            &:hover { transform: translateY(-4px); }
+        }
+        &.up { transform: translateY(-2px); }
+
+        // Empty slot placeholder keeps the grid from jumping when a card leaves.
+        &.empty {
+            width: 54px;
+            height: 75px;
+            border: 2px dashed $line;
+            border-radius: 8px;
+            background: repeating-linear-gradient(45deg, #f2f4f8, #f2f4f8 4px, #fbfcfe 4px, #fbfcfe 8px);
+        }
+    }
+}
+
+// ---- Player panels ----------------------------------------------------------
+.player-panels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .player-panel {
+        flex: 1 1 190px;
+        min-width: 0;
+        background: $panel;
+        border: 1px solid $line;
+        border-radius: 14px;
+        padding: 10px 12px;
+        transition: border-color 0.15s, box-shadow 0.15s;
+
+        &.current {
+            border-color: $accent;
+            box-shadow: inset 0 0 0 2px rgba(106, 91, 176, 0.35);
+        }
+        &.me { background: #fcfbff; }
+
+        .pp-head {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            .pp-name {
+                font-weight: 800;
+                font-size: 0.92em;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .pp-badge {
+                margin-left: auto;
+                font-size: 0.62em;
+                font-weight: 800;
+                text-transform: uppercase;
+                background: #efeafb;
+                color: $accent;
+                padding: 2px 7px;
+                border-radius: 6px;
+            }
+        }
+
+        .pp-stats {
+            display: flex;
+            gap: 12px;
+            margin: 8px 0 6px;
+            font-size: 0.85em;
+            font-weight: 700;
+            color: $ink;
+
+            .pp-stat { white-space: nowrap; }
+        }
+
+        .pp-trios {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 6px;
+        }
+
+        .pp-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+
+            .reveal-btn {
+                flex: 1 1 0;
+                min-height: 40px;
+                border-radius: 10px;
+                border: 1px solid $line;
+                background: #fff;
+                font-weight: 800;
+                font-size: 0.84em;
+                color: $accent;
+                cursor: pointer;
+                transition: transform 0.12s, background 0.12s;
+
+                &:hover:not(:disabled) { background: #f2eefc; transform: translateY(-2px); }
+                &:disabled { color: #bfc5d0; cursor: not-allowed; background: #f7f8fa; }
+            }
+        }
+    }
+}
+
+.pp-dot {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15em;
+    height: 1.15em;
+    font-size: 1em;
+    vertical-align: middle;
+
+    svg { width: 100%; height: 100%; }
+}
+
+// ---- Your hand --------------------------------------------------------------
+.trio-hand {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 6px;
+    justify-content: safe center;
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+
+    .hand-card {
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        position: relative;
+
+        &.end .trio-card { filter: drop-shadow(0 0 0 transparent); }
+        &.end.low { transform: translateY(0); }
+
+        .hand-end-tag {
+            font-size: 0.6em;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: $accent;
+            background: #efeafb;
+            border-radius: 5px;
+            padding: 1px 6px;
+        }
+    }
+}
+
+// ---- Buttons ----------------------------------------------------------------
+.primary-btn {
+    min-height: 46px;
+    padding: 0 22px;
+    border-radius: 14px;
+    border: none;
+    background: $accent;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: transform 0.12s, filter 0.12s;
+    margin-top: 8px;
+
+    &:hover { transform: translateY(-2px); filter: brightness(1.05); }
+}
+
+.ghost-btn {
+    min-height: 46px;
+    padding: 0 22px;
+    border-radius: 14px;
+    border: 1px solid $line;
+    background: #fff;
+    color: $muted;
+    font-weight: 700;
+    font-size: 0.95em;
+    cursor: pointer;
+    margin-top: 8px;
+
+    &:hover { background: #f2f4f8; }
+}
+
+.settings-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px;
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+// ---- Game over --------------------------------------------------------------
+.game-over {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 18px 18px 20px;
+    text-align: center;
+
+    .go-mark {
+        width: 74px;
+        height: 74px;
+        margin: 2px auto 8px;
+        .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+    }
+    .go-title {
+        font-size: 1.35em;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+    }
+    .go-reason {
+        color: $muted;
+        font-size: 0.9em;
+        margin-top: 4px;
+    }
+    .go-wintrios {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin: 12px 0 4px;
+        font-size: 1.3em;
+    }
+
+    .re-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 14px 0;
+        font-size: 0.9em;
+
+        th {
+            text-align: center;
+            color: $muted;
+            font-size: 0.82em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 6px 4px;
+            border-bottom: 2px solid $line;
+        }
+        td {
+            padding: 8px 4px;
+            border-bottom: 1px solid $line;
+            text-align: center;
+            vertical-align: middle;
+        }
+        td:first-child, th:first-child { width: 40px; }
+        td:nth-child(2), th:nth-child(2) { text-align: left; }
+
+        .row-trios {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            .none { color: $muted; }
+        }
+        .winner-row { background: #eef8f2; }
+    }
+
+    .go-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+// ---- Rules ------------------------------------------------------------------
+.trio-rules-panel {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 80vh;
+    overflow-y: auto;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+
+    .rules-section {
+        background: #fff;
+        border: 1px solid $line;
+        border-radius: 14px;
+        padding: 14px 16px;
+
+        &.mode-active { border-color: $accent; box-shadow: inset 0 0 0 2px rgba(106, 91, 176, 0.25); }
+        &.highlight { border-color: #f0c65a; background: #fdf7e6; }
+
+        h3 {
+            margin: 0 0 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.95em;
+        }
+        p { margin: 0; line-height: 1.55; font-size: 0.9em; }
+        ul {
+            margin: 0;
+            padding-left: 18px;
+            line-height: 1.7;
+            font-size: 0.9em;
+        }
+        li { margin-bottom: 3px; }
+    }
+
+    .conn-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 16px;
+        margin-top: 10px;
+
+        .conn-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 0.92em;
+
+            .conn-arrow { color: $muted; font-weight: 700; margin: 0 2px; }
+        }
+    }
+
+    .setup-table-wrap { overflow-x: auto; margin: 10px 0 6px; }
+    .setup-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.86em;
+        white-space: nowrap;
+
+        th {
+            text-align: center;
+            color: $muted;
+            font-size: 0.86em;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            font-weight: 800;
+            padding: 6px 10px;
+            border-bottom: 2px solid $line;
+        }
+        td {
+            text-align: center;
+            padding: 7px 10px;
+            border-bottom: 1px solid $line;
+        }
+        td:first-child, th:first-child { font-weight: 800; }
+
+        .setup-current {
+            background: #efeafb;
+            td { color: #5a4fa0; font-weight: 800; }
+        }
+    }
+
+    .setup-note {
+        font-size: 0.82em !important;
+        color: $muted;
+        line-height: 1.5 !important;
+        margin-top: 8px !important;
+    }
+}

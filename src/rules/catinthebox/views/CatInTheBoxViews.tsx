@@ -18,6 +18,19 @@ import {
     CAT_COLOR_HEX,
     CAT_COLOR_TEXT
 } from '../CatInTheBoxAssets';
+import BellSound from '../../../sounds/microwave_bell.mp3';
+import ScratchSound from '../../../sounds/scratch.mp3';
+
+// Fire-and-forget SFX. Guarded for non-browser (test) contexts, and swallows the
+// autoplay-policy rejection until the first user interaction.
+function playSound(src: string) {
+    if (typeof Audio === 'undefined' || !src) return;
+    try {
+        const audio = new Audio(src);
+        const p = audio.play();
+        if (p && typeof p.catch === 'function') p.catch(() => { /* blocked until interaction */ });
+    } catch (e) { /* ignore */ }
+}
 
 interface PublicPlayer {
     xSlots: Record<CatColor, boolean>;
@@ -335,6 +348,12 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
             }
         }
 
+        // A card was just played (by anyone) — ring the bell.
+        const lm = this.props.lastMove;
+        if (lm && lm.kind === 'play' && lm.moveId !== (prev.lastMove ? prev.lastMove.moveId : null)) {
+            playSound(BellSound);
+        }
+
         const rt = this.props.resolvingTrick;
         if (rt && rt.resolveId !== this.state.resolveKey) {
             // A new trick just completed — kick off the reveal → flip → collapse → fade.
@@ -362,7 +381,11 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
         this.setState({ resolveStage: 'glow', resolveKey: rt.resolveId });
 
         this.resolveTimers.push(setTimeout(() => this.setState({ resolveStage: 'flip' }), STAGE_FLIP));
-        this.resolveTimers.push(setTimeout(() => this.setState({ resolveStage: 'collapse' }), STAGE_COLLAPSE));
+        this.resolveTimers.push(setTimeout(() => {
+            // Cards collapse into a pile before fading — play the scratch.
+            this.setState({ resolveStage: 'collapse' });
+            playSound(ScratchSound);
+        }, STAGE_COLLAPSE));
         this.resolveTimers.push(setTimeout(() => this.setState({ resolveStage: 'fade' }), STAGE_FADE));
 
         // The host alone advances the game once the animation has played out.
