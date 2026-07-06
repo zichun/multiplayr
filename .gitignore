@@ -1,4 +1,5 @@
 buildcache/*
+buildcache/front-end
 node_modules/*
 .claude/*
 out/*
