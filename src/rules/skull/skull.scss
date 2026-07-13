@@ -1,0 +1,584 @@
+/**
+ * skull.scss - Flat minimalist skin (soft pastels, hairline borders, no hard
+ * offset shadows) for "Skull". Mirrors the Trio / Cat in the Box / Splendor Duel
+ * flat aesthetic: light panels, rounded corners, inset selection rings.
+ */
+
+$ink: #2b3240;
+$muted: #7c8aa5;
+$line: #e4e8ee;
+$panel: #ffffff;
+$bg: #f6f7fa;
+$accent: #6d76a0;      // slate-indigo, echoing the skull disc
+$rose: #ef88a6;
+$danger: #e0554f;
+$success: #3fa981;
+
+// ---- Lobby ------------------------------------------------------------------
+.skull-waiting {
+    background: #eef0f8;
+    color: $accent;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9em;
+}
+
+// ---- Round disc token (self-contained flip) ---------------------------------
+.disc {
+    position: relative;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    perspective: 600px;
+
+    .disc-flip {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.55s cubic-bezier(0.4, 0.1, 0.25, 1);
+        transform-style: preserve-3d;
+    }
+    &.is-up .disc-flip { transform: rotateY(180deg); }
+
+    .disc-face {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        backface-visibility: hidden;
+        overflow: hidden;
+        display: block;
+        box-shadow: 0 1px 3px rgba(43, 50, 64, 0.18);
+
+        .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+    }
+    .disc-front { transform: rotateY(180deg); }  // the glyph face (shown when .is-up)
+
+    &.clickable {
+        cursor: pointer;
+        .disc-flip { transition: transform 0.55s cubic-bezier(0.4, 0.1, 0.25, 1), translate 0.15s; }
+        &:hover { translate: 0 -5px; }
+        .disc-face { box-shadow: 0 0 0 3px rgba(245, 185, 66, 0.9), 0 3px 8px rgba(43, 50, 64, 0.25); }
+    }
+}
+
+// A tiny flat disc pip used inline in counts / legends.
+.disc-pip {
+    display: inline-flex;
+    width: 1.15em;
+    height: 1.15em;
+    border-radius: 50%;
+    vertical-align: middle;
+    overflow: hidden;
+    .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+}
+
+// ---- Arena ------------------------------------------------------------------
+.skull-arena {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+    padding: 12px 14px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 960px;
+    margin: 0 auto;
+
+    .arena-topline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+
+        .phase-pill, .turn-pill {
+            font-size: 0.8em;
+            font-weight: 800;
+            padding: 5px 14px;
+            border-radius: 999px;
+            letter-spacing: 0.4px;
+        }
+        .phase-pill {
+            text-transform: uppercase;
+            background: #eef1f6;
+            color: $muted;
+        }
+        .turn-pill { background: #efeafb; color: $accent; }
+    }
+
+    .section-label {
+        font-size: 0.72em;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: $muted;
+        margin-top: 2px;
+    }
+}
+
+// ---- Bid banner -------------------------------------------------------------
+.bid-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 12px 16px;
+
+    &.challenge { border-color: #f0c99a; background: #fdf5ea; }
+    &.success { border-color: #9fdcc2; background: #eef9f3; }
+    &.failure { border-color: #f0b3ab; background: #fdeeec; }
+
+    .bb-main {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+
+        .bb-num {
+            font-size: 1.9em;
+            font-weight: 900;
+            line-height: 1;
+            color: $accent;
+        }
+        .bb-label { font-weight: 800; font-size: 0.9em; }
+        .bb-sub { color: $muted; font-size: 0.82em; }
+    }
+    .bb-who {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 800;
+        font-size: 0.88em;
+    }
+    .bb-progress {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+    }
+}
+
+// ---- Reveal tape (during / after a challenge) -------------------------------
+.reveal-tape {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 12px 14px;
+
+    &.success { border-color: #9fdcc2; background: #f1faf5; }
+    &.failure { border-color: #f0b3ab; background: #fdefed; }
+
+    .rt-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 0.82em;
+        font-weight: 800;
+        color: $muted;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .rt-cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 2px;
+        align-items: flex-start;
+
+        .rt-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+
+            .rt-owner {
+                font-size: 0.62em;
+                font-weight: 800;
+                color: $muted;
+                max-width: 66px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            &.bad .disc .disc-face { box-shadow: 0 0 0 3px rgba(224, 85, 79, 0.85), 0 2px 6px rgba(43, 50, 64, 0.25); }
+        }
+    }
+    .rt-banner {
+        margin-top: 10px;
+        padding: 9px 12px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 0.92em;
+        text-align: center;
+
+        &.success { background: #d8f0e2; color: #1f7a4d; }
+        &.failure { background: #f8dcd7; color: #c0392b; }
+    }
+}
+
+// ---- Player panels ----------------------------------------------------------
+.player-panels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .player-panel {
+        flex: 1 1 210px;
+        min-width: 0;
+        background: $panel;
+        border: 1px solid $line;
+        border-radius: 16px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transition: border-color 0.15s, box-shadow 0.15s;
+
+        &.current {
+            border-color: $accent;
+            box-shadow: inset 0 0 0 2px rgba(109, 118, 160, 0.35);
+        }
+        &.challenger {
+            border-color: #e8b978;
+            box-shadow: inset 0 0 0 2px rgba(240, 192, 74, 0.4);
+        }
+        &.me { background: #fcfcff; }
+        &.eliminated { opacity: 0.5; filter: grayscale(0.6); }
+        &.flippable { cursor: pointer; border-color: #f0c04a; box-shadow: inset 0 0 0 2px rgba(245, 185, 66, 0.4); }
+
+        .pp-head {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            .pp-name {
+                font-weight: 800;
+                font-size: 0.94em;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .pp-tag {
+                margin-left: auto;
+                font-size: 0.6em;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.4px;
+                padding: 2px 7px;
+                border-radius: 6px;
+                white-space: nowrap;
+            }
+            .pp-tag.turn { background: #efeafb; color: $accent; }
+            .pp-tag.challenger { background: #fdeccb; color: #b26a12; }
+            .pp-tag.passed { background: #eef0f3; color: $muted; }
+            .pp-tag.out { background: #f3e0de; color: #b0433a; }
+        }
+
+        .pp-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.8em;
+            font-weight: 700;
+            color: $ink;
+
+            .pp-metric {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+            }
+            .wins-pips { display: inline-flex; gap: 2px; }
+            .win-star { color: #f0b429; font-size: 1.05em; line-height: 1; }
+            .win-star.empty { color: #dfe3ea; }
+        }
+
+        // The mat: a resting place for the round's stack.
+        .pp-mat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            background: #f7f8fb;
+            border: 1px dashed $line;
+            border-radius: 12px;
+            padding: 10px 8px;
+            min-height: 72px;
+            justify-content: center;
+
+            .mat-empty { color: $muted; font-size: 0.78em; font-weight: 600; }
+        }
+
+        .pp-hand {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.76em;
+            color: $muted;
+            font-weight: 700;
+            justify-content: center;
+        }
+    }
+}
+
+// A vertical pile of discs (the stack on a mat). Rendered top-first; lower discs
+// overlap upward and sit behind (z-index set inline) so the accessible top disc
+// reads clearly on top.
+.disc-pile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+
+    .pile-slot {
+        position: relative;
+        &:not(:first-child) { margin-top: -16px; }
+    }
+}
+
+// ---- Controls panel ---------------------------------------------------------
+.controls {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    &.acting { border-color: $accent; box-shadow: inset 0 0 0 2px rgba(109, 118, 160, 0.3); }
+
+    .ctrl-title {
+        font-weight: 800;
+        font-size: 0.95em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .ctrl-hint { color: $muted; font-size: 0.85em; line-height: 1.5; }
+
+    .ctrl-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .disc-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 48px;
+        padding: 8px 18px 8px 10px;
+        border-radius: 14px;
+        border: 2px solid $line;
+        background: #fff;
+        font-weight: 800;
+        font-size: 0.92em;
+        color: $ink;
+        cursor: pointer;
+        transition: transform 0.12s, border-color 0.15s, background 0.15s;
+
+        .db-disc { width: 34px; height: 34px; border-radius: 50%; overflow: hidden; flex: 0 0 auto;
+            .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+
+        &.flower:hover:not(:disabled) { border-color: $rose; background: #fdf0f4; transform: translateY(-2px); }
+        &.skull:hover:not(:disabled) { border-color: $accent; background: #f1f2f9; transform: translateY(-2px); }
+        &:disabled { opacity: 0.4; cursor: not-allowed; }
+    }
+}
+
+// ---- Bid stepper ------------------------------------------------------------
+.bid-stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #f5f6fa;
+    border: 1px solid $line;
+    border-radius: 12px;
+    padding: 6px 8px;
+
+    .step-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        border: none;
+        background: #fff;
+        border: 1px solid $line;
+        font-size: 1.3em;
+        font-weight: 900;
+        color: $accent;
+        cursor: pointer;
+        line-height: 1;
+
+        &:hover:not(:disabled) { background: #eef0f8; }
+        &:disabled { opacity: 0.35; cursor: not-allowed; }
+    }
+    .step-val {
+        min-width: 2ch;
+        text-align: center;
+        font-size: 1.4em;
+        font-weight: 900;
+        color: $ink;
+    }
+    .step-max { font-size: 0.72em; color: $muted; font-weight: 700; }
+}
+
+// ---- Buttons ----------------------------------------------------------------
+.primary-btn {
+    min-height: 48px;
+    padding: 0 22px;
+    border-radius: 14px;
+    border: none;
+    background: $accent;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: transform 0.12s, filter 0.12s;
+
+    &:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.06); }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+.danger-btn {
+    min-height: 48px;
+    padding: 0 22px;
+    border-radius: 14px;
+    border: 2px solid #f0b3ab;
+    background: #fff;
+    color: $danger;
+    font-weight: 800;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.12s;
+
+    &:hover:not(:disabled) { background: #fdeeec; transform: translateY(-2px); }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+.ghost-btn {
+    min-height: 48px;
+    padding: 0 22px;
+    border-radius: 14px;
+    border: 1px solid $line;
+    background: #fff;
+    color: $muted;
+    font-weight: 700;
+    font-size: 0.95em;
+    cursor: pointer;
+
+    &:hover { background: #f2f4f8; }
+}
+
+.settings-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px;
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+.waiting-note {
+    color: $muted;
+    font-size: 0.9em;
+    font-weight: 600;
+    text-align: center;
+    padding: 6px 0;
+}
+
+// ---- Game over --------------------------------------------------------------
+.game-over {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 18px 18px 20px;
+    text-align: center;
+
+    .go-mark {
+        width: 76px;
+        height: 76px;
+        margin: 2px auto 8px;
+        border-radius: 50%;
+        overflow: hidden;
+        .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+    }
+    .go-title { font-size: 1.4em; font-weight: 900; letter-spacing: 0.5px; }
+    .go-reason { color: $muted; font-size: 0.9em; margin-top: 4px; }
+
+    .re-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 14px 0;
+        font-size: 0.9em;
+
+        th {
+            text-align: center;
+            color: $muted;
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 6px 4px;
+            border-bottom: 2px solid $line;
+        }
+        td {
+            padding: 8px 4px;
+            border-bottom: 1px solid $line;
+            text-align: center;
+            vertical-align: middle;
+        }
+        td:nth-child(2), th:nth-child(2) { text-align: left; }
+        .winner-row { background: #eef8f2; }
+    }
+
+    .go-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+}
+
+// ---- Rules ------------------------------------------------------------------
+.skull-rules-panel {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 80vh;
+    overflow-y: auto;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+
+    .rules-section {
+        background: #fff;
+        border: 1px solid $line;
+        border-radius: 14px;
+        padding: 14px 16px;
+
+        &.highlight { border-color: #f0c65a; background: #fdf7e6; }
+
+        h3 {
+            margin: 0 0 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        p { margin: 0 0 6px; line-height: 1.55; font-size: 0.9em; }
+        ul { margin: 0; padding-left: 18px; line-height: 1.7; font-size: 0.9em; }
+        li { margin-bottom: 3px; }
+    }
+    .rules-discs {
+        display: flex;
+        gap: 18px;
+        justify-content: center;
+        margin: 6px 0 2px;
+
+        .rd-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .rd-disc { width: 56px; height: 56px; border-radius: 50%; overflow: hidden;
+            .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+        .rd-label { font-size: 0.8em; font-weight: 800; }
+    }
+}

@@ -1,0 +1,830 @@
+/**
+ * regicide.scss - Flat minimalist skin (soft pastels, hairline borders, no hard
+ * offset shadows) for "Regicide".
+ */
+
+$ink: #2b3240;
+$muted: #7c8aa5;
+$line: #e4e8ee;
+$panel: #ffffff;
+$bg: #f6f7fa;
+$accent: #5f77c6;
+$danger: #d5482f;
+
+// ---- Lobby -----------------------------------------------------------------
+.regicide-lobby-note {
+    margin-top: 18px;
+    background: #eef1fb;
+    color: #3f4c7a;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 0.9em;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.regicide-waiting {
+    background: #eef1fb;
+    color: #3f4c7a;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9em;
+}
+
+// ---- Arena -----------------------------------------------------------------
+.regicide-arena {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+    padding: 12px 14px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 920px;
+    margin: 0 auto;
+
+    .section-label {
+        font-size: 0.72em;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: $muted;
+        margin-top: 4px;
+    }
+
+    .empty-note {
+        color: $muted;
+        font-size: 0.86em;
+        background: $panel;
+        border: 1px dashed $line;
+        border-radius: 12px;
+        padding: 12px 14px;
+        text-align: center;
+    }
+}
+
+// ---- Suit glyph chips ------------------------------------------------------
+.suit-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    vertical-align: middle;
+
+    .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+}
+
+// ---- Status strip (castle progress + decks) --------------------------------
+.status-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 14px;
+    padding: 10px 14px;
+
+    .castle-progress {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: wrap;
+
+        .castle-pip {
+            width: 14px;
+            height: 18px;
+            border-radius: 3px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: #e7eaf1;
+
+            &.jack.done { background: #e26d7e; }
+            &.queen.done { background: #dca23f; }
+            &.king.done { background: #5f77c6; }
+        }
+        .castle-count {
+            margin-left: 8px;
+            font-weight: 800;
+            font-size: 0.8em;
+            color: $muted;
+        }
+    }
+
+    .deck-counts {
+        display: flex;
+        gap: 12px;
+        .deck-count {
+            font-weight: 800;
+            font-size: 0.85em;
+            color: $ink;
+            white-space: nowrap;
+        }
+    }
+}
+
+// ---- Enemy panel -----------------------------------------------------------
+.enemy-panel {
+    position: relative; // anchors the incoming slash + damage number
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+    background: $panel;
+    border: 2px solid $line;
+    border-radius: 18px;
+    padding: 14px 16px;
+
+    // Struck by a player: flash red behind the slash. The border carries an inline
+    // suit colour, so the hit reads through an inset ring instead of a border swap.
+    &.struck {
+        animation: struck-flash 1s ease-out;
+        box-shadow: inset 0 0 0 2px rgba(213, 72, 47, 0.55);
+    }
+
+    .enemy-card {
+        position: relative; // anchors the slash + damage number to the card face
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+
+        // Stage 1 of an enemy strike: the royal rears up and down.
+        &.striking { animation: strike-shake 0.5s ease-in-out; }
+
+        // Match the royal card's own rounding so the sweep clips to its face.
+        > .attack-slash { border-radius: 10px; }
+
+        // Sit just outside the card's right edge, beside the slash.
+        > .attack-damage { right: -10px; }
+    }
+
+    .enemy-info {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+
+        .enemy-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            .enemy-name {
+                font-weight: 900;
+                font-size: 1.15em;
+                letter-spacing: 0.3px;
+            }
+        }
+
+        .enemy-hp .hp-bar {
+            position: relative;
+            height: 22px;
+            border-radius: 8px;
+            background: #eef1f6;
+            overflow: hidden;
+
+            .hp-fill {
+                position: absolute;
+                inset: 0 auto 0 0;
+                transition: width 0.35s ease;
+                opacity: 0.85;
+            }
+            .hp-text {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.76em;
+                font-weight: 800;
+                color: $ink;
+            }
+        }
+
+        .enemy-stats {
+            display: flex;
+            gap: 22px;
+
+            .es-stat {
+                display: flex;
+                flex-direction: column;
+                .es-label {
+                    font-size: 0.64em;
+                    font-weight: 800;
+                    text-transform: uppercase;
+                    letter-spacing: 0.6px;
+                    color: $muted;
+                }
+                .es-value {
+                    font-size: 1.25em;
+                    font-weight: 900;
+                    .es-base { font-size: 0.55em; font-weight: 700; color: $muted; }
+                }
+            }
+        }
+
+        .enemy-immunity {
+            font-size: 0.78em;
+            font-weight: 700;
+            color: #b06a1a;
+            background: #fbf1dc;
+            border-radius: 8px;
+            padding: 5px 10px;
+            align-self: flex-start;
+
+            &.cancelled {
+                color: #1c7a4d;
+                background: #e2f4ea;
+                text-decoration: line-through;
+                text-decoration-color: rgba(28, 122, 77, 0.5);
+            }
+        }
+    }
+}
+
+// ---- Played cards ----------------------------------------------------------
+.played-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 14px;
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+    min-height: 56px;
+    align-items: center;
+
+    &.empty-note { justify-content: center; }
+
+    .mini-card { flex: 0 0 auto; }
+}
+
+// ---- Player panels ---------------------------------------------------------
+.player-panels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .player-panel {
+        position: relative; // anchors the slash overlay + floating damage number
+        flex: 1 1 170px;
+        min-width: 0;
+        background: $panel;
+        border: 1px solid $line;
+        border-radius: 14px;
+        padding: 10px 12px;
+        transition: border-color 0.15s, box-shadow 0.15s;
+
+        // Struck by the enemy: flash red behind the slash.
+        &.struck {
+            border-color: $danger;
+            animation: struck-flash 1s ease-out;
+        }
+
+        // Stage 1 of this player's own strike: the panel rears up and down.
+        &.striking { animation: strike-shake 0.5s ease-in-out; }
+
+        &.current {
+            border-color: $accent;
+            box-shadow: inset 0 0 0 2px rgba(95, 119, 198, 0.35);
+        }
+        &.me { background: #fbfcff; }
+
+        .pp-head {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            .pp-name {
+                font-weight: 800;
+                font-size: 0.9em;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .pp-badge {
+                margin-left: auto;
+                font-size: 0.6em;
+                font-weight: 800;
+                text-transform: uppercase;
+                background: #eaeefb;
+                color: $accent;
+                padding: 2px 7px;
+                border-radius: 6px;
+            }
+        }
+        .pp-stats {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 6px;
+            font-size: 0.85em;
+            font-weight: 700;
+
+            .pp-yielded {
+                font-size: 0.72em;
+                font-weight: 800;
+                text-transform: uppercase;
+                color: $muted;
+                background: #eef1f6;
+                border-radius: 6px;
+                padding: 1px 6px;
+            }
+        }
+    }
+}
+
+.pp-dot {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15em;
+    height: 1.15em;
+    vertical-align: middle;
+    svg { width: 100%; height: 100%; }
+}
+
+// ---- Enemy strike animation ------------------------------------------------
+// The red slash is clipped to the panel; the damage number is not, so it can
+// float up past the panel edge.
+// The slash sweeps corner-to-corner across the whole panel. It is clipped to the
+// panel bounds; the damage number is not, so it can float up past the top edge.
+// Used by both the player panels and the enemy panel, so it inherits their radius.
+.attack-slash {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 3;
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: -28%;
+        width: 156%;
+        height: 6px;
+        margin-top: -3px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, rgba(213, 72, 47, 0) 0%, #d5482f 18%, #ff7a5e 50%, #d5482f 82%, rgba(213, 72, 47, 0) 100%);
+        // Steep enough to run corner-to-corner on a short, wide panel.
+        transform: rotate(-28deg) scaleX(0);
+        transform-origin: left center;
+        animation: slash-wipe 0.55s ease-out forwards;
+    }
+}
+
+// Sits beside the slash (right of panel centre) and flies straight up.
+.attack-damage {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    z-index: 4;
+    pointer-events: none;
+    font-weight: 900;
+    font-size: 1.7em;
+    line-height: 1;
+    color: $danger;
+    text-shadow: 0 1px 0 #fff, 0 0 6px rgba(255, 255, 255, 0.9);
+    // 1s total: 0.5s rising + fading in, 0.5s continuing up + fading out.
+    animation: damage-rise 1s ease-out forwards;
+}
+
+// Shared by the enemy card and the player panels — whoever is throwing the blow.
+@keyframes strike-shake {
+    0%, 100% { transform: translateY(0); }
+    15% { transform: translateY(-5px); }
+    35% { transform: translateY(5px); }
+    55% { transform: translateY(-4px); }
+    75% { transform: translateY(3px); }
+}
+
+@keyframes struck-flash {
+    0% { background: #fdeeec; }
+    60% { background: #fdeeec; }
+    100% { background: $panel; }
+}
+
+@keyframes slash-wipe {
+    0% { transform: rotate(-28deg) scaleX(0); opacity: 0; }
+    10% { opacity: 1; }
+    70% { transform: rotate(-28deg) scaleX(1); opacity: 1; }
+    100% { transform: rotate(-28deg) scaleX(1); opacity: 0; }
+}
+
+// Rises continuously: fades in over the first half, out over the second.
+@keyframes damage-rise {
+    0% { opacity: 0; transform: translateY(16px); }
+    50% { opacity: 1; transform: translateY(-6px); }
+    100% { opacity: 0; transform: translateY(-32px); }
+}
+
+
+// ---- Action dock -----------------------------------------------------------
+.action-dock { margin-top: 2px; }
+
+.action-bar {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 12px 14px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    &.waiting {
+        justify-content: center;
+        color: $muted;
+        font-weight: 700;
+        font-size: 0.9em;
+    }
+    &.turn { border-color: #c3ccec; background: #f5f7fe; }
+    &.damage { border-color: #f0b3ab; background: #fdeeec; }
+    &.jester-choice { border-color: #d9c4f2; background: #f7f1fd; }
+
+    .ab-info {
+        flex: 1 1 200px;
+        min-width: 0;
+        font-size: 0.9em;
+
+        .ab-hint { color: $muted; font-weight: 600; }
+        .ab-value { color: $ink; }
+        .ab-danger {
+            font-weight: 900;
+            color: $danger;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 10px;
+        }
+        .ab-sum {
+            font-weight: 700;
+            color: $muted;
+            .ok { color: #1c7a4d; }
+            .low { color: $danger; }
+        }
+    }
+
+    .ab-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+
+        &.choose { flex: 1 1 100%; }
+    }
+
+    .choose-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 42px;
+        padding: 0 14px;
+        border-radius: 12px;
+        border: 1px solid #d9c4f2;
+        background: #fff;
+        font-weight: 800;
+        font-size: 0.86em;
+        color: #6b3fb0;
+        cursor: pointer;
+        transition: transform 0.12s, background 0.12s;
+
+        &:hover { transform: translateY(-2px); background: #f4edfc; }
+        .choose-dot { width: 1.1em; height: 1.1em; display: inline-flex; svg { width: 100%; height: 100%; } }
+    }
+}
+
+// ---- Your hand -------------------------------------------------------------
+.regicide-hand {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 8px;
+    justify-content: safe center;
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+
+    .hand-card { flex: 0 0 auto; }
+}
+
+// ---- Player card face (big rank + corner suit watermark) -------------------
+// Scoped to the player-card containers so other games / the enemy tile are
+// unaffected. Mirrors CatInTheBox / Trio mono tiles.
+.hand-card, .mini-card {
+    .playing-card-face.face-front {
+        display: block !important;
+        position: relative;
+        padding: 0 !important;
+        overflow: hidden;
+    }
+
+    .card-art-region {
+        position: absolute;
+        inset: 0;
+        margin: 0;
+        z-index: 1;
+        overflow: hidden;
+    }
+    .card-art-frame {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        overflow: visible;
+    }
+    .card-art-content {
+        position: absolute;
+        width: 76%;
+        height: 54%;
+        right: -14%;
+        bottom: -8%;
+        top: auto;
+        left: auto;
+
+        .expressive-vector-icon {
+            max-width: none;
+            max-height: none;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    }
+
+    .card-header-region {
+        position: absolute;
+        inset: 0;
+        min-height: 0;
+        padding: 0;
+        background: transparent !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+    }
+    .card-header-text { flex: none; align-items: center; justify-content: center; }
+    .card-header-title {
+        font-size: 8.5em !important;
+        font-weight: 900;
+        text-transform: none;
+        letter-spacing: -0.03em;
+        line-height: 1;
+        overflow: visible;
+    }
+    .card-header-meta { display: none; }
+}
+
+// ---- Enemy card face (crown centred, letter pinned top-left) ---------------
+.enemy-card {
+    .playing-card-face.face-front {
+        display: block !important;
+        position: relative;
+        padding: 0 !important;
+        overflow: hidden;
+    }
+    .card-art-region {
+        position: absolute;
+        inset: 12% 8% 8% 8%;
+        margin: 0;
+        z-index: 1;
+    }
+    .card-art-frame { background: transparent !important; border: none !important; }
+    .card-art-content {
+        position: absolute;
+        inset: 0;
+        .expressive-vector-icon { max-width: 100%; max-height: 100%; width: 100%; height: 100%; display: block; }
+    }
+    .card-header-region {
+        position: absolute;
+        top: 6%;
+        left: 8%;
+        right: auto;
+        min-height: 0;
+        padding: 0;
+        background: transparent !important;
+        z-index: 2;
+    }
+    .card-header-title {
+        font-size: 3.4em !important;
+        font-weight: 900;
+        line-height: 1;
+    }
+    .card-header-meta { display: none; }
+}
+
+// ---- Buttons ---------------------------------------------------------------
+.primary-btn {
+    min-height: 46px;
+    padding: 0 22px;
+    border-radius: 14px;
+    border: none;
+    background: $accent;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.92em;
+    cursor: pointer;
+    transition: transform 0.12s, filter 0.12s;
+
+    &:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.05); }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.ghost-btn {
+    min-height: 46px;
+    padding: 0 20px;
+    border-radius: 14px;
+    border: 1px solid $line;
+    background: #fff;
+    color: $muted;
+    font-weight: 700;
+    font-size: 0.92em;
+    cursor: pointer;
+
+    &:hover:not(:disabled) { background: #f2f4f8; }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.danger-btn {
+    min-height: 46px;
+    padding: 0 22px;
+    border-radius: 14px;
+    border: none;
+    background: $danger;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.92em;
+    cursor: pointer;
+    transition: transform 0.12s, filter 0.12s;
+
+    &:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.05); }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.jester-btn {
+    min-height: 46px;
+    padding: 0 18px;
+    border-radius: 14px;
+    border: 1px solid #d9c4f2;
+    background: #f7f1fd;
+    color: #6b3fb0;
+    font-weight: 800;
+    font-size: 0.9em;
+    cursor: pointer;
+
+    &:hover { transform: translateY(-2px); background: #f0e6fb; }
+}
+
+.settings-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px;
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+// ---- Game over -------------------------------------------------------------
+.game-over {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 22px 18px 20px;
+    text-align: center;
+
+    &.won { border-color: #f0d9a6; background: #fdf8ec; }
+    &.lost { border-color: #f0b3ab; background: #fdeeec; }
+
+    .go-mark {
+        width: 84px;
+        height: 84px;
+        margin: 2px auto 10px;
+        .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+    }
+    .go-title { font-size: 1.5em; font-weight: 900; letter-spacing: 0.5px; }
+    .go-reason { color: $muted; font-size: 0.92em; margin-top: 6px; }
+    .go-progress { margin-top: 10px; font-size: 0.9em; font-weight: 700; }
+
+    .go-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 16px;
+    }
+}
+
+// ---- Rules -----------------------------------------------------------------
+.regicide-rules-panel {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 80vh;
+    overflow-y: auto;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+
+    .rules-section {
+        background: #fff;
+        border: 1px solid $line;
+        border-radius: 14px;
+        padding: 14px 16px;
+
+        &.highlight { border-color: #f0c65a; background: #fdf7e6; }
+
+        h3 {
+            margin: 0 0 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.95em;
+        }
+        p { margin: 0; line-height: 1.55; font-size: 0.9em; }
+        p.small { margin-top: 8px; font-size: 0.82em; color: $muted; }
+        ul, ol { margin: 0; padding-left: 18px; line-height: 1.7; font-size: 0.9em; }
+        li { margin-bottom: 3px; }
+    }
+
+    .suit-powers {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 8px;
+
+        .suit-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            .suit-row-text {
+                .suit-row-name { font-weight: 800; font-size: 0.9em; }
+                .suit-row-desc {
+                    font-size: 0.82em;
+                    color: $muted;
+                    .when { font-weight: 800; color: $ink; }
+                }
+            }
+        }
+    }
+
+    .enemy-stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1px;
+        background: $line;
+        border: 1px solid $line;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 6px;
+
+        .es-cell {
+            background: #fff;
+            padding: 8px 10px;
+            text-align: center;
+            font-size: 0.86em;
+            font-weight: 700;
+
+            &.head {
+                background: #f2f4f8;
+                color: $muted;
+                text-transform: uppercase;
+                font-size: 0.74em;
+                letter-spacing: 0.5px;
+            }
+        }
+    }
+
+    .setup-table-wrap { overflow-x: auto; margin-top: 6px; }
+    .setup-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.86em;
+        white-space: nowrap;
+
+        th {
+            text-align: center;
+            color: $muted;
+            font-size: 0.78em;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            font-weight: 800;
+            padding: 6px 10px;
+            border-bottom: 2px solid $line;
+        }
+        td {
+            text-align: center;
+            padding: 7px 10px;
+            border-bottom: 1px solid $line;
+        }
+        td:first-child { font-weight: 800; }
+
+        .setup-current {
+            background: #eef1fb;
+            td { color: #3f4c7a; font-weight: 800; }
+        }
+    }
+}
