@@ -413,6 +413,21 @@ The minimal card: the **entire face is one flat colour**, dominated by an **over
 
 ---
 
+## Headless Terminal Inspector (`npm run inspect`)
+
+For quick, browser-free inspection — ideal for agents and CI — use the headless inspector instead of the interactive sandbox. It renders the real components (no drift) and prints to the terminal:
+
+```bash
+npm run inspect -- icon rules/skull/SkullAssets disc_skull   # ASCII preview of one icon
+npm run inspect -- card rules/trio/TrioAssets getTrioCardDefinition 7  # legibility/structure lint
+npm run inspect -- sheet presets                             # faithful .svg grid -> build/inspect/
+npm run inspect -- help
+```
+
+- **ASCII previews** let you read an icon's geometry (including negative-space discs, boolean subtracts, and faint-fill warnings) directly in text.
+- **`card` lint** flags illegible (em-compounded) text, dangling icon refs, and unknown palettes without rendering.
+- Pure helpers (`iconToAscii`, `lintCardDefinition`) live in `inspect.ts` for use from scratch scripts and tests. Full guide: [DESIGN_GUIDE §11](../../../../docs/DESIGN_GUIDE.md).
+
 ## Interactive Designer Sandbox
 
 An interactive visual designer is available to test, draft, and compile playing cards and vector icons:

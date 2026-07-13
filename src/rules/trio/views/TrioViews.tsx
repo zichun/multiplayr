@@ -515,15 +515,25 @@ export class TrioMainPage extends React.Component<TrioProps, MainState> {
     }
 
     // ---- reveal tape (the current / just-resolved sequence) ----
-    // Middle cards carry no label; hand cards show the owner's coloured lobby
-    // icon, their name, and which end (low / high) it came from.
-    private renderRevealLabel(rev: RevealedCard): React.ReactNode {
-        if (rev.source === 'middle') return null;
+    // Top strip of a reveal card: the owner's coloured lobby icon + name (hand
+    // reveals only). Middle reveals reserve the strip but render nothing, so every
+    // card face stays aligned.
+    private revealTop(rev: RevealedCard): React.ReactNode {
+        if (rev.source === 'middle') return <div className="rt-top" />;
         const pid = rev.playerId || '';
         return (
-            <div className="rt-card-label">
+            <div className="rt-top">
                 {this.badge(pid, 'rt-src-icon')}
                 <span className="rt-src-name">{this.name(pid)}</span>
+            </div>
+        );
+    }
+
+    // Bottom strip: which end (low / high) the card came from (hand reveals only).
+    private revealBottom(rev: RevealedCard): React.ReactNode {
+        if (rev.source === 'middle') return <div className="rt-bottom" />;
+        return (
+            <div className="rt-bottom">
                 <span className="rt-src-end">{rev.end === 'low' ? 'low' : 'high'}</span>
             </div>
         );
@@ -546,8 +556,9 @@ export class TrioMainPage extends React.Component<TrioProps, MainState> {
                 <div className="rt-cards">
                     {rm.reveals.map((rev, i) => (
                         <div className="rt-card" key={`${i}-${rev.source}-${rev.slotIndex ?? rev.playerId}-${rev.card}`}>
+                            {this.revealTop(rev)}
                             {staticCard(rev.card, flipped, 50)}
-                            {this.renderRevealLabel(rev)}
+                            {this.revealBottom(rev)}
                         </div>
                     ))}
                 </div>
@@ -607,8 +618,9 @@ export class TrioMainPage extends React.Component<TrioProps, MainState> {
                         return (
                             <div className={`rt-card ${isMismatch ? 'bad' : ''}`}
                                 key={`${i}-${rev.source}-${rev.slotIndex ?? rev.playerId}-${rev.card}`}>
+                                {this.revealTop(rev)}
                                 <FlipInCard number={rev.card} width={50} />
-                                {this.renderRevealLabel(rev)}
+                                {this.revealBottom(rev)}
                             </div>
                         );
                     })}

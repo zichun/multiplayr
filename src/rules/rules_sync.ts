@@ -25,6 +25,8 @@ import { JaipurRule } from './jaipur/jaipur';
 import { SplendorDuelRule } from './splendorduel/splendorduel';
 import { CatInTheBoxRule } from './catinthebox/catinthebox';
 import { TrioRule } from './trio/trio';
+import { RegicideRule } from './regicide/regicide';
+import { SkullRule } from './skull/skull';
 
 
 const CoupDebugger = NewDebuggerRule(
@@ -166,6 +168,22 @@ const CatInTheBoxDebugger = NewDebuggerRule(
 const TrioDebugger = NewDebuggerRule(
     'trio',
     TrioRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const RegicideDebugger = NewDebuggerRule(
+    'regicide',
+    RegicideRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const SkullDebugger = NewDebuggerRule(
+    'skull',
+    SkullRule,
     {
         HistoryBufferSize: 10,
         HistoryInSessionStorage: true
@@ -491,6 +509,40 @@ export const MPRULES = {
         rules: ['lobby', 'gameshell', 'trio', 'debugger'],
         rule: TrioDebugger,
         icon: '🔺',
+        minPlayers: 3,
+        maxPlayers: 6
+    },
+    'regicide': {
+        description: 'Regicide - Cooperative Card Battle',
+        rules: ['lobby', 'gameshell', 'regicide'],
+        rule: RegicideRule,
+        icon: '🗡️',
+        minPlayers: 1,
+        maxPlayers: 4
+    },
+    'regicide-debug': {
+        description: 'Regicide (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'regicide', 'debugger'],
+        rule: RegicideDebugger,
+        icon: '🗡️',
+        minPlayers: 1,
+        maxPlayers: 4
+    },
+    'skull': {
+        description: 'Skull - Bluffing & Bidding Game',
+        rules: ['lobby', 'gameshell', 'skull'],
+        rule: SkullRule,
+        icon: '💀',
+        minPlayers: 3,
+        maxPlayers: 6
+    },
+    'skull-debug': {
+        description: 'Skull (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'skull', 'debugger'],
+        rule: SkullDebugger,
+        icon: '💀',
         minPlayers: 3,
         maxPlayers: 6
     }

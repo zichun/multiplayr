@@ -426,6 +426,52 @@ export const MPRULES = {
         icon: '🔺',
         minPlayers: 3,
         maxPlayers: 6
+    },
+    'regicide': {
+        description: 'Regicide - Cooperative Card Battle',
+        rules: ['lobby', 'gameshell', 'regicide'],
+        rule: () => import('./regicide/regicide').then(m => m.RegicideRule),
+        icon: '🗡️',
+        minPlayers: 1,
+        maxPlayers: 4
+    },
+    'regicide-debug': {
+        description: 'Regicide (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'regicide', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./regicide/regicide')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('regicide', orig.RegicideRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🗡️',
+        minPlayers: 1,
+        maxPlayers: 4
+    },
+    'skull': {
+        description: 'Skull - Bluffing & Bidding Game',
+        rules: ['lobby', 'gameshell', 'skull'],
+        rule: () => import('./skull/skull').then(m => m.SkullRule),
+        icon: '💀',
+        minPlayers: 3,
+        maxPlayers: 6
+    },
+    'skull-debug': {
+        description: 'Skull (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'skull', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./skull/skull')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('skull', orig.SkullRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '💀',
+        minPlayers: 3,
+        maxPlayers: 6
     }
 };
 

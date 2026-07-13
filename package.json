@@ -8,6 +8,7 @@
 		"buildStatic": "npx webpack --env static --mode production",
 		"deploy": "npx webpack --mode development",
 		"test": "npx ts-mocha -p ./tsconfig.json src/tests/test.ts  --require ./.mochaIgnoreStyle.js",
+		"inspect": "node tools/inspect.js",
 		"start": "node ./build/app"
 	},
 	"dependencies": {

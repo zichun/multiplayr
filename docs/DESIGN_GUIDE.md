@@ -438,9 +438,44 @@ The platform default is Neo-Brutalist (Sections 1–4: black borders, hard offse
 Apply the chosen skin **consistently** to cards, board, and player panels. Don't mix a flat board with brutalist panels — a half-converted UI looks broken (we had to unify them across several passes).
 
 ### 10.11 Verify at true rendered size
-Card styling can't be trusted from code alone. Two fast loops:
-- Add a **temporary** debugger webpack entry that imports the game's `.scss` and real card definitions, renders a gallery, and screenshot it (SplendorDuel used a throwaway `splendor.preview` entry, then removed it).
-- Or just run the game.
+Card styling can't be trusted from code alone. **Start with the built-in terminal inspector** (`npm run inspect`, see §11) — it's the cheapest loop and needs no browser or webpack. For a final pixel check, open the generated `.svg` sheet, or run the game. The em-compounding (10.5) and SVG-inflation (10.4) traps are caught statically by `npm run inspect card …`; use a true-size render only to confirm. Always run `tsc --noEmit` and compile the `.scss` (`sass <file>`) after asset/style edits; the webpack build fails on TS/lint/Sass errors.
 
-Either way, verify at the **actual pixel size** — the em-compounding (10.5) and SVG-inflation (10.4) bugs only appear at true scale. Always run `tsc --noEmit` and compile the `.scss` (`sass <file>`) after asset/style edits; the webpack build fails on TS/lint/Sass errors.
+---
+
+## 11. Inspecting Cards & Icons from the Terminal (`npm run inspect`)
+
+Icons and card faces are authored as raw numbers — 0–100 viewBox geometry and em-based text — so they **cannot be trusted from source alone**. Rather than spin up webpack + a browser + a screenshot (slow, and token-heavy for an agent), use the built-in headless inspector. It renders the *real* `card-renderer` components, so its output never drifts from what ships.
+
+```bash
+npm run inspect -- icons                       # ASCII preview of every PRESET_ICON
+npm run inspect -- icons <module> [exportName] # ASCII of a game's icon map(s)
+npm run inspect -- icon  <module> <iconId>     # ASCII of one icon (+ available ids)
+npm run inspect -- card  <module> <export>     # lint a CardDefinition / array / builder fn
+npm run inspect -- sheet <module> [exportName] # write a faithful .svg grid to build/inspect/
+```
+
+`<module>` is a path under `src/` (extension optional), e.g. `rules/skull/SkullAssets` or `client/lib/card-renderer/presets`. Use `presets` as a shortcut for the library's own presets.
+
+### 11.1 ASCII icon preview (the token-cheap default)
+`icon` / `icons` rasterises an `IconObject` to a monochrome grid — one glyph per resolved colour, with a legend — so you can **read the shape directly in the terminal** without rendering. Negative-space discs (§10.3), boolean subtracts, and `ref` icons are all honoured, and faint (low-opacity) fills are flagged in the legend — which instantly exposes the "invisible watermark" bug (§10.3). Example (`npm run inspect -- icon rules/skull/SkullAssets disc_skull`): the disc body prints as one glyph and the knocked-out eyes/nose/teeth as another, so a wrong coordinate or a vanished glyph is obvious at a glance.
+
+### 11.2 Card legibility & structure lint (catches the §10.5 trap)
+`card` statically computes each text element's **effective rendered px** at a given width (`1em ≈ width_px × 0.052`) and warns when it drops below the ~4px "never ship 4px labels" floor, folding merely-small text into one advisory line. It also flags dangling icon references and unknown palette ids. Pass a builder function's args inline (JSON), and set the target width via `INSPECT_WIDTH`:
+
+```bash
+npm run inspect -- card rules/trio/TrioAssets getTrioCardDefinition 7
+INSPECT_WIDTH=120 npm run inspect -- card presets
+```
+
+### 11.3 Faithful SVG sheet (for the final human/pixel check)
+`sheet` renders every icon in a module through the actual `ExpressiveIcon` component into a single self-contained `build/inspect/<name>.svg` (git-ignored). Open that file to verify colour and geometry at true fidelity. Reserve this for the final confirmation — the ASCII preview and lint resolve most questions first, far more cheaply.
+
+### 11.4 Extending the inspector from a scratch script
+The rendering-free helpers live in `src/client/lib/card-renderer/inspect.ts` and are pure (no React/DOM), so a throwaway check is three lines:
+
+```typescript
+import { iconToAscii, lintCardDefinition } from './src/client/lib/card-renderer/inspect';
+console.log(iconToAscii(myIcon, myPalette, { savedIcons }));
+console.log(lintCardDefinition(myCardDef, { widthPx: 90, customIcons }));
+```
 
