@@ -294,6 +294,8 @@ describe('Cat in the Box Game Logic', () => {
                 assert.strictEqual(d.status, Phase.RoundEnd);
                 assert.strictEqual(d.paradoxPlayerId, 'alice');
                 assert.strictEqual(d.players['alice'].isParadox, true);
+                // Alice was stuck as the leader of a fresh trick -> no partial cards.
+                assert.strictEqual(d.paradoxTrick, null);
                 assert.strictEqual(d.players['alice'].tricksWon, 1);
                 // Paradox causer: -1 per trick, no bonus.
                 assert.strictEqual(d.players['alice'].roundScore, -1);
@@ -352,6 +354,135 @@ describe('Cat in the Box Game Logic', () => {
                 assert.strictEqual(nd.players['b'].roundBonus, 0);
                 // 'c' missed prediction -> base 0, no bonus.
                 assert.strictEqual(nd.players['c'].roundScore, 0);
+            });
+
+            it('captures the partial unresolved trick when a follower is stuck (normal mode)', () => {
+                const g = mock2pPlay(d => {
+                    d.totalTricks = 8;
+                    d.players['alice'].hand = [3];
+                    d.players['bob'].hand = [2];
+                    // Every colour at number 2 is taken -> bob (holding only 2) is stuck.
+                    d.board.red[1] = 'x';
+                    d.board.blue[1] = 'x';
+                    d.board.yellow[1] = 'x';
+                    d.board.green[1] = 'x';
+                });
+                g.play_card('alice', 3, 'blue'); // leads; bob is then stuck -> paradox
+                const d = g.get_data();
+                assert.strictEqual(d.status, Phase.RoundEnd);
+                assert.strictEqual(d.paradoxPlayerId, 'bob');
+                assert.ok(d.paradoxTrick, 'partial trick captured');
+                assert.strictEqual(d.paradoxTrick!.ledColor, 'blue');
+                assert.strictEqual(d.paradoxTrick!.culprit, null);
+                assert.deepStrictEqual(
+                    d.paradoxTrick!.plays.map(p => `${p.number}-${p.color}`),
+                    ['3-blue']
+                );
+            });
+        });
+
+        describe('Schrödinger mode', () => {
+            it('defaults to normal mode and preserves the chosen mode through from_data', () => {
+                const normal = new GameState(['a', 'b']);
+                assert.strictEqual(normal.get_mode(), 'normal');
+
+                const schro = new GameState(['a', 'b'], 'schrodinger');
+                assert.strictEqual(schro.get_mode(), 'schrodinger');
+                const rehydrated = GameState.from_data(schro.get_data(), ['a', 'b']);
+                assert.strictEqual(rehydrated.get_mode(), 'schrodinger');
+            });
+
+            it('offers every colour for every card (no hints)', () => {
+                const g = mock2pPlay(d => {
+                    d.mode = 'schrodinger';
+                    d.players['alice'].hand = [3, 4];
+                    d.board.blue[2] = 'bob';               // would be hidden in schrodinger
+                    d.players['alice'].xSlots.green = false; // locked, but still offered
+                });
+                const plays = g.get_declarable_plays('alice');
+                // 2 distinct numbers × 4 colours = 8 declarations, regardless of legality.
+                assert.strictEqual(plays.length, 8);
+                assert.ok(plays.some(p => p.number === 3 && p.color === 'blue'));
+                assert.ok(plays.some(p => p.number === 4 && p.color === 'green'));
+            });
+
+            it('lets a legal declaration proceed normally', () => {
+                const g = mock2pPlay(d => {
+                    d.mode = 'schrodinger';
+                    d.players['alice'].hand = [3];
+                    d.players['bob'].hand = [4];
+                });
+                g.play_card('alice', 3, 'blue');
+                const d = g.get_data();
+                assert.strictEqual(d.status, Phase.Play);
+                assert.strictEqual(d.board.blue[2], 'alice');
+                assert.strictEqual(d.ledColor, 'blue');
+                assert.strictEqual(d.paradoxPlayerId, null);
+            });
+
+            it('turns an impossible declaration (already-claimed cell) into a paradox on the declarer', () => {
+                const g = mock2pPlay(d => {
+                    d.mode = 'schrodinger';
+                    d.totalTricks = 8;
+                    d.players['alice'].hand = [3];
+                    d.players['alice'].tricksWon = 2; // to verify the negative score
+                    d.board.blue[2] = 'bob';          // blue-3 already claimed
+                });
+                // Normal mode would throw; Schrödinger accepts it and collapses the round.
+                g.play_card('alice', 3, 'blue');
+                const d = g.get_data();
+                assert.strictEqual(d.status, Phase.RoundEnd);
+                assert.strictEqual(d.paradoxPlayerId, 'alice');
+                assert.strictEqual(d.players['alice'].isParadox, true);
+                // Paradox causer: -1 per trick won, no bonus.
+                assert.strictEqual(d.players['alice'].roundScore, -2);
+                // The contradictory card is not placed on the board.
+                assert.strictEqual(d.board.blue[2], 'bob');
+                // The impossible declaration is captured as the culprit (no prior plays).
+                assert.ok(d.paradoxTrick);
+                assert.strictEqual(d.paradoxTrick!.plays.length, 0);
+                assert.deepStrictEqual(d.paradoxTrick!.culprit, { playerId: 'alice', number: 3, color: 'blue' });
+            });
+
+            it('makes declaring a locked-out colour a paradox', () => {
+                const g = mock2pPlay(d => {
+                    d.mode = 'schrodinger';
+                    d.totalTricks = 8;
+                    d.ledColor = 'blue';
+                    d.currentTrick = [{ playerId: 'bob', number: 1, color: 'blue' }];
+                    d.currentPlayerId = 'alice';
+                    d.players['alice'].hand = [3];
+                    d.players['alice'].xSlots.blue = false; // locked out of blue
+                });
+                g.play_card('alice', 3, 'blue');
+                const d = g.get_data();
+                assert.strictEqual(d.status, Phase.RoundEnd);
+                assert.strictEqual(d.paradoxPlayerId, 'alice');
+                // The partial trick keeps the earlier legitimate play plus the culprit.
+                assert.ok(d.paradoxTrick);
+                assert.deepStrictEqual(
+                    d.paradoxTrick!.plays.map(p => `${p.number}-${p.color}`),
+                    ['1-blue']
+                );
+                assert.deepStrictEqual(d.paradoxTrick!.culprit, { playerId: 'alice', number: 3, color: 'blue' });
+            });
+
+            it('does not auto-paradox a stuck player: they must declare (which then collapses)', () => {
+                const g = mock2pPlay(d => {
+                    d.mode = 'schrodinger';
+                    d.totalTricks = 8;
+                    d.players['alice'].hand = [2];
+                    // Every colour at number 2 is already taken -> no legal play exists.
+                    d.board.red[1] = 'bob';
+                    d.board.blue[1] = 'bob';
+                    d.board.yellow[1] = 'bob';
+                    d.board.green[1] = 'bob';
+                });
+                // No auto-detection: the round is still live until alice actually declares.
+                assert.strictEqual(g.get_data().status, Phase.Play);
+                g.play_card('alice', 2, 'red'); // any declaration is impossible -> paradox
+                assert.strictEqual(g.get_data().status, Phase.RoundEnd);
+                assert.strictEqual(g.get_data().paradoxPlayerId, 'alice');
             });
         });
     });

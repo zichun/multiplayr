@@ -252,7 +252,7 @@ describe('Trio Game Logic', () => {
             });
 
             it('spicy mode wins on two connected trios but not on unconnected ones', () => {
-                // 3 connects to 2 and 4 in the ring.
+                // Connected when sum or difference is 7: 3 + 4 = 7, but 3 & 6 are not.
                 assert.ok(areConnected(3, 4));
                 assert.ok(!areConnected(3, 6));
 
@@ -285,12 +285,29 @@ describe('Trio Game Logic', () => {
                 assert.deepStrictEqual(d.players['a'].trios.sort((x, y) => x - y), [3, 6]);
             });
 
-            it('every number has exactly two ring neighbours', () => {
+            it('connects trios whose sum or difference is 7', () => {
+                // Sum-to-7 partners.
+                assert.ok(areConnected(2, 5));   // 2 + 5 = 7
+                assert.ok(areConnected(1, 6));   // 1 + 6 = 7
+                assert.ok(areConnected(3, 4));   // 3 + 4 = 7
+                // Difference-of-7 partners.
+                assert.ok(areConnected(2, 9));   // 9 − 2 = 7
+                assert.ok(areConnected(5, 12));  // 12 − 5 = 7
+                assert.ok(areConnected(1, 8));   // 8 − 1 = 7
+                // The example from the rules: a 12 trio and a 5 trio win.
+                assert.ok(areConnected(12, 5));
+                // Non-connections.
+                assert.ok(!areConnected(3, 6));
+                assert.ok(!areConnected(4, 4));  // a number is not connected to itself
+                assert.ok(!areConnected(2, 10));
+
+                // Symmetry, and 7 has no partner (it wins instantly on its own).
                 for (let n = 1; n <= 12; n++) {
-                    assert.strictEqual(CONNECTED_NUMBERS[n].length, 2);
+                    for (const m of CONNECTED_NUMBERS[n]) {
+                        assert.ok(CONNECTED_NUMBERS[m].includes(n));
+                    }
                 }
-                assert.ok(areConnected(12, 1)); // ring wraps
-                assert.ok(areConnected(1, 12));
+                assert.strictEqual(CONNECTED_NUMBERS[7].length, 0);
             });
         });
     });

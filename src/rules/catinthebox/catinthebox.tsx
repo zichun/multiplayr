@@ -18,6 +18,7 @@ import {
 } from './views/CatInTheBoxViews';
 
 import {
+    CatInTheBoxSetMode,
     CatInTheBoxStartGame,
     CatInTheBoxDiscardCard,
     CatInTheBoxMakePrediction,
@@ -28,7 +29,7 @@ import {
     CatInTheBoxBackToLobby
 } from './CatInTheBoxMethods';
 
-import { CatInTheBoxGameState, Phase } from './CatInTheBoxGameState';
+import { CatInTheBoxGameState, Phase, CatColor, CatMode, OBSERVED } from './CatInTheBoxGameState';
 
 export const CatInTheBoxRule: GameRuleInterface = {
     name: 'catinthebox',
@@ -39,16 +40,21 @@ export const CatInTheBoxRule: GameRuleInterface = {
     },
     globalData: {
         gameState: null,
+        catMode: 'normal',
     },
     playerData: {},
 
     onDataChange: (mp: MPType) => {
         const started = mp.getData('lobby_started');
+        const pendingMode: CatMode = (mp.getData('catMode') as CatMode) === 'schrodinger'
+            ? 'schrodinger' : 'normal';
 
         const showLobby = () => {
             mp.setView(mp.hostId, 'host-lobby');
+            mp.setViewProps(mp.hostId, 'catMode', pendingMode);
             mp.playersForEach((clientId) => {
                 mp.setView(clientId, 'client-lobby');
+                mp.setViewProps(clientId, 'catMode', pendingMode);
             });
             return true;
         };
@@ -67,6 +73,35 @@ export const CatInTheBoxRule: GameRuleInterface = {
         }
 
         const stateData = gameState.get_data();
+
+        // Schrödinger mode hides every derived hint (X-token lockouts, legal-move
+        // highlighting) while the round is live — players track claimed identities from
+        // memory. The research board is still SHOWN, but frozen at its initial seeded
+        // state: pre-blocked spaces (the 2-player revealed cards) remain visible, while
+        // player tokens placed during the round are withheld. The full board is revealed
+        // once the round has ended, as the record of what actually happened.
+        const roundLive = stateData.status === Phase.Discard ||
+            stateData.status === Phase.Predict ||
+            stateData.status === Phase.Play;
+        const hideMemory = stateData.mode === 'schrodinger' && roundLive;
+
+        // Keep only the pre-block (OBSERVED) tokens; drop every player-owned token.
+        const preblock = (row: (string | null)[]) =>
+            row.map(cell => (cell === OBSERVED ? OBSERVED : null));
+        const preblockBoard: Record<CatColor, (string | null)[]> = {
+            red: preblock(stateData.board.red),
+            blue: preblock(stateData.board.blue),
+            yellow: preblock(stateData.board.yellow),
+            green: preblock(stateData.board.green)
+        };
+        const sharedBoard = hideMemory ? preblockBoard : stateData.board;
+
+        // The trick history reconstructs the board, so hide the CURRENT round's tricks
+        // while a Schrödinger round is live. Past (finished) rounds stay visible — the
+        // board resets each round, so they don't help track the current one.
+        const sharedHistory = hideMemory
+            ? stateData.trickHistory.filter(t => t.round !== stateData.round)
+            : stateData.trickHistory;
 
         // Player name / accent / lobby-icon maps (never expose raw client ids to the UI).
         const playerNames: { [id: string]: string } = {};
@@ -101,7 +136,10 @@ export const CatInTheBoxRule: GameRuleInterface = {
         stateData.playerIds.forEach((id) => {
             const p = stateData.players[id];
             publicPlayers[id] = {
-                xSlots: p.xSlots,
+                // Hide colour lockouts in Schrödinger while the round is live.
+                xSlots: hideMemory
+                    ? { red: true, blue: true, yellow: true, green: true }
+                    : p.xSlots,
                 tricksWon: p.tricksWon,
                 prediction: p.prediction,
                 hasDiscarded: p.hasDiscarded,
@@ -118,13 +156,15 @@ export const CatInTheBoxRule: GameRuleInterface = {
 
         const setViewProps = (clientId: string) => {
             mp.setViewProps(clientId, 'gameStatus', stateData.status);
+            mp.setViewProps(clientId, 'mode', stateData.mode);
+            mp.setViewProps(clientId, 'pendingMode', pendingMode);
             mp.setViewProps(clientId, 'round', stateData.round);
             mp.setViewProps(clientId, 'totalRounds', stateData.totalRounds);
             mp.setViewProps(clientId, 'numPlayers', stateData.numPlayers);
             mp.setViewProps(clientId, 'maxNum', stateData.maxNum);
             mp.setViewProps(clientId, 'totalTricks', stateData.totalTricks);
             mp.setViewProps(clientId, 'trickNumber', stateData.trickNumber);
-            mp.setViewProps(clientId, 'board', stateData.board);
+            mp.setViewProps(clientId, 'board', sharedBoard);
             mp.setViewProps(clientId, 'playerOrder', stateData.playerIds);
             mp.setViewProps(clientId, 'currentPlayerId', stateData.currentPlayerId);
             mp.setViewProps(clientId, 'trickStartPlayerId', stateData.trickStartPlayerId);
@@ -133,7 +173,8 @@ export const CatInTheBoxRule: GameRuleInterface = {
             mp.setViewProps(clientId, 'currentTrick', stateData.currentTrick);
             mp.setViewProps(clientId, 'resolvingTrick', stateData.resolvingTrick);
             mp.setViewProps(clientId, 'paradoxPlayerId', stateData.paradoxPlayerId);
-            mp.setViewProps(clientId, 'trickHistory', stateData.trickHistory);
+            mp.setViewProps(clientId, 'paradoxTrick', stateData.paradoxTrick || null);
+            mp.setViewProps(clientId, 'trickHistory', sharedHistory);
             mp.setViewProps(clientId, 'winnerId', stateData.winnerId);
             mp.setViewProps(clientId, 'lastMove', stateData.lastMove);
             mp.setViewProps(clientId, 'allowedPredictions', allowedPredictions);
@@ -146,8 +187,10 @@ export const CatInTheBoxRule: GameRuleInterface = {
             // Private: only this client's own hand + their legal plays (when active).
             const myState = stateData.players[clientId];
             mp.setViewProps(clientId, 'myHand', myState ? myState.hand : []);
+            // In Schrödinger this returns every colour (no hints); in normal mode it is
+            // the strict legal set that greys out unavailable colours.
             const legal = (stateData.status === Phase.Play && stateData.currentPlayerId === clientId)
-                ? gameState.get_legal_plays(clientId)
+                ? gameState.get_declarable_plays(clientId)
                 : [];
             mp.setViewProps(clientId, 'legalPlays', legal);
         };
@@ -164,6 +207,7 @@ export const CatInTheBoxRule: GameRuleInterface = {
     },
 
     methods: {
+        'setMode': CatInTheBoxSetMode,
         'startGame': CatInTheBoxStartGame,
         'discardCard': CatInTheBoxDiscardCard,
         'makePrediction': CatInTheBoxMakePrediction,

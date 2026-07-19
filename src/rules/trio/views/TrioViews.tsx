@@ -106,6 +106,25 @@ function trioPill(number: number, opts: { win?: boolean } = {}) {
     );
 }
 
+// A "ghost" pill for a connected trio the player has NOT collected yet: white
+// background with the number's colour as a border/text, hinting at what would
+// complete the connection in Spicy mode. When `taken` is set the connection has
+// already been claimed by another player, so it is crossed out (no longer
+// reachable for this player).
+function trioGhostPill(number: number, opts: { taken?: boolean } = {}) {
+    return (
+        <span
+            className={`trio-pill ghost ${opts.taken ? 'taken' : ''}`}
+            style={{ borderColor: trioColorHex(number), color: trioColorHex(number) }}
+            title={opts.taken
+                ? `${number} trio — connects here, but taken by another player`
+                : `${number} trio — connects here, not collected yet`}
+        >
+            {number}
+        </span>
+    );
+}
+
 // A two-sided card whose flip is driven directly by the `flipped` prop (used for
 // the frozen mismatch tape, where the flip-back timing is a parent-run stage).
 function staticCard(number: number, flipped: boolean, width = 52) {
@@ -324,20 +343,24 @@ export class TrioRulesView extends React.Component<{ mode?: GameMode; numPlayers
     }
 
     private renderConnections() {
-        // Show the ring adjacency used by Spicy mode.
+        // Show the sum/difference adjacency used by Spicy mode.
         return (
             <div className="rules-section">
                 <h3>Connected Numbers (Spicy)</h3>
                 <p style={{ marginTop: 0 }}>
-                    Each number is connected to its two neighbours around the ring 1–12 (with
-                    12 wrapping back to 1). Win by collecting <strong>two connected trios</strong>.
+                    Two trios are <strong>connected</strong> when their numbers'
+                    <strong> sum or difference is 7</strong> — e.g. the 2 trio connects to the
+                    5 trio (2 + 5 = 7) and the 9 trio (9 − 2 = 7). Win by collecting
+                    <strong> two connected trios</strong>.
                 </p>
                 <div className="conn-list">
                     {Array.from({ length: 12 }, (_, i) => i + 1).map(n => (
                         <div className="conn-row" key={n}>
                             {trioPill(n)}
                             <span className="conn-arrow">↔</span>
-                            {CONNECTED_NUMBERS[n].map(m => (
+                            {CONNECTED_NUMBERS[n].length === 0 ? (
+                                <span className="conn-none">wins instantly on its own</span>
+                            ) : CONNECTED_NUMBERS[n].map(m => (
                                 <React.Fragment key={m}>{trioPill(m)}</React.Fragment>
                             ))}
                         </div>
@@ -697,6 +720,13 @@ export class TrioMainPage extends React.Component<TrioProps, MainState> {
         const { playerOrder, publicPlayers, currentPlayerId, availableReveals, winningTrios } = this.props;
         const active = this.amActive();
         const winSet = new Set(winningTrios || []);
+        const spicy = (this.props.mode || 'simple') === 'spicy';
+        // Every trio number claimed by anyone — used to cross out connections in
+        // Spicy mode that another player has already taken.
+        const allTaken = new Set<number>();
+        for (const pid of playerOrder) {
+            for (const t of (publicPlayers[pid]?.trios || [])) allTaken.add(t);
+        }
 
         return (
             <div className="player-panels">
@@ -720,13 +750,42 @@ export class TrioMainPage extends React.Component<TrioProps, MainState> {
                             </div>
 
                             {p.trios.length > 0 && (
-                                <div className="pp-trios">
-                                    {[...p.trios].sort((a, b) => a - b).map((n, k) => (
-                                        <React.Fragment key={k}>
-                                            {trioPill(n, { win: winSet.has(n) })}
-                                        </React.Fragment>
-                                    ))}
-                                </div>
+                                spicy ? (
+                                    <div className="pp-trios spicy">
+                                        {[...p.trios].sort((a, b) => a - b).map((n, k) => {
+                                            // Show each collected trio alongside the numbers it
+                                            // connects to; connections the player hasn't collected
+                                            // yet render as ghost pills.
+                                            const collected = new Set(p.trios);
+                                            const links = CONNECTED_NUMBERS[n] || [];
+                                            return (
+                                                <div className="pp-conn" key={k}>
+                                                    {trioPill(n, { win: winSet.has(n) })}
+                                                    {links.length > 0 && (
+                                                        <>
+                                                            <span className="pp-conn-arrow">↔</span>
+                                                            {links.map(m => (
+                                                                <React.Fragment key={m}>
+                                                                    {collected.has(m)
+                                                                        ? trioPill(m, { win: winSet.has(m) })
+                                                                        : trioGhostPill(m, { taken: allTaken.has(m) })}
+                                                                </React.Fragment>
+                                                            ))}
+                                                        </>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="pp-trios">
+                                        {[...p.trios].sort((a, b) => a - b).map((n, k) => (
+                                            <React.Fragment key={k}>
+                                                {trioPill(n, { win: winSet.has(n) })}
+                                            </React.Fragment>
+                                        ))}
+                                    </div>
+                                )
                             )}
 
                             {active && (

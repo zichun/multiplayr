@@ -123,26 +123,27 @@ export function getSetupConfig(numPlayers: number): SetupConfig {
 }
 
 /**
- * Spicy-mode adjacency. In the physical game each number card prints its
- * "connected" neighbours in the corners; that data is not derivable from the
- * rules text. This encodes a clean, symmetric stand-in: the numbers 1-12 form a
- * ring, so every number is connected to the two numbers either side of it
- * (with 12 wrapping back to 1). Swap this table for the real card adjacency if
- * you have the physical cards to hand — nothing else needs to change.
+ * Spicy-mode adjacency. Two trios are "connected" when their numbers' sum or
+ * difference equals 7. For example the 2 trio connects to the 5 trio (2 + 5 = 7)
+ * and to the 9 trio (9 − 2 = 7). This table is derived from that rule for the
+ * numbers 1-12; most numbers have two partners, but the ones near the ends of
+ * the range have only one, and 7 has none (it wins instantly on its own).
  */
+export function areConnected(a: number, b: number): boolean {
+    if (a === b) return false;
+    return a + b === 7 || Math.abs(a - b) === 7;
+}
+
 export const CONNECTED_NUMBERS: Record<number, number[]> = (() => {
     const map: Record<number, number[]> = {};
     for (let n = 1; n <= 12; n++) {
-        const prev = n === 1 ? 12 : n - 1;
-        const next = n === 12 ? 1 : n + 1;
-        map[n] = [prev, next];
+        map[n] = [];
+        for (let m = 1; m <= 12; m++) {
+            if (areConnected(n, m)) map[n].push(m);
+        }
     }
     return map;
 })();
-
-export function areConnected(a: number, b: number): boolean {
-    return (CONNECTED_NUMBERS[a] || []).includes(b);
-}
 
 function shuffle<T>(arr: T[]): T[] {
     const a = [...arr];

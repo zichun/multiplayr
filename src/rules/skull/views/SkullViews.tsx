@@ -20,8 +20,8 @@ import {
     backPalette
 } from '../SkullAssets';
 
-import PlaceSound from '../../../sounds/coin_few.mp3';
-import BidSound from '../../../sounds/softnotification.mp3';
+import PlaceSound from '../../../sounds/softnotification.mp3';
+import BidSound from '../../../sounds/coin_few.mp3';
 import FlowerSound from '../../../sounds/coin_many.mp3';
 import SkullSound from '../../../sounds/sword-swing.mp3';
 import WinSound from '../../../sounds/connected.mp3';
@@ -255,6 +255,7 @@ export class SkullRulesView extends React.Component<{}, {}> {
 // ================================================================================
 interface MainState {
     bidValue: number;
+    peek: boolean;   // reveal my own hidden discs (hand + placed stack) locally
 }
 
 const RESOLVE_DELAY = 4200; // ms the host lingers on an outcome before advancing
@@ -265,8 +266,10 @@ export class SkullMainPage extends React.Component<SkullProps, MainState> {
 
     constructor(props: SkullProps) {
         super(props);
-        this.state = { bidValue: 1 };
+        this.state = { bidValue: 1, peek: false };
     }
+
+    private togglePeek = () => this.setState({ peek: !this.state.peek });
 
     public componentDidMount() {
         this.maybeScheduleProceed();
@@ -491,6 +494,15 @@ export class SkullMainPage extends React.Component<SkullProps, MainState> {
                             <div className="pp-head">
                                 {this.badge(id)}
                                 <span className="pp-name">{this.name(id)}{id === me ? ' (you)' : ''}</span>
+                                {id === me && !p.eliminated && (
+                                    <button
+                                        className="peek-btn"
+                                        onClick={this.togglePeek}
+                                        title={this.state.peek ? 'Hide your discs' : 'Peek at your discs'}
+                                    >
+                                        <FontAwesomeIcon icon={this.state.peek ? 'eye-slash' : 'eye'} />
+                                    </button>
+                                )}
                                 {p.eliminated
                                     ? <span className="pp-tag out">Out</span>
                                     : isChallenger ? <span className="pp-tag challenger">Challenger</span>
@@ -534,8 +546,10 @@ export class SkullMainPage extends React.Component<SkullProps, MainState> {
         if (p.stackCount === 0) {
             return <span className="mat-empty">no discs</span>;
         }
-        // Own private knowledge: I can see my own placed discs (I placed them).
+        // Own private knowledge: I placed these, so I MAY peek at them — but only
+        // when the eye is toggled on, so a shared screen stays hidden by default.
         const iOwnThis = id === me;
+        const canSeeOwn = iOwnThis && this.state.peek;
         const myStack = this.props.myStack; // bottom -> top
 
         const slots: React.ReactNode[] = [];
@@ -544,13 +558,13 @@ export class SkullMainPage extends React.Component<SkullProps, MainState> {
             let kind: DiscKind | 'hidden' = 'hidden';
             if (revealed) {
                 kind = p.revealedKinds[t] || 'flower';
-            } else if (iOwnThis) {
+            } else if (canSeeOwn) {
                 // Show myself what I placed (top t maps to stack index count-1-t).
                 const idx = p.stackCount - 1 - t;
                 kind = myStack[idx] || 'hidden';
             }
             const clickable = canFlip && t === p.revealed;
-            const showFace = revealed || iOwnThis;
+            const showFace = revealed || canSeeOwn;
             slots.push(
                 <div className="pile-slot" key={t} style={{ zIndex: p.stackCount - t }}>
                     <Disc
@@ -570,10 +584,24 @@ export class SkullMainPage extends React.Component<SkullProps, MainState> {
     private renderMyHandInline() {
         const flowers = this.props.myHandFlowers;
         const skulls = this.props.myHandSkulls;
-        if (flowers + skulls === 0) return <>hand empty</>;
+        const total = flowers + skulls;
+        if (total === 0) return <>hand empty</>;
+
         const pips: React.ReactNode[] = [];
-        for (let i = 0; i < flowers; i++) pips.push(<DiscGlyph key={'f' + i} kind="flower" size={16} />);
-        for (let i = 0; i < skulls; i++) pips.push(<DiscGlyph key={'s' + i} kind="skull" size={16} />);
+        if (this.state.peek) {
+            for (let i = 0; i < flowers; i++) pips.push(<DiscGlyph key={'f' + i} kind="flower" size={16} />);
+            for (let i = 0; i < skulls; i++) pips.push(<DiscGlyph key={'s' + i} kind="skull" size={16} />);
+        } else {
+            // Hidden by default: show face-down backs (count is public anyway).
+            const pal = backPalette(this.accent(this.me));
+            for (let i = 0; i < total; i++) {
+                pips.push(
+                    <span className="disc-pip" key={'h' + i} style={{ width: 16, height: 16 }}>
+                        <ExpressiveIcon icon={SKULL_ICONS.disc_back} palette={pal} />
+                    </span>
+                );
+            }
+        }
         return <>hand: {pips}</>;
     }
 

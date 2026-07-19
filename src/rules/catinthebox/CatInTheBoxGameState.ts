@@ -13,6 +13,15 @@
 
 export type CatColor = 'red' | 'blue' | 'yellow' | 'green';
 
+// Game modes:
+//  - 'normal':      original rules; the research board + legal-move hints are shown,
+//                   and the engine forbids illegal declarations / auto-detects paradox.
+//  - 'schrodinger': no board and no hints. Players track played identities from memory.
+//                   Any colour may be declared for any card; an impossible declaration
+//                   (an identity already claimed, a locked-out colour, an illegal red
+//                   lead) collapses the box: that player becomes the paradox creator.
+export type CatMode = 'normal' | 'schrodinger';
+
 // Fixed row order of the research board (top -> bottom). Red is trump / strongest.
 export const CAT_COLORS: CatColor[] = ['red', 'blue', 'yellow', 'green'];
 
@@ -78,6 +87,7 @@ export interface LastMove {
 
 export interface GameStateData {
     status: Phase;
+    mode: CatMode;               // 'normal' or 'schrodinger'
     playerIds: string[];
     numPlayers: number;
     maxNum: number;              // highest card number in play (5/6/8/9)
@@ -110,6 +120,15 @@ export interface GameStateData {
     } | null;
 
     paradoxPlayerId: string | null;
+    // Snapshot of the partially-played, unresolved trick captured when a paradox is
+    // triggered, so the round-end screen can show the cards that were on the table.
+    // `plays` are the legitimate cards played this trick; `culprit` is the impossible
+    // declaration that opened the box (Schrödinger only; null in normal mode).
+    paradoxTrick: {
+        ledColor: CatColor | null;
+        plays: TrickPlay[];
+        culprit: TrickPlay | null;
+    } | null;
     lastTrickWinnerId: string | null;
     trickHistory: CompletedTrick[]; // every resolved trick this game (across rounds)
     winnerId: string | null;     // set at GameOver (may be shared -> first of tie)
@@ -150,11 +169,12 @@ export class CatInTheBoxGameState {
     private data: GameStateData;
     private readonly playerIds: string[];
 
-    constructor(playerIds: string[]) {
+    constructor(playerIds: string[], mode: CatMode = 'normal') {
         this.playerIds = [...playerIds];
         const numPlayers = playerIds.length;
         this.data = {
             status: Phase.Lobby,
+            mode,
             playerIds: [...playerIds],
             numPlayers,
             maxNum: 0,
@@ -174,6 +194,7 @@ export class CatInTheBoxGameState {
             players: {},
             resolvingTrick: null,
             paradoxPlayerId: null,
+            paradoxTrick: null,
             lastTrickWinnerId: null,
             trickHistory: [],
             winnerId: null,
@@ -186,7 +207,12 @@ export class CatInTheBoxGameState {
     public static from_data(data: GameStateData, playerIds: string[]): CatInTheBoxGameState {
         const state = new CatInTheBoxGameState(playerIds);
         state.data = JSON.parse(JSON.stringify(data));
+        if (!state.data.mode) state.data.mode = 'normal'; // tolerate pre-mode saves
         return state;
+    }
+
+    public get_mode(): CatMode {
+        return this.data.mode;
     }
 
     public get_data(): GameStateData {
@@ -244,6 +270,7 @@ export class CatInTheBoxGameState {
         this.data.currentTrick = [];
         this.data.resolvingTrick = null;
         this.data.paradoxPlayerId = null;
+        this.data.paradoxTrick = null;
         this.data.lastTrickWinnerId = null;
         this.data.revealedTwoPlayer = [];
 
@@ -469,6 +496,25 @@ export class CatInTheBoxGameState {
         return this.get_legal_plays(playerId).length > 0;
     }
 
+    // What the UI is allowed to offer as declarations. In 'normal' mode this is the
+    // strict legal set (drives the greyed-out colour hints). In 'schrodinger' mode
+    // there are no hints: every colour may be declared for every card in hand, and
+    // the engine only discovers a paradox once an impossible one is actually played.
+    public get_declarable_plays(playerId: string): TrickPlay[] {
+        if (this.data.mode !== 'schrodinger') {
+            return this.get_legal_plays(playerId);
+        }
+        const p = this.data.players[playerId];
+        if (!p) return [];
+        const out: TrickPlay[] = [];
+        for (const number of Array.from(new Set(p.hand))) {
+            for (const color of CAT_COLORS) {
+                out.push({ playerId, number, color });
+            }
+        }
+        return out;
+    }
+
     public play_card(playerId: string, cardNumber: number, color: CatColor) {
         this.require_status(Phase.Play);
         if (playerId !== this.data.currentPlayerId) {
@@ -482,6 +528,18 @@ export class CatInTheBoxGameState {
         const legal = this.get_legal_plays(playerId);
         const isLegal = legal.some(m => m.number === cardNumber && m.color === color);
         if (!isLegal) {
+            if (this.data.mode === 'schrodinger') {
+                // No board to stop them: declaring an impossible identity opens the box
+                // and collapses the round. The declarer is the paradox creator; their
+                // token is NOT placed (the identity is contradictory).
+                p.hand.splice(p.hand.indexOf(cardNumber), 1);
+                this.trigger_paradox(
+                    playerId,
+                    `opened the box on ${colorName(color)} ${cardNumber} — PARADOX!`,
+                    { playerId, number: cardNumber, color }
+                );
+                return;
+            }
             throw new Error(`Illegal play: ${cardNumber} declared ${colorName(color)}`);
         }
 
@@ -586,23 +644,35 @@ export class CatInTheBoxGameState {
         this.maybe_paradox();
     }
 
-    // If the active player has no legal play, a paradox occurs.
+    // If the active player has no legal play, a paradox occurs. Skipped in
+    // 'schrodinger' mode: with no board to enforce the rules, nothing is auto-detected
+    // — a player only creates a paradox by actively declaring an impossible identity.
     private maybe_paradox() {
         if (this.data.status !== Phase.Play) return;
+        if (this.data.mode === 'schrodinger') return;
         if (!this.has_legal_play(this.data.currentPlayerId)) {
             this.trigger_paradox(this.data.currentPlayerId);
         }
     }
 
-    private trigger_paradox(playerId: string) {
+    private trigger_paradox(
+        playerId: string,
+        desc = 'triggered a PARADOX',
+        culprit: TrickPlay | null = null
+    ) {
         this.data.paradoxPlayerId = playerId;
         this.data.players[playerId].isParadox = true;
         // The interrupted trick simply does not resolve: cards played by earlier
         // players this trick are set aside (no winner), but the tokens already
-        // placed on the research board remain. Proceed straight to scoring.
+        // placed on the research board remain. Snapshot those cards (plus the
+        // impossible declaration, if any) so the round-end screen can display them.
+        const plays = [...this.data.currentTrick];
+        this.data.paradoxTrick = (plays.length > 0 || culprit)
+            ? { ledColor: this.data.ledColor, plays, culprit }
+            : null;
         this.data.lastMove = {
             playerId,
-            desc: 'triggered a PARADOX',
+            desc,
             moveId: ++this.data.moveCounter,
             kind: 'paradox'
         };

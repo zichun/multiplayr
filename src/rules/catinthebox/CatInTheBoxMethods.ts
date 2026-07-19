@@ -4,7 +4,7 @@
  */
 
 import { MPType } from '../../common/interfaces';
-import { CatInTheBoxGameState, GameStateData, CatColor } from './CatInTheBoxGameState';
+import { CatInTheBoxGameState, GameStateData, CatColor, CatMode } from './CatInTheBoxGameState';
 
 export const getGameState = (mp: MPType): CatInTheBoxGameState => {
     let raw = mp.getData('gameState');
@@ -24,6 +24,23 @@ const sync = (mp: MPType, gameState: CatInTheBoxGameState) => {
     mp.setData('gameState', gameState);
 };
 
+const getMode = (mp: MPType): CatMode => {
+    return (mp.getData('catMode') as CatMode) === 'schrodinger' ? 'schrodinger' : 'normal';
+};
+
+// Host chooses Normal / Schrödinger before starting (stored globally so both the
+// lobby and the in-game Settings tab reflect the pending choice; it is applied to
+// the game on start / restart).
+export const CatInTheBoxSetMode = (mp: MPType, clientId: string, mode: CatMode) => {
+    if (clientId !== mp.hostId) {
+        throw new Error('Only the host can choose the mode');
+    }
+    if (mode !== 'normal' && mode !== 'schrodinger') {
+        throw new Error('Unknown mode');
+    }
+    mp.setData('catMode', mode);
+};
+
 export const CatInTheBoxStartGame = (mp: MPType) => {
     const players = [mp.hostId];
     mp.playersForEach((clientId) => players.push(clientId));
@@ -32,7 +49,7 @@ export const CatInTheBoxStartGame = (mp: MPType) => {
         throw new Error('Cat in the Box requires 2 to 5 players.');
     }
 
-    const gameState = new CatInTheBoxGameState(players);
+    const gameState = new CatInTheBoxGameState(players, getMode(mp));
     gameState.start_game(players[0]);
 
     sync(mp, gameState);
@@ -85,7 +102,8 @@ export const CatInTheBoxRestartGame = (mp: MPType, clientId: string) => {
     }
     const players = [mp.hostId];
     mp.playersForEach((cid) => players.push(cid));
-    const gameState = new CatInTheBoxGameState(players);
+    // Restart picks up the currently selected mode (from lobby or the Settings tab).
+    const gameState = new CatInTheBoxGameState(players, getMode(mp));
     gameState.start_game(players[0]);
     sync(mp, gameState);
 };

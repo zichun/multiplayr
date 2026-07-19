@@ -26,6 +26,59 @@ $c-green: #76c4a0;
     letter-spacing: 0.5px;
 }
 
+// ---- Lobby / Settings mode toggle -------------------------------------------
+.cat-mode-toggle {
+    margin-top: 20px;
+    background: #fff;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 14px 16px;
+    font-family: 'Outfit', 'Inter', sans-serif;
+
+    .cmt-label {
+        font-size: 0.72em;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: $muted;
+        margin-bottom: 10px;
+    }
+    .cmt-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .cmt-btn {
+        flex: 1 1 150px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 2px solid $line;
+        background: #fff;
+        cursor: pointer;
+        text-align: left;
+        transition: border-color 0.15s, transform 0.12s, background 0.15s;
+
+        .cmt-name { font-weight: 800; font-size: 1.02em; color: $ink; }
+        .cmt-desc { font-size: 0.82em; color: $muted; }
+
+        &:hover { transform: translateY(-2px); }
+        &.active {
+            border-color: #7c5bb0;
+            background: #f4f1fc;
+            .cmt-name { color: #6a3fb0; }
+        }
+    }
+    .cmt-note {
+        margin-top: 10px;
+        font-size: 0.82em;
+        color: $muted;
+        line-height: 1.4;
+    }
+}
+
 // ---- Arena ------------------------------------------------------------------
 .cat-arena {
     font-family: 'Outfit', 'Inter', sans-serif;
@@ -43,7 +96,7 @@ $c-green: #76c4a0;
         align-items: center;
         gap: 10px;
 
-        .round-pill, .phase-pill {
+        .round-pill, .phase-pill, .mode-pill {
             font-size: 0.82em;
             font-weight: 700;
             padding: 5px 12px;
@@ -52,6 +105,18 @@ $c-green: #76c4a0;
         }
         .round-pill { background: #eef1f6; color: $muted; }
         .phase-pill { background: #efeafb; color: #6a5bb0; text-transform: uppercase; }
+        .mode-pill.schro { background: #efe6fb; color: #6a3fb0; margin-right: auto; }
+    }
+
+    .cat-memory-note {
+        background: #f5efff;
+        border: 1px dashed #cdb8f0;
+        color: #5a4a8c;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 0.86em;
+        font-weight: 600;
+        text-align: center;
     }
 
     .section-label {
@@ -354,6 +419,29 @@ $c-green: #76c4a0;
     }
 }
 
+// Quantum superposition: the paradox card phases left/right while a chromatic
+// cyan/magenta ghost splits to opposite sides and the whole card shimmers.
+@keyframes cat-quantum-super {
+    0% {
+        transform: translateX(-4px);
+        box-shadow: 6px 0 10px rgba(90, 200, 255, 0.55), -6px 0 10px rgba(255, 100, 210, 0.55);
+        filter: brightness(1);
+        opacity: 0.9;
+    }
+    50% {
+        transform: translateX(4px);
+        box-shadow: -6px 0 10px rgba(90, 200, 255, 0.55), 6px 0 10px rgba(255, 100, 210, 0.55);
+        filter: brightness(1.3);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-4px);
+        box-shadow: 6px 0 10px rgba(90, 200, 255, 0.55), -6px 0 10px rgba(255, 100, 210, 0.55);
+        filter: brightness(1);
+        opacity: 0.9;
+    }
+}
+
 // ---- Research board ---------------------------------------------------------
 .research-board {
     background: $panel;
@@ -526,6 +614,41 @@ $c-green: #76c4a0;
         color: #e0554f;
         font-weight: 800;
         margin: 6px 0;
+    }
+
+    // The partially-played, unresolved trick shown when a paradox ends the round.
+    .re-trick {
+        margin: 2px 0 12px;
+
+        .re-trick-label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.72em;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: $muted;
+            margin-bottom: 8px;
+
+            .led-tag {
+                font-size: 0.9em;
+                font-weight: 700;
+                padding: 3px 10px;
+                border-radius: 999px;
+                text-transform: none;
+                letter-spacing: 0;
+            }
+        }
+
+        // The impossible declaration that opened the box: the card can't decide where
+        // it is, so it shimmers and phases left/right in quantum superposition.
+        .trick-play.paradox-card .cat-card {
+            border-radius: 10px;
+            animation: cat-quantum-super 1.5s ease-in-out infinite;
+            will-change: transform, filter, box-shadow, opacity;
+        }
     }
     .go-cat {
         width: 84px;

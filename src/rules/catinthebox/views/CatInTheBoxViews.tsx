@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ViewPropsInterface } from '../../../common/interfaces';
 import { icons as LOBBY_ICONS } from '../../lobby/LobbyView';
 import {
-    Phase, CatColor, CAT_COLORS, OBSERVED, TrickPlay, CompletedTrick, LastMove, colorName, getRoundConfig
+    Phase, CatColor, CatMode, CAT_COLORS, OBSERVED, TrickPlay, CompletedTrick, LastMove, colorName, getRoundConfig
 } from '../CatInTheBoxGameState';
 import { PlayingCard } from '../../../client/lib/card-renderer/PlayingCard';
 import { ExpressiveIcon } from '../../../client/lib/card-renderer/IconEngine';
@@ -47,6 +47,8 @@ interface PublicPlayer {
 
 interface CatProps extends ViewPropsInterface {
     gameStatus: Phase;
+    mode: CatMode;          // mode the running game was started with
+    pendingMode: CatMode;   // mode selected for the next start / restart
     round: number;
     totalRounds: number;
     numPlayers: number;
@@ -67,6 +69,11 @@ interface CatProps extends ViewPropsInterface {
         resolveId: number;
     } | null;
     paradoxPlayerId: string | null;
+    paradoxTrick: {
+        ledColor: CatColor | null;
+        plays: TrickPlay[];
+        culprit: TrickPlay | null;
+    } | null;
     winnerId: string | null;
     lastMove: LastMove | null;
     allowedPredictions: number[];
@@ -132,14 +139,52 @@ function catCard(
     );
 }
 
+// ---- game mode helpers -----------------------------------------------------------
+const MODE_META: Record<CatMode, { name: string; desc: string }> = {
+    normal: { name: 'Normal', desc: 'Board + hints shown' },
+    schrodinger: { name: 'Schrödinger', desc: 'Board frozen — play from memory' }
+};
+
+function modeLabel(mode: CatMode | undefined): string {
+    return MODE_META[mode === 'schrodinger' ? 'schrodinger' : 'normal'].name;
+}
+
+// Host-only Normal / Schrödinger selector. `applyNote` is shown beneath the buttons
+// (e.g. to explain that the choice applies on restart, from the Settings tab).
+function ModeToggle(props: { mode: CatMode; onSelect: (m: CatMode) => void; applyNote?: React.ReactNode }) {
+    const active = props.mode === 'schrodinger' ? 'schrodinger' : 'normal';
+    return (
+        <div className="cat-mode-toggle">
+            <div className="cmt-label">Game Mode</div>
+            <div className="cmt-buttons">
+                {(['normal', 'schrodinger'] as CatMode[]).map(m => (
+                    <button
+                        key={m}
+                        className={`cmt-btn ${active === m ? 'active' : ''}`}
+                        onClick={() => props.onSelect(m)}
+                    >
+                        <span className="cmt-name">{MODE_META[m].name}</span>
+                        <span className="cmt-desc">{MODE_META[m].desc}</span>
+                    </button>
+                ))}
+            </div>
+            <div className="cmt-note">
+                {props.applyNote ||
+                    <span><strong>Schrödinger:</strong> no hints, and the board won&rsquo;t track plays (pre-blocked spaces stay shown) — remember them yourself. Declaring an already-used colour+number (or any impossible identity) is a paradox on you.</span>}
+            </div>
+        </div>
+    );
+}
+
 // ================================================================================
 // Lobby views
 // ================================================================================
-export class CatInTheBoxHostLobby extends React.Component<ViewPropsInterface, {}> {
+export class CatInTheBoxHostLobby extends React.Component<ViewPropsInterface & { catMode?: CatMode }, {}> {
     public render() {
         const mp = this.props.MP;
         const playerCount = mp.playersCount() + 1;
         const ok = playerCount >= 2 && playerCount <= 5;
+        const mode: CatMode = this.props.catMode === 'schrodinger' ? 'schrodinger' : 'normal';
 
         const links = {
             'home': {
@@ -148,6 +193,7 @@ export class CatInTheBoxHostLobby extends React.Component<ViewPropsInterface, {}
                 'view': (
                     <div>
                         {mp.getPluginView('lobby', 'SetNameWithLobby')}
+                        <ModeToggle mode={mode} onSelect={(m) => mp.setMode(m)} />
                         {!ok && (
                             <p style={{ color: '#e0554f', fontWeight: 700, textAlign: 'center', marginTop: 20 }}>
                                 Cat in the Box needs 2 to 5 players. Currently {playerCount}.
@@ -175,9 +221,10 @@ export class CatInTheBoxHostLobby extends React.Component<ViewPropsInterface, {}
     }
 }
 
-export class CatInTheBoxClientLobby extends React.Component<ViewPropsInterface, {}> {
+export class CatInTheBoxClientLobby extends React.Component<ViewPropsInterface & { catMode?: CatMode }, {}> {
     public render() {
         const mp = this.props.MP;
+        const mode: CatMode = this.props.catMode === 'schrodinger' ? 'schrodinger' : 'normal';
         const links = {
             'home': {
                 'icon': 'id-card',
@@ -185,7 +232,9 @@ export class CatInTheBoxClientLobby extends React.Component<ViewPropsInterface, 
                 'view': (
                     <div>
                         {mp.getPluginView('lobby', 'SetNameWithLobby')}
-                        <div className="cat-waiting">Waiting for the host to start…</div>
+                        <div className="cat-waiting">
+                            Mode: <strong>{modeLabel(mode)}</strong> · Waiting for the host to start…
+                        </div>
                     </div>
                 )
             },
@@ -276,6 +325,28 @@ export class CatInTheBoxRulesView extends React.Component<{ players?: number }, 
                     </p>
                 </div>
 
+                <div className="rules-section">
+                    <h3>Game Modes</h3>
+                    <ul>
+                        <li><strong>Normal:</strong> the shared research board and legal-move
+                            hints are shown. The board physically prevents impossible
+                            declarations, and a paradox is detected automatically when a
+                            player has no legal play.</li>
+                        <li><strong>Schrödinger:</strong> no hints, and the research board is
+                            frozen — it shows only the pre-blocked spaces (the 2-player revealed
+                            cards) and does <em>not</em> update as cards are played, so you must
+                            remember which colour+number identities have been played. You may
+                            declare <em>any</em> colour for any card; if that identity is already
+                            claimed (or is otherwise impossible), you open the box and
+                            <strong> become the paradox creator</strong>, taking the negative
+                            score. The played tokens are revealed only at the end of the round.</li>
+                    </ul>
+                    <p className="setup-note">
+                        The host picks the mode in the lobby, or in the in-game
+                        <strong> Settings</strong> tab (applied on <strong>Restart Game</strong>).
+                    </p>
+                </div>
+
                 {this.renderSetup()}
 
                 <div className="rules-section">
@@ -302,9 +373,13 @@ export class CatInTheBoxRulesView extends React.Component<{ players?: number }, 
                 <div className="rules-section">
                     <h3>Paradox</h3>
                     <p>
-                        If the active player has <strong>no legal play at all</strong>, a paradox
-                        occurs: the round ends immediately and that player <strong>loses</strong> a
-                        point per trick they won (and earns no bonus).
+                        A paradox ends the round immediately, and the player who caused it
+                        <strong> loses</strong> a point per trick they won (and earns no bonus).
+                        In <strong>Normal</strong> mode this happens automatically when the active
+                        player has <strong>no legal play at all</strong>. In <strong>Schrödinger</strong>
+                        mode it happens the moment a player declares an <strong>impossible
+                        identity</strong> — a colour+number already claimed, a colour they are
+                        locked out of, or an illegal red lead.
                     </p>
                 </div>
 
@@ -544,7 +619,7 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
                                 )}
                                 <span className="pp-stat" title="Total score">★ {p.totalScore}</span>
                             </div>
-                            <div className="pp-xslots">
+                            {this.props.mode !== 'schrodinger' && <div className="pp-xslots">
                                 {CAT_COLORS.map(c => (
                                     <span
                                         key={c}
@@ -555,7 +630,7 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
                                         {p.xSlots[c] ? '' : '✕'}
                                     </span>
                                 ))}
-                            </div>
+                            </div>}
                         </div>
                     );
                 })}
@@ -623,6 +698,7 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
 
     private renderPlayControls(myId: string) {
         const { currentPlayerId, ledColor, trickStartPlayerId, myHand } = this.props;
+        const schro = this.props.mode === 'schrodinger';
         const myTurn = currentPlayerId === myId;
         const isLeading = myTurn && this.props.currentTrick.length === 0;
         const selIdx = this.state.selectedCardIdx;
@@ -667,8 +743,10 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
                         <div className="cp-label">Declare colour for {selNum}:</div>
                         <div className="cp-buttons">
                             {CAT_COLORS.map(c => {
-                                const enabled = legalColors.includes(c);
-                                const penalty = !isLeading && ledColor && c !== ledColor && enabled;
+                                // Schrödinger: every colour is offered and no hint is shown —
+                                // an impossible declaration is on the player to avoid.
+                                const enabled = schro || legalColors.includes(c);
+                                const penalty = !schro && !isLeading && ledColor && c !== ledColor && enabled;
                                 return (
                                     <button
                                         key={c}
@@ -683,11 +761,50 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
                                 );
                             })}
                         </div>
-                        {legalColors.length === 0 && (
+                        {schro && (
+                            <div className="phase-note">Declare from memory — an already-used colour+number is a paradox.</div>
+                        )}
+                        {!schro && legalColors.length === 0 && (
                             <div className="phase-note warn">No legal colour for that card — pick another.</div>
                         )}
                     </div>
                 )}
+            </div>
+        );
+    }
+
+    // The unresolved trick that was on the table when a paradox was triggered. Shows
+    // the cards played this trick before the collapse, plus (in Schrödinger) the
+    // impossible declaration that opened the box.
+    private renderParadoxTrick() {
+        const pt = this.props.paradoxTrick;
+        if (!pt || (pt.plays.length === 0 && !pt.culprit)) return null;
+        // Rendered exactly like the live "Current Trick": cards side by side with the
+        // player's name below each (see renderTrick / the .trick-zone styling).
+        const renderCard = (p: TrickPlay, key: string | number, isCulprit: boolean) => (
+            <div className={`trick-play ${isCulprit ? 'paradox-card' : ''} ${p.color === pt.ledColor ? 'is-led' : ''}`} key={key}>
+                {catCard(p.number, p.color, { width: 48 })}
+                <div className="trick-play-name" style={{ color: this.accent(p.playerId) }}>
+                    {this.name(p.playerId)}{isCulprit ? ' ✕' : ''}
+                </div>
+            </div>
+        );
+        return (
+            <div className="re-trick">
+                <div className="re-trick-label">
+                    Unresolved Trick
+                    {pt.ledColor && (
+                        <span className="led-tag" style={{ background: CAT_COLOR_HEX[pt.ledColor], color: CAT_COLOR_TEXT[pt.ledColor] }}>
+                            Led: {colorName(pt.ledColor)}
+                        </span>
+                    )}
+                </div>
+                <div className="trick-zone">
+                    <div className="trick-plays">
+                        {pt.plays.map((p, i) => renderCard(p, i, false))}
+                        {pt.culprit && renderCard(pt.culprit, 'culprit', true)}
+                    </div>
+                </div>
             </div>
         );
     }
@@ -702,6 +819,7 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
                 {paradoxPlayerId && (
                     <div className="re-paradox">{this.name(paradoxPlayerId)} triggered a paradox!</div>
                 )}
+                {this.renderParadoxTrick()}
                 <table className="re-table">
                     <thead>
                         <tr><th>Player</th><th>Tricks</th><th>Pred.</th><th>Bonus</th><th>Round</th><th>Total</th></tr>
@@ -831,6 +949,7 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
         else if (gameStatus === Phase.RoundEnd) controls = this.renderRoundEnd();
         else if (gameStatus === Phase.GameOver) controls = this.renderGameOver();
 
+        const schro = this.props.mode === 'schrodinger';
         const showArena = gameStatus === Phase.Play || gameStatus === Phase.Predict ||
             gameStatus === Phase.Discard;
         // After the round/game ends, keep the board + hand on screen for review.
@@ -841,6 +960,7 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
             <div className="cat-arena">
                 <div className="arena-topline">
                     <span className="round-pill">Round {round + 1} / {totalRounds}</span>
+                    {schro && <span className="mode-pill schro" title="Board doesn't track plays — remember them from memory">🔮 Schrödinger</span>}
                     <span className="phase-pill">{this.phaseLabel(gameStatus)}</span>
                 </div>
 
@@ -853,6 +973,13 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
 
                         <div className="section-label">Research Board</div>
                         {this.renderBoard()}
+                        {schro && (
+                            <div className="cat-memory-note">
+                                Schrödinger mode — the board shows only pre-blocked spaces and
+                                won&rsquo;t update as cards are played. Track declared colour+number
+                                identities yourself.
+                            </div>
+                        )}
 
                         <div className="section-label">Players</div>
                         {this.renderPlayers()}
@@ -861,7 +988,7 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
 
                 {showEnd && (
                     <React.Fragment>
-                        <div className="section-label">Research Board</div>
+                        <div className="section-label">{schro ? 'Revealed Board' : 'Research Board'}</div>
                         {this.renderBoard()}
 
                         {myHand.length > 0 && (
@@ -898,11 +1025,25 @@ export class CatInTheBoxMainPage extends React.Component<CatProps, MainState> {
         };
 
         if (this.props.isHost) {
+            const pending: CatMode = this.props.pendingMode === 'schrodinger' ? 'schrodinger' : 'normal';
+            const pendingDiffers = pending !== (schro ? 'schrodinger' : 'normal');
             links['settings'] = {
                 'icon': 'cogs',
                 'label': 'Settings',
                 'view': (
                     <div className="settings-panel">
+                        <ModeToggle
+                            mode={pending}
+                            onSelect={(m) => mp.setMode(m)}
+                            applyNote={
+                                <span>
+                                    Current game: <strong>{modeLabel(this.props.mode)}</strong>.
+                                    {pendingDiffers
+                                        ? <span> Click <strong>Restart Game</strong> to apply <strong>{modeLabel(pending)}</strong>.</span>
+                                        : <span> The selected mode applies when you <strong>Restart Game</strong>.</span>}
+                                </span>
+                            }
+                        />
                         <button className="primary-btn" onClick={() => mp.restartGame()}>Restart Game</button>
                         <button className="ghost-btn" onClick={() => mp.backToLobby()}>Back to Lobby</button>
                     </div>
