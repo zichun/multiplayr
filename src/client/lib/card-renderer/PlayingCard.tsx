@@ -4,7 +4,7 @@
  */
 
 import * as React from 'react';
-import { CardDefinition, Palette, IconObject, PrimitiveShape, InteractionStyle } from './types';
+import { CardDefinition, Palette, IconObject, PrimitiveShape, InteractionStyle, OverlayLeaf, ScoreStripRegion } from './types';
 import { ExpressiveIcon } from './IconEngine';
 import { PALETTES, PRESET_ICONS } from './presets';
 import './PlayingCard.scss';
@@ -194,6 +194,175 @@ export const PlayingCard: React.FC<PlayingCardProps> = ({
     if (selectedBorderWidth !== undefined) {
         (wrapperStyle as any)['--selected-border-width'] = typeof selectedBorderWidth === 'number' ? `${selectedBorderWidth}em` : selectedBorderWidth;
     }
+
+    // ==========================================
+    // Corner badge renderer (shared by card.overlay + card.overlays)
+    // ==========================================
+    const renderOverlay = (ov: OverlayLeaf, key: React.Key) => {
+        const pos = ov.position;
+
+        // Resolve custom position offsets.
+        const overlayPositionStyle: React.CSSProperties = {};
+        if (ov.offsetY !== undefined) {
+            if (pos.startsWith('top')) overlayPositionStyle.top = `${ov.offsetY}em`;
+            else overlayPositionStyle.bottom = `${ov.offsetY}em`;
+        }
+        if (ov.offsetX !== undefined) {
+            if (pos.endsWith('left')) overlayPositionStyle.left = `${ov.offsetX}em`;
+            else overlayPositionStyle.right = `${ov.offsetX}em`;
+        }
+
+        // ---- CHIP: a flat rounded-square token carrying a glyph (+ optional value) ----
+        if (ov.shape === 'chip') {
+            const size = ov.size ?? 3.4;
+            const radius = ov.radius ?? 0.9;
+            const chipBg = ov.backgroundColor ? resolveColorKey(ov.backgroundColor, palette) : palette.primary;
+            const chipBorder = (ov.showBorder ?? false)
+                ? `${ov.borderWidth ?? 0.12}em solid ${resolveColorKey(ov.borderColor || 'border', palette)}`
+                : 'none';
+            const glyphColor = ov.color ? resolveColorKey(ov.color, palette) : palette.background;
+            const chipIcon = ov.iconId ? allIcons[ov.iconId] : null;
+            const hasValue = ov.value !== undefined && ov.value !== '';
+            const iconFrac = hasValue ? size * 0.5 : size * 0.72;
+            return (
+                <div key={key} className={`card-overlay-component card-overlay-chip overlay-${pos}`} style={overlayPositionStyle}>
+                    <div
+                        className="card-chip-badge"
+                        style={{ width: `${size}em`, height: `${size}em`, borderRadius: `${radius}em`, backgroundColor: chipBg, border: chipBorder }}
+                    >
+                        {chipIcon && (
+                            <div className="card-chip-icon" style={{ width: `${iconFrac}em`, height: `${iconFrac}em` }}>
+                                <ExpressiveIcon
+                                    icon={chipIcon}
+                                    palette={palette}
+                                    savedIcons={allIcons}
+                                    colorOverride={glyphColor}
+                                    scale={ov.scaling}
+                                />
+                            </div>
+                        )}
+                        {hasValue && (
+                            <span className="card-chip-value" style={{ color: glyphColor, fontSize: `${size * 0.42}em` }}>{ov.value}</span>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // ---- LEAF: the classic bookmark ribbon ----
+        let overlayIcon = ov.iconId ? allIcons[ov.iconId] : null;
+        if (overlayIcon) {
+            const showBorder = ov.showBorder ?? true;
+            const borderWidth = ov.borderWidth !== undefined ? ov.borderWidth : 0.288;
+            const hasBorderOverride = ov.borderColor !== undefined;
+            const hasBgOverride = ov.backgroundColor !== undefined;
+
+            const t = showBorder ? Math.max(0, Math.min(25, borderWidth * 20.833)) : 0;
+            const innerRectScaleX = (60 - 2 * t) / 50;
+            const innerRectScaleY = (80 - t) / 50;
+            const innerRectY = 40 - t / 2;
+            const innerTriScaleX = (60 - 2 * t) / 50;
+            const innerTriScaleY = 0.8;
+            const innerTriY = 80 - t;
+
+            overlayIcon = {
+                ...overlayIcon,
+                layers: overlayIcon.layers.map(layer => {
+                    if (layer.id === 'lf_base_rect') {
+                        const shape = layer as PrimitiveShape;
+                        return { ...shape, fill: hasBorderOverride ? ov.borderColor! : shape.fill, opacity: showBorder ? (shape.opacity ?? 1) : 0 };
+                    }
+                    if (layer.id === 'lf_base_tri') {
+                        const shape = layer as PrimitiveShape;
+                        return { ...shape, opacity: showBorder ? (shape.opacity ?? 1) : 0 };
+                    }
+                    if (layer.id === 'lf_gold_rect') {
+                        const shape = layer as PrimitiveShape;
+                        return { ...shape, fill: hasBgOverride ? ov.backgroundColor! : shape.fill, scaleX: innerRectScaleX, scaleY: innerRectScaleY, y: innerRectY };
+                    }
+                    if (layer.id === 'lf_gold_tri') {
+                        const shape = layer as PrimitiveShape;
+                        return { ...shape, scaleX: innerTriScaleX, scaleY: innerTriScaleY, y: innerTriY };
+                    }
+                    return layer;
+                })
+            };
+        }
+
+        return (
+            <div key={key} className={`card-overlay-component overlay-${pos}`} style={overlayPositionStyle}>
+                <div className="overlay-leaf-badge">
+                    {overlayIcon ? (
+                        <div className="overlay-leaf-icon">
+                            <ExpressiveIcon icon={overlayIcon} palette={palette} savedIcons={allIcons} scale={ov.scaling} />
+                        </div>
+                    ) : (
+                        <div
+                            style={{
+                                position: 'absolute',
+                                width: '100%',
+                                height: '100%',
+                                backgroundColor: resolveColorKey(ov.backgroundColor || 'charcoal', palette),
+                                borderRadius: '50%',
+                                border: (ov.showBorder ?? true)
+                                    ? `${ov.borderWidth ?? 0.1}em solid ${resolveColorKey(ov.borderColor || 'border', palette)}`
+                                    : 'none'
+                            }}
+                        />
+                    )}
+                    <span
+                        className="overlay-leaf-value"
+                        style={{ color: ov.color ? resolveColorKey(ov.color, palette) : palette.text }}
+                    >
+                        {ov.value}
+                    </span>
+                </div>
+            </div>
+        );
+    };
+
+    // ==========================================
+    // Edge-pinned score / threshold strip renderer
+    // ==========================================
+    const renderScoreStrip = (strip: ScoreStripRegion) => {
+        const pos = strip.position ?? 'left';
+        const orient = strip.orientation ?? 'vertical';
+        const align = strip.align ?? 'center';
+        const gap = strip.gap ?? 0.35;
+        const cellSize = strip.cellSize ?? 2.15;   // cell value font-size (em) — app-configurable
+        const iconSize = strip.iconSize ?? 1.65;   // cell icon size (em) — app-configurable
+        const stripBg = resolveBg(strip.background, 'transparent');
+        const defColor = strip.color ? resolveColorKey(strip.color, palette) : palette.text;
+        const justifyMap: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end' };
+
+        return (
+            <div
+                className={`card-score-strip strip-${pos} strip-${orient}`}
+                style={{ justifyContent: justifyMap[align], gap: `${gap}em`, backgroundColor: stripBg }}
+            >
+                {strip.cells.map((cell, i) => {
+                    const cellColor = cell.color ? resolveColorKey(cell.color, palette) : defColor;
+                    const icon = cell.iconId ? allIcons[cell.iconId] : null;
+                    // Inline font-size makes the app-supplied size authoritative (inline
+                    // styles beat the stylesheet — see DESIGN_GUIDE §10.6).
+                    return (
+                        <div
+                            key={i}
+                            className={`score-cell ${cell.active ? 'active' : ''} ${cell.muted ? 'muted' : ''}`}
+                            style={{ color: cellColor, fontSize: `${cellSize}em` }}
+                        >
+                            {icon && (
+                                <span className="score-cell-icon" style={{ width: `${iconSize}em`, height: `${iconSize}em` }}>
+                                    <ExpressiveIcon icon={icon} palette={palette} savedIcons={allIcons} colorOverride={cellColor} />
+                                </span>
+                            )}
+                            {cell.value !== undefined && <span className="score-cell-value">{cell.value}</span>}
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
 
     const dimensionsLabel = `${widthMm}mm x ${heightMm}mm (r: ${borderRadiusMm}mm)`;
 
@@ -418,7 +587,11 @@ export const PlayingCard: React.FC<PlayingCardProps> = ({
                         >
                             <div
                                 className={`card-footer-text footer-align-${card.footer.align ?? 'center'}`}
-                                style={{ color: palette.charcoal }}
+                                style={{
+                                    color: card.footer.color ? resolveColorKey(card.footer.color, palette) : palette.charcoal,
+                                    fontStyle: card.footer.italic === false ? 'normal' : undefined,
+                                    fontWeight: card.footer.weight
+                                }}
                             >
                                 {card.footer.text}
                             </div>
@@ -426,131 +599,15 @@ export const PlayingCard: React.FC<PlayingCardProps> = ({
                     )}
 
                     {/* ==========================================
-                     * 5. Composable Overlays (e.g. Top-Left Leaf)
+                     * 5. Edge-pinned score / threshold strip
                      * ========================================== */}
-                    {card.overlay && (() => {
-                        const pos = card.overlay.position;
-                        
-                        // 1. Resolve custom position offsets
-                        const overlayPositionStyle: React.CSSProperties = {};
-                        if (card.overlay.offsetY !== undefined) {
-                            if (pos.startsWith('top')) {
-                                overlayPositionStyle.top = `${card.overlay.offsetY}em`;
-                            } else {
-                                overlayPositionStyle.bottom = `${card.overlay.offsetY}em`;
-                            }
-                        }
-                        if (card.overlay.offsetX !== undefined) {
-                            if (pos.endsWith('left')) {
-                                overlayPositionStyle.left = `${card.overlay.offsetX}em`;
-                            } else {
-                                overlayPositionStyle.right = `${card.overlay.offsetX}em`;
-                            }
-                        }
+                    {card.scoreStrip && renderScoreStrip(card.scoreStrip)}
 
-                        // 2. Resolve custom icon layer overrides (border, background, visibility, thickness)
-                        let overlayIcon = card.overlay.iconId ? allIcons[card.overlay.iconId] : null;
-                        if (overlayIcon) {
-                            const showBorder = card.overlay.showBorder ?? true;
-                            const borderWidth = card.overlay.borderWidth !== undefined ? card.overlay.borderWidth : 0.288;
-                            const hasBorderOverride = card.overlay.borderColor !== undefined;
-                            const hasBgOverride = card.overlay.backgroundColor !== undefined;
-
-                            // Convert borderWidth from em to SVG units (where 4.8em badge width = 100 SVG units)
-                            const t = showBorder ? Math.max(0, Math.min(25, borderWidth * 20.833)) : 0;
-
-                            // Calculate the new inner ribbon scale and positions
-                            const innerRectScaleX = (60 - 2 * t) / 50;
-                            const innerRectScaleY = (80 - t) / 50;
-                            const innerRectY = 40 - t / 2;
-
-                            const innerTriScaleX = (60 - 2 * t) / 50;
-                            const innerTriScaleY = 0.8;
-                            const innerTriY = 80 - t;
-
-                            overlayIcon = {
-                                ...overlayIcon,
-                                layers: overlayIcon.layers.map(layer => {
-                                    if (layer.id === 'lf_base_rect') {
-                                        const shape = layer as PrimitiveShape;
-                                        return {
-                                            ...shape,
-                                            fill: hasBorderOverride ? card.overlay!.borderColor! : shape.fill,
-                                            opacity: showBorder ? (shape.opacity ?? 1) : 0
-                                        };
-                                    }
-                                    if (layer.id === 'lf_base_tri') {
-                                        const shape = layer as PrimitiveShape;
-                                        return {
-                                            ...shape,
-                                            opacity: showBorder ? (shape.opacity ?? 1) : 0
-                                        };
-                                    }
-
-                                    if (layer.id === 'lf_gold_rect') {
-                                        const shape = layer as PrimitiveShape;
-                                        return {
-                                            ...shape,
-                                            fill: hasBgOverride ? card.overlay!.backgroundColor! : shape.fill,
-                                            scaleX: innerRectScaleX,
-                                            scaleY: innerRectScaleY,
-                                            y: innerRectY
-                                        };
-                                    }
-                                    if (layer.id === 'lf_gold_tri') {
-                                        const shape = layer as PrimitiveShape;
-                                        return {
-                                            ...shape,
-                                            scaleX: innerTriScaleX,
-                                            scaleY: innerTriScaleY,
-                                            y: innerTriY
-                                        };
-                                    }
-
-                                    return layer;
-                                })
-                            };
-                        }
-
-                        return (
-                            <div 
-                                className={`card-overlay-component overlay-${pos}`}
-                                style={overlayPositionStyle}
-                            >
-                                <div className="overlay-leaf-badge">
-                                    {overlayIcon ? (
-                                        <div className="overlay-leaf-icon">
-                                            <ExpressiveIcon
-                                                icon={overlayIcon}
-                                                palette={palette}
-                                                savedIcons={allIcons}
-                                                scale={card.overlay.scaling}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                width: '100%',
-                                                height: '100%',
-                                                backgroundColor: resolveColorKey(card.overlay.backgroundColor || 'charcoal', palette),
-                                                borderRadius: '50%',
-                                                border: (card.overlay.showBorder ?? true)
-                                                    ? `${card.overlay.borderWidth ?? 0.1}em solid ${resolveColorKey(card.overlay.borderColor || 'border', palette)}`
-                                                    : 'none'
-                                            }}
-                                        />
-                                    )}
-                                    <span
-                                        className="overlay-leaf-value"
-                                        style={{ color: card.overlay.color ? resolveColorKey(card.overlay.color, palette) : palette.text }}
-                                    >
-                                        {card.overlay.value}
-                                    </span>
-                                </div>
-                            </div>
-                        );
-                    })()}
+                    {/* ==========================================
+                     * 6. Composable Overlays (leaf ribbons + chip badges)
+                     * ========================================== */}
+                    {card.overlay && renderOverlay(card.overlay, 'overlay-single')}
+                    {card.overlays && card.overlays.map((ov, i) => renderOverlay(ov, `overlay-${i}`))}
                 </div>
 
                 {/* ==========================================

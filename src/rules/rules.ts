@@ -450,6 +450,29 @@ export const MPRULES = {
         minPlayers: 1,
         maxPlayers: 4
     },
+    'seasalt': {
+        description: 'Sea Salt & Paper - Push-Your-Luck Set Collection',
+        rules: ['lobby', 'gameshell', 'seasalt'],
+        rule: () => import('./seasalt/seasalt').then(m => m.SeaSaltRule),
+        icon: '🐚',
+        minPlayers: 2,
+        maxPlayers: 4
+    },
+    'seasalt-debug': {
+        description: 'Sea Salt & Paper (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'seasalt', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./seasalt/seasalt')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('seasalt', orig.SeaSaltRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🐚',
+        minPlayers: 2,
+        maxPlayers: 4
+    },
     'skull': {
         description: 'Skull - Bluffing & Bidding Game',
         rules: ['lobby', 'gameshell', 'skull'],

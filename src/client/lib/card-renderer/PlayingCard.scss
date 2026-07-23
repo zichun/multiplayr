@@ -335,6 +335,123 @@
 }
 
 /* ------------------------------------------
+ * Chip badge overlay (flat rounded-square token)
+ * ------------------------------------------ */
+.card-overlay-chip {
+    /* Chips hug the corner tighter than the leaf ribbon (no overhang). */
+    &.overlay-top-left { transform: translate(0, 0); }
+    &.overlay-top-right { transform: translate(0, 0); }
+    &.overlay-bottom-left { transform: translate(0, 0); }
+    &.overlay-bottom-right { transform: translate(0, 0); }
+}
+
+.card-chip-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    line-height: 1;
+    box-shadow: 0 0.08em 0.25em rgba(0, 0, 0, 0.12);
+}
+
+.card-chip-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .expressive-vector-icon {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+.card-chip-value {
+    /* font-size is set inline from the overlay `size` (app-configurable). */
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    margin-top: 0.05em;
+}
+
+/* ------------------------------------------
+ * Score / threshold strip (edge-pinned)
+ * ------------------------------------------ */
+.card-score-strip {
+    position: absolute;
+    z-index: 8;
+    display: flex;
+    align-items: center;          /* cross-axis: centre cells horizontally in a vertical strip */
+    pointer-events: none;
+    padding: 0.6em 0.5em;
+
+    &.strip-vertical {
+        top: 0;
+        bottom: 0;
+        flex-direction: column;
+    }
+
+    &.strip-horizontal {
+        left: 0;
+        right: 0;
+        bottom: 0;
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    &.strip-left { left: 0; }
+    &.strip-right { right: 0; }
+    &.strip-horizontal.strip-right { top: 0; bottom: auto; }
+}
+
+.score-cell {
+    /* font-size (cell value) and .score-cell-icon size are set inline from the
+       ScoreStripRegion `cellSize` / `iconSize` (app-configurable). */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    line-height: 1;
+    min-width: 1.65em;
+    text-align: center;
+    /* Every cell sits on a crisp light pill so numbers stay legible even over the
+       central art. */
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 0.4em;
+    padding: 0.14em 0.32em;
+    box-shadow: 0 0.03em 0.14em rgba(0, 0, 0, 0.16);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+
+    .score-cell-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.12em;
+
+        .expressive-vector-icon {
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    .score-cell-value {
+        font-size: 1em;
+    }
+
+    /* Reached threshold: fully opaque pill, enlarged. */
+    &.active {
+        background: #ffffff;
+        box-shadow: 0 0.06em 0.24em rgba(0, 0, 0, 0.22);
+        transform: scale(1.16);
+    }
+
+    /* Not yet reached: dimmed. */
+    &.muted {
+        opacity: 0.5;
+    }
+}
+
+/* ------------------------------------------
  * Exploded Wireframe Mode (Debugging Grid)
  * ------------------------------------------ */
 

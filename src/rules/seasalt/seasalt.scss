@@ -1,0 +1,754 @@
+/**
+ * seasalt.scss - Styling for Sea Salt & Paper.
+ * Flat minimalist skin (soft ocean palette, hairline borders, soft radius,
+ * no hard offset shadows) — matches the SplendorDuel reference.
+ */
+
+$ink: #21384a;
+$muted: #6b8194;
+$line: #dbe6ec;
+$panel: #ffffff;
+$sea: #2b8aa6;
+$sea-soft: #e6f2f6;
+$sand: #f3ede0;
+$stop: #2ea36b;
+$risk: #e08a2b;
+
+.ss-arena,
+.ss-rules-panel {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+}
+
+.ss-warn {
+    color: #d5482f;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 18px;
+}
+
+.ss-waiting {
+    margin-top: 16px;
+    padding: 14px;
+    text-align: center;
+    background: $sea-soft;
+    border-radius: 12px;
+    color: $sea;
+    font-weight: 700;
+}
+
+// ------------------------------------------------------------------
+// Arena scaffolding
+// ------------------------------------------------------------------
+.ss-arena {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.ss-section-label {
+    font-size: 0.72em;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: $muted;
+    margin: 6px 0 -4px;
+}
+
+.ss-banner {
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-weight: 800;
+    text-align: center;
+    background: $sea-soft;
+    color: $sea;
+    letter-spacing: 0.01em;
+
+    &.mine {
+        background: #d8f0e4;
+        color: #1c6f48;
+    }
+
+    &.lc {
+        background: #fbe7cf;
+        color: #9a5a10;
+    }
+}
+
+// ------------------------------------------------------------------
+// Fly-card animation layer (draw / take)
+// ------------------------------------------------------------------
+.ss-fly-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3000;
+}
+
+.ss-fly-card {
+    position: fixed;
+    pointer-events: none;
+    transform-origin: center center;
+    will-change: left, top, transform, opacity;
+    transition:
+        left 0.72s cubic-bezier(0.34, 0.62, 0.3, 1),
+        top 0.72s cubic-bezier(0.34, 0.62, 0.3, 1),
+        transform 0.72s cubic-bezier(0.34, 0.62, 0.3, 1),
+        opacity 0.72s ease-in;
+    filter: drop-shadow(0 6px 14px rgba(24, 44, 58, 0.28));
+}
+
+// ------------------------------------------------------------------
+// Inline draw-choice panel (non-blocking — hand & tabs stay accessible)
+// ------------------------------------------------------------------
+.ss-draw-panel {
+    background: $sea-soft;
+    border: 2px solid #a6d6e2;
+    border-radius: 16px;
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 14px rgba(43, 138, 166, 0.12);
+}
+
+.ss-draw-panel-title {
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-size: 0.86em;
+    color: $sea;
+    text-align: center;
+}
+
+// ------------------------------------------------------------------
+// Shared table zone (deck + two discard piles)
+// ------------------------------------------------------------------
+.ss-shared {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: safe center;
+    padding: 14px 16px;
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+}
+
+.ss-deck,
+.ss-discard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    border-radius: 12px;
+    padding: 8px;
+    transition: transform 0.15s ease, background 0.15s ease;
+
+    &.clickable {
+        cursor: pointer;
+        background: #f3faf7;
+        box-shadow: inset 0 0 0 2px #b9e3cf;
+
+        &:hover { transform: translateY(-3px); }
+        &:active { transform: translateY(1px); }
+    }
+}
+
+.ss-deck-count {
+    font-size: 0.74em;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $muted;
+}
+
+.ss-deck-empty {
+    width: 84px;
+    height: 118px;
+    border: 2px dashed $line;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $muted;
+    font-size: 0.8em;
+    font-weight: 700;
+}
+
+.ss-zone-hint {
+    position: absolute;
+    top: -8px;
+    right: -6px;
+    background: $stop;
+    color: #fff;
+    font-size: 0.66em;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+}
+
+// ------------------------------------------------------------------
+// Player panels
+// ------------------------------------------------------------------
+.ss-players {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    & > .ss-player { flex: 1 1 240px; min-width: 0; }
+}
+
+.ss-player {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    &.current { border-color: #b9dbe6; box-shadow: 0 0 0 2px #d8eef4; }
+    &.me { background: #fbfdff; }
+}
+
+.ss-player-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+
+    .ss-player-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ss-player-score {
+        font-size: 1.15em;
+        font-weight: 900;
+        color: $sea;
+        min-width: 1.4em;
+        text-align: right;
+    }
+}
+
+.ss-turn-pill,
+.ss-revealed-pill {
+    font-size: 0.62em;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+}
+.ss-turn-pill { background: $sea; color: #fff; }
+.ss-revealed-pill { background: #eee3f5; color: #6b3fa0; }
+
+.ss-player-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 0.82em;
+    font-weight: 700;
+    color: $muted;
+}
+
+.ss-tableau,
+.ss-revealed-hand {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding-top: 4px;
+}
+.ss-revealed-hand {
+    border-top: 1px dashed $line;
+    margin-top: 2px;
+}
+
+.ss-dot {
+    width: 1.5em;
+    height: 1.5em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1em;
+}
+
+// ------------------------------------------------------------------
+// My hand + score panel
+// ------------------------------------------------------------------
+.ss-score-panel {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 14px;
+    padding: 10px 16px;
+
+    &.gate-open {
+        border-color: #bfe6cd;
+        background: #f4fbf7;
+    }
+
+    .ss-score-total {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        line-height: 1;
+
+        .ss-score-num { font-size: 2em; font-weight: 900; color: $sea; }
+        .ss-score-lbl { font-size: 0.62em; font-weight: 800; text-transform: uppercase; color: $muted; letter-spacing: 0.05em; }
+    }
+
+    .ss-score-break {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-weight: 800;
+        color: $ink;
+        font-size: 0.95em;
+
+        span { background: #f1f5f8; border-radius: 8px; padding: 3px 8px; }
+    }
+
+    .ss-gate-hint {
+        flex: 1 1 100%;
+        font-size: 0.8em;
+        font-weight: 700;
+        color: $muted;
+    }
+    &.gate-open .ss-gate-hint { color: #1c6f48; }
+}
+
+.ss-hand-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 6px 0 -4px;
+}
+
+.ss-hand-sort {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .ss-sort-label {
+        font-size: 0.7em;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: $muted;
+    }
+
+    .ss-sort-btn {
+        font-family: inherit;
+        font-weight: 800;
+        font-size: 0.74em;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: $muted;
+        background: $panel;
+        border: 1px solid $line;
+        border-radius: 999px;
+        padding: 5px 12px;
+        min-height: 32px;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+        &:hover { background: $sea-soft; }
+        &.active {
+            background: $sea;
+            border-color: $sea;
+            color: #fff;
+        }
+    }
+}
+
+.ss-hand {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 14px 16px;
+    background: $sand;
+    border-radius: 16px;
+    justify-content: safe center;
+
+    &.empty-note {
+        color: $muted;
+        font-weight: 700;
+        justify-content: center;
+        padding: 22px;
+    }
+}
+
+.ss-hand-play {
+    flex: 1 1 100%;
+    display: flex;
+    justify-content: center;
+    padding-top: 6px;
+}
+
+// ------------------------------------------------------------------
+// Action bar
+// ------------------------------------------------------------------
+.ss-actionbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    padding: 4px 0 8px;
+}
+
+.ss-btn {
+    background: $panel;
+    color: $ink;
+    border: 1px solid #d3dde4;
+    border-radius: 10px;
+    font-family: inherit;
+    font-weight: 800;
+    padding: 9px 18px;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: transform 0.1s, filter 0.15s, background 0.15s;
+
+    &:hover { transform: translateY(-1px); filter: brightness(0.99); }
+    &:active { transform: translateY(1px); }
+    &:disabled {
+        background: #f0f3f5 !important;
+        color: #a9b4bc !important;
+        border-color: #e4eaee !important;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    &.primary { background: $sea; color: #fff; border-color: $sea; }
+    &.stop { background: $stop; color: #fff; border-color: $stop; }
+    &.lastchance { background: $risk; color: #fff; border-color: $risk; }
+    &.steal {
+        text-transform: none;
+        justify-content: flex-start;
+        width: 100%;
+        gap: 10px;
+        .ss-mini { margin-left: auto; }
+    }
+}
+
+.ss-mini { font-size: 0.8em; font-weight: 700; opacity: 0.7; }
+
+// ------------------------------------------------------------------
+// Modals (draw choice / crab / steal)
+// ------------------------------------------------------------------
+.ss-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(24, 44, 58, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 18px;
+}
+
+.ss-modal {
+    background: $panel;
+    border-radius: 18px;
+    box-shadow: 0 14px 36px rgba(24, 44, 58, 0.24);
+    padding: 22px;
+    width: 100%;
+    max-width: 420px;
+    max-height: 88vh;
+    overflow-y: auto;
+
+    &.wide { max-width: 640px; }
+
+    h3 {
+        margin: 0 0 16px;
+        text-transform: uppercase;
+        font-size: 1.15em;
+        letter-spacing: 0.03em;
+        border-bottom: 2px solid $line;
+        padding-bottom: 10px;
+    }
+}
+
+.ss-draw-pair {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+}
+
+.ss-draw-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+
+    .ss-draw-tag {
+        font-size: 0.68em;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: $muted;
+        letter-spacing: 0.04em;
+    }
+    &.chosen .ss-draw-tag { color: $stop; }
+}
+
+.ss-draw-discard { margin-top: 18px; }
+.ss-draw-hint {
+    text-align: center;
+    font-weight: 700;
+    color: $muted;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+}
+.ss-pile-choice { display: flex; gap: 12px; justify-content: center; }
+
+.ss-crab-piles {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.ss-crab-pile { flex: 1 1 240px; min-width: 0; }
+.ss-crab-pile-head {
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 0.8em;
+    color: $muted;
+    margin-bottom: 8px;
+}
+.ss-crab-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-height: 46vh;
+    overflow-y: auto;
+    padding: 4px;
+}
+.ss-crab-card { cursor: pointer; }
+.ss-empty-note { color: $muted; font-size: 0.85em; font-weight: 700; padding: 8px; }
+
+.ss-steal-targets { display: flex; flex-direction: column; gap: 8px; }
+
+// ------------------------------------------------------------------
+// Round-end & game-over
+// ------------------------------------------------------------------
+.ss-roundend,
+.ss-gameover {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 18px;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+    text-align: center;
+}
+
+.ss-roundend-title,
+.ss-go-title {
+    font-size: 1.5em;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    color: $sea;
+}
+.ss-go-title { font-size: 2em; }
+.ss-go-reason { color: $muted; font-weight: 600; font-style: italic; margin-top: -8px; }
+
+.ss-score-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92em;
+
+    th {
+        text-transform: uppercase;
+        font-size: 0.72em;
+        letter-spacing: 0.05em;
+        color: $muted;
+        padding: 6px 8px;
+        border-bottom: 2px solid $line;
+    }
+    td {
+        padding: 8px;
+        border-bottom: 1px solid $line;
+        font-weight: 700;
+    }
+    .gain { color: $stop; }
+    .total { font-weight: 900; color: $ink; }
+    tr.ender td, tr.winner-row td { background: #f3faf7; }
+}
+
+.ss-threshold-note,
+.ss-wait-host {
+    font-size: 0.82em;
+    color: $muted;
+    font-weight: 700;
+}
+
+.ss-go-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+.ss-settings { display: flex; flex-direction: column; gap: 10px; max-width: 320px; margin: 0 auto; }
+
+// ------------------------------------------------------------------
+// Rules panel
+// ------------------------------------------------------------------
+.ss-rules-panel {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 20px;
+    max-width: 720px;
+    margin: 0 auto;
+
+    .rules-section {
+        margin-bottom: 18px;
+
+        h3 {
+            text-transform: uppercase;
+            font-size: 1.05em;
+            letter-spacing: 0.03em;
+            border-bottom: 2px solid $line;
+            padding-bottom: 6px;
+            margin: 0 0 10px;
+        }
+        ul { margin: 0; padding-left: 20px; }
+        li { margin: 5px 0; }
+
+        &.highlight {
+            background: $sea-soft;
+            border-radius: 12px;
+            padding: 14px 16px;
+            border: none;
+            h3 { border-color: #bfe0e9; }
+        }
+    }
+
+    .ss-colorbonus-note { font-size: 0.9em; color: $muted; font-style: italic; margin-bottom: 0; }
+}
+
+.ss-rule-sub {
+    font-size: 0.62em;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: 0;
+    color: $muted;
+    margin-left: 6px;
+}
+
+.ss-rule-entries {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 18px;
+}
+
+.ss-rule-entry {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1 1 300px;
+    min-width: 0;
+}
+
+.ss-rule-cards {
+    display: flex;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+
+.ss-rule-cardwrap {
+    position: relative;
+    display: flex;
+
+    .ss-rule-count {
+        position: absolute;
+        bottom: -6px;
+        right: -6px;
+        background: $ink;
+        color: #fff;
+        font-size: 0.72em;
+        font-weight: 800;
+        border-radius: 999px;
+        padding: 2px 7px;
+        box-shadow: 0 1px 3px rgba(24, 44, 58, 0.3);
+    }
+}
+
+.ss-rule-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+
+    strong { font-size: 0.98em; }
+    span { font-size: 0.86em; color: $muted; line-height: 1.4; }
+}
+
+.ss-mermaid-notes {
+    margin: 12px 0 0;
+    padding-left: 20px;
+    li { margin: 4px 0; font-size: 0.9em; }
+}
+
+// Cards-by-colour breakdown
+.ss-color-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ss-color-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    background: #f7f9fb;
+
+    .ss-color-swatch {
+        flex: 0 0 auto;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        font-size: 0.85em;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    }
+
+    .ss-color-name {
+        flex: 0 0 62px;
+        font-weight: 800;
+        font-size: 0.9em;
+    }
+
+    .ss-color-types {
+        flex: 1 1 auto;
+        font-size: 0.82em;
+        color: $muted;
+        line-height: 1.35;
+        min-width: 0;
+    }
+}
+
+.ss-color-note {
+    font-size: 0.82em;
+    color: $muted;
+    font-style: italic;
+    margin: 12px 0 0;
+}

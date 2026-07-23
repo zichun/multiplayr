@@ -139,14 +139,23 @@ export interface FooterRegion {
     verticalAlign: 'top' | 'center' | 'bottom';
     background?: string; // Configurable background
     size?: number; // Optional size multiplier (default: 1)
+    color?: string;   // Text colour key (default: palette.charcoal)
+    italic?: boolean; // Set false for a plain (non-italic) label; default italic
+    weight?: number;  // Font weight (default: the stylesheet's 500)
 }
 
 export interface OverlayLeaf {
     position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+    // Badge silhouette. 'leaf' is the classic bookmark ribbon; 'chip' is a flat
+    // rounded-square token (a coloured tile carrying a type glyph — used for the
+    // top-left card-type badge or a small corner category marker).
+    shape?: 'leaf' | 'chip';
     iconId?: string;
     value?: string;
     color?: string;
     scaling?: number; // Custom scale factor for the overlay icon
+    size?: number;    // Chip size in em (only used when shape === 'chip', default ~3.4)
+    radius?: number;  // Chip corner radius in em (chip only, default ~0.9)
     // Configurable style and position options for overlays
     showBorder?: boolean;      // Enable or disable the border
     borderColor?: string;      // Color of the outer border/ribbon
@@ -154,6 +163,31 @@ export interface OverlayLeaf {
     borderWidth?: number;      // Width of the outer border (in em)
     offsetX?: number;          // Horizontal offset (in em)
     offsetY?: number;          // Vertical offset (in em)
+}
+
+// A single cell in a ScoreStripRegion (one threshold pip / score value).
+export interface ScoreCell {
+    value?: string;    // The value shown in the cell (e.g. a threshold "9")
+    iconId?: string;   // Optional small glyph alongside / above the value
+    color?: string;    // Text/icon colour key
+    active?: boolean;  // Highlighted (e.g. the currently-reached set threshold)
+    muted?: boolean;   // Dimmed (e.g. a threshold not yet reached)
+}
+
+// A thin strip of score cells pinned to a card edge. Renders set-collection
+// threshold ladders (0 → 3 → 6 → 9 → 12), a duo's action + points, or a
+// multiplier ratio. Absolutely positioned, so it never disturbs the vertical
+// header → art → footer stack.
+export interface ScoreStripRegion {
+    cells: ScoreCell[];
+    position?: 'left' | 'right';                 // Which edge (default 'left')
+    orientation?: 'vertical' | 'horizontal';     // default 'vertical'
+    align?: 'start' | 'center' | 'end';          // alignment along the edge (default 'center')
+    background?: string;                          // strip background colour key
+    color?: string;                              // default cell text colour key
+    gap?: number;                                // gap between cells in em
+    cellSize?: number;                           // cell value font-size in em (default 2.15)
+    iconSize?: number;                           // cell icon size in em (default 1.65)
 }
 
 export interface CardDefinition {
@@ -172,7 +206,9 @@ export interface CardDefinition {
     mainArt?: MainArtRegion;
     data?: DataRegion;
     footer?: FooterRegion;
-    overlay?: OverlayLeaf;
+    overlay?: OverlayLeaf;      // Single corner badge (kept for back-compat)
+    overlays?: OverlayLeaf[];   // Multiple corner badges (type chip, category marker, count…)
+    scoreStrip?: ScoreStripRegion; // Edge-pinned score/threshold strip
 }
 
 export type InteractionStyle = 'offset' | 'border' | 'outline' | 'glow' | 'saturation' | 'none';

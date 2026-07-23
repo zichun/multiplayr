@@ -21,6 +21,7 @@ import './jaipur/test_jaipur';
 import './splendorduel/test_splendorduel';
 import './catinthebox/test_catinthebox';
 import './trio/test_trio';
+import './seasalt/test_seasalt';
 import './regicide/test_regicide';
 import './skull/test_skull';
 import './test_cards';

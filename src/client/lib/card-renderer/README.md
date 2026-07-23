@@ -128,7 +128,9 @@ The root configuration interface defining the card's structural data, physical m
 | `mainArt` | `MainArtRegion` | Optional. Main illustration panel configuration. |
 | `data` | `DataRegion` | Optional. Flexible rows and cost lists configuration. |
 | `footer` | `FooterRegion` | Optional. Bottom description and alignment configuration. |
-| `overlay` | `OverlayLeaf` | Optional. Corner overlay badge configuration. |
+| `overlay` | `OverlayLeaf` | Optional. Single corner overlay badge (kept for back-compat). |
+| `overlays` | `OverlayLeaf[]` | Optional. Multiple corner badges (e.g. a top-left type chip + a top-right category marker + a bottom-right count). |
+| `scoreStrip` | `ScoreStripRegion` | Optional. Edge-pinned strip of score cells (set-collection threshold ladder, duo action+points, or multiplier ratio). |
 
 ### `PlayingCard` Component Props
 The React component accepts the following props to control rendering, dimensions, and interactive states:
@@ -226,21 +228,62 @@ export interface FooterRegion {
 
 ### 5. Overlay Leaf (`OverlayLeaf`)
 Snaps to any corner. Perfect for drawing resource costs, deck alignment symbols, or values.
+Use `shape: 'leaf'` (default) for the classic bookmark ribbon, or `shape: 'chip'` for a flat
+rounded-square token carrying a type glyph (e.g. a card-type badge or a small category marker).
+Pass one via `overlay`, or several via the `overlays` array (each independently positioned).
 
 ```typescript
 export interface OverlayLeaf {
     position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+    shape?: 'leaf' | 'chip';   // 'leaf' = bookmark ribbon (default); 'chip' = rounded-square token
     iconId?: string;           // Optional vector icon ID (e.g., 'costLeaf')
     value?: string;            // Overlay text value (e.g., '3')
-    color?: string;            // Text color key
-    showBorder?: boolean;      // Toggles the ribbon border
+    color?: string;            // Text/glyph color key (chip glyph defaults to the card background)
+    scaling?: number;          // Icon scale factor
+    size?: number;             // Chip size in em (chip only, default ~3.4)
+    radius?: number;           // Chip corner radius in em (chip only, default ~0.9)
+    showBorder?: boolean;      // Toggles the ribbon/chip border
     borderColor?: string;      // Color of the outer border/ribbon
-    backgroundColor?: string;  // Color of the inner fill/ribbon
+    backgroundColor?: string;  // Color of the inner fill/ribbon (chip: the tile colour)
     borderWidth?: number;      // Width of the outer border (in em, default: 0.288)
     offsetX?: number;          // Horizontal offset (in em, default: -0.7)
     offsetY?: number;          // Vertical offset (in em, default: 0.0)
 }
 ```
+
+### 6. Score Strip (`ScoreStripRegion`)
+A thin strip of score cells pinned to a card edge — a set-collection **threshold ladder**
+(`0 → 3 → 6 → 9 → 12`), a duo's **action + points**, or a **multiplier ratio**. It is absolutely
+positioned, so it never disturbs the vertical header → art → footer stack. Mark the reached
+threshold with `active` (renders a crisp white pill), and un-reached ones with `muted` (dimmed).
+
+```typescript
+export interface ScoreCell {
+    value?: string;    // The value shown (e.g. a threshold "9")
+    iconId?: string;   // Optional small glyph above the value
+    color?: string;    // Text/icon colour key
+    active?: boolean;  // Highlighted (currently-reached threshold)
+    muted?: boolean;   // Dimmed (threshold not yet reached)
+}
+
+export interface ScoreStripRegion {
+    cells: ScoreCell[];
+    position?: 'left' | 'right';                 // Which edge (default 'left')
+    orientation?: 'vertical' | 'horizontal';     // default 'vertical'
+    align?: 'start' | 'center' | 'end';          // alignment along the edge (default 'center')
+    background?: string;                          // strip background colour key
+    color?: string;                              // default cell text colour key
+    gap?: number;                                // gap between cells in em
+    cellSize?: number;                           // cell value font-size in em (default 2.15)
+    iconSize?: number;                           // cell icon size in em (default 1.65)
+}
+```
+
+> **Sizing is app-controlled.** The cell value font-size (`cellSize`), cell icon size
+> (`iconSize`), each chip's `size`/`radius`, and a chip value's text (which scales with
+> `size`) are all set as **inline styles** from the definition, so they win over the
+> stylesheet (DESIGN_GUIDE §10.6). Tune these in your `*Assets.ts` builder — editing
+> `PlayingCard.scss` font-sizes will not override them.
 
 ---
 

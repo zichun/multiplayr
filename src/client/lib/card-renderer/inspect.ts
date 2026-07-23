@@ -326,6 +326,8 @@ export function lintCardDefinition(card: CardDefinition, opts: LintOptions = {})
         row.iconsList?.forEach((ic, j) => refWarn(ic.iconId, `data.rows[${i}].iconsList[${j}]`));
     });
     refWarn(card.overlay?.iconId, 'overlay.iconId');
+    card.overlays?.forEach((ov, i) => refWarn(ov.iconId, `overlays[${i}].iconId`));
+    card.scoreStrip?.cells?.forEach((cell, i) => refWarn(cell.iconId, `scoreStrip.cells[${i}].iconId`));
     refWarn(card.backIconId, 'backIconId');
 
     // 3. Legibility of text (the em-compounding trap, §10.5).

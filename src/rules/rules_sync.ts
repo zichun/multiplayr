@@ -25,6 +25,7 @@ import { JaipurRule } from './jaipur/jaipur';
 import { SplendorDuelRule } from './splendorduel/splendorduel';
 import { CatInTheBoxRule } from './catinthebox/catinthebox';
 import { TrioRule } from './trio/trio';
+import { SeaSaltRule } from './seasalt/seasalt';
 import { RegicideRule } from './regicide/regicide';
 import { SkullRule } from './skull/skull';
 
@@ -168,6 +169,14 @@ const CatInTheBoxDebugger = NewDebuggerRule(
 const TrioDebugger = NewDebuggerRule(
     'trio',
     TrioRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const SeaSaltDebugger = NewDebuggerRule(
+    'seasalt',
+    SeaSaltRule,
     {
         HistoryBufferSize: 10,
         HistoryInSessionStorage: true
@@ -511,6 +520,23 @@ export const MPRULES = {
         icon: '🔺',
         minPlayers: 3,
         maxPlayers: 6
+    },
+    'seasalt': {
+        description: 'Sea Salt & Paper - Push-Your-Luck Set Collection',
+        rules: ['lobby', 'gameshell', 'seasalt'],
+        rule: SeaSaltRule,
+        icon: '🐚',
+        minPlayers: 2,
+        maxPlayers: 4
+    },
+    'seasalt-debug': {
+        description: 'Sea Salt & Paper (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'seasalt', 'debugger'],
+        rule: SeaSaltDebugger,
+        icon: '🐚',
+        minPlayers: 2,
+        maxPlayers: 4
     },
     'regicide': {
         description: 'Regicide - Cooperative Card Battle',
