@@ -1,0 +1,493 @@
+/**
+ * courtisans.scss - Flat minimalist "light-but-royal" skin for "Courtisans".
+ * Soft parchment panels, hairline borders, rounded corners, inset selection rings —
+ * the Splendor Duel / Trio / Skull flat aesthetic (no hard offset shadows).
+ */
+
+$ink: #3a3a4a;
+$muted: #857f92;
+$line: #e7e3d8;
+$panel: #fbf9f3;      // parchment
+$bg: #f4f1e8;
+$royal: #6b6486;      // soft royal violet accent
+$gold: #caa24a;
+$favour: #6f9d6a;     // esteemed / above
+$disgrace: #c56d63;   // fallen / below
+$favourBg: #eef5ea;
+$disgraceBg: #fbeeeb;
+
+// ---- Lobby ------------------------------------------------------------------
+.courtisans-waiting {
+    background: #efeaf7;
+    color: $royal;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9em;
+}
+
+// ---- Crest / role tokens ----------------------------------------------------
+.crest-token {
+    position: relative;
+    flex: 0 0 auto;
+    border-radius: 50%;
+
+    .crest-face {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        overflow: hidden;
+        display: block;
+        box-shadow: 0 1px 2px rgba(58, 58, 74, 0.16);
+        .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+    }
+
+    .role-badge {
+        position: absolute;
+        right: -3px;
+        bottom: -3px;
+        width: 44%;
+        height: 44%;
+        min-width: 13px;
+        min-height: 13px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 1.5px solid $panel;
+        display: block;
+        .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+    }
+
+    &.selectable { cursor: pointer; transition: transform 0.12s; }
+    &.selectable:hover { transform: translateY(-3px); }
+    &.selected .crest-face { box-shadow: 0 0 0 3px $royal, 0 2px 6px rgba(58, 58, 74, 0.25); }
+    &.target .crest-face { box-shadow: 0 0 0 3px $disgrace; cursor: pointer; animation: cpulse 1.1s infinite; }
+    &.dimmed { opacity: 0.4; }
+
+    // Recently-played: a soft pulsing glow in the acting player's accent colour.
+    // Target (assassin) styling wins if both apply.
+    &.glowing:not(.target) .crest-face {
+        animation: cglow 1.5s ease-in-out infinite;
+    }
+}
+
+@keyframes cpulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(197, 109, 99, 0.9); }
+    50% { box-shadow: 0 0 0 6px rgba(197, 109, 99, 0.35); }
+}
+
+@keyframes cglow {
+    0%, 100% { box-shadow: 0 0 0 2px var(--glow), 0 0 5px 1px var(--glow-soft); }
+    50% { box-shadow: 0 0 0 3px var(--glow), 0 0 11px 4px var(--glow-soft); }
+}
+
+// ---- Fly animation layer (transient hint of the last card played) -----------
+.fly-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 70;
+    overflow: hidden;
+
+    .fly-card {
+        position: absolute;
+        border-radius: 50%;
+        overflow: hidden;
+        will-change: transform, opacity;
+        box-shadow: 0 3px 8px rgba(58, 58, 74, 0.3);
+        .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+    }
+}
+
+// ---- Assassination slash layer ----------------------------------------------
+.slash-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 82;
+    overflow: hidden;
+
+    .slash-card {
+        position: absolute;
+        border-radius: 50%;
+        will-change: transform, opacity;
+        animation: slashFade 660ms ease-in forwards;
+
+        .sc-ghost {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(58, 58, 74, 0.3);
+            .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+        }
+
+        // The katana stroke: a thin bright-red blade that sweeps across the card.
+        .sc-slash {
+            position: absolute;
+            left: -28%;
+            top: 44%;
+            width: 156%;
+            height: 13%;
+            border-radius: 6px;
+            background: linear-gradient(90deg,
+                rgba(255, 59, 48, 0) 0%, #ff3b30 16%, #ffd7d2 50%, #ff3b30 84%, rgba(255, 59, 48, 0) 100%);
+            box-shadow: 0 0 9px 2px rgba(255, 59, 48, 0.75);
+            transform-origin: center;
+            transform: rotate(-42deg) scaleX(0);
+            animation: slashSweep 260ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+        }
+    }
+}
+
+@keyframes slashSweep {
+    0% { transform: rotate(-42deg) scaleX(0); opacity: 0.15; }
+    55% { opacity: 1; }
+    100% { transform: rotate(-42deg) scaleX(1); opacity: 1; }
+}
+
+@keyframes slashFade {
+    0%, 40% { opacity: 1; transform: scale(1) rotate(0deg); }
+    100% { opacity: 0; transform: scale(0.82) rotate(7deg); }
+}
+
+// ---- Arena ------------------------------------------------------------------
+.courtisans-arena {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+    padding: 12px 14px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 1040px;
+    margin: 0 auto;
+
+    .arena-topline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+
+        .phase-pill, .turn-pill {
+            font-size: 0.78em;
+            font-weight: 800;
+            padding: 5px 14px;
+            border-radius: 999px;
+            letter-spacing: 0.4px;
+        }
+        .phase-pill { text-transform: uppercase; background: #efece3; color: $muted; }
+        .turn-pill { background: #efeaf7; color: $royal; }
+    }
+
+    .section-label {
+        font-size: 0.7em;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: $muted;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .draw-note { color: $muted; font-weight: 700; letter-spacing: 0; text-transform: none; }
+    }
+}
+
+// ---- Queen's Table ----------------------------------------------------------
+.queens-table {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    // Row layout: Favour zone (left) · family crest + label (centre) · Disgrace zone (right).
+    .fam-row {
+        display: flex;
+        align-items: stretch;
+        gap: 6px;
+        padding: 5px 4px;
+        border-bottom: 1px solid $line;
+        &:last-child { border-bottom: none; }
+
+        &.queen-row { background: #f6f2fb; border-radius: 10px; border-bottom: none; }
+
+        // Centred family identity: crest stacked over the name + lean arrows.
+        .fam-id {
+            flex: 0 0 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            min-width: 0;
+            padding: 0 2px;
+            text-align: center;
+
+            .fam-crest { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex: 0 0 auto;
+                .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+            .fam-text { min-width: 0; }
+            // Wrap long names (Nightingale, Queen's Confidants) instead of clipping them.
+            .fam-name { font-weight: 800; font-size: 0.72em; line-height: 1.15; overflow-wrap: break-word; }
+            .fam-lean { font-size: 0.66em; font-weight: 800; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1px; justify-content: center;
+                .up { color: $favour; } .down { color: $disgrace; } .neutral { color: $muted; } }
+            .fam-status {
+                font-size: 0.58em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px;
+                padding: 1px 6px; border-radius: 5px; margin-top: 2px; display: inline-block;
+                &.esteemed { background: #dcefd6; color: #3f6b41; }
+                &.fallen { background: #f7dcd7; color: #a94b40; }
+                &.neutral { background: #ece8e0; color: $muted; }
+            }
+        }
+
+        .zone {
+            flex: 1 1 0;
+            min-width: 0;
+            border-radius: 9px;
+            padding: 5px 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+
+            &.above { background: $favourBg; }
+            &.below { background: $disgraceBg; }
+
+            .zone-cards { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; min-height: 24px; }
+            // Favour fills toward the crest — icons pack from the right (right-to-left).
+            &.above .zone-cards { justify-content: flex-end; }
+            .zone-empty { color: #c9c3b6; font-size: 0.62em; font-weight: 700; }
+        }
+    }
+}
+
+// ---- Player domains ---------------------------------------------------------
+.domains-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .domain-panel {
+        flex: 1 1 250px;
+        min-width: 0;
+        background: $panel;
+        border: 1px solid $line;
+        border-radius: 16px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        transition: border-color 0.15s, box-shadow 0.15s;
+
+        &.current { border-color: $royal; box-shadow: inset 0 0 0 2px rgba(107, 100, 134, 0.28); }
+        &.me { background: #fdfcf8; }
+        &.givable { cursor: pointer; border-color: $gold; box-shadow: inset 0 0 0 2px rgba(202, 162, 74, 0.4); }
+        &.givable:hover { background: #fdf8ec; }
+
+        .dp-head {
+            display: flex; align-items: center; gap: 7px;
+            .dp-name { font-weight: 800; font-size: 0.9em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .dp-tag {
+                margin-left: auto; font-size: 0.58em; font-weight: 800; text-transform: uppercase;
+                letter-spacing: 0.4px; padding: 2px 7px; border-radius: 6px; white-space: nowrap;
+                &.turn { background: #efeaf7; color: $royal; }
+                &.give { background: #f7edd3; color: #9a7724; }
+            }
+            .dp-score { margin-left: auto; font-weight: 900; font-size: 1em; color: $royal; }
+        }
+
+        .dp-cards {
+            display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
+            min-height: 34px;
+            padding: 2px;
+            .dp-empty { color: #c3bdb0; font-size: 0.72em; font-weight: 700; }
+        }
+    }
+}
+
+// ---- Hand + controls --------------------------------------------------------
+.hand-dock {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    &.acting { border-color: $royal; box-shadow: inset 0 0 0 2px rgba(107, 100, 134, 0.26); }
+
+    .dock-title { font-weight: 800; font-size: 0.95em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .dock-hint { color: $muted; font-size: 0.84em; line-height: 1.5; }
+
+    .zone-progress {
+        display: flex; gap: 8px; flex-wrap: wrap;
+        .zp {
+            font-size: 0.66em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px;
+            padding: 3px 9px; border-radius: 999px; background: #efece3; color: $muted;
+            display: inline-flex; align-items: center; gap: 4px;
+            &.done { background: #dcefd6; color: #3f6b41; }
+        }
+    }
+
+    .hand-row {
+        display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+        padding: 4px 2px;
+        .hand-empty { color: $muted; font-size: 0.85em; font-weight: 700; }
+    }
+
+    .place-menu {
+        display: flex; flex-direction: column; gap: 8px;
+        border-top: 1px dashed $line; padding-top: 10px;
+
+        .pm-label { font-size: 0.78em; font-weight: 800; color: $ink; }
+        .pm-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .btn-arrow { font-size: 0.9em; line-height: 1; }
+    }
+}
+
+// ---- Buttons ----------------------------------------------------------------
+%btn {
+    min-height: 44px; padding: 0 16px; border-radius: 12px; font-weight: 800;
+    font-size: 0.88em; cursor: pointer; transition: transform 0.12s, filter 0.12s, background 0.12s;
+    display: inline-flex; align-items: center; gap: 7px; justify-content: center;
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+.primary-btn { @extend %btn; border: none; background: $royal; color: #fff;
+    &:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.07); } }
+.favour-btn { @extend %btn; border: 2px solid #bcd8b6; background: $favourBg; color: #3f6b41;
+    &:hover:not(:disabled) { transform: translateY(-2px); background: #e4f1de; } }
+.disgrace-btn { @extend %btn; border: 2px solid #eab8b0; background: $disgraceBg; color: #a94b40;
+    &:hover:not(:disabled) { transform: translateY(-2px); background: #f8e2dd; } }
+.ghost-btn { @extend %btn; border: 1px solid $line; background: #fff; color: $muted;
+    &:hover:not(:disabled) { background: #f3f0e8; } }
+.gold-btn { @extend %btn; border: none; background: $gold; color: #4a3608;
+    &:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.05); } }
+
+.waiting-note { color: $muted; font-size: 0.9em; font-weight: 600; text-align: center; padding: 8px 0; }
+
+// ---- Assassin overlay -------------------------------------------------------
+.assassin-bar {
+    background: #fbeeeb;
+    border: 1px solid #eab8b0;
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+
+    .ab-text { font-weight: 800; font-size: 0.9em; color: #a94b40; display: flex; align-items: center; gap: 8px; }
+    .ab-hint { color: $muted; font-size: 0.82em; font-weight: 600; }
+}
+
+// ---- Missions ---------------------------------------------------------------
+.missions-panel {
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 12px;
+    max-width: 560px; margin: 0 auto;
+    font-family: 'Outfit', 'Inter', sans-serif; color: $ink;
+
+    .mp-intro { color: $muted; font-size: 0.86em; line-height: 1.5; }
+
+    .mission-card {
+        background: #fff; border: 1px solid $line; border-radius: 14px; padding: 14px 16px;
+        display: flex; gap: 12px; align-items: flex-start;
+        &.blue { border-left: 5px solid #6f8fcf; }
+        &.white { border-left: 5px solid #b6a06f; }
+        &.done { background: #eef7ea; border-color: #bcd8b6; }
+
+        .mc-badge {
+            flex: 0 0 auto; width: 40px; height: 40px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.2em; color: #fff; overflow: hidden;
+            .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+            &.court.blue { background: #6f8fcf; } &.court.white { background: #b6a06f; }
+            &.crest { border-radius: 50%; box-shadow: 0 1px 3px rgba(58, 58, 74, 0.18); }
+            &.role { border-radius: 50%; padding: 6px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(58, 58, 74, 0.18); }
+        }
+        .mc-body { min-width: 0; }
+        .mc-title {
+            font-weight: 800; font-size: 0.9em; margin-bottom: 3px; line-height: 1.45;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
+            .lobby-player-tag { flex: 0 0 auto; }
+        }
+        .mc-reward { font-size: 0.72em; font-weight: 800; color: $gold; }
+        .mc-done { font-size: 0.72em; font-weight: 800; color: #3f6b41; }
+    }
+}
+
+// ---- Score / game over ------------------------------------------------------
+.score-sheet {
+    background: $panel; border: 1px solid $line; border-radius: 16px;
+    padding: 18px; text-align: center;
+
+    .ss-crown { font-size: 1.8em; line-height: 1; }
+    .ss-title { font-size: 1.4em; font-weight: 900; letter-spacing: 0.4px; margin-top: 4px; }
+    .ss-sub { color: $muted; font-size: 0.88em; margin-top: 2px; }
+
+    .fam-verdict {
+        display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 16px 0;
+        .fv {
+            display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px;
+            font-size: 0.74em; font-weight: 800; background: #f1ede4;
+            .fv-crest { width: 20px; height: 20px; border-radius: 50%; overflow: hidden;
+                .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+            &.esteemed { background: #dcefd6; color: #3f6b41; }
+            &.fallen { background: #f7dcd7; color: #a94b40; }
+            &.neutral { background: #ece8e0; color: $muted; }
+        }
+    }
+
+    .score-table {
+        width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9em;
+        th { text-align: center; color: $muted; font-size: 0.76em; text-transform: uppercase;
+            letter-spacing: 0.5px; padding: 6px 4px; border-bottom: 2px solid $line; }
+        td { padding: 9px 4px; border-bottom: 1px solid $line; text-align: center; vertical-align: middle; }
+        td:nth-child(2), th:nth-child(2) { text-align: left; }
+        .winner-row { background: #eef7ea; }
+        .st-total { font-weight: 900; color: $royal; }
+        .st-name { display: inline-flex; align-items: center; gap: 6px; }
+    }
+
+    .ss-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+}
+
+.settings-panel { display: flex; flex-direction: column; gap: 10px; padding: 18px; max-width: 320px; margin: 0 auto; }
+
+// ---- Rules ------------------------------------------------------------------
+.courtisans-rules {
+    padding: 18px; display: flex; flex-direction: column; gap: 14px;
+    max-height: 80vh; overflow-y: auto;
+    font-family: 'Outfit', 'Inter', sans-serif; color: $ink;
+
+    .rules-section {
+        background: #fff; border: 1px solid $line; border-radius: 14px; padding: 14px 16px;
+        &.highlight { border-color: #d8c46a; background: #fbf6e4; }
+        h3 { margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.95em;
+            display: flex; align-items: center; gap: 8px; }
+        p { margin: 0 0 6px; line-height: 1.55; font-size: 0.9em; }
+        ul { margin: 0; padding-left: 18px; line-height: 1.7; font-size: 0.9em; }
+        li { margin-bottom: 3px; }
+    }
+
+    .rules-crests {
+        display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 6px 0 2px;
+        .rc-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .rc-crest { width: 48px; height: 48px; border-radius: 50%; overflow: hidden;
+            .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+        .rc-label { font-size: 0.72em; font-weight: 800; }
+    }
+    .rules-roles {
+        display: flex; flex-wrap: wrap; gap: 10px; margin: 4px 0;
+        .rr-item { display: flex; align-items: center; gap: 8px; flex: 1 1 220px;
+            background: #faf8f2; border: 1px solid $line; border-radius: 10px; padding: 7px 10px; }
+        .rr-badge { width: 30px; height: 30px; border-radius: 50%; overflow: hidden; flex: 0 0 auto;
+            .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+        .rr-text { font-size: 0.82em; }
+        .rr-name { font-weight: 800; }
+        .rr-desc { color: $muted; font-size: 0.92em; }
+    }
+}

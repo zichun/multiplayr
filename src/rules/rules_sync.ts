@@ -28,6 +28,7 @@ import { TrioRule } from './trio/trio';
 import { SeaSaltRule } from './seasalt/seasalt';
 import { RegicideRule } from './regicide/regicide';
 import { SkullRule } from './skull/skull';
+import { CourtisansRule } from './courtisans/courtisans';
 
 
 const CoupDebugger = NewDebuggerRule(
@@ -193,6 +194,14 @@ const RegicideDebugger = NewDebuggerRule(
 const SkullDebugger = NewDebuggerRule(
     'skull',
     SkullRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const CourtisansDebugger = NewDebuggerRule(
+    'courtisans',
+    CourtisansRule,
     {
         HistoryBufferSize: 10,
         HistoryInSessionStorage: true
@@ -571,6 +580,23 @@ export const MPRULES = {
         icon: '💀',
         minPlayers: 3,
         maxPlayers: 6
+    },
+    'courtisans': {
+        description: 'Courtisans - Courtly Set Collection & Take-That',
+        rules: ['lobby', 'gameshell', 'courtisans'],
+        rule: CourtisansRule,
+        icon: '🎭',
+        minPlayers: 2,
+        maxPlayers: 5
+    },
+    'courtisans-debug': {
+        description: 'Courtisans (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'courtisans', 'debugger'],
+        rule: CourtisansDebugger,
+        icon: '🎭',
+        minPlayers: 2,
+        maxPlayers: 5
     }
 };
 

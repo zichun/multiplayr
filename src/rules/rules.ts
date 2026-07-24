@@ -481,6 +481,29 @@ export const MPRULES = {
         minPlayers: 3,
         maxPlayers: 6
     },
+    'courtisans': {
+        description: 'Courtisans - Courtly Set Collection & Take-That',
+        rules: ['lobby', 'gameshell', 'courtisans'],
+        rule: () => import('./courtisans/courtisans').then(m => m.CourtisansRule),
+        icon: '🎭',
+        minPlayers: 2,
+        maxPlayers: 5
+    },
+    'courtisans-debug': {
+        description: 'Courtisans (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'courtisans', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./courtisans/courtisans')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('courtisans', orig.CourtisansRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🎭',
+        minPlayers: 2,
+        maxPlayers: 5
+    },
     'skull-debug': {
         description: 'Skull (Debug)',
         debug: true,
