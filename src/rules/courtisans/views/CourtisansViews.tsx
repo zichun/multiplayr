@@ -448,7 +448,6 @@ export class CourtisansMissionsView extends React.Component<MissionsViewProps, {
 // ================================================================================
 interface MainState {
     selectedCardId: string | null;
-    placeMode: null | 'table' | 'opp';
     flying: FlyAnim[];
     slashes: SlashAnim[];
 }
@@ -458,7 +457,7 @@ export class CourtisansMainPage extends React.Component<CourtisansProps, MainSta
 
     constructor(props: CourtisansProps) {
         super(props);
-        this.state = { selectedCardId: null, placeMode: null, flying: [], slashes: [] };
+        this.state = { selectedCardId: null, flying: [], slashes: [] };
     }
 
     // Every card currently on the board (table columns + Queen's column + all
@@ -519,7 +518,7 @@ export class CourtisansMainPage extends React.Component<CourtisansProps, MainSta
         // If our hand changed (new turn / drew), clear a stale selection.
         if (prev.myHand !== this.props.myHand && this.state.selectedCardId
             && !this.props.myHand.some(c => c.id === this.state.selectedCardId)) {
-            this.setState({ selectedCardId: null, placeMode: null });
+            this.setState({ selectedCardId: null });
         }
     }
 
@@ -619,14 +618,31 @@ export class CourtisansMainPage extends React.Component<CourtisansProps, MainSta
     // ---- actions ----
     private selectCard = (id: string) => {
         if (!this.amActing() || this.myPendingAssassin()) return;
-        this.setState({ selectedCardId: this.state.selectedCardId === id ? null : id, placeMode: null });
+        this.setState({ selectedCardId: this.state.selectedCardId === id ? null : id });
     };
 
     private place(zone: Zone, level?: 'above' | 'below', targetPlayerId?: string) {
         const id = this.state.selectedCardId;
         if (!id) return;
         this.props.MP.placeCard(id, zone, level, targetPlayerId);
-        this.setState({ selectedCardId: null, placeMode: null });
+        this.setState({ selectedCardId: null });
+    }
+
+    // The hand card currently selected for placement (only while it's a legal
+    // moment to place — the acting player's turn, no pending assassin).
+    private getSelectedCard(): Card | undefined {
+        const id = this.state.selectedCardId;
+        if (!id || !this.amActing() || this.myPendingAssassin()) return undefined;
+        return this.props.myHand.find(c => c.id === id);
+    }
+
+    // Which Queen's-Table row accepts the selected card as a direct drop, if the
+    // table slot is still free: its own family column, or the Queen's column for a
+    // spy. null when no drop is possible.
+    private tableDropFamily(): Family | 'queen' | null {
+        const c = this.getSelectedCard();
+        if (!c || this.props.turnZones.table) return null;
+        return c.role === 'spy' ? 'queen' : c.family;
     }
 
     private resolveAssassin(targetCardId?: string) {
@@ -656,16 +672,20 @@ export class CourtisansMainPage extends React.Component<CourtisansProps, MainSta
         // Queen's column: face-down spies awaiting the reveal.
         const queen = table.queen;
         const queenCount = (queen ? queen.above.length : 0) + (queen ? queen.below.length : 0);
+        // A selected spy drops into the Queen's column — show the row as a target
+        // even when it is still empty, so the first spy has somewhere to land.
+        const queenDrop = this.tableDropFamily() === 'queen';
+        const zEmpty = (which: 'above' | 'below') => queenDrop ? (which === 'above' ? 'favour' : 'disgrace') : '—';
 
         return (
             <div className="queens-table">
                 {rows}
-                {queenCount > 0 && (
+                {(queenCount > 0 || queenDrop) && (
                     <div className="fam-row queen-row" data-famrow="queen">
-                        <div className="zone above">
+                        <div className={`zone above ${queenDrop ? 'drop' : ''}`} onClick={queenDrop ? () => this.place('table', 'above') : undefined}>
                             <div className="zone-cards">
                                 {queen.above.map(c => this.placedToken(c, 24))}
-                                {queen.above.length === 0 && <span className="zone-empty">—</span>}
+                                {queen.above.length === 0 && <span className="zone-empty">{zEmpty('above')}</span>}
                             </div>
                         </div>
                         <div className="fam-id">
@@ -675,10 +695,10 @@ export class CourtisansMainPage extends React.Component<CourtisansProps, MainSta
                                 <div className="fam-lean"><span className="neutral">{queenCount} hidden spy{queenCount === 1 ? '' : 'ies'}</span></div>
                             </div>
                         </div>
-                        <div className="zone below">
+                        <div className={`zone below ${queenDrop ? 'drop' : ''}`} onClick={queenDrop ? () => this.place('table', 'below') : undefined}>
                             <div className="zone-cards">
                                 {queen.below.map(c => this.placedToken(c, 24))}
-                                {queen.below.length === 0 && <span className="zone-empty">—</span>}
+                                {queen.below.length === 0 && <span className="zone-empty">{zEmpty('below')}</span>}
                             </div>
                         </div>
                     </div>
@@ -690,12 +710,18 @@ export class CourtisansMainPage extends React.Component<CourtisansProps, MainSta
     private renderFamilyRow(f: Family, col: ColumnView, lean: { above: number; below: number }, status?: FamilyStatus) {
         const a = lean ? lean.above : 0;
         const b = lean ? lean.below : 0;
+        // When this row's family matches the selected card, its zones become direct
+        // drop targets (click Favour/Disgrace to place there).
+        const drop = this.tableDropFamily() === f;
         // Favour (left) / Disgrace (right) is conveyed by zone colour alone.
         const renderZone = (cards: ViewCard[], which: 'above' | 'below') => (
-            <div className={`zone ${which}`}>
+            <div
+                className={`zone ${which} ${drop ? 'drop' : ''}`}
+                onClick={drop ? () => this.place('table', which) : undefined}
+            >
                 <div className="zone-cards">
                     {cards.map(c => this.placedToken(c, 24))}
-                    {cards.length === 0 && <span className="zone-empty">—</span>}
+                    {cards.length === 0 && <span className="zone-empty">{drop ? (which === 'above' ? 'favour' : 'disgrace') : '—'}</span>}
                 </div>
             </div>
         );
@@ -721,33 +747,42 @@ export class CourtisansMainPage extends React.Component<CourtisansProps, MainSta
 
     // ---- domains ----
     private renderDomains() {
-        const { playerOrder, domains, currentPlayerId, score } = this.props;
-        const selecting = this.state.placeMode === 'opp' && this.state.selectedCardId && this.amActing();
+        const { playerOrder, domains, currentPlayerId, score, turnZones } = this.props;
+        // With a card selected, every domain becomes a direct drop target: your own
+        // panel fills your domain, an opponent's panel gives it to them.
+        const sel = this.getSelectedCard();
         return (
             <div className="domains-grid">
                 {playerOrder.map(id => {
                     const cards = this.sortByFamily(domains[id] || []);
                     const isMe = id === this.me;
-                    const givable = !!selecting && !isMe && !this.props.turnZones.oppDomain;
+                    const dropOwn = !!sel && isMe && !turnZones.ownDomain;
+                    const dropOpp = !!sel && !isMe && !turnZones.oppDomain;
+                    const droppable = dropOwn || dropOpp;
                     const cls = ['domain-panel'];
                     if (id === currentPlayerId && this.props.gameStatus === 'Playing') cls.push('current');
                     if (isMe) cls.push('me');
-                    if (givable) cls.push('givable');
+                    if (dropOwn) cls.push('drop-own');
+                    if (dropOpp) cls.push('drop-opp');
                     const ps = score ? score.players[id] : null;
+                    const onClick = droppable
+                        ? () => (isMe ? this.place('ownDomain') : this.place('oppDomain', undefined, id))
+                        : undefined;
                     return (
-                        <div className={cls.join(' ')} key={id} data-cpanel={id} onClick={givable ? () => this.place('oppDomain', undefined, id) : undefined}>
+                        <div className={cls.join(' ')} key={id} data-cpanel={id} onClick={onClick}>
                             <div className="dp-head">
                                 {this.badge(id)}
                                 <span className="dp-name">{this.name(id)}{isMe ? ' (you)' : ''}</span>
                                 {ps
                                     ? <span className="dp-score">{ps.total >= 0 ? '+' : ''}{ps.total}</span>
-                                    : givable ? <span className="dp-tag give">Give</span>
-                                        : id === currentPlayerId && this.props.gameStatus === 'Playing' ? <span className="dp-tag turn">Turn</span>
-                                            : null}
+                                    : dropOwn ? <span className="dp-tag place">Place</span>
+                                        : dropOpp ? <span className="dp-tag give">Give</span>
+                                            : id === currentPlayerId && this.props.gameStatus === 'Playing' ? <span className="dp-tag turn">Turn</span>
+                                                : null}
                             </div>
                             <div className="dp-cards">
                                 {cards.length === 0
-                                    ? <span className="dp-empty">no courtiers yet</span>
+                                    ? <span className="dp-empty">{droppable ? (isMe ? 'tap to place here' : 'tap to give here') : 'no courtiers yet'}</span>
                                     : cards.map(c => this.placedToken(c, 30))}
                             </div>
                         </div>
@@ -813,7 +848,7 @@ export class CourtisansMainPage extends React.Component<CourtisansProps, MainSta
             <div className="place-menu">
                 <div className="pm-label">
                     Placing {isSpy ? 'a spy' : `${FAMILY_LABELS[card.family]} ${ROLE_LABELS[card.role]}`} —
-                    choose a destination:
+                    tap the board, or use a button:
                 </div>
 
                 <div className="pm-row">
@@ -833,13 +868,11 @@ export class CourtisansMainPage extends React.Component<CourtisansProps, MainSta
 
                     {turnZones.oppDomain
                         ? <button className="ghost-btn" disabled><FontAwesomeIcon icon="users" /> Opponent (done)</button>
-                        : opps.length === 1
-                            ? <button className="gold-btn" onClick={() => this.place('oppDomain', undefined, opps[0])}>
-                                <FontAwesomeIcon icon="users" /> Give to {this.name(opps[0])}
+                        : opps.map(o => (
+                            <button key={o} className="gold-btn" onClick={() => this.place('oppDomain', undefined, o)}>
+                                <FontAwesomeIcon icon="users" /> Give to {this.name(o)}
                             </button>
-                            : <button className="gold-btn" onClick={() => this.setState({ placeMode: this.state.placeMode === 'opp' ? null : 'opp' })}>
-                                <FontAwesomeIcon icon="users" /> {this.state.placeMode === 'opp' ? 'Tap an opponent below' : 'Give to an opponent'}
-                            </button>}
+                        ))}
                 </div>
             </div>
         );
