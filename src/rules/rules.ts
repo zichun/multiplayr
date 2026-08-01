@@ -518,6 +518,52 @@ export const MPRULES = {
         icon: '💀',
         minPlayers: 3,
         maxPlayers: 6
+    },
+    'magicalathletes': {
+        description: 'Magical Athletes - Push-Your-Luck Racing',
+        rules: ['lobby', 'gameshell', 'magicalathletes'],
+        rule: () => import('./magicalathletes/magicalathletes').then(m => m.MagicalAthletesRule),
+        icon: '🏃',
+        minPlayers: 2,
+        maxPlayers: 6
+    },
+    'offwiththeirheads': {
+        description: 'Off With Their Heads - Wonderland Roll-and-Write',
+        rules: ['lobby', 'gameshell', 'offwiththeirheads'],
+        rule: () => import('./offwiththeirheads/offwiththeirheads').then(m => m.OffWithTheirHeadsRule),
+        icon: '👑',
+        minPlayers: 2,
+        maxPlayers: 4
+    },
+    'offwiththeirheads-debug': {
+        description: 'Off With Their Heads (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'offwiththeirheads', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./offwiththeirheads/offwiththeirheads')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('offwiththeirheads', orig.OffWithTheirHeadsRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '👑',
+        minPlayers: 2,
+        maxPlayers: 4
+    },
+    'magicalathletes-debug': {
+        description: 'Magical Athletes (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'magicalathletes', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./magicalathletes/magicalathletes')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('magicalathletes', orig.MagicalAthletesRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🏃',
+        minPlayers: 2,
+        maxPlayers: 6
     }
 };
 

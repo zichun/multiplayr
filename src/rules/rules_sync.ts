@@ -29,6 +29,8 @@ import { SeaSaltRule } from './seasalt/seasalt';
 import { RegicideRule } from './regicide/regicide';
 import { SkullRule } from './skull/skull';
 import { CourtisansRule } from './courtisans/courtisans';
+import { MagicalAthletesRule } from './magicalathletes/magicalathletes';
+import { OffWithTheirHeadsRule } from './offwiththeirheads/offwiththeirheads';
 
 
 const CoupDebugger = NewDebuggerRule(
@@ -202,6 +204,22 @@ const SkullDebugger = NewDebuggerRule(
 const CourtisansDebugger = NewDebuggerRule(
     'courtisans',
     CourtisansRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const MagicalAthletesDebugger = NewDebuggerRule(
+    'magicalathletes',
+    MagicalAthletesRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const OffWithTheirHeadsDebugger = NewDebuggerRule(
+    'offwiththeirheads',
+    OffWithTheirHeadsRule,
     {
         HistoryBufferSize: 10,
         HistoryInSessionStorage: true
@@ -597,6 +615,40 @@ export const MPRULES = {
         icon: '🎭',
         minPlayers: 2,
         maxPlayers: 5
+    },
+    'magicalathletes': {
+        description: 'Magical Athletes - Push-Your-Luck Racing',
+        rules: ['lobby', 'gameshell', 'magicalathletes'],
+        rule: MagicalAthletesRule,
+        icon: '🏃',
+        minPlayers: 2,
+        maxPlayers: 6
+    },
+    'magicalathletes-debug': {
+        description: 'Magical Athletes (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'magicalathletes', 'debugger'],
+        rule: MagicalAthletesDebugger,
+        icon: '🏃',
+        minPlayers: 2,
+        maxPlayers: 6
+    },
+    'offwiththeirheads': {
+        description: 'Off With Their Heads - Wonderland Roll-and-Write',
+        rules: ['lobby', 'gameshell', 'offwiththeirheads'],
+        rule: OffWithTheirHeadsRule,
+        icon: '👑',
+        minPlayers: 2,
+        maxPlayers: 4
+    },
+    'offwiththeirheads-debug': {
+        description: 'Off With Their Heads (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'offwiththeirheads', 'debugger'],
+        rule: OffWithTheirHeadsDebugger,
+        icon: '👑',
+        minPlayers: 2,
+        maxPlayers: 4
     }
 };
 

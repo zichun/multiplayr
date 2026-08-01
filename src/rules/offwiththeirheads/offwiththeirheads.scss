@@ -1,0 +1,381 @@
+/**
+ * offwiththeirheads.scss - Flat, soft-pastel "Wonderland tea-party" skin.
+ * Light parchment panels, hairline borders, rounded forms, gentle pulses — the
+ * Splendor Duel / Cat in the Box / Courtisans flat aesthetic (no hard shadows).
+ */
+
+$ink: #4a4458;
+$muted: #8b86a0;
+$line: #e9e3f0;
+$panel: #fdfbf7;
+$bg: #f5f1ea;
+
+$meadow: #7cc08a;
+$woods: #57b0a6;
+$keep: #b184cc;
+$meadow-soft: #e7f4ea;
+$woods-soft: #e2f2ef;
+$keep-soft: #f1e9f8;
+$meadow-text: #2f6b40;
+$woods-text: #1f6058;
+$keep-text: #5a3b73;
+
+$gold: #e7c26b;
+$gold-deep: #a9822a;
+$queen: #e0798f;
+$red: #d8637a;
+$black: #4a4458;
+
+@mixin panel {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 16px;
+}
+
+// ---- Lobby ------------------------------------------------------------------
+.owth-waiting {
+    background: $keep-soft;
+    color: $keep-text;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9em;
+}
+
+// ---- Arena ------------------------------------------------------------------
+.owth-arena {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+    padding: 12px 12px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+// ---- Playing card tile ------------------------------------------------------
+.owth-card {
+    position: relative;
+    flex: 0 0 auto;
+    width: 50px;
+    height: 70px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1.5px solid $line;
+    box-shadow: 0 1px 3px rgba(74, 68, 88, 0.12);
+    overflow: hidden;
+    transition: transform 0.12s, box-shadow 0.12s;
+
+    // Big value, pinned top-left.
+    .oc-rank {
+        position: absolute; top: 4px; left: 7px; z-index: 1;
+        font-weight: 900; font-size: 1.5em; line-height: 0.92; letter-spacing: -0.5px;
+    }
+    // Oversized suit glyph (~2/5 of the card) bleeding off the bottom-right corner.
+    .oc-suit {
+        position: absolute; right: -8px; bottom: -14px;
+        font-size: 3.4em; line-height: 1; opacity: 0.92;
+    }
+
+    &.red { color: $red; }
+    &.black { color: $black; }
+    &.small {
+        width: 38px; height: 53px; border-radius: 8px;
+        .oc-rank { font-size: 1.05em; top: 3px; left: 5px; }
+        .oc-suit { font-size: 2.5em; right: -6px; bottom: -10px; }
+    }
+    &.dim { opacity: 0.5; }
+
+    &.selectable { cursor: pointer; }
+    &.selectable:hover { transform: translateY(-4px); box-shadow: 0 5px 12px rgba(74, 68, 88, 0.2); }
+    &.selected { box-shadow: 0 0 0 3px $queen, 0 4px 10px rgba(74, 68, 88, 0.22); transform: translateY(-3px); }
+}
+
+// ---- Wonderland board -------------------------------------------------------
+.wl-board {
+    @include panel;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    .wl-left { display: flex; align-items: center; gap: 9px; }
+    .wl-crown { width: 30px; height: 30px; flex: 0 0 auto; .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+    .wl-round { font-weight: 800; font-size: 0.82em; }
+    .wl-caption { font-size: 0.72em; color: $muted; font-weight: 700; }
+
+    .wl-hierarchy {
+        display: flex; align-items: center; gap: 3px;
+        .wl-suit {
+            font-size: 1.15em; font-weight: 900; width: 1.5em; height: 1.5em; border-radius: 8px;
+            display: inline-flex; align-items: center; justify-content: center; background: #f3eff8;
+            &.red { color: $red; } &.black { color: $black; }
+            &.top { background: $queen; color: #fff; box-shadow: 0 0 0 2px rgba(224, 121, 143, 0.35); }
+        }
+        .wl-gt { color: $muted; font-weight: 900; }
+    }
+}
+
+// ---- Reveal row -------------------------------------------------------------
+.reveal-row {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: safe center;
+    padding: 8px 6px; @include panel; background: #fbf7f2;
+
+    .reveal-item { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .pos-tag {
+        font-size: 0.56em; font-weight: 900; text-transform: uppercase; letter-spacing: 0.4px;
+        padding: 1px 6px; border-radius: 6px;
+        &.high { background: $meadow-soft; color: $meadow-text; }
+        &.mid { background: $woods-soft; color: $woods-text; }
+        &.low { background: $keep-soft; color: $keep-text; }
+        &.extra { background: #ece8f2; color: $muted; }
+    }
+}
+
+// ---- Zone segmented control -------------------------------------------------
+.zone-tabs {
+    display: flex; gap: 6px;
+    .zt {
+        flex: 1 1 0; min-width: 0; position: relative;
+        background: #fff; border: 1px solid $line; border-radius: 12px;
+        padding: 7px 4px; cursor: pointer; min-height: 52px;
+        display: flex; flex-direction: column; align-items: center; gap: 2px;
+        transition: background 0.12s, border-color 0.12s, transform 0.12s;
+        .zt-icon { width: 24px; height: 24px; .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+        .zt-label { font-size: 0.66em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: $muted; }
+        .zt-dot { position: absolute; top: 5px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: $gold; box-shadow: 0 0 0 3px rgba(231, 194, 107, 0.3); }
+        &.active { border-color: $ink; background: #fbf9f5; .zt-label { color: $ink; } }
+        &.has-targets { animation: zpulse 1.4s ease-in-out infinite; }
+    }
+}
+@keyframes zpulse { 0%, 100% { border-color: $gold; } 50% { border-color: rgba(231, 194, 107, 0.4); } }
+
+.my-sheet { @include panel; padding: 12px; min-height: 120px; }
+
+// ---- Meadow -----------------------------------------------------------------
+.meadow-board {
+    display: flex; flex-direction: column; gap: 8px;
+
+    .mushroom {
+        border: 1px solid $line; border-radius: 12px; padding: 7px 9px; background: #fff;
+        transition: box-shadow 0.12s, transform 0.12s;
+        &.color-red .mush-head .mush-name { color: $red; }
+        &.color-black .mush-head .mush-name { color: $black; }
+        &.color-both .mush-head .mush-name { color: $meadow-text; }
+        &.complete { background: $meadow-soft; border-color: #b6ddbe; }
+        &.legal { cursor: pointer; box-shadow: inset 0 0 0 2px $gold; animation: mpulse 1.3s ease-in-out infinite; }
+        &.legal:hover { transform: translateY(-1px); }
+
+        .mush-head {
+            display: flex; align-items: center; gap: 7px; margin-bottom: 5px;
+            .mush-crest { width: 24px; height: 24px; flex: 0 0 auto; border-radius: 50%; overflow: hidden;
+                .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+            .mush-name { font-weight: 800; font-size: 0.78em; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .mush-vp { font-weight: 900; font-size: 0.9em; color: $gold-deep; background: #fbf3df; border-radius: 8px; padding: 1px 8px; }
+        }
+        .mush-spaces { display: flex; flex-wrap: wrap; gap: 5px; }
+        .m-space {
+            width: 30px; height: 30px; border-radius: 50%; border: 1.5px dashed #d6cfe0;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 0.86em; color: $ink; background: #faf8fc;
+            &.filled { border-style: solid; border-color: $meadow; background: $meadow-soft; color: $meadow-text; }
+            .sp-icon { width: 18px; height: 18px; opacity: 0.6; .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+        }
+    }
+}
+@keyframes mpulse { 0%, 100% { box-shadow: inset 0 0 0 2px $gold; } 50% { box-shadow: inset 0 0 0 2px rgba(231, 194, 107, 0.4); } }
+
+// ---- Woods & Keep graph boards ---------------------------------------------
+.woods-board, .keep-board {
+    position: relative; width: 100%; max-width: 340px; margin: 2px auto;
+}
+.woods-board { aspect-ratio: 1 / 1; }
+.keep-board { aspect-ratio: 1.35 / 1; }
+
+.wb-edges, .kb-edges {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    line { stroke: #ded7e8; stroke-width: 1.1; }
+}
+
+.wb-tree, .kb-cell, .wb-node {
+    position: absolute; transform: translate(-50%, -50%);
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; font-weight: 900;
+}
+
+.wb-tree {
+    width: 12%; aspect-ratio: 1; border: 2px solid #cfc8dc; background: #fff; font-size: 0.8em;
+    .wt-label { color: #c2bcd0; font-size: 0.86em; }
+    .wt-icon { width: 62%; height: 62%; opacity: 0.7; .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+    &.color-red { border-color: #eab6c1; }
+    &.color-black { border-color: #b7b3c6; }
+    &.color-both { border-color: #a9dcc0; }
+    &.filled { background: $woods-soft; border-color: $woods; color: $woods-text; }
+    &.filled .wt-mark { color: $woods-text; }
+    &.legal { cursor: pointer; border-color: $gold; box-shadow: 0 0 0 3px rgba(231, 194, 107, 0.4); animation: nodepulse 1.2s ease-in-out infinite; }
+}
+.wb-node {
+    width: 9%; aspect-ratio: 1; font-size: 0.66em; z-index: 2;
+    background: #efeaf4; color: $muted; border: 1.5px solid #ded7e8;
+    &.center { width: 12%; background: #fff; }
+    .wb-node-icon { width: 78%; height: 78%; .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+    &.lit { background: #fbf3df; border-color: $gold; color: $gold-deep; box-shadow: 0 0 0 2px rgba(231, 194, 107, 0.3); }
+    &.center.lit { background: #fbf3df; }
+}
+
+.kb-cell {
+    width: 13%; aspect-ratio: 1; border: 2px solid #cfc8dc; background: #fff; font-size: 0.8em; z-index: 1;
+    .kc-icon { width: 60%; height: 60%; opacity: 0.7; .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+    .kc-center-icon { width: 74%; height: 74%; .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+    .kc-suit { font-size: 0.5em; letter-spacing: -1px; &.red { color: $red; } &.black { color: $black; } }
+    &.coin { border-color: $gold; background: #fdf8ea; }
+    &.center { border-color: $queen; background: #fbeaf0; width: 15%; }
+    &.ent-red { border-color: $red; }
+    &.ent-black { border-color: $black; }
+    &.filled { background: $keep-soft; border-color: $keep; color: $keep-text; }
+    &.coin.filled { background: #fbf0d6; border-color: $gold-deep; color: $gold-deep; }
+    &.legal { cursor: pointer; border-color: $gold; box-shadow: 0 0 0 3px rgba(231, 194, 107, 0.45); animation: nodepulse 1.2s ease-in-out infinite; z-index: 3; }
+}
+@keyframes nodepulse { 0%, 100% { box-shadow: 0 0 0 3px rgba(231, 194, 107, 0.45); } 50% { box-shadow: 0 0 0 6px rgba(231, 194, 107, 0.16); } }
+
+// ---- Tea Party --------------------------------------------------------------
+.tea-board {
+    display: flex; flex-direction: column; gap: 12px;
+    .tea-vp {
+        display: flex; align-items: baseline; gap: 8px; justify-content: center;
+        .tv-num { font-size: 1.8em; font-weight: 900; color: $queen; }
+        .tv-label { font-size: 0.76em; font-weight: 700; color: $muted; }
+    }
+    .guests-grid {
+        display: flex; flex-wrap: wrap; gap: 8px;
+        .guest-chip {
+            flex: 1 1 140px; min-width: 0; display: flex; align-items: center; gap: 8px;
+            border: 1px solid $line; border-radius: 12px; padding: 6px 10px; background: #faf8fc;
+            .gc-icon { width: 26px; height: 26px; flex: 0 0 auto; .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+            .gc-label { font-size: 0.78em; font-weight: 700; color: $muted; flex: 1 1 auto; }
+            .gc-check { color: $gold-deep; font-weight: 900; }
+            &.on { background: #fbf3df; border-color: $gold; .gc-label { color: $ink; } }
+        }
+    }
+    .teacup-stack {
+        .ts-label { font-size: 0.66em; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: $muted; margin-bottom: 5px; }
+        .ts-row { display: flex; gap: 6px; flex-wrap: wrap; }
+        .teacup-tag {
+            width: 34px; height: 34px; border-radius: 9px; border: 1.5px solid $line; padding: 4px; box-sizing: border-box;
+            background: #f4f0f8; opacity: 0.55;
+            .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+            &.available { opacity: 1; border-color: $gold; background: #fbf3df; }
+            &.consumed { opacity: 1; border-style: dashed; position: relative;
+                &::after { content: '✕'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: $queen; font-weight: 900; } }
+            &.hatter { box-shadow: 0 0 0 2px rgba(224, 121, 143, 0.35); }
+        }
+    }
+}
+
+// ---- Action dock ------------------------------------------------------------
+.action-dock {
+    @include panel; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
+
+    .dock-title { font-weight: 800; font-size: 0.92em; &.ready { color: $muted; font-weight: 700; } }
+    .hand-row { display: flex; gap: 8px; flex-wrap: wrap; padding: 4px 2px; }
+
+    .ready-row { display: flex; flex-wrap: wrap; gap: 6px;
+        .ready-chip { font-size: 0.7em; font-weight: 700; color: $muted; background: #f3eff8; border-radius: 999px; padding: 3px 9px;
+            &.on { background: $meadow-soft; color: $meadow-text; } }
+    }
+
+    &.marking { border-color: $gold; box-shadow: inset 0 0 0 2px rgba(231, 194, 107, 0.28); }
+    .mark-head { display: flex; align-items: center; gap: 12px; }
+    .mark-prompt { min-width: 0; }
+    .mp-title { font-weight: 900; font-size: 0.92em; line-height: 1.25; }
+    .mp-sub { font-size: 0.78em; color: $muted; font-weight: 600; margin-top: 2px; }
+
+    .ace-row, .teacup-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+        .ar-label, .tr-label { font-size: 0.76em; font-weight: 800; color: $muted; display: inline-flex; align-items: center; gap: 5px;
+            .ic { width: 18px; height: 18px; .expressive-vector-icon { width: 100%; height: 100%; display: block; } } }
+        .pill { border: 1.5px solid $line; background: #fff; border-radius: 999px; padding: 5px 14px; min-height: 34px;
+            font-weight: 800; font-size: 0.8em; cursor: pointer; color: $muted;
+            &.on { background: $ink; color: #fff; border-color: $ink; } }
+    }
+}
+
+// ---- Buttons ----------------------------------------------------------------
+%btn {
+    min-height: 44px; padding: 0 16px; border-radius: 12px; font-weight: 800; font-size: 0.88em;
+    cursor: pointer; transition: transform 0.12s, filter 0.12s; border: none;
+    display: inline-flex; align-items: center; gap: 7px; justify-content: center;
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+.primary-btn { @extend %btn; background: $keep; color: #fff; &:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.06); } }
+.ghost-btn { @extend %btn; border: 1px solid $line; background: #fff; color: $muted; &:hover:not(:disabled) { background: #f3eff8; } }
+.danger-btn { @extend %btn; background: $queen; color: #fff; &:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.05); } }
+
+// ---- Rivals -----------------------------------------------------------------
+.rivals-wrap { display: flex; flex-direction: column; gap: 14px; }
+.rival-panel {
+    @include panel; padding: 12px;
+    .rp-head { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; font-weight: 800;
+        .rp-name { font-size: 0.92em; } .rp-state { margin-left: auto; font-size: 0.68em; color: $muted; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; } }
+    .rival-mini {
+        display: flex; flex-wrap: wrap; gap: 12px;
+        .rm-zone { flex: 1 1 150px; min-width: 0; }
+        .rm-label { font-size: 0.62em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: $muted; margin-bottom: 4px; }
+        // Compact the boards inside rival panels.
+        .meadow-board .mush-name { display: none; }
+        .meadow-board .m-space { width: 22px; height: 22px; font-size: 0.72em; }
+        .woods-board, .keep-board { max-width: 200px; }
+        .m-space .sp-icon, .wb-tree .wt-icon, .kb-cell .kc-icon { display: none; }
+        .tea-board .guests-grid .gc-label { font-size: 0.68em; }
+    }
+}
+
+// ---- Score ------------------------------------------------------------------
+.score-sheet {
+    @include panel; padding: 18px; text-align: center;
+    .ss-crown { width: 44px; height: 44px; margin: 0 auto; .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+    .ss-title { font-size: 1.3em; font-weight: 900; margin-top: 4px; }
+    .ss-sub { color: $muted; font-size: 0.86em; margin-top: 2px; }
+    .score-table {
+        width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 0.82em;
+        th { color: $muted; font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.4px; padding: 6px 3px; border-bottom: 2px solid $line; }
+        td { padding: 8px 3px; border-bottom: 1px solid $line; text-align: center; }
+        td:nth-child(2), th:nth-child(2) { text-align: left; }
+        .pk-cell { font-size: 0.82em; }
+        .winner-row { background: $meadow-soft; }
+        .st-total { font-weight: 900; color: $keep-text; }
+        .st-name { display: inline-flex; align-items: center; gap: 6px; }
+    }
+    .ss-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+}
+
+.settings-panel { display: flex; flex-direction: column; gap: 10px; padding: 18px; max-width: 320px; margin: 0 auto; }
+
+// ---- Rules ------------------------------------------------------------------
+.owth-rules {
+    padding: 16px; display: flex; flex-direction: column; gap: 14px; max-height: 82vh; overflow-y: auto;
+    font-family: 'Outfit', 'Inter', sans-serif; color: $ink; max-width: 620px; margin: 0 auto;
+
+    .rules-section {
+        @include panel; padding: 14px 16px;
+        h3 { margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.92em; }
+        p { margin: 0 0 8px; line-height: 1.55; font-size: 0.88em; }
+        ul { margin: 0; padding-left: 18px; line-height: 1.7; font-size: 0.88em; }
+        li { margin-bottom: 4px; }
+        .ic { display: inline-flex; width: 18px; height: 18px; vertical-align: middle; margin: 0 1px;
+            .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+    }
+    .rules-zones {
+        display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px;
+        .rz-item { display: flex; align-items: center; gap: 8px; flex: 1 1 150px;
+            background: #faf8fc; border: 1px solid $line; border-radius: 10px; padding: 7px 10px; }
+        .rz-icon { width: 30px; height: 30px; flex: 0 0 auto; .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+        .rz-name { font-size: 0.8em; font-weight: 800; }
+    }
+}

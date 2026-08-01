@@ -25,5 +25,7 @@ import './seasalt/test_seasalt';
 import './regicide/test_regicide';
 import './skull/test_skull';
 import './courtisans/test_courtisans';
+import './magicalathletes/test_magicalathletes';
+import './offwiththeirheads/test_offwiththeirheads';
 import './test_cards';
 

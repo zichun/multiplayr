@@ -1,0 +1,696 @@
+/**
+ * magicalathletes.scss - Flat minimalist skin (soft pastels, hairline borders,
+ * rounded corners, no hard offset shadows) for "Magical Athletes". The serpentine
+ * race track is the centrepiece and is tuned to sit cleanly on a phone.
+ */
+
+$ink: #39414f;
+$muted: #7c8aa5;
+$line: #e4e8ee;
+$panel: #ffffff;
+$bg: #f6f7fa;
+
+$purple: #7c5bb0;
+$purple-soft: #f2edfb;
+$green: #76c4a0;
+$gold: #e6c766;
+
+.ma-lobby-warn {
+    color: #d98a86;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 18px;
+}
+.ma-waiting {
+    background: $purple-soft;
+    color: $purple;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+// ---- coins ------------------------------------------------------------------
+.ma-coin {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    overflow: hidden;
+    flex: 0 0 auto;
+    transition: transform 0.15s;
+
+    &.small { width: 18px; height: 18px; }
+    &.dim { opacity: 0.4; }
+    &.tripped { transform: rotate(-24deg); }
+    svg { display: block; width: 100%; height: 100%; }
+}
+
+// ---- racer card -------------------------------------------------------------
+.ma-racer-card {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-family: 'Outfit', 'Inter', sans-serif;
+
+    &.selectable { cursor: pointer; transition: transform 0.12s, border-color 0.15s; }
+    &.selectable:hover { transform: translateY(-2px); }
+    &.selected { border-color: transparent; }
+    &.used { opacity: 0.55; }
+
+    .rc-body { min-width: 0; }
+    .rc-name { font-weight: 800; color: $ink; font-size: 1.0em; }
+    .rc-title { font-size: 0.8em; font-weight: 700; color: $purple; text-transform: uppercase; letter-spacing: 0.4px; margin: 1px 0 3px; }
+    .rc-text { font-size: 0.86em; color: $muted; line-height: 1.35; }
+}
+
+// ---- arena ------------------------------------------------------------------
+.ma-arena {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+    padding: 12px 12px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 720px;
+    margin: 0 auto;
+
+    .arena-topline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;         // never let the auto toggle overflow off-screen
+        gap: 8px 10px;
+
+        .topline-right { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; margin-left: auto; }
+
+        .race-pill, .phase-pill {
+            font-size: 0.8em;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 999px;
+            letter-spacing: 0.3px;
+        }
+        .race-pill { background: #eef1f6; color: $muted; }
+        .phase-pill { background: $purple-soft; color: $purple; text-transform: uppercase; }
+
+        // auto-mode segmented control (per player, persists across rounds)
+        .ma-auto-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: #fff;
+            border: 1.5px solid #d8c7f2;
+            border-radius: 999px;
+            padding: 3px 4px 3px 10px;
+            white-space: nowrap;
+
+            &.active { animation: ma-auto-pulse 1.7s ease-in-out infinite; }
+
+            .mag-label {
+                display: inline-flex; align-items: center; gap: 4px;
+                font-size: 0.72em; font-weight: 800; letter-spacing: 0.4px;
+                text-transform: uppercase; color: $purple; margin-right: 3px;
+            }
+            .mag-seg {
+                font-family: 'Outfit', 'Inter', sans-serif;
+                font-size: 0.72em; font-weight: 800; letter-spacing: 0.2px;
+                padding: 4px 9px; border-radius: 999px; border: none; cursor: pointer;
+                background: transparent; color: $muted;
+                transition: background 0.13s, color 0.13s;
+
+                &:hover { background: #eef1f6; }
+                &.on { background: $purple; color: #fff; }
+            }
+        }
+    }
+}
+
+@keyframes ma-auto-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(124, 91, 176, 0.40); }
+    50%      { box-shadow: 0 0 0 5px rgba(124, 91, 176, 0.12); }
+}
+
+.section-label {
+    font-size: 0.74em;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: $muted;
+    margin: 4px 0 2px;
+}
+
+// ---- score bar --------------------------------------------------------------
+.ma-scorebar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    .sb-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: $panel;
+        border: 1px solid $line;
+        border-radius: 999px;
+        padding: 4px 10px 4px 8px;
+        font-size: 0.84em;
+        font-weight: 700;
+
+        &.me { border-color: #cbb8f0; background: #faf7ff; }
+        .sb-name { color: $ink; }
+        .sb-total { background: $ink; color: #fff; border-radius: 999px; padding: 1px 8px; font-weight: 800; }
+    }
+}
+
+.ma-badge { display: inline-flex; width: 1.05em; height: 1.05em; svg { width: 100%; height: 100%; } }
+
+// ---- choose phase -----------------------------------------------------------
+.ma-choose {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .ma-choose-head {
+        .ch-title { font-weight: 800; font-size: 1.25em; }
+        .ch-sub { color: $muted; font-weight: 600; font-size: 0.9em; }
+    }
+
+    .ma-pick-status {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        .ps-chip {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 0.8em; font-weight: 700; color: $muted;
+            background: #eef1f6; border-radius: 999px; padding: 4px 10px;
+            &.ready { background: #e7f6ee; color: #3f9a70; }
+        }
+    }
+
+    .ma-locked {
+        background: $purple-soft; color: $purple; border-radius: 12px;
+        padding: 14px; font-weight: 600; text-align: center;
+    }
+
+    .ma-racer-list { display: flex; flex-direction: column; gap: 10px; }
+    .ma-used-note { font-size: 0.82em; color: $muted; font-style: italic; }
+
+    // ---- draft ----
+    .ma-draft-turn {
+        font-weight: 700;
+        color: $muted;
+        background: #eef1f6;
+        border-radius: 10px;
+        padding: 9px 12px;
+        text-align: center;
+        &.mine { background: #faf7ff; color: $purple; }
+    }
+    .ma-mystable {
+        margin-top: 4px;
+        .ma-coin-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .ma-coin-chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: $panel; border: 1px solid $line; border-radius: 999px;
+            padding: 4px 12px 4px 5px; font-size: 0.82em; font-weight: 700; color: $ink;
+        }
+    }
+}
+
+// ---- the race track ---------------------------------------------------------
+// A snaking asphalt ribbon: rounded lane straights with red/white kerbs and a
+// dashed centre line, joined by U-bends, over a soft-green infield.
+$asphalt: #e7eaef;
+$asphalt-line: #ffffff;
+$kerb: #e79a97;
+$infield: #eef4ee;
+$lane-h: 52px;
+$lane-r: 26px;
+
+@mixin checker($sq: 8px, $dark: #3a4150) {
+    background-image:
+        linear-gradient(45deg, $dark 25%, transparent 25%, transparent 75%, $dark 75%),
+        linear-gradient(45deg, $dark 25%, #fff 25%, #fff 75%, $dark 75%);
+    background-size: $sq $sq;
+    background-position: 0 0, ($sq * 0.5) ($sq * 0.5);
+    background-color: #fff;
+}
+
+.ma-track {
+    position: relative;
+    background: $infield;
+    border: 1px solid #d9e4dc;
+    border-radius: 22px;
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    max-height: 62vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    // a straight (one serpentine row)
+    .ma-lane {
+        position: relative;
+        z-index: 1;
+        height: $lane-h;
+        border-radius: $lane-r;
+        display: flex;
+        align-items: center;
+        padding: 0 18px;
+        background:
+            repeating-linear-gradient(90deg, $kerb 0 9px, #fff 9px 18px) top / 100% 5px no-repeat,
+            repeating-linear-gradient(90deg, $kerb 0 9px, #fff 9px 18px) bottom / 100% 5px no-repeat,
+            $asphalt;
+        &.rev { flex-direction: row-reverse; }
+
+        // dashed centre line
+        &::before {
+            content: '';
+            position: absolute;
+            left: 20px; right: 20px; top: 50%;
+            height: 3px; transform: translateY(-50%);
+            background: repeating-linear-gradient(90deg, $asphalt-line 0 13px, transparent 13px 28px);
+            opacity: 0.8; border-radius: 2px;
+        }
+    }
+
+    // the U-turn joining two straights (sits in the vertical gap)
+    .ma-bend {
+        position: relative;
+        height: 16px;
+        z-index: 0;
+
+        .bend-curve {
+            position: absolute;
+            top: -26px; bottom: -26px;
+            width: 52px;
+            background: $asphalt;
+        }
+        &.right .bend-curve {
+            right: 0;
+            border-radius: 0 $lane-r $lane-r 0;
+            background:
+                repeating-linear-gradient(0deg, $kerb 0 9px, #fff 9px 18px) right / 5px 100% no-repeat,
+                $asphalt;
+        }
+        &.left .bend-curve {
+            left: 0;
+            border-radius: $lane-r 0 0 $lane-r;
+            background:
+                repeating-linear-gradient(0deg, $kerb 0 9px, #fff 9px 18px) left / 5px 100% no-repeat,
+                $asphalt;
+        }
+    }
+
+    // one racing space along a lane (marker, not a boxed grid cell)
+    .ma-cell {
+        position: relative;
+        flex: 1 1 0;
+        min-width: 0;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        // faint distance tick between spaces
+        &:not(:first-child)::after {
+            content: '';
+            position: absolute;
+            left: -1px; top: 30%; bottom: 30%;
+            width: 1px;
+            background: rgba(90, 100, 120, 0.14);
+        }
+
+        .cell-idx {
+            position: absolute;
+            top: 4px;
+            font-size: 0.48em; font-weight: 800;
+            color: rgba(74, 82, 98, 0.45);
+        }
+        .cell-glyph {
+            position: absolute;
+            width: 62%; height: 62%;
+            opacity: 0.62;
+            display: flex; align-items: center; justify-content: center;
+            svg { width: 100%; height: 100%; }
+        }
+        .cell-racers {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1px;
+            align-items: center;
+            justify-content: center;
+            max-width: 100%;
+        }
+
+        // the starting grid — a checkered tab at GO
+        &.start::before {
+            content: '';
+            position: absolute;
+            top: 7px; bottom: 7px; left: 0;
+            width: 9px;
+            border-radius: 3px;
+            @include checker(6px);
+            opacity: 0.9;
+        }
+        &.last::after { display: none; }
+    }
+
+    // checkered finish banner
+    .ma-finish-line {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 12px;
+        padding: 10px 12px 10px 14px;
+        background: $panel;
+        border: 1px solid $line;
+        border-radius: 14px;
+        overflow: hidden;
+
+        .fl-checker {
+            position: absolute;
+            top: 0; bottom: 0; left: 0;
+            width: 10px;
+            @include checker(8px);
+        }
+        .fl-icon { width: 30px; height: 30px; flex: 0 0 auto; margin-left: 6px; svg { width: 100%; height: 100%; } }
+        .fl-racers { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .fl-empty { color: $muted; font-weight: 700; font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px; }
+        .fl-racer { display: inline-flex; align-items: center; gap: 3px; }
+        .fl-rank { font-size: 0.9em; }
+    }
+}
+
+// ---- turn dock --------------------------------------------------------------
+.ma-dock {
+    border-radius: 16px;
+    padding: 12px 14px;
+    font-family: 'Outfit', 'Inter', sans-serif;
+
+    &.acting {
+        background: #faf7ff;
+        border: 1px solid #d8c7f2;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+
+        .dock-racer { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; }
+        .dr-name { font-weight: 800; color: $purple; }
+        .dr-power { font-size: 0.82em; color: $muted; line-height: 1.3; }
+    }
+    &.waiting {
+        background: $panel;
+        border: 1px solid $line;
+        color: $muted;
+        font-weight: 600;
+        display: flex; align-items: center; gap: 8px;
+        justify-content: center;
+        text-align: center;
+    }
+    // while the shared movement animation plays
+    &.anim {
+        background: #faf7ff;
+        border: 1px solid #d8c7f2;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+
+        .dock-racer { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; }
+        .dr-name { font-weight: 800; color: $purple; }
+        .dr-power { font-size: 0.82em; color: $muted; line-height: 1.3; }
+    }
+}
+
+// ---- die face ----
+.ma-die {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 2px;
+    width: 44px; height: 44px;
+    padding: 5px;
+    flex: 0 0 auto;
+    background: #ffffff;
+    border: 1px solid $line;
+    border-radius: 10px;
+    box-shadow: 0 2px 0 rgba(60, 66, 80, 0.08);
+    animation: ma-die-pop 0.32s ease;
+
+    .ma-pip { border-radius: 50%; background: transparent; }
+    .ma-pip.on { background: $ink; }
+}
+.ma-die-none {
+    flex: 0 0 auto;
+    font-size: 1.3em; color: $purple;
+    width: 44px; text-align: center;
+}
+@keyframes ma-die-pop {
+    0% { transform: scale(0.5) rotate(-16deg); opacity: 0; }
+    60% { transform: scale(1.12) rotate(6deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+// the token currently being animated pops up and sits above its neighbours
+.ma-coin.moving {
+    transform: translateY(-3px) scale(1.14);
+    z-index: 6;
+    position: relative;
+}
+
+// the active player's token pulses a bright coloured halo so whose turn it is is
+// unmistakable on the board
+@keyframes ma-token-pulse {
+    0%, 100% { box-shadow: 0 0 0 3px var(--glow), 0 0 5px 2px var(--glow); }
+    50%      { box-shadow: 0 0 0 4px var(--glow), 0 0 14px 6px var(--glow); }
+}
+.ma-coin.current-turn {
+    animation: ma-token-pulse 1.15s ease-in-out infinite;
+    z-index: 7;
+    position: relative;
+}
+
+// ---- floating rolled die (fixed, visible on every screen during the animation) ----
+.ma-die-float {
+    position: fixed;
+    top: 58px;
+    right: 12px;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.97);
+    border: 1px solid $line;
+    border-radius: 16px;
+    padding: 9px 11px 8px;
+    box-shadow: 0 8px 22px rgba(60, 66, 80, 0.18);
+    animation: ma-die-pop 0.34s ease;
+
+    .ma-die { margin: 0; }
+    .mdf-label {
+        display: flex; align-items: center; gap: 5px;
+        font-size: 0.72em; font-weight: 700; color: $muted; white-space: nowrap;
+    }
+}
+
+// ---- racers & powers roster (togglable) ----
+.ma-roster {
+    border: 1px solid $line;
+    border-radius: 14px;
+    background: $panel;
+    overflow: hidden;
+
+    .ma-roster-toggle {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #f6f7fa;
+        border: none;
+        cursor: pointer;
+        padding: 10px 14px;
+        font-family: 'Outfit', 'Inter', sans-serif;
+        font-weight: 800;
+        font-size: 0.78em;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: $ink;
+
+        .rt-caret { margin-left: auto; color: $muted; font-size: 1.1em; }
+        &:hover { background: #eef1f6; }
+    }
+
+    .ma-roster-list { display: flex; flex-direction: column; }
+
+    .ma-roster-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        border-top: 1px solid $line;
+
+        // the per-player progress fill is applied inline; keep only structural accents
+        &.current { box-shadow: inset 4px 0 0 $purple; }
+        &.out { opacity: 0.5; }
+
+        .rr-info { flex: 1 1 auto; min-width: 0; }
+        .rr-line { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .rr-player { font-weight: 800; color: $ink; }
+        .rr-racer { font-weight: 700; color: $purple; font-size: 0.9em; }
+        .rr-pct { margin-left: auto; font-size: 0.8em; font-weight: 800; color: $muted; }
+        .rr-tag { font-size: 0.82em; }
+        .rr-tag.out { color: #d5655a; font-weight: 700; text-transform: uppercase; font-size: 0.72em; }
+        .rr-power {
+            font-size: 0.84em; color: $muted; line-height: 1.35; margin-top: 2px;
+            em { color: $ink; font-style: italic; }
+        }
+    }
+}
+
+// ---- human decision panel ----
+.ma-decision {
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: $panel;
+    border: 1px solid $line;
+    font-family: 'Outfit', 'Inter', sans-serif;
+
+    &.mine { background: #faf7ff; border-color: #d8c7f2; }
+
+    .dec-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .dec-prompt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .dec-who { font-size: 0.76em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: $muted; }
+    .dec-text { font-weight: 700; color: $ink; line-height: 1.3; }
+
+    .dec-options { display: flex; flex-wrap: wrap; gap: 8px; }
+    .dec-opt { flex: 1 1 auto; min-width: 120px; }
+    .dec-waiting { color: $muted; font-weight: 600; text-align: center; }
+}
+
+.ma-roll {
+    flex: 0 0 auto;
+    background: $purple;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 26px;
+    font-size: 1.05em;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: transform 0.12s, background 0.15s;
+    &:hover { transform: translateY(-2px); background: #6a3fb0; }
+    &:active { transform: translateY(1px); }
+}
+
+// ---- buttons ----------------------------------------------------------------
+.ma-primary {
+    background: $purple; color: #fff; border: none; border-radius: 12px;
+    padding: 12px 20px; font-weight: 800; font-size: 1em; cursor: pointer;
+    transition: transform 0.12s, background 0.15s;
+    &:hover:not(:disabled) { transform: translateY(-2px); background: #6a3fb0; }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+.ma-ghost {
+    background: #fff; color: $muted; border: 1px solid $line; border-radius: 12px;
+    padding: 12px 20px; font-weight: 700; cursor: pointer;
+    &:hover { border-color: $muted; }
+}
+
+// ---- race over --------------------------------------------------------------
+.ma-raceover {
+    background: $panel; border: 1px solid $line; border-radius: 16px;
+    padding: 18px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+
+    .ro-title { font-weight: 800; font-size: 1.2em; }
+    .ro-podium { display: flex; gap: 24px; align-items: flex-end; justify-content: center; }
+    .ro-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .ro-slot.second { opacity: 0.85; }
+    .ro-medal { font-size: 1.4em; }
+    .ro-name { font-weight: 700; font-size: 0.85em; color: $ink; }
+    .ro-wait { color: $muted; font-weight: 600; }
+}
+
+// ---- game over --------------------------------------------------------------
+.ma-gameover {
+    background: $panel; border: 1px solid $line; border-radius: 16px;
+    padding: 18px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+
+    .go-crown { font-size: 2.4em; }
+    .go-title { font-weight: 800; font-size: 1.3em; }
+    .go-table {
+        width: 100%; border-collapse: collapse; font-size: 0.9em;
+        th { color: $muted; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 4px; border-bottom: 2px solid $line; }
+        td { padding: 8px 4px; border-bottom: 1px solid $line; }
+        .go-name { text-align: left; font-weight: 700; }
+        .go-total { font-weight: 800; }
+        tr.win { background: #faf7ff; }
+    }
+    .go-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+}
+
+// ---- feed -------------------------------------------------------------------
+.ma-feed {
+    display: flex; flex-direction: column; gap: 4px;
+    max-height: 150px; overflow-y: auto;
+    background: $panel; border: 1px solid $line; border-radius: 14px;
+    padding: 10px 12px;
+
+    .feed-row {
+        display: flex; align-items: center; gap: 8px;
+        font-size: 0.82em; color: $ink; line-height: 1.3;
+        .feed-badge { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+        .feed-text { min-width: 0; }
+        &.k-eliminate .feed-text { color: #d5655a; font-weight: 700; }
+        &.k-finish .feed-text { color: #3f9a70; font-weight: 700; }
+        &.k-race .feed-text { color: $purple; font-weight: 700; }
+    }
+}
+
+// ---- stable / settings ------------------------------------------------------
+.ma-stable {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 10px;
+    max-width: 620px; margin: 0 auto;
+    .ma-empty { color: $muted; font-style: italic; }
+}
+.ma-settings { padding: 16px; display: flex; flex-direction: column; gap: 10px; max-width: 320px; }
+
+// ---- rules ------------------------------------------------------------------
+.ma-rules {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+    padding: 14px;
+    max-width: 640px; margin: 0 auto;
+
+    .rules-section {
+        margin-bottom: 16px;
+        h3 { text-transform: uppercase; letter-spacing: 1px; font-size: 0.95em; border-bottom: 3px solid $line; padding-bottom: 6px; margin-bottom: 8px; }
+        p { line-height: 1.5; font-size: 0.92em; color: #4a5262; }
+        &.highlight { background: $purple-soft; border-radius: 14px; padding: 14px; h3 { border-color: #d8c7f2; } }
+        .rules-note { font-size: 0.82em; color: $muted; font-style: italic; margin-top: 6px; }
+    }
+    .rules-tracks { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+    .rt-chip {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: $panel; border: 1px solid $line; border-radius: 999px;
+        padding: 4px 12px 4px 6px; font-size: 0.82em; font-weight: 700;
+    }
+}
