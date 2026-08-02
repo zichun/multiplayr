@@ -1,0 +1,387 @@
+/**
+ * projectl.scss — flat, soft, modern skin for Project L.
+ *
+ * A light minimalist look (not the platform's neo-brutalist default): airy
+ * surfaces, hairline borders, gentle radii, soft shadows, muted ink. The board
+ * itself is themed by the polyomino library; this file styles the surrounding
+ * cards, trays, market, overlays and HUD.
+ */
+
+$pl-bg:        #f6f8fb;
+$pl-panel:     #ffffff;
+$pl-ink:       #2c3a4b;
+$pl-muted:     #8695a7;
+$pl-line:      #e4e9f0;
+$pl-accent:    #5aa9e6;
+$pl-accent-dk: #3f8fce;
+$pl-green:     #3fae7c;
+$pl-radius:    14px;
+$pl-shadow:    0 4px 14px rgba(60, 80, 110, 0.08);
+
+.mp-gameshell,
+.pl-arena,
+.pl-players-panel,
+.pl-rules,
+.pl-lobby,
+.pl-scoring,
+.pl-settings {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $pl-ink;
+}
+
+.pl-arena {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 12px 14px 28px;
+    max-width: 980px;
+    margin: 0 auto;
+}
+
+// ---------------------------------------------------------------- HUD
+.pl-hud {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: $pl-panel;
+    border: 1px solid $pl-line;
+    border-radius: $pl-radius;
+    box-shadow: $pl-shadow;
+
+    &.mine { border-color: rgba($pl-accent, 0.7); }
+}
+.pl-hud-left, .pl-hud-right { display: flex; align-items: center; gap: 12px; }
+.pl-round { font-weight: 700; letter-spacing: 0.4px; }
+
+.pl-pips { display: inline-flex; gap: 6px; }
+.pl-pip {
+    width: 12px; height: 12px; border-radius: 50%;
+    &.on  { background: $pl-accent; box-shadow: 0 0 0 3px rgba($pl-accent, 0.18); }
+    &.off { background: #dbe3ec; }
+}
+.pl-endflag {
+    font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+    color: #c8863a; background: #fdf3e3; padding: 4px 10px; border-radius: 999px;
+    &.ft { color: #b06254; background: #fbeae6; }
+}
+
+// ---------------------------------------------------------------- finishing bar
+.pl-ft-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 10px 14px; border-radius: $pl-radius;
+    background: #fbeae6; color: #9c5647; font-weight: 600;
+    &.done { background: #eef2f7; color: $pl-muted; justify-content: center; }
+}
+
+// ---------------------------------------------------------------- section titles
+.pl-section-title {
+    font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    color: $pl-muted; margin: 2px 2px -4px;
+}
+
+// ---------------------------------------------------------------- puzzle card
+.pl-puzzle-card {
+    display: inline-flex; flex-direction: column; gap: 6px;
+    padding: 8px; border-radius: 12px;
+    background: $pl-panel; border: 1px solid $pl-line;
+    box-shadow: $pl-shadow;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+
+    &.deck-black { background: #f3f5f9; }
+    &.compact { padding: 6px; gap: 4px; }
+    // fill mode: card stretches to its grid cell and the board scales with it
+    &.fill {
+        display: flex; width: 100%; box-sizing: border-box;
+        .poly-board { width: 100%; height: auto; }
+    }
+
+    &.clickable {
+        cursor: pointer;
+        &:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(60, 80, 110, 0.14); border-color: rgba($pl-accent, 0.6); }
+        &:active { transform: translateY(0); }
+    }
+    &.highlight { border-color: $pl-green; box-shadow: 0 0 0 3px rgba($pl-green, 0.25); }
+}
+.pl-puzzle-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 0 2px;
+}
+.pl-points {
+    font-weight: 800; font-size: 1.05rem; line-height: 1;
+    min-width: 18px; text-align: center;
+}
+.pl-reward { display: inline-flex; }
+.pl-card-action {
+    text-align: center; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: $pl-accent-dk;
+}
+.pl-puzzle-empty {
+    width: 100%; aspect-ratio: 1; border-radius: 12px;
+    border: 1px dashed $pl-line; background: rgba(255,255,255,0.4);
+    &.grid { aspect-ratio: 1; }
+}
+
+// ---------------------------------------------------------------- deck stub
+.pl-deck-stub {
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+    min-width: 58px; padding: 10px 8px; border-radius: 12px;
+    background: linear-gradient(160deg, #eef2f7, #dfe6ef); border: 1px solid $pl-line;
+    &.deck-black { background: linear-gradient(160deg, #4a5566, #2f3846); color: #fff; }
+    &.clickable { cursor: pointer; &:hover { transform: translateY(-2px); } }
+    transition: transform 0.12s ease;
+}
+.pl-deck-count { font-weight: 800; font-size: 1.15rem; line-height: 1; }
+.pl-deck-label { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.6px; opacity: 0.8; }
+.pl-deck-hint { font-size: 0.62rem; opacity: 0.65; }
+
+// ---------------------------------------------------------------- market
+.pl-market { display: flex; flex-direction: column; gap: 10px; }
+.pl-market-row {
+    background: $pl-panel; border: 1px solid $pl-line; border-radius: $pl-radius;
+    box-shadow: $pl-shadow; padding: 10px 12px;
+}
+.pl-row-header {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    margin-bottom: 8px;
+}
+.pl-row-label {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    color: $pl-muted;
+}
+.pl-market-row.deck-black .pl-row-label { color: #4a5566; }
+.pl-row-tools { display: flex; align-items: center; gap: 8px; }
+// compact horizontal deck chip inside the row header
+.pl-row-tools .pl-deck-stub {
+    flex-direction: row; gap: 6px; min-width: 0; padding: 6px 10px;
+    .pl-deck-label, .pl-deck-hint { display: none; }
+    .pl-deck-count { font-size: 0.95rem; }
+    &::after { content: 'deck'; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.75; }
+}
+// the four market slots always share one tidy row — no ragged wrapping
+.pl-row-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    align-items: start;
+}
+.pl-btn.recycle {
+    gap: 5px; padding: 0 12px;
+    .pl-recycle-glyph { font-size: 1.15rem; line-height: 1; }
+}
+
+// ---------------------------------------------------------------- supply tray
+.pl-supply-tray {
+    display: flex; flex-wrap: wrap; gap: 7px; padding: 10px 12px;
+    background: $pl-panel; border: 1px solid $pl-line; border-radius: $pl-radius; box-shadow: $pl-shadow;
+    justify-content: safe center; align-items: stretch;
+}
+// faint divider separating one piece-level group from the next
+.pl-supply-divider {
+    align-self: stretch; width: 1px; margin: 4px 3px;
+    background: linear-gradient(to bottom, transparent, $pl-line 18%, $pl-line 82%, transparent);
+}
+.pl-supply-piece {
+    display: inline-flex; flex-direction: column; align-items: center; gap: 2px;
+    min-width: 46px; min-height: 58px; padding: 6px 8px;
+    border: 1px solid $pl-line; border-radius: 12px; background: #fbfcfe; cursor: default;
+    transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+
+    &:not(:disabled) { cursor: pointer; &:hover { transform: translateY(-2px); border-color: rgba($pl-accent,0.5); } }
+    &.selected { border-color: $pl-accent; box-shadow: 0 0 0 3px rgba($pl-accent, 0.22); background: #eef6fd; }
+    &.empty { opacity: 0.32; }
+    &:disabled { cursor: not-allowed; }
+}
+.pl-supply-glyph { display: inline-flex; align-items: center; justify-content: center; height: 34px; }
+.pl-supply-count { font-weight: 700; font-size: 0.85rem; color: $pl-ink; line-height: 1; }
+.pl-supply-lvl { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.3px; color: #b3bfcd; line-height: 1; }
+.pl-lvl { font-size: 0.66rem; color: $pl-muted; font-weight: 700; }
+
+// ---------------------------------------------------------------- my puzzles
+.pl-my-puzzles {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    & > div { flex: 0 0 auto; }
+}
+.pl-my-puzzle { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+
+// ---------------------------------------------------------------- action bar
+.pl-actionbar {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    position: sticky; bottom: 0; z-index: 5;
+    padding: 10px; background: rgba(246, 248, 251, 0.9); backdrop-filter: blur(6px);
+    border-radius: $pl-radius;
+}
+
+// ---------------------------------------------------------------- buttons
+.pl-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    min-height: 44px; padding: 0 18px;
+    border: none; border-radius: 12px; background: #eef2f7; color: $pl-ink;
+    font-family: inherit; font-size: 0.95rem; font-weight: 700; letter-spacing: 0.3px; cursor: pointer;
+    transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+
+    &:hover { background: #e3e9f1; }
+    &:active { transform: scale(0.97); }
+    &.primary { background: $pl-accent; color: #fff; box-shadow: 0 4px 12px rgba($pl-accent, 0.3); &:hover { background: $pl-accent-dk; } }
+    &.ghost { background: transparent; color: $pl-muted; &:hover { background: #eef2f7; } }
+    &.small { min-height: 38px; padding: 0 14px; font-size: 0.86rem; }
+    &.tiny { min-height: 32px; padding: 0 12px; font-size: 0.78rem; border-radius: 10px; }
+    &.block { width: 100%; }
+    &:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; transform: none; }
+}
+
+// ---------------------------------------------------------------- overlays
+.pl-overlay {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(30, 42, 60, 0.42); backdrop-filter: blur(3px);
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.pl-overlay-panel {
+    background: $pl-bg; border-radius: 20px; padding: 18px;
+    width: 100%; max-width: 440px; max-height: 92vh; overflow-y: auto;
+    box-shadow: 0 20px 50px rgba(20, 30, 45, 0.3);
+    display: flex; flex-direction: column; gap: 12px;
+    &.wide { max-width: 720px; }
+}
+.pl-overlay-head {
+    display: flex; align-items: center; gap: 10px;
+    h3 { margin: 0; font-size: 1.05rem; font-weight: 800; letter-spacing: 0.3px; flex: 1; }
+}
+.pl-cost-hint { font-size: 0.8rem; font-weight: 700; color: #b06254; }
+.pl-x {
+    border: none; background: #eef2f7; color: $pl-muted; width: 34px; height: 34px;
+    border-radius: 10px; font-size: 1rem; cursor: pointer; &:hover { background: #e0e6ee; }
+}
+.pl-picker-label {
+    font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+    color: $pl-muted; margin-top: 2px;
+}
+.pl-empty-note, .pl-hint-text { color: $pl-muted; font-size: 0.9rem; text-align: center; }
+.pl-or { text-align: center; color: $pl-muted; font-size: 0.82rem; font-weight: 600; }
+.pl-overlay-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.pl-upgrade-targets { display: flex; flex-wrap: wrap; gap: 8px; }
+
+// ---------------------------------------------------------------- master grid
+.pl-master-grid { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
+.pl-master-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+// ---------------------------------------------------------------- solo
+.pl-solo {
+    background: $pl-panel; border: 1px solid $pl-line; border-radius: $pl-radius;
+    box-shadow: $pl-shadow; padding: 12px; display: flex; flex-direction: column; gap: 12px;
+}
+.pl-solo-top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.pl-solo-decknote { display: flex; align-items: center; gap: 8px; }
+.pl-solo-decklabel { font-size: 0.78rem; font-weight: 600; color: $pl-muted; }
+.pl-solo-opponent {
+    margin-left: auto; text-align: right; background: #2f3846; color: #fff;
+    padding: 8px 14px; border-radius: 12px; min-width: 120px;
+}
+.pl-solo-opp-title { font-weight: 800; letter-spacing: 1px; }
+.pl-solo-opp-vp { font-size: 0.82rem; }
+.pl-solo-opp-supply, .pl-solo-diff { font-size: 0.72rem; opacity: 0.75; }
+.pl-solo-locks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pl-lock-col {
+    display: flex; gap: 4px; align-items: center; justify-content: center; min-height: 22px;
+    background: #eef2f7; border-radius: 8px; padding: 4px;
+}
+.pl-lock-token { width: 12px; height: 12px; border-radius: 4px; background: #f0a759; }
+.pl-lock-open { font-size: 0.66rem; color: $pl-muted; }
+.pl-solo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.pl-solo-grid .pl-puzzle-card { width: 100%; align-items: center; }
+
+// ---------------------------------------------------------------- players panel
+.pl-players-panel { display: flex; flex-wrap: wrap; gap: 12px; padding: 14px; }
+.pl-player-block {
+    flex: 1 1 260px; min-width: 0;
+    background: $pl-panel; border: 2px solid $pl-line; border-radius: $pl-radius;
+    box-shadow: $pl-shadow; padding: 12px;
+    &.active { box-shadow: 0 0 0 3px rgba($pl-accent, 0.2), $pl-shadow; }
+}
+.pl-player-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.pl-player-name { font-weight: 800; }
+.pl-player-vp { font-weight: 700; }
+.pl-player-solved { font-size: 0.78rem; color: $pl-muted; margin-left: auto; }
+.pl-player-section { margin-bottom: 8px; }
+.pl-mini-label {
+    display: block; font-size: 0.64rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.8px; color: $pl-muted; margin-bottom: 4px;
+}
+.pl-player-puzzles, .pl-player-solved-cards { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
+.pl-player-supply { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pl-mini-piece { display: inline-flex; align-items: center; gap: 3px; font-size: 0.78rem; b { color: $pl-ink; } }
+.pl-muted { color: $pl-muted; font-size: 0.85rem; &.pad { padding: 8px; } }
+
+// ---------------------------------------------------------------- scoring
+.pl-scoring { padding: 20px; text-align: center; display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.pl-scoring h2 { margin: 0; font-size: 1.5rem; font-weight: 800; &.win { color: $pl-green; } &.lose { color: #b06254; } }
+.pl-score-rows { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 340px; }
+.pl-score-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 10px 16px; background: $pl-panel; border: 1px solid $pl-line; border-radius: 12px;
+    span { font-weight: 700; } b { font-size: 1.1rem; }
+    &.winner { border-color: $pl-green; box-shadow: 0 0 0 2px rgba($pl-green, 0.2); }
+}
+.pl-crown { color: #eab543; }
+
+// ---------------------------------------------------------------- rules / lobby
+.pl-rules { padding: 16px 18px; max-width: 640px; margin: 0 auto; line-height: 1.5;
+    h3 { font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 3px solid $pl-ink; padding-bottom: 6px; }
+    h4 { margin: 14px 0 4px; text-transform: uppercase; letter-spacing: 0.6px; font-size: 0.85rem; color: $pl-accent-dk; }
+    ul { padding-left: 20px; } li { margin: 4px 0; }
+}
+.pl-legend { display: flex; flex-wrap: wrap; gap: 12px; }
+.pl-legend-item { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; small { color: $pl-muted; } }
+.pl-lobby { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.pl-difficulty { display: flex; flex-direction: column; gap: 6px; }
+.pl-diff-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.pl-waiting { text-align: center; color: $pl-muted; padding: 20px; }
+.pl-settings { display: flex; flex-direction: column; gap: 12px; padding: 16px; max-width: 320px; margin: 0 auto; }
+
+// ---------------------------------------------------------------- speed contest
+.pl-speedboard {
+    background: $pl-panel; border: 1px solid $pl-line; border-radius: $pl-radius;
+    box-shadow: $pl-shadow; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
+    &.final { border-color: $pl-green; box-shadow: 0 0 0 2px rgba($pl-green, 0.18), $pl-shadow; }
+}
+.pl-speedboard-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    font-size: 0.82rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+    .pl-speedboard-sub { font-weight: 600; letter-spacing: 0.3px; color: $pl-muted; text-transform: none; font-size: 0.72rem; }
+}
+.pl-speed-rows { display: flex; flex-direction: column; gap: 8px; }
+.pl-speed-row {
+    display: grid;
+    grid-template-columns: 22px minmax(64px, 1fr) minmax(110px, 2fr) auto;
+    align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 12px; background: #fbfcfe; border: 1px solid $pl-line;
+    &.me { border-color: rgba($pl-accent, 0.6); background: #eef6fd; }
+    &.cleared { background: #eefaf3; border-color: rgba($pl-green, 0.45); }
+}
+.pl-speed-rank { font-weight: 800; color: $pl-muted; text-align: center; }
+.pl-speed-name { font-weight: 800; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-speed-mid { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.pl-speed-bar { height: 7px; border-radius: 4px; background: #e6ecf3; overflow: hidden; }
+.pl-speed-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+.pl-speed-counts { display: flex; flex-wrap: wrap; gap: 5px; }
+.pl-chip {
+    font-size: 0.66rem; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+    background: #eef2f7; color: #55677c;
+    &.black { background: #e6e9f0; color: #3a4759; }
+    &.white { background: #f3f6fa; color: #6b7c90; }
+}
+.pl-speed-score {
+    text-align: right; display: flex; flex-direction: column; align-items: flex-end;
+    b { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+    .pl-speed-done { font-size: 0.66rem; font-weight: 700; color: $pl-green; }
+}
+.pl-speed-hint {
+    font-size: 0.85rem; color: $pl-muted; text-align: center;
+    background: #fff; border: 1px dashed $pl-line; border-radius: 12px; padding: 8px 12px;
+    b { color: $pl-ink; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pl-btn, .pl-puzzle-card, .pl-supply-piece, .pl-deck-stub { transition: none; }
+    .pl-speed-bar-fill { transition: none; }
+}

@@ -31,6 +31,7 @@ import { SkullRule } from './skull/skull';
 import { CourtisansRule } from './courtisans/courtisans';
 import { MagicalAthletesRule } from './magicalathletes/magicalathletes';
 import { OffWithTheirHeadsRule } from './offwiththeirheads/offwiththeirheads';
+import { ProjectLRule } from './projectl/projectl';
 
 
 const CoupDebugger = NewDebuggerRule(
@@ -649,6 +650,14 @@ export const MPRULES = {
         icon: '👑',
         minPlayers: 2,
         maxPlayers: 4
+    },
+    'projectl': {
+        description: 'Project L - Polyomino Puzzle Engine Builder',
+        rules: ['lobby', 'gameshell', 'projectl'],
+        rule: ProjectLRule,
+        icon: '🧩',
+        minPlayers: 1,
+        maxPlayers: 6
     }
 };
 

@@ -535,6 +535,29 @@ export const MPRULES = {
         minPlayers: 2,
         maxPlayers: 4
     },
+    'projectl': {
+        description: 'Project L - Polyomino Puzzle Engine Builder',
+        rules: ['lobby', 'gameshell', 'projectl'],
+        rule: () => import('./projectl/projectl').then(m => m.ProjectLRule),
+        icon: '🧩',
+        minPlayers: 1,
+        maxPlayers: 6
+    },
+    'projectl-debug': {
+        description: 'Project L (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'projectl', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./projectl/projectl')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('projectl', orig.ProjectLRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🧩',
+        minPlayers: 1,
+        maxPlayers: 6
+    },
     'offwiththeirheads-debug': {
         description: 'Off With Their Heads (Debug)',
         debug: true,

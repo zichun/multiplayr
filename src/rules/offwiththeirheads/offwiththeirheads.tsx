@@ -33,7 +33,8 @@ import {
 
 import {
     OffWithTheirHeadsGameState,
-    SUIT_ORDER
+    SUIT_ORDER,
+    teaPartyVP
 } from './OffWithTheirHeadsGameState';
 
 export const OffWithTheirHeadsRule: GameRuleInterface = {
@@ -101,6 +102,30 @@ export const OffWithTheirHeadsRule: GameRuleInterface = {
             ? { playerCards: s.reveal.playerCards, extras: s.reveal.extras, positions: s.reveal.positions, rankedIds: s.reveal.rankedIds }
             : null;
 
+        // Sheets are public boards, but each player's set-aside poker cards are
+        // HIDDEN information until the end. Strip them from the shared sheets; a
+        // player always sees their OWN accumulated set-aside (for long-term poker
+        // planning), and at game over everyone's is revealed for review.
+        const sheetsPublic: { [id: string]: any } = {};
+        s.playerIds.forEach(id => { sheetsPublic[id] = { ...s.sheets[id], setAside: [] }; });
+        const allSetAside: { [id: string]: any } | null = isOver
+            ? (() => { const m: { [id: string]: any } = {}; s.playerIds.forEach(id => { m[id] = s.sheets[id].setAside; }); return m; })()
+            : null;
+
+        // Live points earned so far in each zone (public — derived from the public
+        // boards). Meadow/Woods/Keep reuse the engine's pure scorers; Tea is the
+        // guest curve.
+        const zoneScores: { [id: string]: { meadow: number; woods: number; keep: number; tea: number } } = {};
+        s.playerIds.forEach(id => {
+            const sh = s.sheets[id];
+            zoneScores[id] = {
+                meadow: gameState.scoreMeadow(sh).total,
+                woods: gameState.scoreWoods(sh).total,
+                keep: gameState.scoreKeep(sh).total,
+                tea: teaPartyVP(sh.guests.length)
+            };
+        });
+
         const setViewProps = (clientId: string) => {
             mp.setViewProps(clientId, 'gameStatus', s.status);
             mp.setViewProps(clientId, 'round', s.round);
@@ -112,7 +137,10 @@ export const OffWithTheirHeadsRule: GameRuleInterface = {
             mp.setViewProps(clientId, 'playerNames', playerNames);
             mp.setViewProps(clientId, 'playerAccents', playerAccents);
             mp.setViewProps(clientId, 'playerIcons', playerIcons);
-            mp.setViewProps(clientId, 'sheets', s.sheets);
+            mp.setViewProps(clientId, 'sheets', sheetsPublic);
+            mp.setViewProps(clientId, 'mySetAside', s.sheets[clientId] ? s.sheets[clientId].setAside : []);
+            mp.setViewProps(clientId, 'allSetAside', allSetAside);
+            mp.setViewProps(clientId, 'zoneScores', zoneScores);
             mp.setViewProps(clientId, 'selectionReady', selectionReady);
             mp.setViewProps(clientId, 'marksState', marksState);
             mp.setViewProps(clientId, 'reveal', revealView);

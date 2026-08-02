@@ -27,5 +27,6 @@ import './skull/test_skull';
 import './courtisans/test_courtisans';
 import './magicalathletes/test_magicalathletes';
 import './offwiththeirheads/test_offwiththeirheads';
+import './projectl/test_projectl';
 import './test_cards';
 

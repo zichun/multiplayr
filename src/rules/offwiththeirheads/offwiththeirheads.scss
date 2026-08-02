@@ -78,16 +78,16 @@ $black: #4a4458;
     }
     // Oversized suit glyph (~2/5 of the card) bleeding off the bottom-right corner.
     .oc-suit {
-        position: absolute; right: -8px; bottom: -14px;
-        font-size: 3.4em; line-height: 1; opacity: 0.92;
+        position: absolute; right: -18px; bottom: -28px;
+        font-size: 7.0em; line-height: 1; opacity: 0.7;
     }
 
     &.red { color: $red; }
     &.black { color: $black; }
     &.small {
         width: 38px; height: 53px; border-radius: 8px;
-        .oc-rank { font-size: 1.05em; top: 3px; left: 5px; }
-        .oc-suit { font-size: 2.5em; right: -6px; bottom: -10px; }
+        .oc-rank { font-size: 1.2em; top: 3px; left: 5px; }
+        .oc-suit { font-size: 4em; right: -6px; bottom: -10px; }
     }
     &.dim { opacity: 0.5; }
 
@@ -145,11 +145,12 @@ $black: #4a4458;
     .zt {
         flex: 1 1 0; min-width: 0; position: relative;
         background: #fff; border: 1px solid $line; border-radius: 12px;
-        padding: 7px 4px; cursor: pointer; min-height: 52px;
-        display: flex; flex-direction: column; align-items: center; gap: 2px;
+        padding: 6px 4px; cursor: pointer; min-height: 60px;
+        display: flex; flex-direction: column; align-items: center; gap: 1px;
         transition: background 0.12s, border-color 0.12s, transform 0.12s;
-        .zt-icon { width: 24px; height: 24px; .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
-        .zt-label { font-size: 0.66em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: $muted; }
+        .zt-icon { width: 22px; height: 22px; .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+        .zt-label { font-size: 0.62em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: $muted; }
+        .zt-score { font-size: 0.9em; font-weight: 900; color: $gold-deep; line-height: 1.05; }
         .zt-dot { position: absolute; top: 5px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: $gold; box-shadow: 0 0 0 3px rgba(231, 194, 107, 0.3); }
         &.active { border-color: $ink; background: #fbf9f5; .zt-label { color: $ink; } }
         &.has-targets { animation: zpulse 1.4s ease-in-out infinite; }
@@ -158,6 +159,28 @@ $black: #4a4458;
 @keyframes zpulse { 0%, 100% { border-color: $gold; } 50% { border-color: rgba(231, 194, 107, 0.4); } }
 
 .my-sheet { @include panel; padding: 12px; min-height: 120px; }
+
+// ---- Per-zone guest strip ---------------------------------------------------
+.zone-wrap { display: flex; flex-direction: column; gap: 9px; }
+.zone-guests {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    .zg-chip {
+        flex: 1 1 165px; min-width: 0; display: flex; align-items: center; gap: 7px;
+        background: #faf8fc; border: 1px solid $line; border-radius: 10px; padding: 5px 8px;
+        .zg-icon { width: 26px; height: 26px; flex: 0 0 auto; border-radius: 50%; overflow: hidden;
+            background: #f1ecf6; box-sizing: border-box; padding: 2px;
+            .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+        .zg-text { min-width: 0; display: flex; flex-direction: column; line-height: 1.2; }
+        .zg-name { font-size: 0.72em; font-weight: 800; color: $muted; }
+        .zg-check { color: $gold-deep; }
+        .zg-hint { font-size: 0.64em; color: $muted; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        &.on { background: #fbf3df; border-color: $gold;
+            .zg-icon { background: #fff; } .zg-name { color: $gold-deep; } }
+    }
+}
+// Keep cells that seat Humpty Dumpty / the White Rabbit: a rosy ring + the guest glyph.
+.kb-cell.guest-cell:not(.legal) { box-shadow: inset 0 0 0 2px rgba(224, 121, 143, 0.55); }
+.kc-guest { width: 66%; height: 66%; opacity: 0.85; .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
 
 // ---- Meadow -----------------------------------------------------------------
 .meadow-board {
@@ -299,7 +322,8 @@ $black: #4a4458;
 
     .ace-row, .teacup-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
         .ar-label, .tr-label { font-size: 0.76em; font-weight: 800; color: $muted; display: inline-flex; align-items: center; gap: 5px;
-            .ic { width: 18px; height: 18px; .expressive-vector-icon { width: 100%; height: 100%; display: block; } } }
+            .ic { width: 18px; height: 18px; .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+            .tr-count { color: $gold-deep; font-weight: 900; } }
         .pill { border: 1.5px solid $line; background: #fff; border-radius: 999px; padding: 5px 14px; min-height: 34px;
             font-weight: 800; font-size: 0.8em; cursor: pointer; color: $muted;
             &.on { background: $ink; color: #fff; border-color: $ink; } }
@@ -317,21 +341,40 @@ $black: #4a4458;
 .ghost-btn { @extend %btn; border: 1px solid $line; background: #fff; color: $muted; &:hover:not(:disabled) { background: #f3eff8; } }
 .danger-btn { @extend %btn; background: $queen; color: #fff; &:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.05); } }
 
-// ---- Rivals -----------------------------------------------------------------
+// ---- Set-aside (accumulated poker cards) ------------------------------------
+.setaside-strip {
+    @include panel; padding: 9px 12px; display: flex; flex-direction: column; gap: 7px; background: #fbf7f2;
+    .sa-head { display: flex; align-items: center; gap: 8px;
+        .sa-label { font-size: 0.68em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: $muted; }
+        .sa-count { margin-left: auto; font-size: 0.72em; font-weight: 800; color: $gold-deep; background: #fbf3df; border-radius: 8px; padding: 1px 8px; }
+        .sa-poker { margin-left: auto; font-size: 0.72em; font-weight: 900; color: $keep-text; background: $keep-soft; border-radius: 8px; padding: 2px 9px; }
+    }
+    .sa-cards { display: flex; flex-wrap: wrap; gap: 7px; }
+}
+
+// ---- Rivals / Boards --------------------------------------------------------
 .rivals-wrap { display: flex; flex-direction: column; gap: 14px; }
 .rival-panel {
     @include panel; padding: 12px;
+    &.winner { border-color: $gold; box-shadow: inset 0 0 0 2px rgba(231, 194, 107, 0.4); }
     .rp-head { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; font-weight: 800;
-        .rp-name { font-size: 0.92em; } .rp-state { margin-left: auto; font-size: 0.68em; color: $muted; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; } }
+        .rp-name { font-size: 0.92em; }
+        .rp-crown { font-size: 1em; }
+        .rp-state { margin-left: auto; font-size: 0.68em; color: $muted; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .rp-total { margin-left: auto; font-size: 1.05em; font-weight: 900; color: $keep-text; } }
+    .setaside-strip { margin-top: 10px; }
     .rival-mini {
         display: flex; flex-wrap: wrap; gap: 12px;
         .rm-zone { flex: 1 1 150px; min-width: 0; }
-        .rm-label { font-size: 0.62em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: $muted; margin-bottom: 4px; }
+        .rm-label { font-size: 0.62em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: $muted; margin-bottom: 4px;
+            .rm-score { color: $gold-deep; background: #fbf3df; border-radius: 6px; padding: 0 5px; margin-left: 3px; font-size: 1.15em; letter-spacing: 0; } }
         // Compact the boards inside rival panels.
         .meadow-board .mush-name { display: none; }
         .meadow-board .m-space { width: 22px; height: 22px; font-size: 0.72em; }
         .woods-board, .keep-board { max-width: 200px; }
-        .m-space .sp-icon, .wb-tree .wt-icon, .kb-cell .kc-icon { display: none; }
+        .m-space .sp-icon, .wb-tree .wt-icon, .kb-cell .kc-icon, .kb-cell .kc-guest { display: none; }
+        .zone-guests { display: none; }
+        .zone-wrap { gap: 0; }
         .tea-board .guests-grid .gc-label { font-size: 0.68em; }
     }
 }
@@ -352,6 +395,7 @@ $black: #4a4458;
         .st-total { font-weight: 900; color: $keep-text; }
         .st-name { display: inline-flex; align-items: center; gap: 6px; }
     }
+    .ss-note { font-size: 0.8em; color: $muted; margin-top: 12px; }
     .ss-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
 }
 
@@ -377,5 +421,42 @@ $black: #4a4458;
             background: #faf8fc; border: 1px solid $line; border-radius: 10px; padding: 7px 10px; }
         .rz-icon { width: 30px; height: 30px; flex: 0 0 auto; .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
         .rz-name { font-size: 0.8em; font-weight: 800; }
+    }
+    .rz-foot { color: $muted; font-size: 0.82em; margin-top: 8px; }
+
+    // Suit pips inside rules text.
+    .rk { font-weight: 900; font-size: 1.15em; &.red { color: $red; } &.black { color: $black; } }
+    .rk-arrow { color: $muted; font-weight: 900; margin: 0 3px; }
+
+    .rb-ring {
+        display: flex; align-items: center; gap: 2px; flex-wrap: wrap; margin: 4px 0 10px;
+        font-size: 1.05em;
+    }
+
+    .rank-table {
+        width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.86em;
+        th { text-align: left; color: $muted; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.4px;
+            padding: 5px 6px; border-bottom: 2px solid $line; }
+        td { padding: 7px 6px; border-bottom: 1px solid $line; vertical-align: middle; }
+        td:first-child { white-space: nowrap; font-weight: 700; }
+        .rk { margin-right: 2px; }
+    }
+
+    .tea-curve {
+        display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px;
+        span { font-size: 0.74em; font-weight: 800; background: #fbf3df; color: $gold-deep;
+            border-radius: 8px; padding: 3px 9px; }
+    }
+
+    .guest-list {
+        display: flex; flex-direction: column; gap: 8px;
+        .gl-item { display: flex; gap: 10px; align-items: flex-start;
+            background: #faf8fc; border: 1px solid $line; border-radius: 10px; padding: 8px 10px; }
+        .gl-icon { width: 34px; height: 34px; flex: 0 0 auto; border-radius: 50%; overflow: hidden;
+            background: #fbf3df; box-sizing: border-box; padding: 3px;
+            .expressive-vector-icon { width: 100%; height: 100%; display: block; } }
+        .gl-text { min-width: 0; }
+        .gl-name { font-weight: 800; font-size: 0.86em; display: block; }
+        .gl-cond { font-size: 0.82em; color: $muted; line-height: 1.4; }
     }
 }

@@ -1,0 +1,145 @@
+/**
+ * polyomino.scss — flat, soft, modern styling for the polyomino renderers.
+ *
+ * A light minimalist skin (not the platform's neo-brutalist default): airy
+ * surfaces, hairline borders, gentle radii, no hard offset shadows. Colours are
+ * theme variables so a host game can retint the board without touching markup.
+ */
+
+.poly-board {
+    // themeable well colours
+    --poly-well: #{'#eef2f7'};
+    --poly-well-edge: #{'#dbe3ec'};
+    --poly-well-dot: #{'#c2ccd8'};
+
+    display: block;
+    max-width: 100%;
+    height: auto;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+
+    .poly-well {
+        fill: var(--poly-well);
+        stroke: var(--poly-well-edge);
+        stroke-width: 1;
+    }
+
+    .poly-well-dot {
+        fill: var(--poly-well-dot);
+    }
+
+    .poly-ghost rect {
+        transition: none;
+    }
+}
+
+.poly-shape {
+    display: block;
+    overflow: visible;
+}
+
+.poly-placer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+
+    .poly-board {
+        // gentle lift so the active board reads as the focus, without brutalism
+        border-radius: 16px;
+        background: #fbfcfe;
+        padding: 10px;
+        box-sizing: content-box;
+        box-shadow: 0 6px 20px rgba(60, 80, 110, 0.10);
+    }
+}
+
+.poly-placer-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.poly-ctl {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 0 18px;
+    border: none;
+    border-radius: 12px;
+    background: #eef2f7;
+    color: #2c3a4b;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+
+    .poly-ctl-glyph {
+        font-size: 1.25rem;
+        line-height: 1;
+    }
+
+    &:hover {
+        background: #e3e9f1;
+    }
+
+    &:active {
+        transform: scale(0.96);
+    }
+
+    &.primary {
+        background: #3fae7c;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(63, 174, 124, 0.32);
+
+        &:hover {
+            background: #37a072;
+        }
+    }
+
+    &.ghost {
+        background: transparent;
+        color: #8695a7;
+
+        &:hover {
+            background: #f0f3f7;
+        }
+    }
+
+    &:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
+    }
+}
+
+.poly-placer-hint {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-align: center;
+    padding: 6px 12px;
+    border-radius: 10px;
+
+    &.ok {
+        color: #2f8f63;
+    }
+
+    &.no {
+        color: #b06254;
+    }
+}
+
+// Respect users who prefer reduced motion.
+@media (prefers-reduced-motion: reduce) {
+    .poly-ctl {
+        transition: none;
+    }
+}

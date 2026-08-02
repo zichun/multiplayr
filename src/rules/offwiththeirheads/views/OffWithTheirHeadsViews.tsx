@@ -14,11 +14,11 @@ import { icons as LOBBY_ICONS } from '../../lobby/LobbyView';
 import { ExpressiveIcon } from '../../../client/lib/card-renderer/IconEngine';
 
 import {
-    Card, Suit, Zone, Position, Guest, PlayerSheet, ScoreResult, PendingMark,
-    isRed, rankValue, defaultMarkValue, teaPartyVP, zoneLabel,
+    Card, Suit, Zone, Position, Guest, PlayerSheet, ScoreResult, PokerResult, PendingMark,
+    isRed, rankValue, defaultMarkValue, teaPartyVP, zoneLabel, SUIT_ORDER,
     MEADOW_DEF, TREE_IDS, TREE_POS, TREE_COLORS, WOODS_EDGES, WOODS_NODES,
     MARCH_HARE_TREES, DORMOUSE_TREES, WOODS_TEACUP_TREES, WOODS_BISCUIT_TREES,
-    KEEP_CELLS, KEEP_EDGES, KEEP_RED_ENTRANCE, KEEP_BLACK_ENTRANCE,
+    KEEP_CELLS, KEEP_EDGES, KEEP_RED_ENTRANCE, KEEP_BLACK_ENTRANCE, KEEP_HUMPTY_CELL, KEEP_RABBIT_CELL,
     GUESTS, GUEST_LABELS, POKER_LABELS, POSITION_ZONE, TEACUP_COUNT, MAD_HATTER_INDEX
 } from '../OffWithTheirHeadsGameState';
 import {
@@ -74,6 +74,9 @@ interface OWTHProps extends ViewPropsInterface {
     mySelection: string | null;
     myMark: MarkProp | null;
     amDoneMarking: boolean;
+    mySetAside: Card[];
+    allSetAside: Record<string, Card[]> | null;
+    zoneScores: Record<string, { meadow: number; woods: number; keep: number; tea: number }>;
 }
 
 const cid = (c: Card) => `${c.rank}${c.suit}`;
@@ -95,6 +98,26 @@ function CardTile(props: {
         <div className={cls.join(' ')} onClick={props.selectable ? props.onClick : undefined}>
             <span className="oc-rank">{card.rank}</span>
             <span className="oc-suit">{SUIT_GLYPH[card.suit]}</span>
+        </div>
+    );
+}
+
+// The accumulated set-aside cards (2 per round) that become the poker showdown.
+// Shown to their owner during play for long-term planning, and to everyone at the
+// end for review.
+function SetAsideStrip(props: { cards: Card[]; label: string; poker?: PokerResult | null }) {
+    if (!props.cards || props.cards.length === 0) return null;
+    return (
+        <div className="setaside-strip">
+            <div className="sa-head">
+                <span className="sa-label">{props.label}</span>
+                {props.poker
+                    ? <span className="sa-poker">{POKER_LABELS[props.poker.category]} · +{props.poker.vp}</span>
+                    : <span className="sa-count">{props.cards.length}/6</span>}
+            </div>
+            <div className="sa-cards">
+                {props.cards.map((c, i) => <CardTile key={i} card={c} small />)}
+            </div>
         </div>
     );
 }
@@ -130,6 +153,39 @@ function colorPalette(color: 'red' | 'black' | 'both') {
     return ZONE_PALETTES.meadow;
 }
 
+// Which Tea Party guests are earned in each zone, plus the exact Keep cells that
+// physically trigger Humpty Dumpty / the White Rabbit.
+const ZONE_GUESTS: Record<Zone, Guest[]> = {
+    meadow: ['caterpillar', 'cheshire'],
+    woods: ['dormouse', 'marchhare'],
+    keep: ['humpty', 'rabbit']
+};
+const KEEP_GUEST_CELL: Record<string, Guest> = {
+    [KEEP_HUMPTY_CELL]: 'humpty',
+    [KEEP_RABBIT_CELL]: 'rabbit'
+};
+
+// A compact strip of the guests earned in a given zone, lit gold when achieved —
+// shown at the top of each zone board so the Tea Party goals live where you work.
+function ZoneGuests(props: { zone: Zone; sheet: PlayerSheet }) {
+    return (
+        <div className="zone-guests">
+            {ZONE_GUESTS[props.zone].map(g => {
+                const on = props.sheet.guests.indexOf(g) >= 0;
+                return (
+                    <span className={`zg-chip ${on ? 'on' : ''}`} key={g}>
+                        <span className="zg-icon"><ExpressiveIcon icon={GUEST_ICONS[g]} palette={on ? GOLD_PALETTE : SLATE_PALETTE} /></span>
+                        <span className="zg-text">
+                            <span className="zg-name">{GUEST_LABELS[g]}{on && <span className="zg-check"> ✓</span>}</span>
+                            <span className="zg-hint">{GUEST_UNLOCK[g]}</span>
+                        </span>
+                    </span>
+                );
+            })}
+        </div>
+    );
+}
+
 // ================================================================================
 // Zone boards
 // ================================================================================
@@ -137,7 +193,9 @@ function colorPalette(color: 'red' | 'black' | 'both') {
 function MeadowBoard(props: { sheet: PlayerSheet; interactive?: boolean; legal?: string[]; onPlace?: (id: string) => void }) {
     const legal = props.legal || [];
     return (
-        <div className="meadow-board">
+        <div className="zone-wrap">
+            <ZoneGuests zone="meadow" sheet={props.sheet} />
+            <div className="meadow-board">
             {MEADOW_DEF.map(def => {
                 const m = props.sheet.meadow.find(x => x.id === def.id)!;
                 const complete = m.marks.every(x => x !== null);
@@ -172,6 +230,7 @@ function MeadowBoard(props: { sheet: PlayerSheet; interactive?: boolean; legal?:
                     </div>
                 );
             })}
+            </div>
         </div>
     );
 }
@@ -180,7 +239,9 @@ function WoodsBoard(props: { sheet: PlayerSheet; interactive?: boolean; legal?: 
     const legal = props.legal || [];
     const marked = (t: string) => props.sheet.woods[t] !== null;
     return (
-        <div className="woods-board">
+        <div className="zone-wrap">
+            <ZoneGuests zone="woods" sheet={props.sheet} />
+            <div className="woods-board">
             <svg className="wb-edges" viewBox="0 0 100 100" preserveAspectRatio="none">
                 {WOODS_EDGES.map(([a, b], i) => (
                     <line key={i} x1={TREE_POS[a].x} y1={TREE_POS[a].y} x2={TREE_POS[b].x} y2={TREE_POS[b].y} />
@@ -217,6 +278,7 @@ function WoodsBoard(props: { sheet: PlayerSheet; interactive?: boolean; legal?: 
                     </div>
                 );
             })}
+            </div>
         </div>
     );
 }
@@ -224,7 +286,9 @@ function WoodsBoard(props: { sheet: PlayerSheet; interactive?: boolean; legal?: 
 function KeepBoard(props: { sheet: PlayerSheet; interactive?: boolean; legal?: string[]; onPlace?: (id: string) => void }) {
     const legal = props.legal || [];
     return (
-        <div className="keep-board">
+        <div className="zone-wrap">
+            <ZoneGuests zone="keep" sheet={props.sheet} />
+            <div className="keep-board">
             <svg className="kb-edges" viewBox="0 0 100 100" preserveAspectRatio="none">
                 {KEEP_EDGES.map(([a, b], i) => {
                     const ca = KEEP_CELLS.find(c => c.id === a)!;
@@ -240,6 +304,8 @@ function KeepBoard(props: { sheet: PlayerSheet; interactive?: boolean; legal?: s
                 if (c.isCenter) cls.push('center');
                 if (c.id === KEEP_RED_ENTRANCE) cls.push('ent-red');
                 if (c.id === KEEP_BLACK_ENTRANCE) cls.push('ent-black');
+                const guest = KEEP_GUEST_CELL[c.id];
+                if (guest) cls.push('guest-cell');
                 if (mk !== null) cls.push('filled');
                 if (isLegal) cls.push('legal');
                 return (
@@ -248,14 +314,16 @@ function KeepBoard(props: { sheet: PlayerSheet; interactive?: boolean; legal?: s
                         {mk !== null
                             ? <span className="kc-mark">{mk}</span>
                             : c.isCenter ? <span className="kc-center-icon"><ExpressiveIcon icon={CROWN_ICON} palette={QUEEN_PALETTE} /></span>
-                                : c.teacup ? <span className="kc-icon"><ExpressiveIcon icon={TEACUP_ICON} palette={GOLD_PALETTE} /></span>
-                                    : c.biscuit ? <span className="kc-icon"><ExpressiveIcon icon={BISCUIT_ICON} palette={GOLD_PALETTE} /></span>
-                                        : (c.id === KEEP_RED_ENTRANCE ? <span className="kc-suit red">♥♦</span>
-                                            : c.id === KEEP_BLACK_ENTRANCE ? <span className="kc-suit black">♠♣</span>
-                                                : '')}
+                                : guest ? <span className="kc-guest"><ExpressiveIcon icon={GUEST_ICONS[guest]} palette={SLATE_PALETTE} /></span>
+                                    : c.teacup ? <span className="kc-icon"><ExpressiveIcon icon={TEACUP_ICON} palette={GOLD_PALETTE} /></span>
+                                        : c.biscuit ? <span className="kc-icon"><ExpressiveIcon icon={BISCUIT_ICON} palette={GOLD_PALETTE} /></span>
+                                            : (c.id === KEEP_RED_ENTRANCE ? <span className="kc-suit red">♥♦</span>
+                                                : c.id === KEEP_BLACK_ENTRANCE ? <span className="kc-suit black">♠♣</span>
+                                                    : '')}
                     </div>
                 );
             })}
+            </div>
         </div>
     );
 }
@@ -304,15 +372,37 @@ function TeaPartyBoard(props: { sheet: PlayerSheet }) {
 // ================================================================================
 // Rules reference
 // ================================================================================
+// Unlock condition for each Tea Party guest, shown in the rules.
+const GUEST_UNLOCK: Record<Guest, string> = {
+    caterpillar: 'Completely fill any one Meadow mushroom.',
+    cheshire: 'Place a mark in three different Meadow mushrooms.',
+    dormouse: 'Mark all four red-and-black (both-colour) trees in the Woods.',
+    marchhare: 'Mark the three trees around the central March Hare node in the Woods.',
+    humpty: 'Mark the Keep cell right beside Humpty Dumpty.',
+    rabbit: 'Mark the Keep cell right beside the White Rabbit.',
+    madhatter: 'Reach the 4th teacup from the top of your stack (no need to spend it).'
+};
+
 export class OWTHRulesView extends React.Component<{}, {}> {
+    // A coloured suit pip.
+    private suit(s: Suit, key?: React.Key) {
+        return <span key={key} className={`rk ${isRed(s) ? 'red' : 'black'}`}>{SUIT_GLYPH[s]}</span>;
+    }
+    // The full high→low order for a given Queen suit (top suit + clockwise descent).
+    private hierarchy(q: Suit): Suit[] {
+        const idx = SUIT_ORDER.indexOf(q);
+        return [0, 1, 2, 3].map(i => SUIT_ORDER[(idx + i) % 4]);
+    }
+
     public render() {
         return (
             <div className="owth-rules">
                 <div className="rules-section">
                     <h3>The Croquet Court</h3>
-                    <p>Over <strong>3 rounds × 7 bouts</strong>, everyone secretly plays one card. All cards are
-                        ranked by the <strong>Wonderland Board's</strong> rotating suit order. Your card's place —
-                        <strong> High / Mid / Low</strong> — forces a mark:</p>
+                    <p>Over <strong>3 rounds × 7 bouts</strong> (21 bouts total) you are dealt <strong>9 cards</strong> each
+                        round. Every bout, all players <strong>secretly pick one card</strong> and reveal together. The cards
+                        are ranked against each other, and where yours lands — <strong>High / Mid / Low</strong> — forces a
+                        mark on your private sheet:</p>
                     <div className="rules-zones">
                         {(['meadow', 'woods', 'keep'] as Zone[]).map((z, i) => (
                             <div className="rz-item" key={z}>
@@ -321,29 +411,95 @@ export class OWTHRulesView extends React.Component<{}, {}> {
                             </div>
                         ))}
                     </div>
+                    <p className="rz-foot">After the 7th bout you set aside your 2 leftover cards (6 by game end) for the
+                        poker showdown, then re-deal for the next round.</p>
                 </div>
+
+                <div className="rules-section">
+                    <h3>Card Ranking — the Red Queen</h3>
+                    <p>The Wonderland Board is a ring of four suits in fixed clockwise order:</p>
+                    <div className="rb-ring">
+                        {SUIT_ORDER.map((s, i) => (
+                            <React.Fragment key={s}>
+                                {this.suit(s)}
+                                {i < SUIT_ORDER.length - 1 ? <span className="rk-arrow">→</span> : <span className="rk-arrow">↺</span>}
+                            </React.Fragment>
+                        ))}
+                    </div>
+                    <ul>
+                        <li><strong>Suit decides first.</strong> The suit the <strong>Red Queen</strong> sits on is the
+                            <em> highest</em>; the others descend <em>clockwise</em> from her. A card of the Queen's suit beats
+                            <strong> every</strong> other suit — a 2♥ beats a K♠ when the Queen is on Hearts.</li>
+                        <li><strong>Then number.</strong> Within one suit, higher wins — <strong>Ace is high</strong>, then
+                            K, Q, J, 10 … down to 2.</li>
+                        <li>The single <strong>highest</strong> card is <strong>High</strong>, the single <strong>lowest</strong>
+                            is <strong>Low</strong>, and everyone in between is <strong>Mid</strong>. With 2–3 players, extra
+                            cards are dealt into the bout — they help decide the ranking but never make marks.</li>
+                    </ul>
+                    <p>At the <strong>end of every bout the Queen steps one suit clockwise</strong>, so the pecking order keeps
+                        rotating. It <em>never resets</em> between rounds — over 21 bouts she laps the ring several times.</p>
+                    <table className="rank-table">
+                        <thead><tr><th>Queen on</th><th>Ranking — highest → lowest</th></tr></thead>
+                        <tbody>
+                            {SUIT_ORDER.map(q => (
+                                <tr key={q}>
+                                    <td>{this.suit(q)} {SUIT_LABEL[q]}</td>
+                                    <td>{this.hierarchy(q).map((s, i) => (
+                                        <React.Fragment key={s}>{this.suit(s)}{i < 3 && <span className="rk-arrow">›</span>}</React.Fragment>
+                                    ))}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
                 <div className="rules-section">
                     <h3>Marking</h3>
                     <ul>
-                        <li>Numbers = face value; <strong>J/Q/K = 10</strong>; <strong>Ace = 1 or 11</strong> (you choose).</li>
-                        <li>Hearts/Diamonds are <strong>red</strong>; Clubs/Spades are <strong>black</strong>. Spaces must match colour.</li>
+                        <li>The number you write = face value; <strong>J/Q/K = 10</strong>; <strong>Ace = 1 or 11</strong> (you choose each time).</li>
+                        <li>Hearts/Diamonds are <strong>red</strong>; Clubs/Spades are <strong>black</strong>. A space's colour must match your card.</li>
+                        <li>If your forced zone has no legal space, the mark is simply <strong>lost</strong>.</li>
                         <li><span className="ic"><ExpressiveIcon icon={TEACUP_ICON} palette={GOLD_PALETTE} /></span>
-                            <strong>Teacups</strong> let you shift a mark to another zone, or flip its colour.</li>
+                            <strong>Teacups</strong> (spend one) let you mark in a <em>different zone</em>, or treat your card as the <em>other colour</em>.</li>
                         <li><span className="ic"><ExpressiveIcon icon={BISCUIT_ICON} palette={GOLD_PALETTE} /></span>
-                            <strong>Biscuits</strong> repeat the exact mark in a different zone (and can chain).</li>
-                        <li>The <strong>Red Keep</strong> centre gives a free Meadow <em>and</em> Woods mark.</li>
+                            <strong>Biscuits</strong> immediately repeat the exact mark (same number &amp; colour) in a different zone — and a repeat landing on another biscuit chains again.</li>
+                        <li>Marking the <strong>Red Keep</strong> centre grants a free Meadow <em>and</em> a free Woods mark (any space, any colour).</li>
                     </ul>
                 </div>
+
                 <div className="rules-section">
-                    <h3>Scoring</h3>
+                    <h3>The Tea Party — Seven Guests</h3>
+                    <p>Meet a guest's condition and they're seated for good. Only <strong>how many</strong> guests you gather
+                        matters — your Tea Party score is <strong>(guests + 1)²</strong>, so each new guest is worth more than the last:</p>
+                    <div className="tea-curve">
+                        {[1, 2, 3, 4, 5, 6, 7].map(n => (
+                            <span key={n}>{n} → {teaPartyVP(n)}</span>
+                        ))}
+                    </div>
+                    <div className="guest-list">
+                        {GUESTS.map(g => (
+                            <div className="gl-item" key={g}>
+                                <span className="gl-icon"><ExpressiveIcon icon={GUEST_ICONS[g]} palette={GOLD_PALETTE} /></span>
+                                <div className="gl-text">
+                                    <span className="gl-name">{GUEST_LABELS[g]}</span>
+                                    <span className="gl-cond">{GUEST_UNLOCK[g]}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="rules-section">
+                    <h3>Scoring &amp; Winning</h3>
                     <ul>
-                        <li><strong>Meadow:</strong> completed mushrooms only (27 / 15 / 3).</li>
-                        <li><strong>Woods:</strong> surrounded nodes; <strong>+30</strong> for all 18 trees; the Jabberwock
-                            rule doubles starred nodes if no two neighbouring trees share a number.</li>
-                        <li><strong>Keep:</strong> each coin scores its number; the centre is +2.</li>
-                        <li><strong>Tea Party:</strong> (guests+1)² — 1→4, 2→9 … 7→64.</li>
-                        <li><strong>Poker:</strong> your 6 set-aside cards make a hand; the best also gets +5.</li>
+                        <li><strong>Meadow:</strong> only <em>completed</em> mushrooms score (27 / 15 / 3 VP).</li>
+                        <li><strong>Woods:</strong> each fully-surrounded node scores; <strong>+30</strong> if all 18 trees are marked; the
+                            <strong> Jabberwock rule</strong> doubles the starred nodes if no two neighbouring trees share a number.</li>
+                        <li><strong>Keep:</strong> each coin space scores the number written in it; the Red Keep centre adds <strong>+2</strong>.</li>
+                        <li><strong>Tea Party:</strong> (guests + 1)² — see above.</li>
+                        <li><strong>Poker:</strong> your 6 set-aside cards form your best hand (One Pair 3 … Straight Flush 24); the single best hand at the table earns <strong>+5</strong>.</li>
                     </ul>
+                    <p>Highest grand total wins; ties are broken by the best poker hand. Unspent teacups score nothing.</p>
                 </div>
             </div>
         );
@@ -419,6 +575,18 @@ export class OffWithTheirHeadsMainPage extends React.Component<OWTHProps, MainSt
     private accent(id: string) { return this.props.playerAccents[id] || '#7c8aa5'; }
     private mySheet(): PlayerSheet { return this.props.sheets[this.me]; }
 
+    // Hand order: by suit (Clubs, Diamonds, Spades, Hearts), then value ascending.
+    private sortedHand(): Card[] {
+        const suitOrder: Record<Suit, number> = { C: 0, D: 1, S: 2, H: 3 };
+        return [...this.props.myHand].sort((a, b) =>
+            (suitOrder[a.suit] - suitOrder[b.suit]) || (rankValue(a.rank) - rankValue(b.rank)));
+    }
+
+    // How many teacups this player currently has available to spend.
+    private availableTeacups(): number {
+        return this.mySheet().teacups.filter(t => t === 1).length;
+    }
+
     public componentDidUpdate(prev: OWTHProps) {
         const lm = this.props.lastMove;
         const prevId = prev.lastMove ? prev.lastMove.moveId : -1;
@@ -480,6 +648,7 @@ export class OffWithTheirHeadsMainPage extends React.Component<OWTHProps, MainSt
     private renderZoneTabs() {
         const legal = this.isMarkingMine() ? this.activeLegal() : null;
         const zones: (Zone | 'tea')[] = ['meadow', 'woods', 'keep', 'tea'];
+        const zs = this.props.zoneScores ? this.props.zoneScores[this.me] : null;
         return (
             <div className="zone-tabs">
                 {zones.map(z => {
@@ -487,12 +656,14 @@ export class OffWithTheirHeadsMainPage extends React.Component<OWTHProps, MainSt
                     const hasTargets = legal && z !== 'tea' && (legal as any)[z].length > 0;
                     const cls = ['zt', active ? 'active' : ''];
                     if (hasTargets) cls.push('has-targets');
+                    const pts = zs ? (z === 'tea' ? zs.tea : (zs as any)[z]) : 0;
                     return (
                         <button className={cls.join(' ')} key={z} onClick={() => this.setState({ activeZone: z })}>
                             {z === 'tea'
                                 ? <span className="zt-icon"><ExpressiveIcon icon={CROWN_ICON} palette={QUEEN_PALETTE} /></span>
                                 : <span className="zt-icon"><ExpressiveIcon icon={ZONE_ICONS[z]} palette={ZONE_PALETTES[z]} /></span>}
                             <span className="zt-label">{z === 'tea' ? 'Tea' : ZONE_LABELS[z]}</span>
+                            <span className="zt-score">{pts}</span>
                             {hasTargets && <span className="zt-dot" />}
                         </button>
                     );
@@ -526,7 +697,7 @@ export class OffWithTheirHeadsMainPage extends React.Component<OWTHProps, MainSt
                     ? <div className="dock-title ready">Card played face-down — waiting for the others…</div>
                     : <div className="dock-title">Play a card face-down for this bout</div>}
                 <div className="hand-row">
-                    {this.props.myHand.map(c => (
+                    {this.sortedHand().map(c => (
                         <CardTile key={cid(c)} card={c} selectable={!selected} selected={selected === cid(c)} dim={!!selected && selected !== cid(c)} onClick={() => this.selectCard(c)} />
                     ))}
                 </div>
@@ -591,7 +762,7 @@ export class OffWithTheirHeadsMainPage extends React.Component<OWTHProps, MainSt
 
                 {isRank && mk.hasTeacup && (
                     <div className="teacup-row">
-                        <span className="tr-label"><span className="ic"><ExpressiveIcon icon={TEACUP_ICON} palette={GOLD_PALETTE} /></span> Teacup:</span>
+                        <span className="tr-label"><span className="ic"><ExpressiveIcon icon={TEACUP_ICON} palette={GOLD_PALETTE} /></span> Teacup <span className="tr-count">×{this.availableTeacups()}</span>:</span>
                         <button className={`pill ${this.state.teacup === null ? 'on' : ''}`} onClick={() => this.setState({ teacup: null })}>None</button>
                         <button className={`pill ${this.state.teacup === 'zone' ? 'on' : ''}`} onClick={() => this.setState({ teacup: 'zone' })}>Any zone</button>
                         <button className={`pill ${this.state.teacup === 'color' ? 'on' : ''}`} onClick={() => this.setState({ teacup: 'color' })}>Flip colour</button>
@@ -634,26 +805,45 @@ export class OffWithTheirHeadsMainPage extends React.Component<OWTHProps, MainSt
         );
     }
 
-    // ---- rivals tab ----
+    // ---- boards tab (opponents during play; everyone at game over) ----
     private renderRivals() {
-        const others = this.props.playerOrder.filter(id => id !== this.me);
-        if (others.length === 0) return <div className="owth-waiting">No rivals.</div>;
+        const over = this.props.gameStatus === 'GameOver';
+        // During play: opponents only (your own board is the Court tab). At game
+        // over: everyone, so the whole table can be reviewed by all — including the
+        // host, whose Court tab only holds the score + new-game controls.
+        const list = over ? this.props.playerOrder : this.props.playerOrder.filter(id => id !== this.me);
+        if (list.length === 0) return <div className="owth-waiting">No rivals to show.</div>;
+        const score = this.props.score;
+        const winners = score ? score.winnerIds : [];
+        const allSetAside = this.props.allSetAside;
+
         return (
             <div className="rivals-wrap">
-                {others.map(id => (
-                    <div className="rival-panel" key={id}>
-                        <div className="rp-head">
-                            {this.badge(id)} <span className="rp-name">{this.name(id)}</span>
-                            <span className="rp-state">{this.props.marksState[id] && !this.props.marksState[id].done ? 'marking…' : this.props.selectionReady[id] ? 'ready' : ''}</span>
+                {list.map(id => {
+                    const ps = score ? score.players[id] : null;
+                    const zs = this.props.zoneScores ? this.props.zoneScores[id] : null;
+                    const zscore = (z: 'meadow' | 'woods' | 'keep' | 'tea') => zs ? <span className="rm-score">{zs[z]}</span> : null;
+                    return (
+                        <div className={`rival-panel ${over && winners.indexOf(id) >= 0 ? 'winner' : ''}`} key={id}>
+                            <div className="rp-head">
+                                {this.badge(id)} <span className="rp-name">{this.name(id)}{id === this.me ? ' (you)' : ''}</span>
+                                {over && winners.indexOf(id) >= 0 && <span className="rp-crown">🏆</span>}
+                                {ps
+                                    ? <span className="rp-total">{ps.total}</span>
+                                    : <span className="rp-state">{this.props.marksState[id] && !this.props.marksState[id].done ? 'marking…' : this.props.selectionReady[id] ? 'ready' : ''}</span>}
+                            </div>
+                            <div className="rival-mini">
+                                <div className="rm-zone"><div className="rm-label">Meadow {zscore('meadow')}</div><MeadowBoard sheet={this.props.sheets[id]} /></div>
+                                <div className="rm-zone"><div className="rm-label">Woods {zscore('woods')}</div><WoodsBoard sheet={this.props.sheets[id]} /></div>
+                                <div className="rm-zone"><div className="rm-label">Keep {zscore('keep')}</div><KeepBoard sheet={this.props.sheets[id]} /></div>
+                                <div className="rm-zone"><div className="rm-label">Tea {zscore('tea')}</div><TeaPartyBoard sheet={this.props.sheets[id]} /></div>
+                            </div>
+                            {over && allSetAside && (
+                                <SetAsideStrip cards={allSetAside[id] || []} label={`${this.name(id)}'s showdown hand`} poker={ps ? ps.poker : null} />
+                            )}
                         </div>
-                        <div className="rival-mini">
-                            <div className="rm-zone"><div className="rm-label">Meadow</div><MeadowBoard sheet={this.props.sheets[id]} /></div>
-                            <div className="rm-zone"><div className="rm-label">Woods</div><WoodsBoard sheet={this.props.sheets[id]} /></div>
-                            <div className="rm-zone"><div className="rm-label">Keep</div><KeepBoard sheet={this.props.sheets[id]} /></div>
-                            <div className="rm-zone"><TeaPartyBoard sheet={this.props.sheets[id]} /></div>
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         );
     }
@@ -691,6 +881,7 @@ export class OffWithTheirHeadsMainPage extends React.Component<OWTHProps, MainSt
                         })}
                     </tbody>
                 </table>
+                <div className="ss-note">Open the <strong>Boards</strong> tab to review every player's full tableau and showdown hand.</div>
                 {this.props.isHost && (
                     <div className="ss-actions">
                         <button className="primary-btn" onClick={() => this.props.MP.restartGame()}>Play Again</button>
@@ -724,12 +915,13 @@ export class OffWithTheirHeadsMainPage extends React.Component<OWTHProps, MainSt
                 {this.renderZoneTabs()}
                 <div className="my-sheet">{this.renderActiveZone(this.mySheet(), interactive)}</div>
                 {this.renderDock()}
+                <SetAsideStrip cards={this.props.mySetAside} label="Your set-aside (poker showdown)" />
             </div>
         );
 
         const links: any = {
             'home': { 'icon': 'gamepad', 'label': 'Court', 'view': arena },
-            'rivals': { 'icon': 'users', 'label': 'Rivals', 'view': <div className="owth-arena">{this.renderRivals()}</div> },
+            'rivals': { 'icon': 'users', 'label': over ? 'Boards' : 'Rivals', 'view': <div className="owth-arena">{this.renderRivals()}</div> },
             'rules': { 'icon': 'book', 'label': 'Rules', 'view': <OWTHRulesView /> }
         };
         if (this.props.isHost) {
@@ -761,4 +953,4 @@ function zoneForcedLabel(head: PendingMark): string {
 }
 
 // (imported constants referenced only for typing/no-ops kept tree-shakeable)
-void POSITION_ZONE; void MARCH_HARE_TREES; void DORMOUSE_TREES; void rankValue; void ZONE_HEX;
+void POSITION_ZONE; void MARCH_HARE_TREES; void DORMOUSE_TREES; void ZONE_HEX;

@@ -561,7 +561,7 @@ export class OffWithTheirHeadsGameState {
     private start_round(round: number) {
         this.data.round = round;
         this.data.bout = 1;
-        let deck = shuffle(buildDeck());
+        const deck = shuffle(buildDeck());
         for (const pid of this.playerIds) {
             this.data.hands[pid] = deck.splice(0, 9);
             this.data.selections[pid] = null;
