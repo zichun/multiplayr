@@ -2,6 +2,8 @@
  * GameRuleInterfaces.ts
  */
 
+import { IconObject } from '../../client/lib/card-renderer/types';
+
 export type MPType = any;
 
 export interface GameRuleInterface {
@@ -18,11 +20,14 @@ export interface GameRuleInterface {
 export interface GameRuleWrapperInterface {
     description: string;
     debug?: boolean;
+    enabled?: boolean;     // host page hides rules set to false (default: enabled)
     rules: string[];
     rule: GameRuleInterface;
-    icon?: string;
+    icon?: string;         // emoji shortcut (legacy / compact contexts)
+    glyph?: IconObject;    // geometric vector emblem from host-icons (GAME_ICONS)
     minPlayers?: number;
     maxPlayers?: number;
+    mechanics?: string[];
 }
 
 export interface ViewPropsInterface {

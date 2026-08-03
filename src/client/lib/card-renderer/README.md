@@ -359,6 +359,45 @@ export interface IconRef {
 
 ---
 
+## Rendering an Icon Without React (`iconToSvg`)
+
+An `IconObject` is **pure data**, so it can be rendered in two ways. Author a glyph once and reuse it everywhere:
+
+| Context | Use | Fidelity |
+| :--- | :--- | :--- |
+| React view | `<ExpressiveIcon icon={…} palette={…} />` | Full — primitives, booleans, refs, patterns |
+| React → static string (CI, sheets, SSR) | `renderToStaticMarkup(<ExpressiveIcon …/>)` | Full — it *is* the component (see `inspect-cli.tsx`) |
+| **No React runtime** (plain DOM, jQuery, data URI, email, string template) | **`iconToSvg(icon, colors, opts?)`** | Painter's-order primitives |
+
+`iconToSvg` (in `iconToSvg.ts`) compiles the same layer stack to a static `<svg>…</svg>` **string**, reproducing the IconEngine geometry exactly (same 0-100 viewBox, same local ±25 shape units, same `translate → scale → rotate` order). It is the tool to reach for whenever you need an icon outside a React tree.
+
+```typescript
+import { iconToSvg } from './iconToSvg';
+import { PALETTES } from './presets';
+
+// A Palette satisfies the colours map directly:
+const svg = iconToSvg(myIcon, PALETTES.midCentury);
+container.innerHTML = svg;                 // inject anywhere
+
+// …or a bespoke two-tone map (palette keys resolve; unknown keys fall through
+// as literal colours). `colorOverride` forces one flat tone (silhouette/watermark):
+iconToSvg(myIcon, { primary: '#1c8c7d', background: '#d7e9e5' });
+iconToSvg(myIcon, { primary: '#000', background: '#000' }, { colorOverride: '#1c8c7d' });
+```
+
+**Signature.** `iconToSvg(icon: IconObject, colors: IconColors, opts?: IconToSvgOptions): string`
+- `colors` — a `primary`/`background` (+ any key) colour map; a full `Palette` works as-is. Palette keys in a shape's `fill`/`stroke` resolve against it; unknown strings pass through as literal colours.
+- `opts.colorOverride` — paint every layer one colour (mirrors `ExpressiveIcon`'s `colorOverride`).
+- `opts.className` / `opts.size` — root `<svg>` class and viewBox size.
+
+**Supported:** `circle`, `semi-circle`, `quarter-circle`, `rectangle`, `triangle`, `arch`, `zig-zag`, and `bezier` (via `customPath` or `bezierPoints`) — i.e. **painter's-order primitive layers**. **Not compiled here:** boolean ops (`subtract`/`intersect`/`union`), `ref` embeds, and repeating patterns (`stripes`/`dots`/`grid`), since those need SVG `<defs>`/masks/clip-paths. If a glyph needs them, render it through `ExpressiveIcon` + `renderToStaticMarkup` instead.
+
+### Designing icons that render both ways
+
+To keep a glyph portable across React and `iconToSvg`, **build negative space by painter's-order layering rather than boolean masks**: draw the silhouette in `primary`, then punch details back in with shapes filled `background` (the surface colour behind the icon). This is the platform's standard flat recipe (see `SkullAssets`, `CourtisansAssets`) and it renders identically through both paths. The host page's `GAME_ICONS` (`src/rules/host-icons.ts`) are authored this way and imprinted as watermarks — set `background` to the panel tint and dim the whole `<svg>` with CSS `opacity`, so the knockouts read as the surface showing through. Verify any new icon with `npm run inspect -- sheet <module>` (the faithful component render) and `npm run inspect -- icon <module> <id>` (ASCII geometry).
+
+---
+
 ## Color Palettes (`presets.ts`)
 
 A palette must provide a consistent set of color keys to ensure visual contrast and flexibility across card themes:

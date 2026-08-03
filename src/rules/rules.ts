@@ -3,10 +3,14 @@
  * Static imports are removed to allow Webpack code splitting.
  */
 import './fontawesome';
+import { GAME_ICONS } from './host-icons';
 
 export const MPRULES = {
     'rockscissorspaper': {
         description: 'A classic 2 player game',
+        mechanics: ['Simultaneous'],
+        glyph: GAME_ICONS.rockscissorspaper,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'rockscissorspaper'],
         rule: () => import('./rockscissorspaper/rockscissorspaper').then(m => m.RockScissorsPaperRule),
         icon: '✊',
@@ -15,6 +19,9 @@ export const MPRULES = {
     },
     'theoddone': {
         description: 'Guess the odd one',
+        mechanics: ['Social Deduction'],
+        glyph: GAME_ICONS.theoddone,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'theoddone'],
         rule: () => import('./theoddone/theoddone').then(m => m.TheOddOneRule),
         icon: '🔍',
@@ -23,6 +30,9 @@ export const MPRULES = {
     },
     'coup': {
         description: 'Coup - Resistance',
+        mechanics: ['Bluffing', 'Social Deduction', 'Take That'],
+        glyph: GAME_ICONS.coup,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'coup'],
         rule: () => import('./coup/coup').then(m => m.CoupRule),
         icon: '⚔️',
@@ -31,6 +41,9 @@ export const MPRULES = {
     },
     'avalon': {
         description: 'The Resistance - Avalon',
+        mechanics: ['Social Deduction', 'Team-Based'],
+        glyph: GAME_ICONS.avalon,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'avalon'],
         rule: () => import('./avalon/avalon').then(m => m.AvalonRule),
         icon: '👑',
@@ -39,6 +52,9 @@ export const MPRULES = {
     },
     'decrypto': {
         description: 'Decrypto',
+        mechanics: ['Team-Based', 'Word Game', 'Deduction'],
+        glyph: GAME_ICONS.decrypto,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'decrypto'],
         rule: () => import('./decrypto/decrypto').then(m => m.DecryptoRule),
         icon: '🕵️',
@@ -47,6 +63,9 @@ export const MPRULES = {
     },
     'minesweeperflags': {
         description: 'Minesweeper Flags',
+        mechanics: ['Deduction', 'Abstract Strategy'],
+        glyph: GAME_ICONS.minesweeperflags,
+        enabled: true,
         rules: ['gameshell', 'minesweeperflags'],
         rule: () => import('./minesweeperflags/minesweeperflags').then(m => m.MinesweeperFlagsRule),
         icon: '🚩',
@@ -70,6 +89,9 @@ export const MPRULES = {
     },
     'tictactoepoker': {
         description: 'Tic-tac-toe Poker',
+        mechanics: ['Abstract Strategy', 'Bluffing'],
+        glyph: GAME_ICONS.tictactoepoker,
+        enabled: true,
         rules: ['gameshell', 'tictactoepoker'],
         rule: () => import('./tictactoepoker/tictactoepoker_rule').then(m => m.TicTacToePokerRule),
         icon: '❌',
@@ -93,6 +115,9 @@ export const MPRULES = {
     },
     'ito': {
         description: 'Ito - Cooperative Number Game',
+        mechanics: ['Cooperative', 'Communication'],
+        glyph: GAME_ICONS.ito,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'ito'],
         rule: () => import('./ito/ito').then(m => m.ItoRule),
         icon: '🔢',
@@ -116,6 +141,9 @@ export const MPRULES = {
     },
     'catchsketch': {
         description: 'Catch Sketch - Speed Drawing Guessing Game',
+        mechanics: ['Drawing', 'Party', 'Real-Time'],
+        glyph: GAME_ICONS.catchsketch,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'drawing', 'catchsketch'],
         rule: () => import('./catchsketch/catchsketch').then(m => m.CatchSketchRule),
         icon: '📝',
@@ -199,6 +227,9 @@ export const MPRULES = {
     },
     'durian': {
         description: 'Durian - Shopkeeper & Inventory Crisis Game',
+        mechanics: ['Memory', 'Deduction'],
+        glyph: GAME_ICONS.durian,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'durian'],
         rule: () => import('./durian/durian').then(m => m.DurianRule),
         icon: '🍍',
@@ -222,6 +253,9 @@ export const MPRULES = {
     },
     'startups': {
         description: 'Startups - Competitive Investment Card Game',
+        mechanics: ['Set Collection', 'Bluffing'],
+        glyph: GAME_ICONS.startups,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'startups'],
         rule: () => import('./startups/startups').then(m => m.StartupsRule),
         icon: '💼',
@@ -245,6 +279,9 @@ export const MPRULES = {
     },
     'clever': {
         description: 'Clever - Dice Drafting Roll and Write',
+        mechanics: ['Dice', 'Roll & Write'],
+        glyph: GAME_ICONS.clever,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'clever'],
         rule: () => import('./clever/clever').then(m => m.CleverRule),
         icon: '🧠',
@@ -268,6 +305,9 @@ export const MPRULES = {
     },
     'ttykm': {
         description: 'That Time You Killed Me - Abstract Time Travel Strategy',
+        mechanics: ['Abstract Strategy'],
+        glyph: GAME_ICONS.ttykm,
+        enabled: true,
         rules: ['gameshell', 'ttykm'],
         rule: () => import('./ttykm/ttykm').then(m => m.TTYKMRule),
         icon: '⏳',
@@ -291,6 +331,9 @@ export const MPRULES = {
     },
     'maskmen': {
         description: 'Maskmen - Dynamic Wrestler Hierarchy Card Game',
+        mechanics: ['Deduction', 'Memory'],
+        glyph: GAME_ICONS.maskmen,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'maskmen'],
         rule: () => import('./maskmen/maskmen').then(m => m.MaskmenRule),
         icon: '🤼',
@@ -314,6 +357,9 @@ export const MPRULES = {
     },
     'cockroach': {
         description: 'Cockroach Poker: Royal - Bluffing Card Game',
+        mechanics: ['Bluffing'],
+        glyph: GAME_ICONS.cockroach,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'cockroach'],
         rule: () => import('./cockroach/cockroach').then(m => m.CockroachRule),
         icon: '🪳',
@@ -337,6 +383,9 @@ export const MPRULES = {
     },
     'jaipur': {
         description: 'Jaipur - 2 Player Tactical Trading Card Game',
+        mechanics: ['Set Collection', 'Trading'],
+        glyph: GAME_ICONS.jaipur,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'jaipur'],
         rule: () => import('./jaipur/jaipur').then(m => m.JaipurRule),
         icon: '🐫',
@@ -360,6 +409,9 @@ export const MPRULES = {
     },
     'splendorduel': {
         description: 'Splendor Duel - 2 Player Tactical Jewel Game',
+        mechanics: ['Engine Building', 'Set Collection'],
+        glyph: GAME_ICONS.splendorduel,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'splendorduel'],
         rule: () => import('./splendorduel/splendorduel').then(m => m.SplendorDuelRule),
         icon: '💎',
@@ -368,6 +420,9 @@ export const MPRULES = {
     },
     'catinthebox': {
         description: 'Cat in the Box - Quantum Trick-Taking Game',
+        mechanics: ['Trick-Taking'],
+        glyph: GAME_ICONS.catinthebox,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'catinthebox'],
         rule: () => import('./catinthebox/catinthebox').then(m => m.CatInTheBoxRule),
         icon: '🐱',
@@ -406,6 +461,9 @@ export const MPRULES = {
     },
     'trio': {
         description: 'Trio - Memory & Deduction Number Game',
+        mechanics: ['Memory', 'Set Collection'],
+        glyph: GAME_ICONS.trio,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'trio'],
         rule: () => import('./trio/trio').then(m => m.TrioRule),
         icon: '🔺',
@@ -429,6 +487,9 @@ export const MPRULES = {
     },
     'regicide': {
         description: 'Regicide - Cooperative Card Battle',
+        mechanics: ['Cooperative'],
+        glyph: GAME_ICONS.regicide,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'regicide'],
         rule: () => import('./regicide/regicide').then(m => m.RegicideRule),
         icon: '🗡️',
@@ -452,6 +513,9 @@ export const MPRULES = {
     },
     'seasalt': {
         description: 'Sea Salt & Paper - Push-Your-Luck Set Collection',
+        mechanics: ['Push Your Luck', 'Set Collection'],
+        glyph: GAME_ICONS.seasalt,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'seasalt'],
         rule: () => import('./seasalt/seasalt').then(m => m.SeaSaltRule),
         icon: '🐚',
@@ -475,6 +539,9 @@ export const MPRULES = {
     },
     'skull': {
         description: 'Skull - Bluffing & Bidding Game',
+        mechanics: ['Bluffing', 'Bidding'],
+        glyph: GAME_ICONS.skull,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'skull'],
         rule: () => import('./skull/skull').then(m => m.SkullRule),
         icon: '💀',
@@ -483,6 +550,9 @@ export const MPRULES = {
     },
     'courtisans': {
         description: 'Courtisans - Courtly Set Collection & Take-That',
+        mechanics: ['Set Collection', 'Take That'],
+        glyph: GAME_ICONS.courtisans,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'courtisans'],
         rule: () => import('./courtisans/courtisans').then(m => m.CourtisansRule),
         icon: '🎭',
@@ -521,6 +591,9 @@ export const MPRULES = {
     },
     'magicalathletes': {
         description: 'Magical Athletes - Push-Your-Luck Racing',
+        mechanics: ['Push Your Luck', 'Racing'],
+        glyph: GAME_ICONS.magicalathletes,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'magicalathletes'],
         rule: () => import('./magicalathletes/magicalathletes').then(m => m.MagicalAthletesRule),
         icon: '🏃',
@@ -529,6 +602,9 @@ export const MPRULES = {
     },
     'offwiththeirheads': {
         description: 'Off With Their Heads - Wonderland Roll-and-Write',
+        mechanics: ['Roll & Write'],
+        glyph: GAME_ICONS.offwiththeirheads,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'offwiththeirheads'],
         rule: () => import('./offwiththeirheads/offwiththeirheads').then(m => m.OffWithTheirHeadsRule),
         icon: '👑',
@@ -537,6 +613,9 @@ export const MPRULES = {
     },
     'projectl': {
         description: 'Project L - Polyomino Puzzle Engine Builder',
+        mechanics: ['Puzzle', 'Engine Building'],
+        glyph: GAME_ICONS.projectl,
+        enabled: true,
         rules: ['lobby', 'gameshell', 'projectl'],
         rule: () => import('./projectl/projectl').then(m => m.ProjectLRule),
         icon: '🧩',

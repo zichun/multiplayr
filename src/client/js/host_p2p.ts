@@ -6,6 +6,8 @@
 
 export {};
 
+import { iconToSvg } from '../lib/card-renderer/iconToSvg';
+
 /* eslint-disable no-var */
 declare var _mplib;
 declare var _mprules;
@@ -14,6 +16,34 @@ _mplib.MultiplayR.SetGameRules(_mprules.MPRULES);
 _mplib.MultiplayR.SetGamerulesPath('/gamerules/');
 
 declare var process: any;
+
+// Flat mid-century accents cycled across the game cards. `bg` is the bold banner
+// hue (and the watermark tone); `tint` is the same hue washed pale for the card
+// body; `fg` is the title colour on the banner.
+const CARD_ACCENTS = [
+    { bg: '#e3a81e', fg: '#221f1a', tint: '#f6ecd2' }, // mustard
+    { bg: '#1c8c7d', fg: '#fbf8f1', tint: '#d7e9e5' }, // teal
+    { bg: '#e1553a', fg: '#fbf8f1', tint: '#f8ded7' }, // coral
+    { bg: '#33507a', fg: '#fbf8f1', tint: '#dbe2ec' }, // navy
+    { bg: '#6e8b3d', fg: '#fbf8f1', tint: '#e7ecd8' }, // olive
+    { bg: '#7b4b72', fg: '#fbf8f1', tint: '#ece0e9' }  // plum
+];
+
+function accentFor(name: string) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+    }
+    return CARD_ACCENTS[hash % CARD_ACCENTS.length];
+}
+
+function escapeHtml(str: string) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
 
 $(() => {
     let clientId = '';
@@ -36,7 +66,7 @@ $(() => {
         const displayRoomId = roomId.startsWith('mp-') ? roomId.substring(3) : roomId;
         if (confirm('An existing P2P game at room ' + displayRoomId + ' (' + ruleName + ') detected. Click OK to resume the game, and cancel to host a new game.')) {
             console.log(`Attempting to resume P2P game at room ${roomId}...`);
-            
+
             transportOpts.customPeerId = savedClientId;
             const transport = new _mplib.WebRTCTransport(
                 transportOpts,
@@ -90,79 +120,149 @@ $(() => {
                 .addClass('connected')
                 .text('Host P2P is established. Room Code: ' + displayId);
 
-            // Define categories
-            const categories = [
-                { title: '2 Players Only', maxLimit: 2, rules: [] },
-                { title: 'Up to 4 Players', maxLimit: 4, rules: [] },
-                { title: 'Up to 6 Players', maxLimit: 6, rules: [] },
-                { title: 'Up to 8 Players', maxLimit: 8, rules: [] },
-                { title: 'Party Games (9+ Players)', maxLimit: Infinity, rules: [] }
-            ];
-
-            // Distribute rules into categories
-            Object.keys(_mprules.MPRULES).forEach((ruleName) => {
-                const rule = _mprules.MPRULES[ruleName];
-                if (!rule.debug) {
-                    const maxPlayers = rule.maxPlayers || 2; // default fallback
-                    const category = categories.find(cat => maxPlayers <= cat.maxLimit);
-                    if (category) {
-                        category.rules.push({ name: ruleName, rule });
-                    }
-                }
-            });
-
-            // Clear and render by category
-            const $rulesContainer = $('#rules').empty();
-
-            categories.forEach((cat) => {
-                if (cat.rules.length === 0) return;
-
-                // Sort rules within category alphabetically by game name
-                cat.rules.sort((a, b) => {
-                    const nameA = a.name.toLowerCase();
-                    const nameB = b.name.toLowerCase();
-                    return nameA.localeCompare(nameB);
-                });
-
-                const $section = $('<section class="category-section" />');
-                $('<h2 class="category-title">' + cat.title + '</h2>').appendTo($section);
-                
-                const $grid = $('<div class="rules-grid" />');
-                cat.rules.forEach((item) => {
-                    $grid.append(makeRule(item.name, item.rule));
-                });
-                
-                $grid.appendTo($section);
-                $rulesContainer.append($section);
-            });
+            renderGameBrowser();
         }
     );
 
-    function makeRule(name: string, rule: any) {
-        const $rule = $('<div class="rule" />')
-            .click(hostGame(name));
-        
-        const $content = $('<div class="rule-content" />').appendTo($rule);
+    // Currently selected mechanic filters (OR semantics; empty = show everything).
+    const activeMechanics: { [mechanic: string]: boolean } = {};
 
-        const prettyName = name.charAt(0).toUpperCase() + name.slice(1);
-        const displayName = rule.icon ? `${rule.icon} ${prettyName}` : prettyName;
+    function renderGameBrowser() {
+        // Collect non-debug games that are enabled (default: enabled).
+        const games = Object.keys(_mprules.MPRULES)
+            .map((name) => ({ name, rule: _mprules.MPRULES[name] }))
+            .filter((g) => !g.rule.debug && g.rule.enabled !== false)
+            .sort((a, b) => a.name.localeCompare(b.name));
 
-        $('<header class="name">' + displayName + '</header>').appendTo($content);
-        $('<div class="desc">' + rule.description + '</div>').appendTo($content);
+        // Tally mechanics across all games.
+        const counts: { [mechanic: string]: number } = {};
+        games.forEach((g) => {
+            (g.rule.mechanics || []).forEach((m: string) => {
+                counts[m] = (counts[m] || 0) + 1;
+            });
+        });
+        const mechanics = Object.keys(counts).sort((a, b) => a.localeCompare(b));
 
-        // Render player count badge
-        let playersText = '';
-        if (rule.minPlayers && rule.maxPlayers) {
-            if (rule.minPlayers === rule.maxPlayers) {
-                playersText = `${rule.minPlayers} players`;
-            } else {
-                playersText = `${rule.minPlayers}-${rule.maxPlayers} players`;
+        renderFilterBar(mechanics, counts, games);
+        renderGrid(games);
+    }
+
+    function renderFilterBar(
+        mechanics: string[],
+        counts: { [mechanic: string]: number },
+        games: { name: string; rule: any }[]
+    ) {
+        const $bar = $('#mechanic-filter').empty();
+
+        $('<p class="filter-bar__label">Filter by mechanic</p>').appendTo($bar);
+        const $chips = $('<div class="filter-bar__chips" />').appendTo($bar);
+
+        const hasActive = Object.keys(activeMechanics).some((m) => activeMechanics[m]);
+
+        // "All" resets every filter.
+        const $all = $('<span class="chip">All games <span class="chip__count">' + games.length + '</span></span>');
+        if (!hasActive) {
+            $all.addClass('is-active');
+        }
+        $all.on('click', () => {
+            Object.keys(activeMechanics).forEach((m) => delete activeMechanics[m]);
+            renderGameBrowser();
+        });
+        $chips.append($all);
+
+        mechanics.forEach((m) => {
+            const $chip = $('<span class="chip">' + escapeHtml(m) +
+                ' <span class="chip__count">' + counts[m] + '</span></span>');
+            if (activeMechanics[m]) {
+                $chip.addClass('is-active');
             }
-            const $badge = $('<div class="player-count-badge"><i class="fa fa-users"></i> ' + playersText + '</div>');
-            $badge.appendTo($rule);
+            $chip.on('click', () => toggleMechanic(m));
+            $chips.append($chip);
+        });
+    }
+
+    function toggleMechanic(mechanic: string) {
+        if (activeMechanics[mechanic]) {
+            delete activeMechanics[mechanic];
+        } else {
+            activeMechanics[mechanic] = true;
+        }
+        renderGameBrowser();
+    }
+
+    function renderGrid(games: { name: string; rule: any }[]) {
+        const $grid = $('#rules').empty();
+        const selected = Object.keys(activeMechanics).filter((m) => activeMechanics[m]);
+
+        const visible = games.filter((g) => {
+            if (selected.length === 0) {
+                return true;
+            }
+            const gm = g.rule.mechanics || [];
+            return selected.some((m) => gm.indexOf(m) !== -1);
+        });
+
+        if (visible.length === 0) {
+            $grid.append('<p class="grid-empty">No games match that combination of mechanics. Try clearing a filter.</p>');
+            return;
         }
 
-        return $rule;
+        visible.forEach((g) => $grid.append(makeCard(g.name, g.rule)));
+    }
+
+    function makeCard(name: string, rule: any) {
+        const accent = accentFor(name);
+        const prettyName = name.charAt(0).toUpperCase() + name.slice(1);
+
+        const $card = $('<div class="game-card" />').on('click', hostGame(name));
+
+        // Colored banner — title only (the icon now lives as a body watermark).
+        const $banner = $('<div class="game-card__banner" />')
+            .css({ 'background-color': accent.bg, color: accent.fg })
+            .appendTo($card);
+        $('<h3 class="game-card__title">' + escapeHtml(prettyName) + '</h3>').appendTo($banner);
+
+        // Body tinted with the banner hue washed pale.
+        const $body = $('<div class="game-card__body" />')
+            .css('background-color', accent.tint)
+            .appendTo($card);
+
+        // Geometric icon (declared on the rule) imprinted large in the
+        // bottom-right, bled off the corner.
+        const glyph = rule.glyph;
+        if (glyph) {
+            const svg = iconToSvg(glyph, { primary: accent.bg, background: accent.tint });
+            $('<div class="game-card__watermark" aria-hidden="true">' + svg + '</div>').appendTo($body);
+        }
+
+        $('<p class="game-card__desc">' + escapeHtml(rule.description) + '</p>').appendTo($body);
+
+        const mechanics: string[] = rule.mechanics || [];
+        if (mechanics.length) {
+            const $tags = $('<div class="game-card__tags" />').appendTo($body);
+            mechanics.forEach((m) => {
+                const $tag = $('<span class="tag">' + escapeHtml(m) + '</span>');
+                if (activeMechanics[m]) {
+                    $tag.addClass('is-active');
+                }
+                // Tapping a tag filters instead of hosting.
+                $tag.on('click', (ev) => {
+                    ev.stopPropagation();
+                    toggleMechanic(m);
+                });
+                $tags.append($tag);
+            });
+        }
+
+        if (rule.minPlayers && rule.maxPlayers) {
+            const playersText = rule.minPlayers === rule.maxPlayers
+                ? `${rule.minPlayers} players`
+                : `${rule.minPlayers}–${rule.maxPlayers} players`;
+            $('<div class="game-card__players"><i class="fa fa-users"></i> ' + playersText + '</div>')
+                .appendTo($body);
+        }
+
+        return $card;
     }
 
     function hostGame(ruleName: string) {
