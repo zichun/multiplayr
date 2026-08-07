@@ -1,0 +1,784 @@
+/**
+ * splendor.scss - Flat, soft-pastel styling for Splendor.
+ * Everything is scoped under `.splendor-game` (arena) or the `.spl-card` / `.spl-noble`
+ * card wrappers so it never collides with other games' card-renderer overrides.
+ */
+
+.splendor-game {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  color: #2b2440;
+}
+
+// ---- shared inline glyph ----
+.spl-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  vertical-align: middle;
+  width: 1.2em;
+  height: 1.2em;
+
+  .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+}
+
+// ---- buttons (flat pills) ----
+.spl-button {
+  background-color: #ffffff;
+  color: #2b2440;
+  border: 1px solid #d8d1e6;
+  border-radius: 10px;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-weight: 800;
+  padding: 7px 16px;
+  text-transform: uppercase;
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: transform 0.1s, background-color 0.15s, filter 0.15s;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  &:hover { transform: translateY(-1px); background-color: #f7f6fb; }
+  &:active { transform: translateY(1px); }
+
+  &.primary {
+    background-color: #2ec27e;
+    border-color: #2ec27e;
+    color: #ffffff;
+    &:hover { background-color: #26a269; }
+  }
+
+  &.tiny { min-height: 30px; padding: 4px 10px; font-size: 0.72em; }
+
+  &.chip { text-transform: none; }
+  &.chip.is-selected {
+    background-color: #efe9fb;
+    box-shadow: inset 0 0 0 2px #6c5ce7;
+    color: #3f2fa3;
+  }
+
+  &:disabled {
+    background-color: #f0eef4 !important;
+    color: #a8a2b8 !important;
+    border-color: #e3ddee !important;
+    transform: none !important;
+    cursor: not-allowed !important;
+    filter: none !important;
+  }
+}
+
+// ---- badges / chips ----
+.spl-badge {
+  border: none;
+  border-radius: 8px;
+  padding: 3px 9px;
+  font-size: 0.82em;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  &.spl-prestige { background-color: #fbedc6; color: #7a5a00; }
+  &.spl-cards { background-color: #eef1f4; color: #4a5568; }
+  &.spl-res { background-color: #f1eafa; color: #5b3c8a; }
+  &.spl-tokens { background-color: #e2e7fb; color: #303f78; }
+}
+
+.spl-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #f7f6fb;
+  border: 1px solid #ece8f2;
+  border-radius: 999px;
+  padding: 3px 10px 3px 5px;
+  font-size: 0.85em;
+  font-weight: 800;
+  color: #2b2440;
+}
+
+.spl-strip-label,
+.spl-group-label {
+  font-size: 0.68em;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8a86a0;
+}
+
+// ---- banners ----
+.spl-banner {
+  border: none;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+
+  &.noble-banner { background-color: #fbeec2; color: #7a5a00; }
+  &.discard-banner { background-color: #fde3e3; color: #a32d2d; }
+
+  .spl-banner-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+}
+
+.spl-discard-area { display: flex; flex-direction: column; gap: 12px; align-items: center; width: 100%; }
+.spl-discard-hand { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.spl-discard-tray {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center;
+  min-height: 34px;
+
+  .spl-discard-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; cursor: pointer; transition: transform 0.1s;
+    &:hover { transform: scale(1.12); }
+  }
+}
+
+// ---- nobles strip ----
+.spl-nobles-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background-color: #ffffff;
+  border: 1px solid #e3ddee;
+  border-radius: 14px;
+  padding: 10px 14px;
+
+  .spl-nobles-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 4px 2px;
+  }
+}
+
+// ---- card board ----
+.spl-board {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background-color: #ffffff;
+  border: 1px solid #e3ddee;
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.spl-board-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  overflow-x: auto;
+  padding: 6px 2px 10px;
+
+  &::-webkit-scrollbar { height: 6px; }
+  &::-webkit-scrollbar-thumb { background-color: #cfc7de; border-radius: 3px; }
+}
+
+.spl-deck-stub {
+  position: relative;
+  flex: 0 0 96px;
+  width: 96px;
+  height: 134px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .spl-deck-count {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.8em;
+    font-weight: 800;
+    color: #ffffff;
+    background-color: rgba(20, 16, 32, 0.55);
+    border-radius: 6px;
+    padding: 1px 8px;
+    pointer-events: none;
+  }
+
+  .reserve-deck { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); }
+}
+
+.spl-board-cards {
+  display: flex;
+  gap: 12px;
+  flex-grow: 1;
+
+  .spl-empty-slot {
+    width: 112px;
+    height: 156px;
+    border: 2px dashed #d6d0e2;
+    border-radius: 12px;
+    background-color: #f6f5fa;
+    flex: 0 0 auto;
+  }
+}
+
+// ---- token supply ----
+.spl-supply {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: #ffffff;
+  border: 1px solid #e3ddee;
+  border-radius: 16px;
+  padding: 14px;
+
+  .spl-supply-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: safe center;
+  }
+
+  .spl-supply-chip {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background-color: #f7f6fb;
+    border: 1px solid #ece8f2;
+    border-radius: 14px;
+    padding: 8px 12px;
+    cursor: pointer;
+    min-width: 60px;
+    transition: transform 0.12s, box-shadow 0.12s, background-color 0.12s;
+
+    &:hover:not(:disabled) { transform: translateY(-2px); background-color: #f0edf8; }
+    &.is-picked { box-shadow: inset 0 0 0 3px #6c5ce7; background-color: #efe9fb; }
+    &.is-gold { opacity: 0.85; }
+
+    // Soft pulse on still-pickable gems while a take is incomplete (can pick more).
+    &.can-pick-more { animation: spl-pulse-hint 1.2s ease-in-out infinite; }
+
+    &:disabled { cursor: default; opacity: 0.55; }
+
+    .spl-supply-count { font-weight: 800; font-size: 0.95em; color: #2b2440; }
+
+    .spl-picked-badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background-color: #6c5ce7;
+      color: #fff;
+      font-size: 0.72em;
+      font-weight: 800;
+      border-radius: 999px;
+      min-width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+    }
+  }
+
+  .spl-take-confirm {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+
+    .spl-take-desc { font-weight: 800; color: #3a2f5c; }
+  }
+
+  .spl-hint { margin: 0; font-size: 0.82em; color: #8a86a0; text-align: center; }
+}
+
+// ---- my panel ----
+.spl-panel {
+  background-color: #ffffff;
+  border: 1px solid #e3ddee;
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &.is-active { border-color: #c9bce6; box-shadow: 0 0 0 2px #ece4fa; }
+
+  .spl-panel-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 1px solid #ece8f2;
+    padding-bottom: 10px;
+
+    .spl-panel-name { font-weight: 800; font-size: 1.1em; }
+    .spl-turn-tag {
+      background-color: #6c5ce7; color: #fff; padding: 3px 10px; font-size: 0.7em;
+      border-radius: 999px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .spl-panel-badges { display: flex; gap: 6px; margin-left: auto; }
+  }
+
+  .spl-panel-tokens { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .spl-panel-bonuses {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+
+    .spl-group-label { flex: 1 0 100%; }
+
+    .spl-bonus-badge {
+      border: 1px solid #d9cdf2;
+      border-radius: 999px;
+      padding: 3px 11px 3px 6px;
+      font-size: 0.9em;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background-color: #efe9fb;
+      color: #4a3aa0;
+    }
+  }
+
+  .spl-reserved {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    .spl-reserved-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  }
+}
+
+// ---- opponents ----
+.spl-opponents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  & > div { flex: 1 1 240px; min-width: 0; }
+}
+
+.spl-opp {
+  background-color: #ffffff;
+  border: 1px solid #e3ddee;
+  border-radius: 14px;
+  padding: 10px 14px;
+
+  &.is-active { border-color: #f0c98a; box-shadow: 0 0 0 2px #fbeed0; }
+
+  .spl-opp-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    .spl-opp-name { font-weight: 800; }
+  }
+
+  .spl-opp-stats {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    font-size: 0.85em;
+    font-weight: 700;
+    color: #4a5568;
+
+    .spl-opp-bonus { display: inline-flex; align-items: center; gap: 3px; }
+    .spl-opp-meta { margin-left: auto; color: #8a86a0; font-size: 0.9em; }
+  }
+}
+
+// ---- game over ----
+.spl-gameover {
+  border-radius: 14px;
+  border: 1px solid;
+  padding: 20px 22px;
+  text-align: center;
+
+  .go-title { font-size: 2em; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; line-height: 1; }
+  .go-sub { margin-top: 8px; font-weight: 700; font-size: 1.05em; }
+  .go-actions { margin-top: 16px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  &.victory { background-color: #e6f7f0; border-color: #bfe8d6; color: #0f6e42; .go-title { color: #0f8a52; } }
+  &.defeat { background-color: #f5edf0; border-color: #e4cdd6; color: #7a3b52; .go-title { color: #9c3b5e; } }
+}
+
+// ---- rules panel ----
+.spl-rules-panel {
+  background-color: #ffffff;
+  border: 1px solid #e3ddee;
+  border-radius: 16px;
+  padding: 20px;
+
+  h2, h3 { text-transform: uppercase; border-bottom: 1px solid #ece8f2; padding-bottom: 8px; margin-top: 0; }
+}
+
+// ==========================================
+// Tableau tab
+// ==========================================
+.spl-tableau {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 6px;
+  max-height: 82vh;
+  overflow-y: auto;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  color: #2b2440;
+}
+
+.spl-tab-player {
+  background-color: #ffffff;
+  border: 1px solid #e3ddee;
+  border-radius: 14px;
+  padding: 14px 16px;
+
+  &.is-you { border-color: #c9bce6; }
+  &.is-active { box-shadow: 0 0 0 2px #fbeed0; }
+}
+
+.spl-tab-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 1px solid #ece8f2;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+
+  .spl-tab-name { font-weight: 800; font-size: 1.1em; }
+  .spl-tab-badges { display: flex; gap: 6px; }
+}
+
+.spl-tab-tokens { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+
+.spl-tab-stacks { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+
+.spl-tab-stack { display: flex; flex-direction: column; gap: 6px; }
+
+.spl-tab-stack-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  font-size: 0.82em;
+
+  .spl-stack-bonus { color: #6c5ce7; font-weight: 900; }
+}
+
+.spl-tab-stack-cards {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 86px;
+
+  .spl-card, .spl-noble { transition: none; }
+}
+
+// ==========================================
+// Development card face overrides (scoped to `.spl-card`)
+// Header colour band + points/bonus, left cost column, watermark art, castle tier skyline.
+// ==========================================
+.spl-card {
+  width: 112px;
+  height: 156px;
+  position: relative;
+  border-radius: 8px;
+  transition: transform 0.2s;
+  box-sizing: border-box;
+
+  &.is-buyable { animation: spl-pulse-green 1.4s infinite alternate; }
+
+  .playing-card-container { width: 100%; height: 100%; box-shadow: none !important; }
+  .playing-card-inner { width: 100% !important; height: 100% !important; transform: none !important; }
+  .playing-card-face { box-shadow: none; }
+  .playing-card-face.face-front { display: block !important; position: relative; padding: 0 !important; }
+
+  // Header band
+  .card-header-region {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 4.4em;
+    padding: 0.6em 0.7em 0.9em 0.7em;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: none;
+    z-index: 2;
+    overflow: visible;
+
+    .card-header-text { flex: none; width: auto; }
+
+    .card-header-title {
+      font-size: 1.85em !important;
+      font-weight: 900;
+      color: #12181f !important;
+      text-shadow: none !important;
+      position: relative;
+      padding-left: 1.05em;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0; top: 50%;
+        transform: translateY(-50%);
+        width: 0.95em; height: 0.95em;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M 50 8 L 63 37 L 94 37 L 69 57 L 79 88 L 50 68 L 21 88 L 31 57 L 6 37 L 37 37 Z' fill='%23ffce4d'/%3E%3C/svg%3E");
+        background-size: 100% 100%;
+        background-repeat: no-repeat;
+      }
+    }
+
+    .card-header-meta { display: flex; align-items: center; }
+    .card-header-icon { width: 2.9em; height: 2.9em; }
+  }
+
+  // Castle skyline cutout at the bottom of the header (tier = tower count)
+  .card-header-region::after {
+    content: "";
+    position: absolute;
+    bottom: -1px; left: 0;
+    width: 100%;
+    height: 1.05em;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    z-index: 10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30' fill='%23ffffff'%3E%3Cpath d='M 0 30 L 100 30 L 100 10 L 85 10 L 85 0 L 73 0 L 73 10 L 59 10 L 59 0 L 41 0 L 41 10 L 27 10 L 27 0 L 15 0 L 15 10 L 0 10 Z' /%3E%3C/svg%3E");
+  }
+  &.level-1 .card-header-region::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30' fill='%23ffffff'%3E%3Cpath d='M 0 30 L 100 30 L 100 12 L 60 12 L 60 0 L 40 0 L 40 12 L 0 12 Z' /%3E%3C/svg%3E");
+  }
+  &.level-2 .card-header-region::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30' fill='%23ffffff'%3E%3Cpath d='M 0 30 L 100 30 L 100 12 L 76 12 L 76 0 L 60 0 L 60 12 L 40 12 L 40 0 L 24 0 L 24 12 L 0 12 Z' /%3E%3C/svg%3E");
+  }
+  &.level-3 .card-header-region::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30' fill='%23ffffff'%3E%3Cpath d='M 0 30 L 100 30 L 100 12 L 86 12 L 86 0 L 72 0 L 72 12 L 57 12 L 57 0 L 43 0 L 43 12 L 28 12 L 28 0 L 14 0 L 14 12 L 0 12 Z' /%3E%3C/svg%3E");
+  }
+
+  // Watermark art (lower-right)
+  .card-art-region {
+    position: absolute;
+    top: 4.6em;
+    right: 0.1em;
+    width: 6em;
+    height: 6em;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+
+    .card-art-frame { width: 100%; height: 100%; background-color: transparent !important; border: none !important; padding: 0; }
+  }
+
+  // Cost column (left)
+  .card-data-region {
+    position: absolute;
+    top: 4.9em;
+    left: 0.5em;
+    width: 6em;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.05em;
+    z-index: 2;
+
+    .card-data-row {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 0.3em;
+      border-bottom: none;
+      padding-bottom: 0;
+      margin: 0;
+      height: 1.7em;
+
+      .card-data-label {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        opacity: 1;
+        width: 1.7em !important;
+        height: 1.7em !important;
+
+        span { margin: 0 !important; width: 1.7em !important; height: 1.7em !important; }
+        svg { width: 100% !important; height: 100% !important; transform: none !important; }
+      }
+
+      .card-data-value {
+        font-size: 1.15em;
+        font-weight: 900;
+        color: #12181f !important;
+        white-space: nowrap;
+        letter-spacing: 0.02em;
+      }
+    }
+  }
+}
+
+// Card action buttons (buy / reserve) overlaid on a card
+.spl-card-actions {
+  position: absolute;
+  bottom: 6px; right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 4;
+}
+.spl-card-btn {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  cursor: pointer;
+  padding: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 56%;
+  box-shadow: 0 2px 5px rgba(30, 24, 48, 0.28);
+  transition: transform 0.1s, filter 0.15s;
+
+  &:hover { filter: brightness(1.06); }
+  &:active { transform: scale(0.92); }
+
+  &.buy {
+    background-color: #2eb87a;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 13 l4 4 L19 7'/%3E%3C/svg%3E");
+  }
+  &.reserve {
+    background-color: #e6a417;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M6 3 h12 a1 1 0 0 1 1 1 v17 l-7 -4 -7 4 v-17 a1 1 0 0 1 1 -1 Z'/%3E%3C/svg%3E");
+  }
+}
+
+// ==========================================
+// Noble tile face overrides (scoped to `.spl-noble`) — square tile.
+// Header band with points, medallion art centred, requirement gems as a bottom row.
+// ==========================================
+.spl-noble {
+  position: relative;
+  border-radius: 8px;
+  box-sizing: border-box;
+
+  &.spl-clickable { cursor: pointer; animation: spl-pulse-gold 1.5s infinite alternate; }
+
+  .playing-card-container { width: 100%; height: 100%; box-shadow: none !important; }
+  .playing-card-inner { width: 100% !important; height: 100% !important; transform: none !important; }
+  .playing-card-face { box-shadow: none; }
+  .playing-card-face.face-front { display: block !important; position: relative; padding: 0 !important; }
+
+  // No central medallion on nobles.
+  .card-art-region { display: none !important; }
+
+  // Header: top third of the card, centred.
+  .card-header-region {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 33%;
+    min-height: 0;
+    padding: 0.15em 0.4em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: none;
+    z-index: 2;
+
+    .card-header-text { width: auto; flex: none; display: flex; align-items: center; justify-content: center; }
+
+    .card-header-title {
+      font-size: 1.6em !important;
+      font-weight: 900;
+      color: #3f2f06 !important;
+      position: relative;
+      padding-left: 1.05em;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0; top: 50%;
+        transform: translateY(-50%);
+        width: 0.9em; height: 0.9em;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M 50 8 L 63 37 L 94 37 L 69 57 L 79 88 L 50 68 L 21 88 L 31 57 L 6 37 L 37 37 Z' fill='%23ffffff'/%3E%3C/svg%3E");
+        background-size: 100% 100%;
+        background-repeat: no-repeat;
+      }
+    }
+  }
+
+  // Requirement gems fill the lower two-thirds — centred, wrapping to a new line
+  // when they don't fit on one.
+  .card-data-region {
+    position: absolute;
+    top: 33%; left: 0;
+    width: 100%;
+    height: 67%;
+    padding: 0.15em 0.35em 0.35em;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    align-content: center;
+    justify-content: center;
+    gap: 0.3em 0.5em;
+    z-index: 2;
+
+    .card-data-row {
+      display: flex;
+      align-items: center;
+      gap: 0.15em;
+      border-bottom: none;
+      padding: 0;
+      margin: 0;
+      height: auto;
+      flex: 0 0 auto;
+
+      .card-data-label {
+        margin: 0;
+        width: 1.55em !important;
+        height: 1.55em !important;
+        span { margin: 0 !important; width: 1.55em !important; height: 1.55em !important; }
+        svg { width: 100% !important; height: 100% !important; transform: none !important; }
+      }
+      .card-data-value { font-size: 1.1em; font-weight: 900; color: #3f320c !important; white-space: nowrap; }
+    }
+  }
+}
+
+// ---- animations ----
+@keyframes spl-pulse-green {
+  0% { box-shadow: 0 0 6px 1px rgba(46, 184, 122, 0.6); }
+  100% { box-shadow: 0 0 13px 4px rgba(46, 184, 122, 0.16); }
+}
+@keyframes spl-pulse-gold {
+  0% { box-shadow: 0 0 6px 1px rgba(217, 165, 32, 0.6); }
+  100% { box-shadow: 0 0 13px 4px rgba(217, 165, 32, 0.16); }
+}
+// Subtle "you can pick more" halo on still-selectable gem chips.
+@keyframes spl-pulse-hint {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(108, 92, 231, 0); transform: translateY(0); }
+  50% { box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.30); transform: translateY(-2px); }
+}

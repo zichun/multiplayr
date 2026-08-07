@@ -243,6 +243,16 @@ export const GAME_ICONS: Record<string, IconObject> = {
         CUT('f_r', 'rectangle', 56, 52, 0.03, 0.6, -40)
     ]),
 
+    // 💠 Splendor — a cluster of three faceted gems
+    splendor: icon('gems', [
+        S('g3', 'rectangle', 50, 36, 0.62, 0.62, 45),
+        CUT('g3c', 'rectangle', 50, 36, 0.3, 0.03, 45),
+        S('g1', 'rectangle', 33, 60, 0.52, 0.52, 45),
+        CUT('g1c', 'rectangle', 33, 60, 0.26, 0.03, 45),
+        S('g2', 'rectangle', 67, 60, 0.52, 0.52, 45),
+        CUT('g2c', 'rectangle', 67, 60, 0.26, 0.03, 45)
+    ]),
+
     // 🐱 Cat in the Box — cat face
     catinthebox: icon('cat', [
         S('ear_l', 'triangle', 33, 30, 0.6, 0.72),
@@ -337,5 +347,23 @@ export const GAME_ICONS: Record<string, IconObject> = {
         CUT('gap1', 'rectangle', 40, 40, 0.44, 0.02),
         CUT('gap2', 'rectangle', 40, 62, 0.44, 0.02),
         CUT('gap3', 'rectangle', 51, 73, 0.02, 0.44)
+    ]),
+
+    // 🎲 Moonrollers — a die with a crescent moon knocked out
+    moonrollers: icon('moondie', [
+        S('die', 'rectangle', 50, 50, 1.5, 1.5),
+        CUT('moon', 'circle', 54, 46, 0.64, 0.64),
+        S('bite', 'circle', 64, 40, 0.54, 0.54),
+        CUT('star1', 'circle', 33, 66, 0.1, 0.1),
+        CUT('star2', 'circle', 40, 74, 0.06, 0.06)
+    ]),
+
+    // 🐾 Night at the Zoo — a paw print (pad + four toes)
+    nightzoo: icon('paw', [
+        S('pad', 'circle', 50, 62, 0.98, 0.82),
+        S('t1', 'circle', 30, 40, 0.4, 0.46),
+        S('t2', 'circle', 43, 30, 0.4, 0.46),
+        S('t3', 'circle', 57, 30, 0.4, 0.46),
+        S('t4', 'circle', 70, 40, 0.4, 0.46)
     ])
 };

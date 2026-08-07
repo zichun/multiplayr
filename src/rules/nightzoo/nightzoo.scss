@@ -1,0 +1,509 @@
+/**
+ * nightzoo.scss — flat, soft-pastel skin for Night at the Zoo.
+ *
+ * Flat Minimalist skin (DESIGN_GUIDE §10.10): hairline borders, soft radii,
+ * flat pastel fills, no offset shadows. Selection shows as an inset ring so
+ * there is no layout shift. All rules are scoped under .nz-* wrappers.
+ */
+
+$paper: #fdfbf6;
+$panel: #fbf6ec;
+$ink: #4a4750;
+$muted: #9a938a;
+$line: #e6dfd0;
+$teal: #5aa9a0;
+$apricot: #f2a65a;
+
+.nz-arena, .nz-rules, .nz-lobby, .nz-scoring, .nz-settings, .nz-players-strip {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+}
+
+.nz-ic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+    svg { display: block; width: 100%; height: 100%; }
+}
+
+.nz-muted { color: $muted; font-size: 0.86em; }
+.nz-muted.pad { padding: 20px; display: block; text-align: center; }
+
+.nz-section-title {
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    color: #857c70;
+    &.small { font-size: 0.72rem; }
+}
+
+// ---------------------------------------------------------------- buttons
+.nz-btn {
+    font-family: inherit;
+    font-weight: 600;
+    border: 1.5px solid $line;
+    background: #fff;
+    color: $ink;
+    border-radius: 10px;
+    padding: 9px 14px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
+
+    &:hover:not(:disabled) { border-color: $teal; }
+    &:active:not(:disabled) { transform: translateY(1px); }
+    &:disabled { opacity: 0.45; cursor: default; }
+
+    &.primary { background: $teal; border-color: $teal; color: #fff; }
+    &.primary:hover:not(:disabled) { background: darken($teal, 6%); }
+    &.ghost { background: transparent; }
+    &.on { background: lighten($teal, 38%); border-color: $teal; }
+    &.tiny { padding: 5px 9px; min-height: 30px; font-size: 0.8rem; border-radius: 8px; }
+    &.xtiny { padding: 3px 7px; min-height: 24px; font-size: 0.72rem; border-radius: 7px; }
+}
+
+// ---------------------------------------------------------------- tiles (cards)
+// The tile is a square PlayingCard. Scope all region overrides under the wrapper
+// so no other game's cards are affected: the central action art fills the tile,
+// and the food sits as a small chip in the top-right "header" corner.
+.nz-tile-card {
+    display: inline-flex;
+    flex: 0 0 auto;
+    line-height: 0;
+
+    &.dim { opacity: 0.5; }
+
+    .playing-card-face.face-front {
+        display: block !important;
+        position: relative;
+        padding: 0 !important;
+        overflow: hidden;
+    }
+
+    // central action / terrain art fills almost the whole tile
+    .card-art-region {
+        position: absolute;
+        inset: 8%;
+        margin: 0 !important;
+    }
+    .card-art-content { width: 100%; height: 100%; }
+
+    // compact "header" — just the food glyph, pinned top-right, small
+    .card-header-region {
+        position: absolute;
+        top: 0; right: 0; left: auto;
+        width: auto;
+        min-height: 0 !important;
+        height: auto;
+        padding: 6% 6% 0 0 !important;
+        background: transparent !important;
+        z-index: 2;
+    }
+    .card-header-text { display: none !important; }
+    .card-header-meta { gap: 0; }
+    .card-header-icon { width: 3em; height: 3em; }
+}
+
+.nz-tile-ghost {
+    border-radius: 10px;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    background: repeating-linear-gradient(45deg, #f3eee2, #f3eee2 5px, #efe8d8 5px, #efe8d8 10px);
+    border: 1.5px dashed $line;
+}
+
+// ---------------------------------------------------------------- figures
+.nz-fig {
+    position: relative;
+    background: #fff;
+    border: 2px solid;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+
+    &.faded { opacity: 0.5; }
+    &.pick { cursor: pointer; }
+    &.pick:hover { transform: scale(1.08); }
+    &.on { box-shadow: 0 0 0 3px rgba($apricot, 0.85); }
+
+    .nz-fig-badge {
+        position: absolute;
+        bottom: -5px; right: -5px;
+        background: $ink;
+        color: #fff;
+        font-size: 0.6rem;
+        font-weight: 700;
+        min-width: 13px; height: 13px;
+        line-height: 13px;
+        text-align: center;
+        border-radius: 7px;
+        padding: 0 2px;
+        &.dir { background: #5a6b8a; }
+        &.pollen { background: #b06fb0; }
+    }
+}
+
+// ---------------------------------------------------------------- board
+.nz-board-wrap {
+    display: flex;
+    align-items: stretch;
+    justify-content: safe center;
+    padding: 10px;
+    overflow-x: auto;
+}
+
+// 7×7 grid: a 5×5 board of 62px cells surrounded by 31px gutter tracks that hold
+// the external entrance half-squares.
+.nz-grid7 {
+    display: grid;
+    grid-template-columns: 31px repeat(5, 62px) 31px;
+    grid-template-rows: 31px repeat(5, 62px) 31px;
+    gap: 5px;
+    background: $panel;
+    padding: 8px;
+    border-radius: 14px;
+    border: 1.5px solid $line;
+}
+
+.nz-cell {
+    position: relative;
+    border-radius: 10px;
+    border: 1.5px dashed #ded6c4;
+    background: #fffdf8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+
+    &.filled { border-style: solid; border-color: transparent; background: transparent; }
+    &.zoo {
+        border: 2px solid $teal;
+        background: lighten($teal, 42%);
+    }
+    .nz-zoo-label { font-weight: 800; font-size: 0.7rem; letter-spacing: 1px; color: $teal; }
+
+    &.paired { background: #f1ebfa; border-color: #cdb9e9; }
+
+    &.place-target { cursor: pointer; box-shadow: inset 0 0 0 2px rgba($teal, 0.5); background: lighten($teal, 44%); }
+    &.place-target:hover { box-shadow: inset 0 0 0 3px $teal; }
+    &.move-target { cursor: pointer; box-shadow: inset 0 0 0 2px rgba($apricot, 0.7); }
+    &.move-target:hover { box-shadow: inset 0 0 0 3px $apricot; }
+    &.move-target.arrives { box-shadow: inset 0 0 0 2px rgba($teal, 0.85); }
+}
+
+// external entrance: a half-square, flat toward the board, rounded on the outer edge
+.nz-entrance-cell {
+    position: relative;
+    border: 1.5px solid;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .nz-entrance-mark {
+        font-weight: 800; font-size: 0.56rem; letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.92); text-shadow: 0 1px 1px rgba(0, 0, 0, 0.28);
+    }
+    &.side-N { border-radius: 9px 9px 0 0; align-self: end; }
+    &.side-S { border-radius: 0 0 9px 9px; align-self: start; }
+    &.side-W { border-radius: 9px 0 0 9px; justify-self: end; }
+    &.side-E { border-radius: 0 9px 9px 0; justify-self: start; }
+    &.discover-target { cursor: pointer; box-shadow: inset 0 0 0 3px $apricot; animation: nz-pulse 1.1s ease-in-out infinite; }
+}
+
+@keyframes nz-pulse {
+    0%, 100% { box-shadow: inset 0 0 0 2px rgba($apricot, 0.6); }
+    50% { box-shadow: inset 0 0 0 4px $apricot; }
+}
+
+.nz-cell-figs {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    pointer-events: none;
+    .nz-fig { pointer-events: auto; }
+}
+
+.nz-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%; height: 100%;
+    position: relative;
+
+    .nz-hint-star {
+        display: inline-flex; align-items: center; gap: 1px;
+        b { font-weight: 800; font-size: 0.92rem; color: #544d66; }
+    }
+    // terrain condition chip, pinned top-left
+    .nz-hint-terr {
+        position: absolute; top: 3px; left: 3px;
+        width: 12px; height: 12px; border-radius: 3px;
+        border: 1.5px solid;
+    }
+    .nz-hint-sym { position: absolute; top: 2px; left: 2px; }
+
+    &.paired {
+        flex-direction: column;
+        gap: 1px;
+        .nz-hint-pairhead {
+            display: inline-flex; align-items: center; gap: 2px;
+            b { font-size: 0.72rem; font-weight: 800; color: #8a5aa0; }
+        }
+        .nz-hint-pairreward {
+            font-size: 0.56rem; font-weight: 700; color: #7a7288; letter-spacing: 0.3px;
+        }
+    }
+}
+
+// ---------------------------------------------------------------- market
+.nz-market, .nz-leftover {
+    background: $panel;
+    border: 1.5px solid $line;
+    border-radius: 14px;
+    padding: 10px 12px;
+    margin: 8px 0;
+}
+.nz-market-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.nz-deck-badge { font-size: 0.72rem; color: $muted; background: #fff; border: 1px solid $line; border-radius: 8px; padding: 2px 8px; }
+.nz-market-row, .nz-leftover-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 4px 2px;
+}
+.nz-leftover-row { gap: 6px; }
+
+// ---------------------------------------------------------------- arena
+.nz-arena { padding: 6px 4px 20px; }
+.nz-hud {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    .nz-round { font-weight: 700; font-size: 0.9rem; }
+    .nz-live-vp { font-weight: 800; color: $teal; }
+}
+.nz-wait-note, .nz-endround-note {
+    text-align: center;
+    color: #7a7268;
+    font-size: 0.9rem;
+    padding: 8px;
+    background: $panel;
+    border-radius: 12px;
+    margin: 6px 0;
+}
+.nz-arena-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+// ---------------------------------------------------------------- prompts
+.nz-prompt {
+    background: #fff;
+    border: 1.5px solid $line;
+    border-radius: 14px;
+    padding: 10px 12px;
+    margin: 8px 0;
+
+    &.move { border-color: rgba($apricot, 0.6); background: lighten($apricot, 32%); }
+    &.discover { border-color: rgba($teal, 0.5); }
+    .nz-prompt-title { font-weight: 700; font-size: 0.86rem; display: block; margin-bottom: 8px; }
+}
+.nz-prompt-grid { display: flex; flex-direction: column; gap: 6px; }
+.nz-discover-pick { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.nz-discover-pick .nz-btn { text-transform: capitalize; }
+.nz-prompt-terrains { display: flex; gap: 8px; flex-wrap: wrap; }
+.nz-prompt-terrains .nz-btn { text-transform: capitalize; color: $ink; }
+
+.nz-move-figs { display: flex; gap: 10px; flex-wrap: wrap; padding: 4px 0 8px; }
+.nz-move-opts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+// ---------------------------------------------------------------- held / warehouse
+.nz-held, .nz-warehouse {
+    background: $panel;
+    border: 1.5px solid $line;
+    border-radius: 14px;
+    padding: 10px 12px;
+    margin: 8px 0;
+}
+.nz-held-row { display: flex; gap: 8px; flex-wrap: wrap; padding: 6px 0; }
+.nz-held-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.nz-choice { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.nz-choice-label { font-weight: 700; font-size: 0.82rem; color: $ink; }
+
+.nz-wh-slots { display: flex; gap: 12px; padding-top: 6px; }
+.nz-wh-slot {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    .nz-wh-empty {
+        width: 44px; height: 44px; border: 1.5px dashed $line; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.62rem; color: $muted;
+    }
+    .nz-wh-btns { display: flex; gap: 4px; }
+}
+
+// ---------------------------------------------------------------- keepers (per-player boards)
+.nz-keepers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 12px;
+    align-items: flex-start;
+    justify-content: safe center;
+}
+.nz-keeper-block {
+    background: #fff;
+    border: 1.5px solid $line;
+    border-top-width: 5px;
+    border-radius: 14px;
+    padding: 8px;
+    flex: 0 0 auto;
+    &.drafting { box-shadow: 0 0 0 2px rgba($apricot, 0.5); }
+}
+.nz-keeper-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 2px 6px 6px;
+}
+.nz-pchip-name { font-weight: 700; }
+.nz-pchip-score { font-weight: 800; color: $teal; }
+.nz-pchip-sub { font-size: 0.78rem; color: $muted; }
+.nz-tick { font-size: 0.74rem; color: $apricot; }
+.nz-tick.done { color: $teal; }
+
+// ---------------------------------------------------------------- animal reference (bottom of arena)
+.nz-animal-ref {
+    background: $panel;
+    border: 1.5px solid $line;
+    border-radius: 14px;
+    padding: 10px 12px;
+    margin: 14px 0 4px;
+}
+.nz-animal-ref-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+}
+.nz-animal-ref-item {
+    flex: 1 1 240px;
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: #fff;
+    border: 1.5px solid $line;
+    border-radius: 12px;
+    padding: 8px 10px;
+}
+.nz-animal-ref-txt { min-width: 0; b { font-size: 0.98rem; } }
+.nz-animal-pts { font-weight: 800; color: $teal; font-size: 0.86rem; }
+.nz-animal-moons { color: $muted; font-size: 0.8rem; }
+
+// ---------------------------------------------------------------- scoring
+.nz-scoring {
+    padding: 16px;
+    h2.win { color: $teal; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+}
+.nz-score-table {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 560px;
+    margin: 0 auto;
+}
+.nz-score-row {
+    display: grid;
+    grid-template-columns: 1.6fr repeat(4, 0.8fr) 0.9fr;
+    gap: 6px;
+    align-items: center;
+    padding: 8px 10px;
+    background: #fff;
+    border: 1.5px solid $line;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    span:not(:first-child), b { text-align: center; }
+    &.head { background: $panel; font-weight: 700; font-size: 0.74rem; text-transform: uppercase; color: #857c70; }
+    &.winner { border-color: $teal; background: lighten($teal, 44%); }
+    b { color: $teal; font-size: 1.05rem; }
+}
+
+// ---------------------------------------------------------------- rules / lobby
+.nz-rules {
+    padding: 14px 16px;
+    line-height: 1.5;
+    h3 { text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid $line; padding-bottom: 6px; }
+    h4 { margin: 14px 0 6px; color: $teal; }
+    ul { padding-left: 18px; }
+    li { margin: 4px 0; }
+}
+.nz-legend { display: flex; flex-wrap: wrap; gap: 14px; }
+.nz-legend-item { display: flex; flex-direction: column; align-items: center; }
+
+// action symbol rows
+.nz-rules-actions { display: flex; flex-direction: column; gap: 8px; }
+.nz-rules-action {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: #fff; border: 1.5px solid $line; border-radius: 10px; padding: 7px 10px;
+    b { font-size: 0.92rem; }
+}
+
+// terrain chips
+.nz-rules-terr { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
+.nz-rules-terr-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    text-transform: capitalize; font-weight: 700; color: $ink;
+    border: 1.5px solid; border-radius: 9px; padding: 4px 10px;
+}
+
+// animals list
+.nz-rules-animals { display: flex; flex-direction: column; gap: 8px; }
+.nz-rules-animal {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: #fff; border: 1.5px solid $line; border-radius: 12px; padding: 8px 10px;
+    &.in-play { border-color: $teal; background: lighten($teal, 46%); }
+}
+.nz-inplay-tag {
+    font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+    color: #fff; background: $teal; border-radius: 6px; padding: 1px 6px; margin-left: 6px;
+}
+
+// score ladders (sets / pollen / food)
+.nz-ladders { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+.nz-ladder { flex: 1 1 200px; }
+.nz-ladder-head { font-weight: 700; font-size: 0.8rem; color: #857c70; }
+.nz-ladder-grid { display: flex; gap: 5px; margin-top: 4px; }
+.nz-ladder-cell {
+    flex: 1 1 0; min-width: 34px;
+    display: flex; flex-direction: column; align-items: center;
+    background: #fff; border: 1.5px solid $line; border-radius: 8px; padding: 4px 2px;
+    span { font-size: 0.72rem; color: $muted; }
+    b { color: $teal; font-size: 1.02rem; }
+}
+
+// foods
+.nz-rules-foods { display: flex; flex-wrap: wrap; gap: 12px; margin: 6px 0; }
+.nz-rules-food { display: flex; flex-direction: column; align-items: center; gap: 2px; small { color: $muted; } }
+
+.nz-lobby { padding: 10px; }
+.nz-waiting { text-align: center; color: $muted; padding: 20px; }
+.nz-settings { padding: 16px; display: flex; flex-direction: column; gap: 10px; max-width: 260px; }

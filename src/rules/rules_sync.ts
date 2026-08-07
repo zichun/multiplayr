@@ -23,6 +23,7 @@ import { MaskmenRule } from './maskmen/maskmen';
 import { CockroachRule } from './cockroach/cockroach';
 import { JaipurRule } from './jaipur/jaipur';
 import { SplendorDuelRule } from './splendorduel/splendorduel';
+import { SplendorRule } from './splendor/splendor';
 import { CatInTheBoxRule } from './catinthebox/catinthebox';
 import { TrioRule } from './trio/trio';
 import { SeaSaltRule } from './seasalt/seasalt';
@@ -32,6 +33,8 @@ import { CourtisansRule } from './courtisans/courtisans';
 import { MagicalAthletesRule } from './magicalathletes/magicalathletes';
 import { OffWithTheirHeadsRule } from './offwiththeirheads/offwiththeirheads';
 import { ProjectLRule } from './projectl/projectl';
+import { MoonrollersRule } from './moonrollers/moonrollers';
+import { NightZooRule } from './nightzoo/nightzoo';
 
 
 const CoupDebugger = NewDebuggerRule(
@@ -157,6 +160,14 @@ const JaipurDebugger = NewDebuggerRule(
 const SplendorDuelDebugger = NewDebuggerRule(
     'splendorduel',
     SplendorDuelRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const SplendorDebugger = NewDebuggerRule(
+    'splendor',
+    SplendorRule,
     {
         HistoryBufferSize: 10,
         HistoryInSessionStorage: true
@@ -515,6 +526,23 @@ export const MPRULES = {
         minPlayers: 2,
         maxPlayers: 2
     },
+    'splendor': {
+        description: 'Splendor - Renaissance Gem Engine Builder',
+        rules: ['lobby', 'gameshell', 'splendor'],
+        rule: SplendorRule,
+        icon: '💠',
+        minPlayers: 2,
+        maxPlayers: 4
+    },
+    'splendor-debug': {
+        description: 'Splendor (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'splendor', 'debugger'],
+        rule: SplendorDebugger,
+        icon: '💠',
+        minPlayers: 2,
+        maxPlayers: 4
+    },
     'catinthebox': {
         description: 'Cat in the Box - Quantum Trick-Taking Game',
         rules: ['lobby', 'gameshell', 'catinthebox'],
@@ -658,6 +686,22 @@ export const MPRULES = {
         icon: '🧩',
         minPlayers: 1,
         maxPlayers: 6
+    },
+    'moonrollers': {
+        description: 'Moonrollers - Push-Your-Luck Dice & Crew Builder',
+        rules: ['lobby', 'gameshell', 'moonrollers'],
+        rule: MoonrollersRule,
+        icon: '🎲',
+        minPlayers: 2,
+        maxPlayers: 5
+    },
+    'nightzoo': {
+        description: 'Night at the Zoo - Tile-Drafting Routing Puzzle',
+        rules: ['lobby', 'gameshell', 'nightzoo'],
+        rule: NightZooRule,
+        icon: '🐾',
+        minPlayers: 1,
+        maxPlayers: 4
     }
 };
 

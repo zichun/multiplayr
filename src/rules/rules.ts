@@ -8,9 +8,9 @@ import { GAME_ICONS } from './host-icons';
 export const MPRULES = {
     'rockscissorspaper': {
         description: 'A classic 2 player game',
-        mechanics: ['Simultaneous'],
+        mechanics: ['Legacy'],
         glyph: GAME_ICONS.rockscissorspaper,
-        enabled: true,
+        enabled: false,
         rules: ['lobby', 'gameshell', 'rockscissorspaper'],
         rule: () => import('./rockscissorspaper/rockscissorspaper').then(m => m.RockScissorsPaperRule),
         icon: '✊',
@@ -19,9 +19,9 @@ export const MPRULES = {
     },
     'theoddone': {
         description: 'Guess the odd one',
-        mechanics: ['Social Deduction'],
+        mechanics: ['Social Deduction', 'Legacy'],
         glyph: GAME_ICONS.theoddone,
-        enabled: true,
+        enabled: false,
         rules: ['lobby', 'gameshell', 'theoddone'],
         rule: () => import('./theoddone/theoddone').then(m => m.TheOddOneRule),
         icon: '🔍',
@@ -30,7 +30,7 @@ export const MPRULES = {
     },
     'coup': {
         description: 'Coup - Resistance',
-        mechanics: ['Bluffing', 'Social Deduction', 'Take That'],
+        mechanics: ['Bluffing', 'Deduction', 'Take That', 'Legacy'],
         glyph: GAME_ICONS.coup,
         enabled: true,
         rules: ['lobby', 'gameshell', 'coup'],
@@ -41,7 +41,7 @@ export const MPRULES = {
     },
     'avalon': {
         description: 'The Resistance - Avalon',
-        mechanics: ['Social Deduction', 'Team-Based'],
+        mechanics: ['Bluffing', 'Team-Based', 'Legacy'],
         glyph: GAME_ICONS.avalon,
         enabled: true,
         rules: ['lobby', 'gameshell', 'avalon'],
@@ -52,7 +52,7 @@ export const MPRULES = {
     },
     'decrypto': {
         description: 'Decrypto',
-        mechanics: ['Team-Based', 'Word Game', 'Deduction'],
+        mechanics: ['Team-Based', 'Deduction', 'Word Game', 'Legacy'],
         glyph: GAME_ICONS.decrypto,
         enabled: true,
         rules: ['lobby', 'gameshell', 'decrypto'],
@@ -63,7 +63,7 @@ export const MPRULES = {
     },
     'minesweeperflags': {
         description: 'Minesweeper Flags',
-        mechanics: ['Deduction', 'Abstract Strategy'],
+        mechanics: ['Deduction', 'Duel'],
         glyph: GAME_ICONS.minesweeperflags,
         enabled: true,
         rules: ['gameshell', 'minesweeperflags'],
@@ -89,9 +89,9 @@ export const MPRULES = {
     },
     'tictactoepoker': {
         description: 'Tic-tac-toe Poker',
-        mechanics: ['Abstract Strategy', 'Bluffing'],
+        mechanics: ['Abstract Strategy', 'Bluffing', 'Legacy'],
         glyph: GAME_ICONS.tictactoepoker,
-        enabled: true,
+        enabled: false,
         rules: ['gameshell', 'tictactoepoker'],
         rule: () => import('./tictactoepoker/tictactoepoker_rule').then(m => m.TicTacToePokerRule),
         icon: '❌',
@@ -115,7 +115,7 @@ export const MPRULES = {
     },
     'ito': {
         description: 'Ito - Cooperative Number Game',
-        mechanics: ['Cooperative', 'Communication'],
+        mechanics: ['Cooperative', 'Deduction'],
         glyph: GAME_ICONS.ito,
         enabled: true,
         rules: ['lobby', 'gameshell', 'ito'],
@@ -141,7 +141,7 @@ export const MPRULES = {
     },
     'catchsketch': {
         description: 'Catch Sketch - Speed Drawing Guessing Game',
-        mechanics: ['Drawing', 'Party', 'Real-Time'],
+        mechanics: ['Drawing', 'Deduction'],
         glyph: GAME_ICONS.catchsketch,
         enabled: true,
         rules: ['lobby', 'gameshell', 'drawing', 'catchsketch'],
@@ -227,7 +227,7 @@ export const MPRULES = {
     },
     'durian': {
         description: 'Durian - Shopkeeper & Inventory Crisis Game',
-        mechanics: ['Memory', 'Deduction'],
+        mechanics: ['Memory', 'Deduction', 'Bluffing'],
         glyph: GAME_ICONS.durian,
         enabled: true,
         rules: ['lobby', 'gameshell', 'durian'],
@@ -253,7 +253,7 @@ export const MPRULES = {
     },
     'startups': {
         description: 'Startups - Competitive Investment Card Game',
-        mechanics: ['Set Collection', 'Bluffing'],
+        mechanics: ['Set Collection', 'Push Your Luck'],
         glyph: GAME_ICONS.startups,
         enabled: true,
         rules: ['lobby', 'gameshell', 'startups'],
@@ -305,7 +305,7 @@ export const MPRULES = {
     },
     'ttykm': {
         description: 'That Time You Killed Me - Abstract Time Travel Strategy',
-        mechanics: ['Abstract Strategy'],
+        mechanics: ['Abstract Strategy', 'Duel'],
         glyph: GAME_ICONS.ttykm,
         enabled: true,
         rules: ['gameshell', 'ttykm'],
@@ -331,7 +331,7 @@ export const MPRULES = {
     },
     'maskmen': {
         description: 'Maskmen - Dynamic Wrestler Hierarchy Card Game',
-        mechanics: ['Deduction', 'Memory'],
+        mechanics: ['Card Shredding'],
         glyph: GAME_ICONS.maskmen,
         enabled: true,
         rules: ['lobby', 'gameshell', 'maskmen'],
@@ -357,7 +357,7 @@ export const MPRULES = {
     },
     'cockroach': {
         description: 'Cockroach Poker: Royal - Bluffing Card Game',
-        mechanics: ['Bluffing'],
+        mechanics: ['Bluffing', 'Card Shredding'],
         glyph: GAME_ICONS.cockroach,
         enabled: true,
         rules: ['lobby', 'gameshell', 'cockroach'],
@@ -383,7 +383,7 @@ export const MPRULES = {
     },
     'jaipur': {
         description: 'Jaipur - 2 Player Tactical Trading Card Game',
-        mechanics: ['Set Collection', 'Trading'],
+        mechanics: ['Set Collection', 'Duel'],
         glyph: GAME_ICONS.jaipur,
         enabled: true,
         rules: ['lobby', 'gameshell', 'jaipur'],
@@ -409,7 +409,7 @@ export const MPRULES = {
     },
     'splendorduel': {
         description: 'Splendor Duel - 2 Player Tactical Jewel Game',
-        mechanics: ['Engine Building', 'Set Collection'],
+        mechanics: ['Engine Building', 'Set Collection', 'Duel'],
         glyph: GAME_ICONS.splendorduel,
         enabled: true,
         rules: ['lobby', 'gameshell', 'splendorduel'],
@@ -418,9 +418,35 @@ export const MPRULES = {
         minPlayers: 2,
         maxPlayers: 2
     },
+    'splendor': {
+        description: 'Splendor - Renaissance Gem Engine Builder',
+        mechanics: ['Engine Building', 'Set Collection'],
+        glyph: GAME_ICONS.splendor,
+        enabled: true,
+        rules: ['lobby', 'gameshell', 'splendor'],
+        rule: () => import('./splendor/splendor').then(m => m.SplendorRule),
+        icon: '💠',
+        minPlayers: 2,
+        maxPlayers: 4
+    },
+    'splendor-debug': {
+        description: 'Splendor (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'splendor', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./splendor/splendor')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('splendor', orig.SplendorRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '💠',
+        minPlayers: 2,
+        maxPlayers: 4
+    },
     'catinthebox': {
         description: 'Cat in the Box - Quantum Trick-Taking Game',
-        mechanics: ['Trick-Taking'],
+        mechanics: ['Trick-Taking', 'Deduction'],
         glyph: GAME_ICONS.catinthebox,
         enabled: true,
         rules: ['lobby', 'gameshell', 'catinthebox'],
@@ -461,7 +487,7 @@ export const MPRULES = {
     },
     'trio': {
         description: 'Trio - Memory & Deduction Number Game',
-        mechanics: ['Memory', 'Set Collection'],
+        mechanics: ['Memory', 'Set Collection', 'Deduction'],
         glyph: GAME_ICONS.trio,
         enabled: true,
         rules: ['lobby', 'gameshell', 'trio'],
@@ -487,7 +513,7 @@ export const MPRULES = {
     },
     'regicide': {
         description: 'Regicide - Cooperative Card Battle',
-        mechanics: ['Cooperative'],
+        mechanics: ['Cooperative', 'Take That'],
         glyph: GAME_ICONS.regicide,
         enabled: true,
         rules: ['lobby', 'gameshell', 'regicide'],
@@ -539,7 +565,7 @@ export const MPRULES = {
     },
     'skull': {
         description: 'Skull - Bluffing & Bidding Game',
-        mechanics: ['Bluffing', 'Bidding'],
+        mechanics: ['Bluffing', 'Deduction'],
         glyph: GAME_ICONS.skull,
         enabled: true,
         rules: ['lobby', 'gameshell', 'skull'],
@@ -550,7 +576,7 @@ export const MPRULES = {
     },
     'courtisans': {
         description: 'Courtisans - Courtly Set Collection & Take-That',
-        mechanics: ['Set Collection', 'Take That'],
+        mechanics: ['Set Collection', 'Take That', 'Deduction'],
         glyph: GAME_ICONS.courtisans,
         enabled: true,
         rules: ['lobby', 'gameshell', 'courtisans'],
@@ -591,7 +617,7 @@ export const MPRULES = {
     },
     'magicalathletes': {
         description: 'Magical Athletes - Push-Your-Luck Racing',
-        mechanics: ['Push Your Luck', 'Racing'],
+        mechanics: ['Push Your Luck', 'Racing', 'Dice'],
         glyph: GAME_ICONS.magicalathletes,
         enabled: true,
         rules: ['lobby', 'gameshell', 'magicalathletes'],
@@ -602,7 +628,7 @@ export const MPRULES = {
     },
     'offwiththeirheads': {
         description: 'Off With Their Heads - Wonderland Roll-and-Write',
-        mechanics: ['Roll & Write'],
+        mechanics: ['Roll & Write', 'Trick Taking'],
         glyph: GAME_ICONS.offwiththeirheads,
         enabled: true,
         rules: ['lobby', 'gameshell', 'offwiththeirheads'],
@@ -613,7 +639,7 @@ export const MPRULES = {
     },
     'projectl': {
         description: 'Project L - Polyomino Puzzle Engine Builder',
-        mechanics: ['Puzzle', 'Engine Building'],
+        mechanics: ['Polyomino', 'Engine Building'],
         glyph: GAME_ICONS.projectl,
         enabled: true,
         rules: ['lobby', 'gameshell', 'projectl'],
@@ -666,6 +692,58 @@ export const MPRULES = {
         icon: '🏃',
         minPlayers: 2,
         maxPlayers: 6
+    },
+    'moonrollers': {
+        description: 'Moonrollers - Push-Your-Luck Dice & Crew Builder',
+        mechanics: ['Push Your Luck', 'Dice', 'Set Collection'],
+        glyph: GAME_ICONS.moonrollers,
+        enabled: true,
+        rules: ['lobby', 'gameshell', 'moonrollers'],
+        rule: () => import('./moonrollers/moonrollers').then(m => m.MoonrollersRule),
+        icon: '🎲',
+        minPlayers: 2,
+        maxPlayers: 5
+    },
+    'moonrollers-debug': {
+        description: 'Moonrollers (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'moonrollers', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./moonrollers/moonrollers')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('moonrollers', orig.MoonrollersRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🎲',
+        minPlayers: 2,
+        maxPlayers: 5
+    },
+    'nightzoo': {
+        description: 'Night at the Zoo - Tile-Drafting Routing Puzzle',
+        mechanics: ['Tile Placement', 'Drafting', 'Puzzle'],
+        glyph: GAME_ICONS.nightzoo,
+        enabled: true,
+        rules: ['lobby', 'gameshell', 'nightzoo'],
+        rule: () => import('./nightzoo/nightzoo').then(m => m.NightZooRule),
+        icon: '🐾',
+        minPlayers: 1,
+        maxPlayers: 4
+    },
+    'nightzoo-debug': {
+        description: 'Night at the Zoo (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'nightzoo', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./nightzoo/nightzoo')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('nightzoo', orig.NightZooRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🐾',
+        minPlayers: 1,
+        maxPlayers: 4
     }
 };
 

@@ -19,6 +19,7 @@ import './maskmen/test_maskmen';
 import './cockroach/test_cockroach';
 import './jaipur/test_jaipur';
 import './splendorduel/test_splendorduel';
+import './splendor/test_splendor';
 import './catinthebox/test_catinthebox';
 import './trio/test_trio';
 import './seasalt/test_seasalt';
@@ -28,5 +29,8 @@ import './courtisans/test_courtisans';
 import './magicalathletes/test_magicalathletes';
 import './offwiththeirheads/test_offwiththeirheads';
 import './projectl/test_projectl';
+import './moonrollers/test_moonrollers';
+import './nightzoo/test_nightzoo';
+import './dice-roller/test_dice_roller';
 import './test_cards';
 

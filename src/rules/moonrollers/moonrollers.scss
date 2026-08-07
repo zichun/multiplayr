@@ -1,0 +1,538 @@
+/**
+ * moonrollers.scss — Flat, mid-century-modern skin (white surfaces, bold faction
+ * hues, hairline borders, no offset shadows). Selection is an inset ring so there is
+ * no layout shift. All rules are scoped under Moonrollers wrapper classes.
+ */
+
+$ink: #2b333c;
+$paper: #ffffff;
+$cream: #f6efe1;
+$line: #e7e1d4;
+$muted: #9aa0a6;
+
+.moonrollers-game,
+.mr-rules,
+.mr-roster,
+.mr-admin {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+}
+
+.mr-glyph {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+
+    svg { display: block; width: 100%; height: 100%; }
+}
+
+.mr-muted { color: $muted; font-style: italic; font-size: 0.85em; }
+
+// ==========================================
+// Dice
+// ==========================================
+// The die base (tile, face, tumble) is rendered by the dice-roller library (.dr-die).
+// Moonrollers only layers the interaction rings / states on top.
+.mr-die {
+    transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+
+    &.state-dim { opacity: 0.4; }
+    &.is-actionable { cursor: pointer; }
+    &.state-lockable { box-shadow: 0 0 0 3px rgba(43, 51, 60, 0.9); }
+    &.state-convert { box-shadow: 0 0 0 3px #8a5aa6; }
+    &.state-retag { box-shadow: 0 0 0 3px #e0a51b; }
+    &.state-select { box-shadow: 0 0 0 3px rgba(224, 165, 27, 0.6); }
+    &.state-selected { box-shadow: 0 0 0 4px #e0a51b; transform: translateY(-3px); }
+    &.is-actionable:hover { transform: translateY(-3px); }
+    &.is-actionable:active { transform: translateY(1px); }
+
+    // A transient pull die: dashed outline + gentle fade, on its way back to supply.
+    &.is-transient {
+        cursor: default;
+        box-shadow: 0 0 0 2px rgba(43, 51, 60, 0.25);
+        animation: mr-transient-fade 1.5s ease-in forwards;
+    }
+}
+@keyframes mr-transient-fade {
+    0%, 55% { opacity: 1; }
+    100% { opacity: 0.35; }
+}
+
+.mr-die-badge {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: $ink;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+// ==========================================
+// Lobby / rules
+// ==========================================
+.mr-wait {
+    background: $cream;
+    color: #7a5a12;
+    padding: 15px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 20px;
+}
+
+.mr-rules {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 82vh;
+    overflow-y: auto;
+
+    .mr-rules-sec {
+        background: $paper;
+        border: 1px solid $line;
+        border-radius: 14px;
+        padding: 16px 18px;
+
+        h3 { margin: 0 0 10px; text-transform: uppercase; letter-spacing: 1px; font-size: 0.95em; }
+        p { margin: 8px 0 0; line-height: 1.6; }
+        ol { margin: 0; padding-left: 20px; line-height: 1.7; }
+    }
+
+    .mr-legend { display: flex; flex-wrap: wrap; gap: 14px; }
+    .mr-legend-item { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.8em; font-weight: 600; }
+
+    // Crew-card anatomy: sample card beside an annotated list.
+    .mr-anatomy { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+    .mr-anatomy-card { flex: 0 0 auto; width: 190px; }
+    .mr-anatomy-list {
+        flex: 1 1 260px; min-width: 240px; list-style: none; margin: 0; padding: 0;
+        display: flex; flex-direction: column; gap: 9px;
+        li { display: flex; gap: 10px; align-items: flex-start; line-height: 1.4; font-size: 0.9em; }
+    }
+    .mr-a-ico {
+        flex: 0 0 auto; width: 26px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .mr-a-num { font-weight: 800; font-size: 1.05em; color: $ink; }
+    .mr-a-dot { width: 10px; height: 10px; border-radius: 50%; background: $ink; }
+    .mr-a-tok {
+        flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; background: #d1495b; color: #fff;
+        font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center;
+        border: 2px solid #fff; box-shadow: 0 0 0 1px #d1495b;
+    }
+}
+
+// ==========================================
+// Turn banner
+// ==========================================
+.mr-turn-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: $cream;
+    border-radius: 12px;
+    font-weight: 700;
+    margin-bottom: 12px;
+
+    .mr-you-turn { color: #b7791f; text-transform: uppercase; letter-spacing: 0.5px; }
+    .mr-deck { font-size: 0.8em; color: $muted; font-weight: 600; }
+}
+
+// ==========================================
+// Crew display
+// ==========================================
+.mr-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 4px;
+    justify-content: safe center;
+}
+
+.mr-crew {
+    flex: 1 1 160px;
+    max-width: 210px;
+    min-width: 150px;
+    background: $paper;
+    border: 1px solid $line;
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.12s ease;
+
+    &.is-choosable { cursor: pointer; }
+    &.is-choosable:hover { transform: translateY(-3px); }
+    // While a card is only switchable (not the chosen one), its requirement rows must not
+    // swallow clicks — the whole card selects it.
+    &.is-choosable .mr-req { pointer-events: none; }
+}
+
+.mr-crew-head {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 10px;
+    color: #fff;
+
+    .mr-crew-name { font-weight: 800; font-size: 0.92em; flex: 1; letter-spacing: 0.3px; }
+    .mr-starter { opacity: 0.9; }
+}
+
+.mr-crew-reqs { display: flex; flex-direction: column; padding: 6px; gap: 4px; }
+
+.mr-req {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 8px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: #fbf9f4;
+    font-family: inherit;
+    color: $ink;
+    cursor: default;
+    text-align: left;
+    width: 100%;
+
+    &.status-completed { background: #eef6f0; }
+    &.status-committed { background: #fdf4e3; }
+    &.is-live { box-shadow: inset 0 0 0 2px #e0a51b; }
+    &.is-committable { cursor: pointer; border-color: rgba(43, 51, 60, 0.35); }
+    &.is-committable:hover { background: #f2eee5; }
+
+    .mr-req-count { font-weight: 800; font-size: 1.02em; min-width: 16px; }
+    .mr-x2 { font-size: 0.7em; color: #8a5aa6; font-style: normal; margin-left: 1px; font-weight: 800; }
+    .mr-pips { display: inline-flex; gap: 3px; flex: 1; }
+    .mr-req-hz { margin-left: auto; }
+}
+
+// Soft pulse on the chosen card's open requirements the current player's dice can satisfy
+// (before committing). Animates background + inset ring so it reads clearly, and the inset
+// ring is never clipped by the card's overflow.
+@keyframes mr-req-pulse {
+    0%, 100% { background-color: #fdf3dd; box-shadow: inset 0 0 0 1.5px rgba(224, 165, 27, 0.4); }
+    50% { background-color: #f6dfa2; box-shadow: inset 0 0 0 2.5px rgba(224, 165, 27, 1); }
+}
+.mr-req.is-dice-glow {
+    animation: mr-req-pulse 1.35s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+    .mr-req.is-dice-glow { animation: none; background-color: #fdf3dd; box-shadow: inset 0 0 0 2px rgba(224, 165, 27, 0.8); }
+}
+
+.mr-pip {
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+    background: #e2ddd2;
+
+    &.filled { background: $ink; }
+}
+
+.mr-token {
+    position: absolute;
+    top: -6px;
+    right: 6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+
+    &.covered { top: 50%; transform: translateY(-50%); right: 7px; opacity: 0.95; }
+}
+
+.mr-crew-ability {
+    margin-top: auto;
+    padding: 7px 10px;
+    font-size: 0.72em;
+    line-height: 1.35;
+    color: #6b7178;
+    border-top: 1px dashed $line;
+    background: #fcfaf5;
+}
+
+// ==========================================
+// Dice tray + actions
+// ==========================================
+.mr-tray {
+    margin-top: 14px;
+    background: $cream;
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+
+.mr-tray-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.mr-tray-label { font-weight: 800; text-transform: uppercase; letter-spacing: 1px; font-size: 0.8em; }
+.mr-tray-meta { font-size: 0.75em; color: $muted; font-weight: 600; }
+
+.mr-dice { display: flex; flex-wrap: wrap; gap: 10px; min-height: 46px; align-items: center; padding: 4px; }
+
+.mr-hint { margin: 8px 2px 0; font-size: 0.8em; color: #7a7f85; }
+
+// Triggered-ability bar (inside the dice tray)
+.mr-ability-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    margin-top: 10px; padding-top: 10px; border-top: 1px dashed $line;
+
+    &.armed { background: #fffaf0; border-radius: 10px; padding: 8px 10px; border-top: none; }
+}
+.mr-ability-bar-label, .mr-ability-armed-label {
+    font-size: 0.72em; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 800; color: $muted;
+}
+.mr-ability-armed-label { text-transform: none; letter-spacing: 0; color: #9a6b0f; font-size: 0.82em; }
+.mr-btn.ability { border-style: dashed; border-color: #8a5aa6; color: #6b3f80; background: #faf4fc; }
+
+.mr-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+    justify-content: center;
+}
+
+.mr-btn {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: 0.9em;
+    letter-spacing: 0.3px;
+    padding: 11px 20px;
+    min-height: 44px;
+    border: 1px solid $ink;
+    border-radius: 11px;
+    background: #fff;
+    color: $ink;
+    cursor: pointer;
+    transition: transform 0.1s ease, background 0.1s ease, opacity 0.1s ease;
+
+    &:hover:not(:disabled) { transform: translateY(-2px); }
+    &:active:not(:disabled) { transform: translateY(1px); }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    &.primary { background: $ink; color: #fff; }
+    &.ghost { border-style: dashed; border-color: #e0a51b; color: #b7791f; }
+}
+
+.mr-action-note { align-self: center; font-size: 0.8em; color: $muted; }
+
+// ==========================================
+// Hazard modal
+// ==========================================
+.mr-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(43, 51, 60, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 60;
+    padding: 20px;
+}
+
+.mr-modal {
+    background: #fff;
+    border-radius: 18px;
+    padding: 24px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+
+    h3 { margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+}
+
+.mr-haz-choices { display: flex; gap: 14px; justify-content: center; margin-top: 16px; }
+
+.mr-haz-card {
+    flex: 1 1 0;
+    border: 2px solid $line;
+    border-radius: 14px;
+    background: #fbf9f4;
+    padding: 18px 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    transition: transform 0.1s ease, border-color 0.1s ease;
+
+    &:hover { transform: translateY(-3px); border-color: #e0a51b; }
+
+    .mr-haz-prestige { display: flex; align-items: center; gap: 5px; font-size: 1.3em; }
+    .mr-haz-symbols { display: flex; gap: 4px; min-height: 24px; align-items: center; }
+}
+
+// ==========================================
+// My panel + opponents
+// ==========================================
+.mr-panel {
+    margin-top: 14px;
+    background: #fff;
+    border: 2px solid $line;
+    border-radius: 14px;
+    padding: 12px 14px;
+
+    &.is-active { background: #fffdf6; }
+}
+
+.mr-panel-head { display: flex; align-items: center; gap: 8px; }
+.mr-dot { width: 14px; height: 14px; border-radius: 50%; flex: 0 0 auto; }
+.mr-panel-name { font-weight: 800; }
+.mr-turn-tag {
+    background: #e0a51b; color: #fff; font-size: 0.68em; font-weight: 800;
+    padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.mr-panel-prestige { margin-left: auto; font-weight: 800; display: flex; align-items: center; gap: 5px; }
+
+.mr-crew-chips { margin-top: 10px; }
+.mr-chips-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+.mr-chip-starter {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 15px; height: 15px; border-radius: 50%; background: rgba(0, 0, 0, 0.22); margin-left: 1px;
+}
+
+.mr-abilities { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
+.mr-ability {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.78em; line-height: 1.35; padding: 6px 9px; border-radius: 9px;
+    background: #f7f4ec; border-left: 4px solid transparent;
+    &.is-triggered { border-left-color: #8a5aa6; }
+    &.is-passive { border-left-color: #419a5e; }
+    // Icon column: capped at 30% of the bar, icon centred both axes.
+    .mr-ability-icon {
+        flex: 0 0 auto;
+        width: 24px;
+        max-width: 30%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .mr-ability-text { flex: 1 1 auto; min-width: 0; }
+    .mr-ability-tag {
+        flex: 0 0 auto; font-size: 0.68em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px;
+        padding: 2px 7px; border-radius: 20px; white-space: nowrap;
+        &.passive { background: #e5f3ea; color: #2c7a49; }
+        &.triggered { background: #f1e7f6; color: #6b3f80; }
+    }
+}
+
+// Duplicate-faction ability choice modal
+.mr-ability-choices { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+.mr-ability-choice {
+    display: flex; flex-direction: column; gap: 6px; align-items: flex-start; text-align: left;
+    padding: 12px; border-radius: 12px; border: 2px solid $line; background: #fbf9f4; cursor: pointer;
+    transition: border-color 0.1s ease, transform 0.1s ease;
+    &:hover { transform: translateY(-2px); }
+    &.is-sel { border-color: #e0a51b; box-shadow: inset 0 0 0 2px rgba(224, 165, 27, 0.35); }
+    .mr-choice-text { font-size: 0.85em; color: #55606a; line-height: 1.35; }
+}
+.mr-haz-return { margin: 6px 0 14px; text-align: left; }
+.mr-haz-return-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.mr-btn.tiny {
+    padding: 6px 10px; min-height: auto; font-size: 0.78em; border-radius: 9px;
+    display: inline-flex; align-items: center; gap: 3px;
+    &.is-sel { background: #e0a51b; color: #fff; border-color: #e0a51b; }
+}
+
+.mr-haz-drawer {
+    margin-top: 10px; display: flex; align-items: center; gap: 8px;
+    padding-top: 8px; border-top: 1px dashed $line;
+}
+.mr-group-label { font-size: 0.72em; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 800; color: $muted; }
+.mr-haz-summary { display: flex; align-items: center; gap: 5px; font-weight: 700; }
+.mr-haz-sep { color: $line; }
+
+.mr-opponents { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 10px; }
+.mr-opp {
+    flex: 1 1 200px;
+    min-width: 0;
+    background: #fff;
+    border: 1px solid $line;
+    border-radius: 12px;
+    padding: 10px 12px;
+
+    &.is-active { border-color: #e0a51b; box-shadow: inset 0 0 0 2px rgba(224, 165, 27, 0.4); }
+}
+.mr-opp-head { display: flex; align-items: center; gap: 7px; }
+.mr-opp-name { font-weight: 700; font-size: 0.9em; flex: 1; }
+.mr-opp-prestige { display: flex; align-items: center; gap: 4px; font-weight: 800; }
+.mr-opp-haz { font-size: 0.75em; color: $muted; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; }
+
+// ==========================================
+// Faction row (win tracker)
+// ==========================================
+.mr-faction-row { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; &.small { gap: 7px; margin-top: 6px; } }
+.mr-fac {
+    display: inline-flex; align-items: center; gap: 2px; opacity: 0.55;
+    &.has { opacity: 1; }
+    &.trio .mr-fac-n { text-decoration: underline; }
+    .mr-fac-n { font-weight: 800; font-size: 0.85em; }
+}
+
+// ==========================================
+// Game over
+// ==========================================
+.mr-gameover {
+    background: #fff;
+    border: 2px solid $ink;
+    border-radius: 18px;
+    padding: 22px;
+    text-align: center;
+    margin-bottom: 16px;
+
+    &.victory { border-color: #e0a51b; background: #fffdf3; }
+}
+.mr-go-title { font-size: 1.7em; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+.mr-go-sub { color: #6b7178; margin-bottom: 12px; font-weight: 600; }
+
+.mr-score-table {
+    width: 100%; border-collapse: collapse; margin: 8px 0;
+    th, td { padding: 7px 8px; text-align: center; border-bottom: 1px solid $line; font-size: 0.9em; }
+    th { text-transform: uppercase; font-size: 0.72em; letter-spacing: 0.5px; color: $muted; }
+    td:first-child, th:first-child { text-align: left; }
+    tr.is-winner td { background: #fff7e0; font-weight: 800; }
+    td.is-dq { color: #d1495b; }
+}
+.mr-dq-note { margin-top: 4px; }
+.mr-go-actions { display: flex; gap: 12px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+
+// ==========================================
+// Roster
+// ==========================================
+.mr-roster { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.mr-roster-player { border: 2px solid $line; border-radius: 14px; padding: 12px 14px; background: #fff; }
+.mr-roster-head { display: flex; align-items: center; gap: 8px; }
+.mr-roster-name { font-weight: 800; flex: 1; }
+.mr-roster-crew { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.mr-hired-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    color: #fff; font-weight: 700; font-size: 0.78em;
+    padding: 4px 9px; border-radius: 20px;
+}
+
+// ==========================================
+// Admin
+// ==========================================
+.mr-admin {
+    padding: 24px; text-align: center; display: flex; flex-direction: column; gap: 14px; align-items: center;
+    h3 { text-transform: uppercase; letter-spacing: 1px; }
+}

@@ -1,0 +1,116 @@
+/**
+ * dice-roller.scss — styles for the dice-roller library.
+ * Consumes CSS custom properties set by <Die/>: --dr-size, --dr-radius, --dr-color,
+ * --dr-side, --dr-depth, --dr-border, --dr-border-w.
+ */
+
+.dr-die {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--dr-size);
+    height: var(--dr-size);
+    border-radius: var(--dr-radius);
+    flex: 0 0 auto;
+
+    &.is-clickable { cursor: pointer; }
+}
+
+.dr-die-face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--dr-radius);
+    background: var(--dr-color);
+    border: var(--dr-border-w) solid var(--dr-border);
+    box-sizing: border-box;
+    transform-origin: center 60%;
+}
+
+.dr-die-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    svg { display: block; width: 100%; height: 100%; }
+}
+
+.dr-die-label {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: calc(var(--dr-size) * 0.5);
+    line-height: 1;
+}
+
+.dr-die-overlay { position: absolute; inset: 0; pointer-events: none; }
+.dr-die-overlay > * { pointer-events: auto; }
+
+// --- Flat 2D ---
+.dr-style-flat .dr-die-face {
+    box-shadow: inset 0 calc(var(--dr-depth) * -0.55) 0 rgba(0, 0, 0, 0.16);
+}
+
+// --- 2.5D iso: an upright, readable face with an extruded thickness + ground shadow ---
+.dr-style-iso {
+    margin-bottom: var(--dr-depth); // reserve room for the extrusion
+    .dr-die-face {
+        background:
+            linear-gradient(155deg, rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0) 55%),
+            var(--dr-color);
+        box-shadow:
+            0 var(--dr-depth) 0 var(--dr-side),
+            calc(var(--dr-depth) * 0.5) calc(var(--dr-depth) * 1.15) 0 var(--dr-side),
+            0 calc(var(--dr-depth) + 6px) 11px rgba(0, 0, 0, 0.28);
+    }
+}
+
+// --- Animations ---
+@keyframes dr-tumble {
+    0% { transform: rotate(0deg) scale(1); }
+    20% { transform: rotate(-14deg) scale(1.05); }
+    45% { transform: rotate(11deg) scale(0.95); }
+    70% { transform: rotate(-7deg) scale(1.04); }
+    100% { transform: rotate(3deg) scale(1); }
+}
+@keyframes dr-land {
+    0% { transform: scale(1.16); }
+    55% { transform: scale(0.93); }
+    100% { transform: scale(1); }
+}
+.dr-die.is-rolling .dr-die-face { animation: dr-tumble 0.32s ease-in-out infinite; }
+.dr-die.is-landing .dr-die-face { animation: dr-land 0.26s ease-out; }
+
+// --- Pool ---
+.dr-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+.dr-pool-hidden { visibility: hidden; }
+.dr-slot { display: inline-flex; }
+
+// --- Overlay (viewport) mode ---
+.dr-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    overflow: visible;
+}
+.dr-fly {
+    position: fixed;
+    left: 0;
+    top: 0;
+    transition-property: transform;
+    transition-timing-function: cubic-bezier(0.2, 0.85, 0.2, 1);
+    will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dr-die.is-rolling .dr-die-face,
+    .dr-die.is-landing .dr-die-face { animation: none; }
+}
