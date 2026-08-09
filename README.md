@@ -115,10 +115,8 @@ For exhaustive explanations, architecture flowcharts, design guidelines, and tes
    - **The GameState/View/Method Pattern**: Decoupled game engines.
    - **Mandatory Testing Methodologies**: Class-level unit tests and integration tests via `GameRuleTest`.
 2. [**Multiplayr Design Language & Style Guide**](file:///c:/repos/multiplayr/docs/DESIGN_GUIDE.md)
-   - **Neo-Brutalist Aesthetic**: Outlined elements and solid offset shadows (`box-shadow: 4px 4px 0px #000;`).
    - **Multi-Device Responsiveness**: Supporting portrait/landscape orientations, proper touch target sizes (min `44px`), and viewport-height layout constraints.
    - **UI Tabs**: Leveraging the Game Shell navigation menu to organize interfaces cleanly.
-   - **Event Broadcasts**: Toast notifications and sound feedback via `gameshell`.
    - **Emoji Rules**: Restricting emojis to functional text-replacement iconography only.
 
 > [!IMPORTANT]

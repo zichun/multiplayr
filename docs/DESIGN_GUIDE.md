@@ -6,17 +6,17 @@ Whether you are styling a board, laying out a card hand, or setting up a dashboa
 
 ---
 
-## 1. Aesthetic Philosophy: Neo-Brutalist Tabletop
+## 1. Aesthetic Philosophy: Flat Geometric Tabletop
 
-Multiplayr games should feel like high-quality physical board games on your screen. The primary aesthetic theme is **Neo-Brutalist Tabletop**, characterized by:
-- **High Contrast**: Pure white or bright neon surfaces surrounded by heavy black borders.
-- **Flat 3D Depth**: Real depth simulated using hard, offset solid box shadows instead of soft, blurry CSS dropshadows.
-- **Tactile Interactions**: Buttons and cards that physically "sink" when clicked or hovered.
-- **Clean Grid Layouts**: Structured, grid-based card zones and dashboard metrics that look orderly and legible.
+Multiplayr games should feel like high-quality physical board games on your screen. The primary aesthetic theme is **Flat Geometric Tabletop**, characterized by:
+- **Geometric**: Triangles, circles, squares, and polygons as compositional building blocks
+- **Angular**: Angular, faceted surfaces creating low-poly effects
+- **Clean Grid Layouts**: Structured, grid-based card zones and dashboard metrics that look orderly and legible with symmetry and pattern recognition.
+- **Negative space**: Strategic use of clean negative space as compositional tool.
 
 ```mermaid
 flowchart LR
-    Sub1[Bold Typography] --> Theme[Neo-Brutalist Aesthetic]
+    Sub1[Bold Typography] --> Theme[Flat-geometric Aesthetic]
     Sub2[Solid Borders & Shadows] --> Theme
     Sub3[High-Contrast Palette] --> Theme
     Sub4[Tactile Press Effects] --> Theme
