@@ -25,7 +25,12 @@ import {
     placeMask,
     maskToCells,
     isPlacementValid,
-    pieceFitsAnywhere
+    pieceFitsAnywhere,
+    normalize,
+    rotateCW,
+    reflect,
+    toOrientation,
+    cellsKey
 } from './geometry';
 import { PolyBoard, BoardPlacement } from './PolyBoard';
 
@@ -50,7 +55,8 @@ export interface PolyPlacerProps {
 }
 
 interface PlacerState {
-    orientIndex: number;
+    /** the current orientation, as normalised cells (rotate/flip transform this) */
+    cells: Cell[];
     anchorRow: number;
     anchorCol: number;
     dragging: boolean;
@@ -61,6 +67,8 @@ export class PolyPlacer extends React.Component<PolyPlacerProps, PlacerState> {
     private svg: SVGSVGElement | null = null;
     private orientations: Orientation[];
     private filled: number;
+    private canRotate: boolean;  // shape has >1 distinct rotation
+    private canFlip: boolean;    // shape is chiral (reflection is a new orientation)
 
     constructor(props: PolyPlacerProps) {
         super(props);
@@ -68,11 +76,26 @@ export class PolyPlacer extends React.Component<PolyPlacerProps, PlacerState> {
             ? props.shape.orientations
             : freeOrientations(props.shape.cells);
         this.filled = (props.placements || []).reduce((m, p) => m | p.mask, 0);
-        const start = this.firstLegalAnchor(0);
+
+        // Which controls make sense for this shape?
+        const base = normalize(props.shape.cells);
+        const rotKeys = new Set<string>();
+        let rc: Cell[] = base;
+        for (let i = 0; i < 4; i++) { rotKeys.add(cellsKey(rc)); rc = rotateCW(rc); }
+        this.canRotate = rotKeys.size > 1;
+        // chiral when no rotation of the mirror image matches a rotation of the base
+        let chiral = true;
+        let m: Cell[] = reflect(base);
+        for (let i = 0; i < 4; i++) { if (rotKeys.has(cellsKey(m))) { chiral = false; break; } m = rotateCW(m); }
+        this.canFlip = chiral;
+
+        // Auto-fit on selection: land the piece on the first legal spot (any
+        // orientation) so the player starts from a valid preview.
+        const fit = this.findFit();
         this.state = {
-            orientIndex: start.orientIndex,
-            anchorRow: start.row,
-            anchorCol: start.col,
+            cells: fit.cells,
+            anchorRow: fit.row,
+            anchorCol: fit.col,
             dragging: false,
             touched: false
         };
@@ -80,8 +103,8 @@ export class PolyPlacer extends React.Component<PolyPlacerProps, PlacerState> {
 
     // ---- geometry helpers -------------------------------------------------
 
-    private currentOrientation(idx = this.state.orientIndex): Orientation {
-        return this.orientations[idx % this.orientations.length];
+    private currentOrientation(): Orientation {
+        return toOrientation(this.state.cells);
     }
 
     private clampAnchor(o: Orientation, row: number, col: number) {
@@ -92,33 +115,26 @@ export class PolyPlacer extends React.Component<PolyPlacerProps, PlacerState> {
         };
     }
 
-    private maskFor(orientIndex: number, row: number, col: number): number | null {
-        const o = this.currentOrientation(orientIndex);
-        return placeMask(o, row, col, this.props.width, this.props.height);
-    }
-
-    /** Find a legal (or at least in-bounds) starting spot for an orientation. */
-    private firstLegalAnchor(orientIndex: number) {
+    /** First legal placement across every orientation (any fit will do). */
+    private findFit(): { cells: Cell[]; row: number; col: number } {
         const { width, height, recessed } = this.props;
-        const o = this.currentOrientation(orientIndex);
-        for (let r = 0; r + o.height <= height; r++) {
-            for (let c = 0; c + o.width <= width; c++) {
-                const m = placeMask(o, r, c, width, height);
-                if (m !== null && isPlacementValid(m, recessed, this.filled)) {
-                    return { orientIndex, row: r, col: c };
+        for (const o of this.orientations) {
+            for (let r = 0; r + o.height <= height; r++) {
+                for (let c = 0; c + o.width <= width; c++) {
+                    const m = placeMask(o, r, c, width, height);
+                    if (m !== null && isPlacementValid(m, recessed, this.filled)) {
+                        return { cells: o.cells, row: r, col: c };
+                    }
                 }
             }
         }
-        return { orientIndex, row: 0, col: 0 };
+        const base = this.orientations[0];
+        return { cells: base.cells, row: 0, col: 0 };
     }
 
     private currentMask(): number | null {
-        return this.maskFor(this.state.orientIndex, this.state.anchorRow, this.state.anchorCol);
-    }
-
-    private isValid(): boolean {
-        const m = this.currentMask();
-        return m !== null && isPlacementValid(m, this.props.recessed, this.filled);
+        const o = this.currentOrientation();
+        return placeMask(o, this.state.anchorRow, this.state.anchorCol, this.props.width, this.props.height);
     }
 
     private fitsAnywhere(): boolean {
@@ -176,21 +192,20 @@ export class PolyPlacer extends React.Component<PolyPlacerProps, PlacerState> {
 
     // ---- transforms -------------------------------------------------------
 
+    /** Rotate the current orientation 90° clockwise, in place. */
     private rotate = () => {
-        const next = (this.state.orientIndex + 1) % this.orientations.length;
-        const o = this.currentOrientation(next);
+        const cells = rotateCW(this.state.cells);
+        const o = toOrientation(cells);
         const { row, col } = this.clampAnchor(o, this.state.anchorRow, this.state.anchorCol);
-        this.setState({ orientIndex: next, anchorRow: row, anchorCol: col, touched: true });
+        this.setState({ cells, anchorRow: row, anchorCol: col, touched: true });
     };
 
+    /** Mirror the current orientation (only meaningful for chiral shapes). */
     private flip = () => {
-        // Reflection maps to a different orientation in the free set; step by
-        // half the list so a single control feels like a mirror for most shapes.
-        const half = Math.max(1, Math.floor(this.orientations.length / 2));
-        const next = (this.state.orientIndex + half) % this.orientations.length;
-        const o = this.currentOrientation(next);
+        const cells = reflect(this.state.cells);
+        const o = toOrientation(cells);
         const { row, col } = this.clampAnchor(o, this.state.anchorRow, this.state.anchorCol);
-        this.setState({ orientIndex: next, anchorRow: row, anchorCol: col, touched: true });
+        this.setState({ cells, anchorRow: row, anchorCol: col, touched: true });
     };
 
     private commit = () => {
@@ -208,7 +223,6 @@ export class PolyPlacer extends React.Component<PolyPlacerProps, PlacerState> {
         const valid = mask !== null && isPlacementValid(mask, recessed, this.filled);
         const ghostCells: Cell[] = mask !== null ? maskToCells(mask, width, height) : [];
         const canFit = this.fitsAnywhere();
-        const multiOrient = this.orientations.length > 1;
 
         return (
             <div className="poly-placer">
@@ -230,18 +244,18 @@ export class PolyPlacer extends React.Component<PolyPlacerProps, PlacerState> {
                 />
 
                 <div className="poly-placer-controls">
-                    {multiOrient && (
+                    {this.canRotate && (
                         <button
                             type="button"
                             className="poly-ctl"
                             onClick={this.rotate}
-                            aria-label="Rotate piece"
+                            aria-label="Rotate piece 90 degrees clockwise"
                         >
                             <span className="poly-ctl-glyph">↻</span>
                             <span className="poly-ctl-label">Rotate</span>
                         </button>
                     )}
-                    {multiOrient && (
+                    {this.canFlip && (
                         <button
                             type="button"
                             className="poly-ctl"

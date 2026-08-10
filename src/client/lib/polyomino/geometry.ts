@@ -40,17 +40,20 @@ export function cellsKey(cells: Cell[]): string {
     return normalize(cells).map(([r, c]) => `${r},${c}`).join(' ');
 }
 
-function rotateCW(cells: Cell[]): Cell[] {
+/** Rotate a cell set 90° clockwise (normalised to the origin). */
+export function rotateCW(cells: Cell[]): Cell[] {
     // (r, c) -> (c, -r); normalisation fixes the negative offset.
     return normalize(cells.map(([r, c]) => [c, -r] as Cell));
 }
 
-function reflect(cells: Cell[]): Cell[] {
+/** Mirror a cell set horizontally (normalised to the origin). */
+export function reflect(cells: Cell[]): Cell[] {
     // horizontal mirror: (r, c) -> (r, -c)
     return normalize(cells.map(([r, c]) => [r, -c] as Cell));
 }
 
-function toOrientation(cells: Cell[]): Orientation {
+/** Build a normalised `Orientation` (with bounding box) from a cell set. */
+export function toOrientation(cells: Cell[]): Orientation {
     const norm = normalize(cells);
     let maxR = 0;
     let maxC = 0;

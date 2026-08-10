@@ -11,8 +11,28 @@ import { ProjectLGameState, Phase } from '../../rules/projectl/ProjectLGameState
 import {
     PUZZLE_BY_ID, orientationsFor, SHAPES, ShapeId
 } from '../../rules/projectl/ProjectLData';
-import { placeMask } from '../../client/lib/polyomino/geometry';
+import { placeMask, rotateCW, reflect, cellsKey, freeOrientations, Cell } from '../../client/lib/polyomino/geometry';
+import { ProjectLMainPage } from '../../rules/projectl/views/ProjectLViews';
 import { GameRuleTest } from '../GameRuleTest';
+
+const amActive = (props: any): boolean =>
+    (new ProjectLMainPage({ MP: {}, ...props } as any) as any).amActive();
+
+/** Distinct 90° rotations of a shape (without reflection). */
+function distinctRotations(cells: Cell[]): number {
+    const seen = new Set<string>();
+    let c = cells;
+    for (let i = 0; i < 4; i++) { seen.add(cellsKey(c)); c = rotateCW(c); }
+    return seen.size;
+}
+function isChiral(cells: Cell[]): boolean {
+    const rot = new Set<string>();
+    let c = cells;
+    for (let i = 0; i < 4; i++) { rot.add(cellsKey(c)); c = rotateCW(c); }
+    let m = reflect(cells);
+    for (let i = 0; i < 4; i++) { if (rot.has(cellsKey(m))) return false; m = rotateCW(m); }
+    return true;
+}
 
 // Fill puzzle 9 (recess = two vertical cells at (2,2),(3,2)) with a vertical domino.
 function dominoMaskForP9(): number {
@@ -22,6 +42,118 @@ function dominoMaskForP9(): number {
 
 describe('Project L', () => {
     // ======================================================================
+    describe('Polyomino rotation', () => {
+        it('rotates 90° clockwise and returns to the original after 4 turns', () => {
+            const L = SHAPES.tet_L.cells;
+            let c: Cell[] = L.map(x => [...x] as Cell);
+            for (let i = 0; i < 4; i++) c = rotateCW(c);
+            assert.equal(cellsKey(c), cellsKey(L), 'L-piece is back to its start after 4 rotations');
+        });
+
+        it('gives the L-piece exactly 4 rotations (not 8) and marks it chiral', () => {
+            assert.equal(distinctRotations(SHAPES.tet_L.cells), 4);
+            assert.equal(isChiral(SHAPES.tet_L.cells), true, 'L needs a flip to reach its mirror');
+            assert.equal(freeOrientations(SHAPES.tet_L.cells).length, 8, 'flip×rotate spans all 8');
+        });
+
+        it('only the L and S tetrominoes are chiral (need a flip control)', () => {
+            const chiral = (['mono', 'domino', 'tri_I', 'tri_V', 'tet_O', 'tet_I', 'tet_T', 'tet_L', 'tet_S'] as ShapeId[])
+                .filter(id => isChiral(SHAPES[id].cells));
+            assert.deepEqual(chiral.sort(), ['tet_L', 'tet_S']);
+        });
+    });
+
+    describe('Speed UI gating (regression: taking must be enabled)', () => {
+        it('is active in speed while playing even without an action count', () => {
+            // Regression: speed mode never sends actionsLeft; gating must not require it.
+            assert.equal(amActive({ mode: 'speed', isMyTurn: true, phase: Phase.Play }), true);
+            assert.equal(amActive({ mode: 'speed', isMyTurn: true, phase: Phase.Play, actionsLeft: undefined }), true);
+        });
+        it('is inactive in speed once cleared (phase Finished)', () => {
+            assert.equal(amActive({ mode: 'speed', isMyTurn: false, phase: Phase.Finished }), false);
+        });
+        it('still requires actions left in the standard game', () => {
+            assert.equal(amActive({ mode: 'multiplayer', isMyTurn: true, phase: Phase.Play, actionsLeft: 0 }), false);
+            assert.equal(amActive({ mode: 'multiplayer', isMyTurn: true, phase: Phase.Play, actionsLeft: 2 }), true);
+        });
+    });
+
+    describe('Move staging (client-side planned turn)', () => {
+        const makePage = (myPuzzles: any[], mySupply: any, staged: any[], shared: any = { reserve: {} }) => {
+            const inst: any = new ProjectLMainPage({ MP: {}, mode: 'multiplayer', myPuzzles, mySupply, shared } as any);
+            inst.state = { ui: { kind: 'idle' }, staged };
+            return inst;
+        };
+        const market = { reserve: {}, whiteRow: [9, 10, 11, 12], blackRow: [33, 34, 35, 36] };
+        const place = (puzzleIndex: number, puzzleId: number, shapeId: string, mask: number) =>
+            ({ kind: 'place', puzzleIndex, puzzleId, shapeId, mask });
+
+        it('validates a single planned placement via the local simulation', () => {
+            const page = makePage([{ puzzleId: 9, filled: 0, placements: [] }], { domino: 1 },
+                [place(0, 9, 'domino', dominoMaskForP9())]);
+            assert.equal(page.stagedValid(), true);
+        });
+
+        it('rejects a plan referencing a puzzle slot that no longer exists', () => {
+            const page = makePage([{ puzzleId: 9, filled: 0, placements: [] }], { mono: 1 },
+                [place(3, 9, 'mono', 1 << 12)]);
+            assert.equal(page.stagedValid(), false);
+        });
+
+        it('rejects a plan when the piece is not owned', () => {
+            const page = makePage([{ puzzleId: 9, filled: 0, placements: [] }], { domino: 0 },
+                [place(0, 9, 'domino', dominoMaskForP9())]);
+            assert.equal(page.stagedValid(), false);
+        });
+
+        it('simulates a sequence so the second placement sees the first', () => {
+            // puzzle 9 covers bits 12 and 17; two monos (one each) is a legal plan
+            const ok = makePage([{ puzzleId: 9, filled: 0, placements: [] }], { mono: 2 },
+                [place(0, 9, 'mono', 1 << 12), place(0, 9, 'mono', 1 << 17)]);
+            assert.equal(ok.stagedValid(), true);
+            // planning the same cell twice overlaps → invalid
+            const bad = makePage([{ puzzleId: 9, filled: 0, placements: [] }], { mono: 2 },
+                [place(0, 9, 'mono', 1 << 12), place(0, 9, 'mono', 1 << 12)]);
+            assert.equal(bad.stagedValid(), false);
+        });
+
+        it('supports a mixed plan of upgrade + placement', () => {
+            const page = makePage([{ puzzleId: 9, filled: 0, placements: [] }], { domino: 1 },
+                [{ kind: 'upgradeL1' }, place(0, 9, 'domino', dominoMaskForP9())]);
+            assert.equal(page.stagedValid(), true);
+        });
+
+        it('the plan preview supply reflects staged upgrades', () => {
+            const page = makePage([], { mono: 0, domino: 0 }, [{ kind: 'upgradeL1' }]);
+            const sim = page.simState();
+            assert.equal(sim.ok, true);
+            assert.equal(sim.supply.mono, 1, 'take-L1 shows a new mono in the preview supply');
+        });
+
+        it('stages taking a visible market card into the preview', () => {
+            const page = makePage([], {}, [{ kind: 'take', deck: 'white', puzzleId: 9 }], market);
+            const sim = page.simState();
+            assert.equal(sim.ok, true);
+            assert.equal(sim.puzzles.length, 1);
+            assert.equal(sim.puzzles[0].puzzleId, 9, 'the planned card is now held in the preview');
+        });
+
+        it('voids the plan when the planned card is no longer in the market', () => {
+            // someone else took puzzle 9 → the row now holds different cards
+            const gone = { reserve: {}, whiteRow: [13, 10, 11, 12], blackRow: [33, 34, 35, 36] };
+            const page = makePage([], {}, [{ kind: 'take', deck: 'white', puzzleId: 9 }], gone);
+            assert.equal(page.stagedValid(), false);
+        });
+
+        it('stages take-then-place into the newly taken puzzle', () => {
+            const page = makePage([], { domino: 1 }, [
+                { kind: 'take', deck: 'white', puzzleId: 9 },
+                { kind: 'place', puzzleIndex: 0, puzzleId: 9, shapeId: 'domino', mask: dominoMaskForP9() }
+            ], market);
+            assert.equal(page.stagedValid(), true);
+        });
+    });
+
     describe('Type A: engine', () => {
 
         describe('Setup', () => {

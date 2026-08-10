@@ -124,8 +124,11 @@ export const ProjectLRule: GameRuleInterface = {
                 const me = g ? g.get_player(clientId) : undefined;
                 mp.setViewProps(clientId, 'mode', 'speed');
                 mp.setViewProps(clientId, 'phase', g ? g.get_phase() : Phase.Play);
+                mp.setViewProps(clientId, 'actionsLeft', g ? g.get_actions_left() : 0);
+                mp.setViewProps(clientId, 'round', g ? g.get_round() : 0);
                 mp.setViewProps(clientId, 'mySupply', me ? me.supply : null);
                 mp.setViewProps(clientId, 'myPuzzles', me ? me.puzzles : []);
+                mp.setViewProps(clientId, 'myMasterUsed', false); // unlimited in speed
                 mp.setViewProps(clientId, 'shared', g ? {
                     whiteRow: g.get_white_row(),
                     blackRow: g.get_black_row(),
@@ -238,6 +241,7 @@ export const ProjectLRule: GameRuleInterface = {
             const me = gs.get_player(clientId);
             mp.setViewProps(clientId, 'mySupply', me ? me.supply : null);
             mp.setViewProps(clientId, 'myPuzzles', me ? me.puzzles : []);
+            mp.setViewProps(clientId, 'myMasterUsed', me ? me.masterUsedThisTurn : false);
             mp.setViewProps(clientId, 'myFinishingDone', me ? me.finishingDone : false);
             mp.setViewProps(clientId, 'isMyTurn', clientId === gs.currentPlayerId());
 

@@ -74,6 +74,41 @@ $pl-shadow:    0 4px 14px rgba(60, 80, 110, 0.08);
     &.done { background: #eef2f7; color: $pl-muted; justify-content: center; }
 }
 
+// ---------------------------------------------------------------- staged move banner
+.pl-staged-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 10px 14px; border-radius: $pl-radius; font-weight: 600;
+    border: 1px solid $pl-line;
+    &.planning { background: #eef2f7; color: #55677c; border-style: dashed; }
+    &.ready { background: #eefaf3; color: #2f8f63; border-color: rgba($pl-green, 0.5); box-shadow: 0 0 0 2px rgba($pl-green, 0.14); }
+    &.stale { background: #fbeae6; color: #9c5647; border-color: rgba(#d5482f, 0.4); }
+}
+.pl-staged-text { min-width: 0; }
+.pl-staged-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+// planned-turn list
+.pl-plan-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pl-plan-list { display: flex; flex-direction: column; gap: 6px; }
+.pl-plan-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border-radius: 10px; background: #fff; border: 1px solid $pl-line;
+}
+.pl-plan-num {
+    flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%;
+    background: $pl-accent; color: #fff; font-size: 0.72rem; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.pl-plan-desc { flex: 1; min-width: 0; display: flex; align-items: center; gap: 5px; font-weight: 600; font-size: 0.9rem; flex-wrap: wrap; }
+.pl-plan-x {
+    flex-shrink: 0; border: none; background: #eef2f7; color: $pl-muted;
+    width: 26px; height: 26px; border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+    &:hover { background: #e0e6ee; }
+}
+.pl-endflag.plan { color: #3f6fae; background: #e9f1fb; }
+// the preview board reads as a plan, not committed state
+.pl-my-puzzles.plan-preview { opacity: 0.96; }
+.pl-my-puzzles.plan-preview .pl-puzzle-card { border-style: dashed; }
+
 // ---------------------------------------------------------------- section titles
 .pl-section-title {
     font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
@@ -259,6 +294,10 @@ $pl-shadow:    0 4px 14px rgba(60, 80, 110, 0.08);
 .pl-empty-note, .pl-hint-text { color: $pl-muted; font-size: 0.9rem; text-align: center; }
 .pl-or { text-align: center; color: $pl-muted; font-size: 0.82rem; font-weight: 600; }
 .pl-overlay-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.pl-overlay-panel.confirm { max-width: 340px; }
+.pl-confirm-body { display: flex; justify-content: center; padding: 6px 0 2px; }
+.pl-confirm-pieces { display: inline-flex; align-items: center; gap: 12px; padding: 8px 0; }
+.pl-confirm-arrow { font-size: 1.3rem; color: $pl-muted; font-weight: 700; }
 .pl-upgrade-targets { display: flex; flex-wrap: wrap; gap: 8px; }
 
 // ---------------------------------------------------------------- master grid

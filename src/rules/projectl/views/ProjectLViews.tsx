@@ -17,9 +17,14 @@ import { PolyPlacer } from '../../../client/lib/polyomino/PolyPlacer';
 import {
     SHAPES, SHAPE_IDS, ShapeId, orientationsFor, shapesAtLevel,
     PUZZLE_BY_ID, PuzzleDef, BOARD_W, BOARD_H, MAX_LEVEL,
-    MAX_UNFINISHED_PUZZLES
+    MAX_UNFINISHED_PUZZLES, ACTIONS_PER_TURN, fullReserve
 } from '../ProjectLData';
-import { Phase, PuzzleInstance, PlacementRec } from '../ProjectLGameState';
+
+// Sentinel puzzle ids used only to keep the planning simulation's decks non-empty
+// (never collide with real ids 1–52; never shown or placed into).
+const SIM_DUMMY_WHITE = 99990;
+const SIM_DUMMY_BLACK = 99991;
+import { Phase, PuzzleInstance, PlacementRec, ProjectLGameState } from '../ProjectLGameState';
 
 // ============================================================================
 // Prop shapes
@@ -72,6 +77,7 @@ interface ProjectLProps extends ViewPropsInterface {
     isHost: boolean;
     mySupply: Record<ShapeId, number> | null;
     myPuzzles: PuzzleInstance[];
+    myMasterUsed?: boolean;
     myFinishingDone: boolean;
     isMyTurn: boolean;
     // ---- speed contest ----
@@ -231,6 +237,7 @@ interface PlacementOverlayProps {
     supply: Record<ShapeId, number>;
     title: string;
     costHint?: string;
+    confirmLabel?: string;
     onCommit: (shapeId: ShapeId, mask: number) => void;
     onClose: () => void;
 }
@@ -268,6 +275,7 @@ class PlacementOverlay extends React.Component<PlacementOverlayProps, PlacementO
                                 color: SHAPES[shapeId].color,
                                 orientations: orientationsFor(shapeId)
                             }}
+                            confirmLabel={this.props.confirmLabel}
                             onCommit={(mask) => this.props.onCommit(shapeId, mask)}
                             onCancel={this.props.onClose}
                         />
@@ -472,6 +480,32 @@ class UpgradeOverlay extends React.Component<UpgradeOverlayProps, { from: ShapeI
 }
 
 // ============================================================================
+// Confirmation dialog (guards irreversible taps in the standard game)
+// ============================================================================
+
+const ConfirmDialog: React.FC<{
+    title: string;
+    body?: React.ReactNode;
+    confirmLabel: string;
+    onConfirm: () => void;
+    onClose: () => void;
+}> = ({ title, body, confirmLabel, onConfirm, onClose }) => (
+    <div className="pl-overlay" onClick={onClose}>
+        <div className="pl-overlay-panel confirm" onClick={(e) => e.stopPropagation()}>
+            <div className="pl-overlay-head">
+                <h3>{title}</h3>
+                <button className="pl-x" onClick={onClose} aria-label="Cancel">✕</button>
+            </div>
+            {body && <div className="pl-confirm-body">{body}</div>}
+            <div className="pl-overlay-actions">
+                <button className="pl-btn ghost" onClick={onClose}>Cancel</button>
+                <button className="pl-btn primary" onClick={onConfirm}>{confirmLabel}</button>
+            </div>
+        </div>
+    </div>
+);
+
+// ============================================================================
 // Market (multiplayer rows) + Solo area
 // ============================================================================
 
@@ -481,19 +515,25 @@ const Market: React.FC<{
     canTake: boolean;
     /** active turn with an action to spend (Recycle does not need a free puzzle slot) */
     active: boolean;
+    /** blind deck draw allowed (defaults to canTake; false to disable, e.g. planning) */
+    deckTakeable?: boolean;
+    /** label on takeable cards (default "Take", "Stage" when planning) */
+    takeLabel?: string;
     onTakeRow: (deck: 'white' | 'black', slot: number) => void;
     onTakeDeck: (deck: 'white' | 'black') => void;
     onRecycle: (deck: 'white' | 'black') => void;
-}> = ({ p, canTake, active, onTakeRow, onTakeDeck, onRecycle }) => {
+}> = ({ p, canTake, active, deckTakeable, takeLabel, onTakeRow, onTakeDeck, onRecycle }) => {
+    const canDeck = deckTakeable ?? canTake;
+    const label = takeLabel || 'Take';
     const renderRow = (deck: 'white' | 'black', row: (number | null)[], deckCount: number) => {
-        const hasCards = row.some(x => x != null);
         return (
         <div className={`pl-market-row deck-${deck}`}>
             <div className="pl-row-header">
                 <span className="pl-row-label">{deck}</span>
                 <div className="pl-row-tools">
-                    <DeckStub deck={deck} label="deck" count={deckCount} onClick={canTake && deckCount > 0 ? () => onTakeDeck(deck) : undefined} />
-                    {active && hasCards && (
+                    <DeckStub deck={deck} label="deck" count={deckCount} onClick={canDeck && deckCount > 0 ? () => onTakeDeck(deck) : undefined} />
+                    {/* Recycle only makes sense while the deck still has fresh cards to reveal */}
+                    {active && deckCount > 0 && (
                         <button className="pl-btn tiny ghost recycle" onClick={() => onRecycle(deck)} title="Recycle this row" aria-label="Recycle row">
                             <span className="pl-recycle-glyph">↻</span> Recycle
                         </button>
@@ -511,7 +551,7 @@ const Market: React.FC<{
                         compact
                         fill
                         onClick={canTake ? () => onTakeRow(deck, slot) : undefined}
-                        actionLabel={canTake ? 'Take' : undefined}
+                        actionLabel={canTake ? label : undefined}
                     />
                 ))}
             </div>
@@ -884,26 +924,93 @@ type UIMode =
     | { kind: 'place'; puzzleIndex: number }
     | { kind: 'master' }
     | { kind: 'upgrade' }
-    | { kind: 'finishing'; puzzleIndex: number };
+    | { kind: 'finishing'; puzzleIndex: number }
+    | { kind: 'stagePlace'; puzzleIndex: number }
+    | { kind: 'stageMaster' }
+    | { kind: 'stageUpgrade' }
+    | { kind: 'confirm'; title: string; body: React.ReactNode; confirmLabel: string; run: () => void };
 
-export class ProjectLMainPage extends React.Component<ProjectLProps, { ui: UIMode }> {
+/**
+ * A queue (up to 3) of actions a player plans client-side (never synced) while
+ * waiting for their turn — any mix of Place, Master and Upgrade. Each item is
+ * planned against the board *after* the earlier items, using a local engine
+ * simulation, and executed in order when the turn comes.
+ */
+type StagedItem = { puzzleIndex: number; puzzleId: number; shapeId: ShapeId; mask: number };
+type StagedAction =
+    | { kind: 'take'; deck: 'white' | 'black'; puzzleId: number }
+    | { kind: 'place'; puzzleIndex: number; puzzleId: number; shapeId: ShapeId; mask: number }
+    | { kind: 'master'; items: StagedItem[] }
+    | { kind: 'upgradeL1' }
+    | { kind: 'upgradeSwap'; from: ShapeId; to: ShapeId };
+
+const SIM_ID = '__sim__';
+
+interface MainState { ui: UIMode; staged: StagedAction[]; }
+
+export class ProjectLMainPage extends React.Component<ProjectLProps, MainState> {
     constructor(props: ProjectLProps) {
         super(props);
-        this.state = { ui: { kind: 'idle' } };
+        this.state = { ui: { kind: 'idle' }, staged: [] };
     }
 
     private mp() { return this.props.MP as any; }
     private close = () => this.setState({ ui: { kind: 'idle' } });
 
     private amActive(): boolean {
+        // Speed contest has no per-turn action limit — you act freely until cleared.
+        if (this.props.mode === 'speed') {
+            return this.props.isMyTurn && this.props.phase === Phase.Play;
+        }
         return this.props.isMyTurn && this.props.phase === Phase.Play && this.props.actionsLeft > 0;
     }
 
+    /**
+     * Take/upgrade guard: in the standard game these commit an irreversible
+     * action, so confirm first. In the speed contest speed matters more than
+     * misclick-safety, so run immediately.
+     */
+    private confirmAction(title: string, body: React.ReactNode, confirmLabel: string, run: () => void) {
+        if (this.props.mode === 'speed') { run(); this.close(); return; }
+        this.setState({ ui: { kind: 'confirm', title, body, confirmLabel, run } });
+    }
+
     // ---- action senders ----
-    private takeRow = (deck: 'white' | 'black', slot: number) => { this.mp().takeRow(deck, slot); };
-    private takeDeck = (deck: 'white' | 'black') => { this.mp().takeDeck(deck); };
-    private takeSoloGrid = (pos: number) => { this.mp().takeSoloGrid(pos); };
-    private takeSoloDeck = () => { this.mp().takeSoloDeck(); };
+    private takeRow = (deck: 'white' | 'black', slot: number) => {
+        const row = deck === 'white' ? this.props.shared.whiteRow : this.props.shared.blackRow;
+        const pid = row[slot];
+        this.confirmAction(
+            `Take this ${deck} puzzle?`,
+            pid != null ? <PuzzleCard puzzle={PUZZLE_BY_ID[pid]} unit={30} /> : null,
+            'Take',
+            () => this.mp().takeRow(deck, slot)
+        );
+    };
+    private takeDeck = (deck: 'white' | 'black') => {
+        this.confirmAction(
+            `Draw the top ${deck} puzzle?`,
+            <p className="pl-muted">You'll draw it blind — you won't see the puzzle first.</p>,
+            'Draw',
+            () => this.mp().takeDeck(deck)
+        );
+    };
+    private takeSoloGrid = (pos: number) => {
+        const pid = this.props.solo ? this.props.solo.grid[pos] : null;
+        this.confirmAction(
+            'Take this puzzle?',
+            pid != null ? <PuzzleCard puzzle={PUZZLE_BY_ID[pid]} unit={30} /> : null,
+            'Take',
+            () => this.mp().takeSoloGrid(pos)
+        );
+    };
+    private takeSoloDeck = () => {
+        this.confirmAction(
+            'Draw the top puzzle?',
+            <p className="pl-muted">You'll draw it blind — you won't see the puzzle first.</p>,
+            'Draw',
+            () => this.mp().takeSoloDeck()
+        );
+    };
     private recycle = (deck: 'white' | 'black') => { this.mp().recycle(deck); };
     private commitPlace = (shapeId: ShapeId, mask: number) => {
         if (this.state.ui.kind !== 'place') return;
@@ -919,10 +1026,130 @@ export class ProjectLMainPage extends React.Component<ProjectLProps, { ui: UIMod
         this.mp().finishingPlace(this.state.ui.puzzleIndex, shapeId, mask);
         this.close();
     };
-    private upgradeTakeL1 = () => { this.mp().upgradeTakeL1(); this.close(); };
-    private upgradeSwap = (from: ShapeId, to: ShapeId) => { this.mp().upgradeSwap(from, to); this.close(); };
+    private upgradeTakeL1 = () => {
+        this.confirmAction(
+            'Take a new Level-1 piece?',
+            <div className="pl-confirm-pieces"><PieceGlyph shapeId="mono" unit={22} /></div>,
+            'Take',
+            () => this.mp().upgradeTakeL1()
+        );
+    };
+    private upgradeSwap = (from: ShapeId, to: ShapeId) => {
+        this.confirmAction(
+            'Swap this piece?',
+            <div className="pl-confirm-pieces">
+                <PieceGlyph shapeId={from} unit={20} /><span className="pl-confirm-arrow">→</span><PieceGlyph shapeId={to} unit={20} />
+            </div>,
+            'Swap',
+            () => this.mp().upgradeSwap(from, to)
+        );
+    };
     private pass = () => { this.mp().pass(); };
     private finishingDone = () => { this.mp().finishingDone(); };
+
+    // ---- move staging (client-side planning of a whole turn, no host sync) ----
+
+    /** A local engine seeded with my current board, used to plan the next move. */
+    private buildSim(): ProjectLGameState {
+        const gs = new ProjectLGameState([SIM_ID]);
+        gs.start_game({ mode: 'speed', seed: 1 }); // speed = no turn/action limit
+        const d = gs.get_data();
+        const supply: any = {};
+        SHAPE_IDS.forEach(s => { supply[s] = (this.props.mySupply || ({} as any))[s] || 0; });
+        d.players[SIM_ID].supply = supply;
+        d.players[SIM_ID].puzzles = (this.props.myPuzzles || []).map(p => ({
+            puzzleId: p.puzzleId, filled: p.filled, placements: [...p.placements]
+        }));
+        d.reserve = fullReserve();      // optimistic (real reserve applies on execute)
+        // mirror the current market so staged takes pull the right card; keep decks
+        // non-empty (dummy ids) so refills work and a black take never "clears" the sim
+        const sh = this.props.shared;
+        d.whiteRow = sh && sh.whiteRow ? [...sh.whiteRow] : [null, null, null, null];
+        d.blackRow = sh && sh.blackRow ? [...sh.blackRow] : [null, null, null, null];
+        d.whiteDeck = new Array(8).fill(SIM_DUMMY_WHITE);
+        d.blackDeck = new Array(8).fill(SIM_DUMMY_BLACK);
+        d.phase = Phase.Play;
+        d.cleared = false;
+        return gs;
+    }
+
+    private applyStaged(gs: ProjectLGameState, a: StagedAction) {
+        if (a.kind === 'take') {
+            const row = a.deck === 'white' ? gs.get_white_row() : gs.get_black_row();
+            const slot = row.indexOf(a.puzzleId);
+            if (slot < 0) throw new Error('planned card is no longer available'); // voids the plan
+            gs.take_from_row(SIM_ID, a.deck, slot);
+        }
+        else if (a.kind === 'place') gs.place(SIM_ID, a.puzzleIndex, a.shapeId, a.mask);
+        else if (a.kind === 'master') gs.master(SIM_ID, a.items.map(i => ({ puzzleIndex: i.puzzleIndex, shapeId: i.shapeId, mask: i.mask })));
+        else if (a.kind === 'upgradeL1') gs.upgrade_take_l1(SIM_ID);
+        else gs.upgrade_swap(SIM_ID, a.from, a.to);
+    }
+
+    /** Board + supply after applying the first `count` staged actions. */
+    private simState(count = this.state.staged.length): { puzzles: PuzzleInstance[]; supply: Record<ShapeId, number>; ok: boolean } {
+        try {
+            const gs = this.buildSim();
+            for (let i = 0; i < count; i++) this.applyStaged(gs, this.state.staged[i]);
+            const p = gs.get_player(SIM_ID)!;
+            return { puzzles: p.puzzles, supply: p.supply, ok: true };
+        } catch (e) {
+            return { puzzles: this.props.myPuzzles || [], supply: (this.props.mySupply || {}) as any, ok: false };
+        }
+    }
+
+    private stagedValid(): boolean {
+        return this.simState(this.state.staged.length).ok;
+    }
+
+    private stageAction(a: StagedAction) {
+        const staged = [...this.state.staged, a];
+        if (staged.length > ACTIONS_PER_TURN) return;
+        this.setState({ staged, ui: { kind: 'idle' } });
+    }
+    private commitStagePlace = (shapeId: ShapeId, mask: number) => {
+        if (this.state.ui.kind !== 'stagePlace') return;
+        const idx = this.state.ui.puzzleIndex;
+        const sim = this.simState();
+        const inst = sim.puzzles[idx];
+        this.stageAction({ kind: 'place', puzzleIndex: idx, puzzleId: inst ? inst.puzzleId : -1, shapeId, mask });
+    };
+    private commitStageMaster = (stages: MasterStage[]) => {
+        const sim = this.simState();
+        const items = stages.map(s => ({
+            puzzleIndex: s.puzzleIndex,
+            puzzleId: sim.puzzles[s.puzzleIndex] ? sim.puzzles[s.puzzleIndex].puzzleId : -1,
+            shapeId: s.shapeId, mask: s.mask
+        }));
+        this.stageAction({ kind: 'master', items });
+    };
+    private stageUpgradeL1 = () => this.stageAction({ kind: 'upgradeL1' });
+    private stageUpgradeSwap = (from: ShapeId, to: ShapeId) => this.stageAction({ kind: 'upgradeSwap', from, to });
+    private stageTakeRow = (deck: 'white' | 'black', slot: number) => {
+        const row = deck === 'white' ? this.props.shared.whiteRow : this.props.shared.blackRow;
+        const puzzleId = row[slot];
+        if (puzzleId == null) return;
+        this.stageAction({ kind: 'take', deck, puzzleId });
+    };
+
+    private clearStaged = () => this.setState({ staged: [] });
+
+    private executeStaged = () => {
+        if (this.state.staged.length === 0 || !this.stagedValid()) return;
+        for (const a of this.state.staged) {
+            if (a.kind === 'take') {
+                const row = a.deck === 'white' ? this.props.shared.whiteRow : this.props.shared.blackRow;
+                const slot = row.indexOf(a.puzzleId);
+                if (slot < 0) { this.setState({ staged: [] }); return; } // card gone → void
+                this.mp().takeRow(a.deck, slot);
+            }
+            else if (a.kind === 'place') this.mp().place(a.puzzleIndex, a.shapeId, a.mask);
+            else if (a.kind === 'master') this.mp().master(a.items.map(i => ({ puzzleIndex: i.puzzleIndex, shapeId: i.shapeId, mask: i.mask })));
+            else if (a.kind === 'upgradeL1') this.mp().upgradeTakeL1();
+            else this.mp().upgradeSwap(a.from, a.to);
+        }
+        this.setState({ staged: [] });
+    };
 
     // ---- sub-renders ----
     private topBar(): string {
@@ -973,7 +1200,8 @@ export class ProjectLMainPage extends React.Component<ProjectLProps, { ui: UIMod
                 {active && (
                     <div className="pl-actionbar">
                         <button className="pl-btn" onClick={() => this.setState({ ui: { kind: 'upgrade' } })}>Upgrade</button>
-                        {p.myPuzzles.length > 0 && (
+                        {/* Master is once per turn in the standard game — hide it once used */}
+                        {p.myPuzzles.length > 0 && (p.mode === 'speed' || !p.myMasterUsed) && (
                             <button className="pl-btn" onClick={() => this.setState({ ui: { kind: 'master' } })}>Master</button>
                         )}
                         {opts.showEndTurn && <button className="pl-btn ghost" onClick={this.pass}>End turn</button>}
@@ -984,6 +1212,120 @@ export class ProjectLMainPage extends React.Component<ProjectLProps, { ui: UIMod
                 {p.mySupply && <SupplyTray supply={p.mySupply} />}
             </>
         );
+    }
+
+    /** One line describing a staged action, for the plan list. */
+    private describeStaged(a: StagedAction): React.ReactNode {
+        if (a.kind === 'take') return <>Take {a.deck} puzzle #{a.puzzleId}</>;
+        if (a.kind === 'upgradeL1') return <>Upgrade — take <PieceGlyph shapeId="mono" unit={12} /></>;
+        if (a.kind === 'upgradeSwap') return <>Upgrade — <PieceGlyph shapeId={a.from} unit={12} /> → <PieceGlyph shapeId={a.to} unit={12} /></>;
+        if (a.kind === 'place') return <>Place <PieceGlyph shapeId={a.shapeId} unit={12} /> in puzzle #{a.puzzleId}</>;
+        return <>Master — {a.items.map((it, k) => <PieceGlyph key={k} shapeId={it.shapeId} unit={12} />)}</>;
+    }
+
+    /** Ordered list of the planned actions. Steps aren't individually removable —
+     *  a plan is executed or reset as a whole to avoid dependency inconsistencies. */
+    private renderPlanList() {
+        const staged = this.state.staged;
+        if (staged.length === 0) return null;
+        return (
+            <div className="pl-plan-list">
+                {staged.map((a, i) => (
+                    <div key={i} className="pl-plan-item">
+                        <span className="pl-plan-num">{i + 1}</span>
+                        <span className="pl-plan-desc">{this.describeStaged(a)}</span>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    /** Downtime planning view: plan a whole turn against a live simulation. */
+    private renderPlanning() {
+        const p = this.props;
+        const sim = this.simState();
+        const full = this.state.staged.length >= ACTIONS_PER_TURN;
+        const canStageTake = !full && sim.puzzles.length < MAX_UNFINISHED_PUZZLES;
+        return (
+            <>
+                {/* tap a market card to stage taking it; the deck can't be pre-planned */}
+                <Market
+                    p={p}
+                    canTake={canStageTake}
+                    deckTakeable={false}
+                    takeLabel="Stage"
+                    active={false}
+                    onTakeRow={this.stageTakeRow}
+                    onTakeDeck={() => { /* blind draws are live-only */ }}
+                    onRecycle={() => { /* recycle is live-only */ }}
+                />
+
+                <div className="pl-plan-head">
+                    <span className="pl-section-title">Plan your turn — {this.state.staged.length}/{ACTIONS_PER_TURN} moves</span>
+                    {this.state.staged.length > 0 && <button className="pl-btn tiny ghost" onClick={this.clearStaged}>Reset Plan</button>}
+                </div>
+                {this.renderPlanList()}
+
+                <div className="pl-section-title">Your puzzles — preview after plan</div>
+                <div className="pl-my-puzzles plan-preview">
+                    {sim.puzzles.length === 0 && <div className="pl-muted pad">Stage a card above to start planning.</div>}
+                    {sim.puzzles.map((inst, i) => (
+                        <div key={i} className="pl-my-puzzle">
+                            <PuzzleCard puzzle={PUZZLE_BY_ID[inst.puzzleId]} instance={inst} unit={30} />
+                            {!full && (
+                                <button className="pl-btn small block ghost" onClick={() => this.setState({ ui: { kind: 'stagePlace', puzzleIndex: i } })}>
+                                    Stage place
+                                </button>
+                            )}
+                        </div>
+                    ))}
+                </div>
+
+                {!full && (
+                    <div className="pl-actionbar">
+                        <button className="pl-btn ghost" onClick={() => this.setState({ ui: { kind: 'stageUpgrade' } })}>Stage upgrade</button>
+                        {sim.puzzles.length > 0 && (
+                            <button className="pl-btn ghost" onClick={() => this.setState({ ui: { kind: 'stageMaster' } })}>Stage Master</button>
+                        )}
+                    </div>
+                )}
+                {full && <div className="pl-muted pad">Turn full — 3 moves planned. Reset the plan to change it.</div>}
+
+                <div className="pl-section-title">Your pieces — after plan</div>
+                <SupplyTray supply={sim.supply} />
+            </>
+        );
+    }
+
+    /** Banner that surfaces a staged plan: void warning if broken, execute on your turn. */
+    private renderStagedBanner(active: boolean) {
+        const staged = this.state.staged;
+        if (staged.length === 0 || this.props.mode !== 'multiplayer') return null;
+        const n = staged.length;
+        const valid = this.stagedValid();
+        if (!valid) {
+            // e.g. a card you planned to take was taken by someone else first
+            return (
+                <div className="pl-staged-bar stale">
+                    <span className="pl-staged-text">Plan voided — a card you planned to take is gone, or your board changed.</span>
+                    <div className="pl-staged-actions">
+                        <button className="pl-btn ghost small" onClick={this.clearStaged}>Reset Plan</button>
+                    </div>
+                </div>
+            );
+        }
+        if (active) {
+            return (
+                <div className="pl-staged-bar ready">
+                    <span className="pl-staged-text">Your turn — {n} move{n === 1 ? '' : 's'} planned and ready.</span>
+                    <div className="pl-staged-actions">
+                        <button className="pl-btn primary small" onClick={this.executeStaged}>Execute plan</button>
+                        <button className="pl-btn ghost small" onClick={this.clearStaged}>Reset</button>
+                    </div>
+                </div>
+            );
+        }
+        return null; // valid & waiting: the planning view already shows the plan
     }
 
     private renderSpeedArena() {
@@ -1025,6 +1367,8 @@ export class ProjectLMainPage extends React.Component<ProjectLProps, { ui: UIMod
 
         const active = this.amActive();
         const finishing = p.phase === Phase.FinishingTouches;
+        // Downtime: real multiplayer game, in the play phase, waiting for my turn.
+        const downtime = p.mode === 'multiplayer' && p.phase === Phase.Play && !active;
 
         return (
             <div className="pl-arena">
@@ -1035,6 +1379,7 @@ export class ProjectLMainPage extends React.Component<ProjectLProps, { ui: UIMod
                         {p.phase === Phase.Play && <ActionPips left={p.actionsLeft} />}
                     </div>
                     <div className="pl-hud-right">
+                        {downtime && <span className="pl-endflag plan">Planning ahead</span>}
                         {p.endTriggered && p.phase === Phase.Play && <span className="pl-endflag">Final rounds</span>}
                         {finishing && <span className="pl-endflag ft">Finishing touches · −1 / piece</span>}
                     </div>
@@ -1049,7 +1394,12 @@ export class ProjectLMainPage extends React.Component<ProjectLProps, { ui: UIMod
                 )}
                 {finishing && p.myFinishingDone && <div className="pl-ft-bar done">Waiting for other players…</div>}
 
-                {this.renderMyBoard(active, { finishing, showEndTurn: true })}
+                {!finishing && this.renderStagedBanner(active)}
+                {active && this.state.staged.length > 0 && this.renderPlanList()}
+
+                {downtime
+                    ? this.renderPlanning()
+                    : this.renderMyBoard(active, { finishing, showEndTurn: true })}
 
                 {this.renderOverlay()}
             </div>
@@ -1059,6 +1409,17 @@ export class ProjectLMainPage extends React.Component<ProjectLProps, { ui: UIMod
     private renderOverlay() {
         const p = this.props;
         const ui = this.state.ui;
+        if (ui.kind === 'confirm') {
+            return (
+                <ConfirmDialog
+                    title={ui.title}
+                    body={ui.body}
+                    confirmLabel={ui.confirmLabel}
+                    onConfirm={() => { ui.run(); this.close(); }}
+                    onClose={this.close}
+                />
+            );
+        }
         if (!p.mySupply) return null;
         if (ui.kind === 'place') {
             const inst = p.myPuzzles[ui.puzzleIndex];
@@ -1072,6 +1433,21 @@ export class ProjectLMainPage extends React.Component<ProjectLProps, { ui: UIMod
         }
         if (ui.kind === 'master') {
             return <MasterOverlay puzzles={p.myPuzzles} supply={p.mySupply} onCommit={this.commitMaster} onClose={this.close} />;
+        }
+        if (ui.kind === 'stagePlace') {
+            // plan against the simulated board (after already-staged moves)
+            const sim = this.simState();
+            const inst = sim.puzzles[ui.puzzleIndex];
+            if (!inst) return null;
+            return <PlacementOverlay instance={inst} supply={sim.supply} title={`Stage a placement — puzzle ${ui.puzzleIndex + 1}`} costHint="planning" confirmLabel="Stage" onCommit={this.commitStagePlace} onClose={this.close} />;
+        }
+        if (ui.kind === 'stageMaster') {
+            const sim = this.simState();
+            return <MasterOverlay puzzles={sim.puzzles} supply={sim.supply} onCommit={this.commitStageMaster} onClose={this.close} />;
+        }
+        if (ui.kind === 'stageUpgrade') {
+            const sim = this.simState();
+            return <UpgradeOverlay supply={sim.supply} reserve={p.shared.reserve} onTakeL1={this.stageUpgradeL1} onSwap={this.stageUpgradeSwap} onClose={this.close} />;
         }
         if (ui.kind === 'upgrade') {
             return <UpgradeOverlay supply={p.mySupply} reserve={p.shared.reserve} onTakeL1={this.upgradeTakeL1} onSwap={this.upgradeSwap} onClose={this.close} />;
