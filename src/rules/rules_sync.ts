@@ -35,6 +35,7 @@ import { OffWithTheirHeadsRule } from './offwiththeirheads/offwiththeirheads';
 import { ProjectLRule } from './projectl/projectl';
 import { MoonrollersRule } from './moonrollers/moonrollers';
 import { NightZooRule } from './nightzoo/nightzoo';
+import { WingspanRule } from './wingspanpocket/wingspan';
 
 
 const CoupDebugger = NewDebuggerRule(
@@ -702,6 +703,14 @@ export const MPRULES = {
         icon: '🐾',
         minPlayers: 1,
         maxPlayers: 4
+    },
+    'wingspanpocket': {
+        description: 'Wingspan (Pocket) - Bird Engine Builder',
+        rules: ['lobby', 'gameshell', 'wingspanpocket'],
+        rule: WingspanRule,
+        icon: '🐦',
+        minPlayers: 2,
+        maxPlayers: 5
     }
 };
 

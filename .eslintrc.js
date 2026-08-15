@@ -11,6 +11,7 @@ module.exports = {
         "no-useless-escape": 0,
         "no-prototype-builtins": 0,
         "react/display-name": 0,
+        "react/no-unescaped-entities": 0,
         "prefer-rest-params": 0,
         "prefer-spread": 0,
         "react/jsx-key": 0,

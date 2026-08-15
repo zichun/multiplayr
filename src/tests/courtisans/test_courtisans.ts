@@ -219,7 +219,7 @@ describe('Courtisans Game Logic', () => {
                     a: [card('nightingale', 'assassin', 1), card('carp', 'plain', 1), card('toad', 'plain', 1)],
                     b: [card('hare', 'plain', 1)]
                 });
-                let d = g.get_data();
+                const d = g.get_data();
                 d.table.hare.below = [card('hare', 'plain', 9)];
                 d.table.queen.above = [card('carp', 'spy', 1)]; // a face-down spy on the table
                 const g2 = GameState.from_data(d, ['a', 'b']);

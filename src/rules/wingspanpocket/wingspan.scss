@@ -1,0 +1,409 @@
+/**
+ * wingspan.scss — flat, bright, light-and-fun skin for Wingspan (Pocket).
+ *
+ * Deliberately NOT the platform neo-brutalist skin: soft radii, hairline
+ * borders, gentle shadows, warm-cream ground — matching the flat-vibrant card
+ * art. All rules are scoped under `.ws-arena` / `.ws-lobby` / `.ws-rules` so no
+ * other game is affected. The bird faces themselves are rendered by the shared
+ * card-renderer and are never restyled here (DESIGN_GUIDE §9.4).
+ */
+
+$ink: #33404a;
+$muted: #8a94a0;
+$line: #e6e0d4;
+$cream: #fbf7ef;
+$panel: #ffffff;
+$accent: #4a90d9;
+$radius: 14px;
+
+.ws-arena, .ws-lobby, .ws-rules, .ws-scoring, .ws-settings {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+}
+
+.ws-arena {
+    padding: 10px 12px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+.ws-muted { color: $muted; font-size: 0.85em; }
+.ws-muted.pad { padding: 10px; }
+
+.ws-section-title {
+    font-size: 0.78em;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-weight: 700;
+    color: $muted;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.ws-endtag {
+    background: #f2803a; color: #fff; border-radius: 20px;
+    padding: 1px 10px; font-size: 0.85em; letter-spacing: 0.4px;
+}
+
+.ws-icon svg { width: 100%; height: 100%; display: block; }
+
+// ---------------------------------------------------------------- card layout
+// Balanced composition (DESIGN_GUIDE §10.4): the bird is the hero illustration
+// in the TOP half of the card; a single cohesive info panel fills the BOTTOM
+// half — cost coins, then the egg/wingspan/beak stats, then the power text. A
+// VP feather chip sits in the top-right corner. Everything is grouped (no more
+// components stranded at opposite edges), and nothing is clipped.
+.wingspan-card {
+    display: inline-block;
+    $panelTop: 51%;     // art occupies the top 51%, the panel the rest
+    $foot: 2.7em;       // power-text band height (inside the bottom panel)
+
+    .playing-card-face.face-front {
+        display: block !important;
+        position: relative;
+        padding: 0 !important;
+        overflow: hidden;
+    }
+
+    // bird — the hero illustration, top half
+    .card-art-region {
+        position: absolute; top: 0; left: 0; right: 0; height: $panelTop; z-index: 0;
+        padding: 0.35em 0.35em 0 !important;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .card-art-content, .card-art-frame { width: 100%; height: 100%; }
+    .card-art-content .expressive-vector-icon { max-width: 100%; max-height: 100%; }
+
+    // bottom info panel (upper part): cost row + stats row, centred & grouped
+    .card-data-region {
+        position: absolute; top: $panelTop; bottom: $foot; left: 0; right: 0;
+        z-index: 2; padding: 0.3em 0.4em;
+        display: flex; flex-direction: column; align-items: center; justify-content: space-evenly;
+        gap: 0.1em;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+    }
+    .card-data-icons-list { overflow: visible; }
+    .card-data-icon-item {
+        background: transparent !important; overflow: visible;
+        padding: 0 0.1em !important;             // tight so the stats row fits
+        filter: drop-shadow(0 1px 1px rgba(255, 255, 255, .55));
+    }
+    .card-data-icon-item > span { font-size: 1.6em; font-weight: 800; }
+    .card-data-icon-glyph { margin-right: 0.12em !important; }
+
+    // cost row (first): overlapping coin stack, no numbers
+    .card-data-icons-list:first-child {
+        gap: 0 !important;
+        .card-data-icon-item { padding: 0 !important; }
+        .card-data-icon-item + .card-data-icon-item { margin-left: -1.5em; }
+        .card-data-icon-glyph { margin-right: 0 !important; }
+        .card-data-icon-item > span { display: none; }
+    }
+
+    // VP feather chip (top-right corner)
+    .card-overlay-chip .card-chip-value { font-weight: 800; }
+
+    // power band — bottom of the panel
+    .card-footer-region {
+        position: absolute; bottom: 0; left: 0; right: 0; height: $foot;
+        z-index: 2; display: flex; align-items: center; justify-content: center;
+    }
+    .card-footer-text { font-weight: 700; line-height: 1.12; padding: 0 0.45em; }
+}
+
+// The reverse (food) face — plain stacked layout, big saturated coins centred
+// in the card. Deliberately NOT the watermark layout above.
+.wingspan-food {
+    display: inline-block;
+    .card-data-region { flex: 1; display: flex; align-items: center; justify-content: center; }
+    .card-data-icons-list { align-items: center; }
+    .card-data-icon-item { background: transparent !important; }
+}
+
+// ---------------------------------------------------------------- buttons
+.ws-btn {
+    font-family: inherit;
+    border: 1px solid $line;
+    background: $panel;
+    color: $ink;
+    border-radius: 11px;
+    padding: 10px 16px;
+    font-size: 0.95em;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 44px;
+    transition: transform .12s, background .12s, box-shadow .12s;
+
+    &:hover { box-shadow: 0 3px 10px rgba(0,0,0,.08); }
+    &:active { transform: translateY(1px); }
+    &.primary { background: $accent; color: #fff; border-color: $accent; }
+    &.ghost { background: transparent; color: $muted; }
+    &.small { padding: 7px 12px; min-height: 38px; font-size: 0.88em; }
+    &.tiny { padding: 4px 10px; min-height: 30px; font-size: 0.8em; border-radius: 9px; }
+    &.block { display: block; width: 100%; }
+    &:disabled { opacity: .4; cursor: default; box-shadow: none; }
+}
+
+// ---------------------------------------------------------------- goals
+.ws-goals {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    background: $cream; border: 1px solid $line; border-radius: $radius; padding: 8px 10px;
+}
+.ws-goal {
+    display: flex; align-items: center; gap: 6px;
+    background: #fff; border: 1px solid $line; border-radius: 20px; padding: 4px 12px;
+    .ws-goal-icon { font-weight: 800; color: $accent; }
+    .ws-goal-desc { font-size: 0.82em; }
+}
+.ws-goal-note { font-size: 0.72em; color: $muted; margin-left: auto; }
+
+// ---------------------------------------------------------------- supply
+.ws-supply {
+    background: $cream; border: 1px solid $line; border-radius: $radius; padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 8px;
+}
+// one shared, horizontally-scrollable row for supply birds + food decks + discard
+.ws-supply-row {
+    display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px;
+    align-items: center; justify-content: safe center;
+}
+.ws-supply-slot { flex: 0 0 auto; }
+.ws-empty-card { width: 101px; height: 141px; border: 1px dashed $line; border-radius: 10px; background: #fff; }
+
+// thin divider between the playable birds and the drawable food decks
+.ws-supply-divider {
+    flex: 0 0 auto; align-self: stretch; width: 1px; margin: 6px 4px;
+    background: $line;
+}
+
+// shared icon-only food tile (no header/footer) — used by supply decks + reserve
+.ws-food-face {
+    border-radius: 11px; background: #fbf7ef; border: 1px solid $line;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+    flex: 0 0 auto;
+}
+
+// food deck: an icon-only card tile matching the bird height
+.ws-fooddeck {
+    position: relative; flex: 0 0 auto; border-radius: 13px; padding: 2px;
+    border: 2px solid transparent; cursor: default; transition: transform .1s, box-shadow .1s;
+    &.pick { cursor: pointer; }
+    &.pick:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+    &.picked { border-color: $accent; }
+    // remaining-count badge (bottom-left)
+    .ws-fooddeck-count {
+        position: absolute; left: 6px; bottom: 6px;
+        background: rgba(51,64,74,.85); color: #fff; font-weight: 800; font-size: 0.74em;
+        border-radius: 9px; padding: 1px 8px; line-height: 1.5;
+    }
+    // how many you've staged to draw from this deck (top-right)
+    .ws-fooddeck-picked {
+        position: absolute; right: 6px; top: 6px;
+        background: $accent; color: #fff; font-weight: 800; font-size: 0.74em;
+        border-radius: 9px; padding: 1px 7px;
+    }
+}
+.ws-discard {
+    flex: 0 0 auto; display: flex; flex-direction: column; align-items: center;
+    color: $muted; font-size: 0.72em; padding: 0 6px;
+    .ws-discard-count { font-weight: 700; color: $ink; font-size: 1.3em; }
+}
+.ws-supply-hint { font-size: 0.78em; color: $accent; font-weight: 600; text-align: center; }
+
+// ---------------------------------------------------------------- action bar
+.ws-actionbar {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    position: sticky; bottom: 0; z-index: 5;
+    background: rgba(251,247,239,.92); padding: 8px 4px; border-radius: 12px;
+    backdrop-filter: blur(4px);
+}
+.ws-actionbar-hint { font-size: 0.78em; color: $muted; }
+
+// ---------------------------------------------------------------- flock
+.ws-flock-zone { display: flex; flex-direction: column; gap: 8px; }
+.ws-flock-row {
+    display: flex; gap: 8px; overflow-x: auto; padding: 10px 6px;
+    align-items: flex-start; justify-content: safe center;
+    background: #fff; border: 1px solid $line; border-radius: $radius;
+}
+.ws-bird { flex: 0 0 auto; border-radius: 12px; }
+.ws-bird.active { border-radius: 12px; }
+.ws-bird-status {
+    display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 3px;
+}
+.ws-tuck-badge {
+    display: inline-flex; align-items: center; gap: 2px;
+    font-size: 0.72em; font-weight: 700; color: #5b4420;
+    background: #f2e6cf; border-radius: 10px; padding: 1px 6px;
+}
+
+.ws-eggpips { display: inline-flex; gap: 3px; align-items: center; }
+.ws-eggpip {
+    width: 8px; height: 10px; border-radius: 50% 50% 48% 48%;
+    background: #efe6de; border: 1px solid #d8c3ad;
+    &.on { background: #d98a4a; border-color: #a25f24; }
+    &.off { opacity: .5; }
+    &.big { width: 12px; height: 15px; }
+}
+
+.ws-nest {
+    flex: 0 0 auto; width: 66px; min-height: 109px;
+    border: 1px solid $line; border-radius: 12px; background: #f6efdf;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    &.selectable { cursor: pointer; border-color: $accent; }
+    &.selected { box-shadow: inset 0 0 0 3px $accent; }
+    .ws-nest-label { font-size: 0.66em; letter-spacing: 1.5px; color: $muted; font-weight: 700; }
+    .ws-nest-eggs { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+}
+
+// activation
+.ws-activate-bar {
+    display: flex; flex-direction: column; gap: 6px;
+    background: #f2e6cf; border: 1px solid #e2cfa8; border-radius: 12px; padding: 10px 12px;
+}
+.ws-activate-title { font-weight: 700; font-size: 0.9em; }
+.ws-activate-controls { display: flex; flex-direction: column; gap: 6px; }
+.ws-activate-power { font-size: 0.85em; color: #5b4420; }
+.ws-activate-buttons, .ws-activate-branches { display: flex; gap: 8px; flex-wrap: wrap; }
+
+// ---------------------------------------------------------------- reserve
+.ws-reserve {
+    display: flex; flex-direction: column; gap: 8px;
+    background: $cream; border: 1px solid $line; border-radius: $radius; padding: 10px 12px;
+}
+.ws-reserve-label { font-size: 0.74em; text-transform: uppercase; letter-spacing: 1px; color: $muted; font-weight: 700; margin-bottom: 4px; }
+.ws-reserve-row { display: flex; gap: 8px; overflow-x: auto; padding: 8px 4px; align-items: flex-start; }
+.ws-reserve-bird {
+    flex: 0 0 auto; position: relative; transition: transform .12s;
+    &.affordable { transform: translateY(-2px); }
+    &.dim { opacity: .5; }
+    .ws-play-hint {
+        position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+        background: $accent; color: #fff; font-size: 0.7em; font-weight: 700;
+        border-radius: 10px; padding: 2px 10px; box-shadow: 0 2px 6px rgba(0,0,0,.15);
+    }
+}
+.ws-reserve-food { flex: 0 0 auto; }
+
+// ---------------------------------------------------------------- opponents
+.ws-opponents { display: flex; flex-wrap: wrap; gap: 10px; }
+.ws-opp {
+    flex: 1 1 260px; min-width: 0;
+    background: #fff; border: 1px solid $line; border-left: 4px solid $line; border-radius: 12px; padding: 8px 10px;
+    &.active { box-shadow: 0 2px 12px rgba(74,144,217,.18); }
+}
+.ws-opp-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.ws-opp-name { font-weight: 700; }
+.ws-opp-score { font-weight: 800; display: inline-flex; align-items: center; gap: 3px; }
+.ws-opp-meta { font-size: 0.72em; color: $muted; margin-left: auto; }
+.ws-opp-flock { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+.ws-opp-nest {
+    display: inline-flex; align-items: center; gap: 3px; background: #f6efdf;
+    border-radius: 8px; padding: 3px 7px; font-size: 0.8em;
+    .ws-opp-nest-label { color: $muted; font-weight: 700; }
+}
+.ws-opp-bird {
+    position: relative; width: 34px; height: 34px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #f7f4ee; border-radius: 9px;
+    .ws-opp-eggs { position: absolute; bottom: -3px; right: -3px; background: #f4d98a; color: #5b4420; border-radius: 8px; font-size: 0.62em; font-weight: 800; padding: 0 4px; }
+    .ws-opp-tuck { position: absolute; top: -4px; right: -4px; background: #f2e6cf; color: #5b4420; border-radius: 8px; font-size: 0.6em; font-weight: 800; padding: 0 3px; }
+}
+
+// ---------------------------------------------------------------- overlays
+.ws-overlay {
+    position: fixed; inset: 0; z-index: 60;
+    background: rgba(30,32,38,.42);
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.ws-panel {
+    background: #fff; border-radius: 18px; padding: 16px; width: 100%; max-width: 420px;
+    max-height: 90vh; overflow-y: auto; box-shadow: 0 12px 40px rgba(0,0,0,.28);
+    &.wide { max-width: 640px; }
+}
+.ws-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.ws-panel-head h3 { margin: 0; font-size: 1.05em; }
+.ws-x { border: none; background: none; font-size: 1.1em; color: $muted; cursor: pointer; }
+
+.ws-play-confirm { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-start; justify-content: center; }
+.ws-pay { flex: 1 1 160px; display: flex; flex-direction: column; gap: 8px; }
+.ws-pay-label { font-size: 0.78em; color: $muted; text-transform: uppercase; letter-spacing: 1px; }
+.ws-pay-items { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; min-height: 30px; }
+.ws-pay-pill { display: inline-flex; background: #f4eede; border-radius: 20px; padding: 4px; }
+.ws-pay-note {
+    font-size: 0.8em; line-height: 1.35; color: #6b4f21;
+    background: #f6ecd9; border-radius: 10px; padding: 7px 10px;
+}
+.ws-pay-ok { color: #2b8a4a; font-weight: 700; margin-left: 6px; text-transform: none; letter-spacing: 0; }
+.ws-pay-bad { color: #d5482f; font-weight: 700; margin-left: 6px; text-transform: none; letter-spacing: 0; }
+.ws-pay-choose { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.ws-pay-food {
+    display: inline-flex; gap: 2px; align-items: center; cursor: pointer;
+    background: #fff; border: 2px solid $line; border-radius: 12px; padding: 4px 7px; min-height: 40px;
+    transition: transform .1s, border-color .1s, box-shadow .1s;
+    &:hover { border-color: #cdd4dc; }
+    &.on { border-color: $accent; background: #eef5fd; box-shadow: 0 2px 6px rgba(74,144,217,.18); }
+}
+.ws-pay-egg {
+    display: inline-flex; gap: 5px; align-items: center; cursor: pointer; font-family: inherit; font-size: 0.85em;
+    background: #fff; border: 2px solid $line; border-radius: 12px; padding: 6px 10px; min-height: 40px; color: $ink;
+    &.on { border-color: $accent; background: #eef5fd; }
+}
+.ws-pay-actions { display: flex; gap: 8px; justify-content: space-between; align-items: center; margin-top: 4px; }
+
+// ---- activation choice modal ----
+.ws-act { display: flex; flex-direction: column; gap: 12px; align-items: stretch; }
+.ws-act-prompt { font-weight: 700; font-size: 1.02em; text-align: center; }
+.ws-act-sub { font-size: 0.76em; text-transform: uppercase; letter-spacing: 1px; color: $muted; font-weight: 700; }
+.ws-act-branches { display: flex; flex-direction: column; gap: 8px; }
+.ws-act-grid { display: flex; gap: 10px; flex-wrap: wrap; justify-content: safe center; padding: 4px 0; }
+.ws-act-tile {
+    position: relative; flex: 0 0 auto; border: 2px solid transparent; border-radius: 13px;
+    padding: 2px; background: none; cursor: pointer; transition: transform .1s, box-shadow .1s;
+    &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.14); border-color: $accent; }
+    &:disabled { opacity: .45; cursor: default; }
+    .ws-act-count {
+        position: absolute; left: 6px; bottom: 6px; background: rgba(51,64,74,.85); color: #fff;
+        font-weight: 800; font-size: 0.74em; border-radius: 9px; padding: 1px 8px;
+    }
+}
+.ws-act-grid.eggs { flex-direction: column; align-items: stretch; }
+.ws-act-egg {
+    display: inline-flex; gap: 7px; align-items: center; cursor: pointer; font-family: inherit; color: $ink;
+    background: #fff; border: 2px solid $line; border-radius: 12px; padding: 9px 12px; min-height: 44px; font-size: 0.92em;
+    small { color: $muted; }
+    &.on { border-color: $accent; background: #eef5fd; }
+    &:disabled { opacity: .45; cursor: default; }
+}
+
+// ---------------------------------------------------------------- scoring
+.ws-scoring { padding: 16px; display: flex; flex-direction: column; gap: 12px; max-width: 520px; margin: 0 auto; }
+.ws-scoring h2 { text-align: center; margin: 0; }
+.ws-score-rows { display: flex; flex-direction: column; gap: 8px; }
+.ws-score-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    background: #fff; border: 1px solid $line; border-radius: 12px; padding: 10px 12px;
+    &.winner { border-color: #f4d98a; background: #fffdf3; }
+}
+.ws-score-name { font-weight: 700; flex: 0 0 auto; }
+.ws-score-break { font-size: 0.78em; color: $muted; display: inline-flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.ws-score-total { margin-left: auto; font-size: 1.3em; }
+.ws-crown { font-size: 1.1em; }
+
+// ---------------------------------------------------------------- lobby / rules
+.ws-lobby { padding: 14px; display: flex; flex-direction: column; gap: 14px; max-width: 520px; margin: 0 auto; }
+.ws-lobby-opt { display: flex; flex-direction: column; gap: 8px; }
+.ws-picker-label { font-size: 0.78em; text-transform: uppercase; letter-spacing: 1px; color: $muted; font-weight: 700; }
+.ws-opt-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.ws-waiting { text-align: center; color: $muted; padding: 20px; }
+
+.ws-rules { padding: 16px; max-width: 640px; margin: 0 auto; line-height: 1.5; }
+.ws-rules h3 { margin-top: 0; }
+.ws-rules h4 { margin-bottom: 4px; }
+.ws-legend { display: flex; gap: 14px; flex-wrap: wrap; }
+.ws-legend-item { display: flex; flex-direction: column; align-items: center; gap: 2px; small { color: $muted; } }
+
+.ws-settings { padding: 16px; display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 0 auto; }

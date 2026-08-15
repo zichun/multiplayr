@@ -102,7 +102,7 @@ describe('Skull Game Logic', () => {
             it('adds to the top of the stack and rotates clockwise', () => {
                 const g = mockStacking(['a', 'b', 'c'], { a: ['flower'], b: ['flower'], c: ['flower'] });
                 g.add_disc('a', 'skull');
-                let d = g.get_data();
+                const d = g.get_data();
                 assert.deepStrictEqual(d.players['a'].stack, ['flower', 'skull']); // bottom -> top
                 assert.strictEqual(d.currentPlayerId, 'b');
                 assert.throws(() => g.add_disc('a', 'flower'), /not your turn/);

@@ -708,46 +708,45 @@ export class MagicalAthletesGameState {
     private hooksOf(r: RacerState): RacerHooks { return RACER_HOOKS[r.powerId] || {}; }
 
     private ctxFor(self: RacerState, mover: RacerState): RaceCtx {
-        const g = this;
         return {
-            self, mover, track: g.track(),
-            active: () => g.active(),
-            others: (of?: RacerState) => g.active().filter(x => x.ownerId !== (of || self).ownerId),
-            leaders: () => g.leaders(),
-            lastPlace: () => g.lastPlace(),
-            onSpace: (pos: number, except?: string) => g.active().filter(x => x.pos === pos && x.ownerId !== except),
-            othersOnSpaceOf: (r: RacerState) => g.othersOnSpace(r.pos, r.ownerId),
+            self, mover, track: this.track(),
+            active: () => this.active(),
+            others: (of?: RacerState) => this.active().filter(x => x.ownerId !== (of || self).ownerId),
+            leaders: () => this.leaders(),
+            lastPlace: () => this.lastPlace(),
+            onSpace: (pos: number, except?: string) => this.active().filter(x => x.pos === pos && x.ownerId !== except),
+            othersOnSpaceOf: (r: RacerState) => this.othersOnSpace(r.pos, r.ownerId),
             twoRacerSpaces: (except: string) => {
                 const counts: Record<number, number> = {};
-                for (const o of g.active()) if (o.ownerId !== except) counts[o.pos] = (counts[o.pos] || 0) + 1;
+                for (const o of this.active()) if (o.ownerId !== except) counts[o.pos] = (counts[o.pos] || 0) + 1;
                 return Object.keys(counts).map(Number).filter(p => counts[p] === 2);
             },
-            aloneInLead: (r: RacerState) => { const l = g.leaders(); return l.length === 1 && l[0].ownerId === r.ownerId; },
-            aloneInLast: (r: RacerState) => { const l = g.lastPlace(); return l.length === 1 && l[0].ownerId === r.ownerId; },
+            aloneInLead: (r: RacerState) => { const l = this.leaders(); return l.length === 1 && l[0].ownerId === r.ownerId; },
+            aloneInLast: (r: RacerState) => { const l = this.lastPlace(); return l.length === 1 && l[0].ownerId === r.ownerId; },
             pos: (r: RacerState) => r.pos,
-            trackLen: () => g.track().length,
+            trackLen: () => this.track().length,
             allPowerIds: () => ROSTER.map(d => d.id),
-            pastWinners: () => [...g.data.pastWinnerRacerIds],
-            move: (r: RacerState, steps: number, kind?: MoveKind) => g.moveRacer(r, steps, kind || 'power'),
-            warp: (r: RacerState, to: number, kind?: MoveKind) => g.stepMove(r, to, kind || 'warp'),
-            trip: (r: RacerState) => g.tripRacer(r),
-            eliminate: (r: RacerState) => g.eliminateRacer(r),
-            award: (r: RacerState, pts: number) => { g.data.scores[r.ownerId].bronze = Math.max(0, g.data.scores[r.ownerId].bronze + pts); },
-            finish: (r: RacerState) => g.finishRacer(r),
-            rollDie: () => g.rollDie(),
-            rnd: (n: number) => g.rnd(n),
-            setDie: (v: number) => { g.data.turnDie = v; },
-            cancelMainMove: () => { g._cancelMain = true; },
-            tripAfterMove: () => { g._tripAfter = true; },
-            grantExtraTurn: () => { g.data.extraTurn = true; },
-            endRaceNow: () => g.endRace(),
-            goNext: (owner: string) => { g.data.skipperPending = owner; },
-            rerolled: (by: string) => g.rerolled(by),
-            fire: (by: string) => g.triggerScoocher(by),
-            decide: (pid: string, key: string, prompt: string, options: DecisionOption[]) => g.decide(pid, key, prompt, options),
-            answered: (key: string) => g.data.pendingTurn ? g.data.pendingTurn.decisions[key] : undefined,
-            emit: (kind, text, actor) => g.emit(kind, text, actor),
-            nm: (id: string) => g.name(id)
+            pastWinners: () => [...this.data.pastWinnerRacerIds],
+            move: (r: RacerState, steps: number, kind?: MoveKind) => this.moveRacer(r, steps, kind || 'power'),
+            warp: (r: RacerState, to: number, kind?: MoveKind) => this.stepMove(r, to, kind || 'warp'),
+            trip: (r: RacerState) => this.tripRacer(r),
+            eliminate: (r: RacerState) => this.eliminateRacer(r),
+            award: (r: RacerState, pts: number) => { this.data.scores[r.ownerId].bronze = Math.max(0, this.data.scores[r.ownerId].bronze + pts); },
+            finish: (r: RacerState) => this.finishRacer(r),
+            rollDie: () => this.rollDie(),
+            rnd: (n: number) => this.rnd(n),
+            setDie: (v: number) => { this.data.turnDie = v; },
+            cancelMainMove: () => { this._cancelMain = true; },
+            tripAfterMove: () => { this._tripAfter = true; },
+            grantExtraTurn: () => { this.data.extraTurn = true; },
+            endRaceNow: () => this.endRace(),
+            goNext: (owner: string) => { this.data.skipperPending = owner; },
+            rerolled: (by: string) => this.rerolled(by),
+            fire: (by: string) => this.triggerScoocher(by),
+            decide: (pid: string, key: string, prompt: string, options: DecisionOption[]) => this.decide(pid, key, prompt, options),
+            answered: (key: string) => this.data.pendingTurn ? this.data.pendingTurn.decisions[key] : undefined,
+            emit: (kind, text, actor) => this.emit(kind, text, actor),
+            nm: (id: string) => this.name(id)
         };
     }
 
@@ -891,7 +890,7 @@ export class MagicalAthletesGameState {
         let remaining = Math.abs(steps);
         let pos = oldPos;
         while (remaining > 0) {
-            let next = pos + dir;
+            const next = pos + dir;
             if (next < 0) { pos = 0; break; }
             if (leaps && next < track.length && this.occupiedByOther(next, r.ownerId)) {
                 pos = next;

@@ -192,7 +192,7 @@ describe('Clever Game Logic', () => {
             // Bob confirms his selection
             gameMock.confirm_passive_selection('bob');
 
-            let currentData = gameMock.get_data();
+            const currentData = gameMock.get_data();
             // Bob should be confirmed, Charlie not
             assert.equal(currentData.players['bob'].hasConfirmedPassiveSelection, true);
             assert.equal(currentData.players['charlie'].hasConfirmedPassiveSelection, false);

@@ -38,6 +38,7 @@ function loadModule(rel: string): any {
     ];
     for (const c of candidates) {
         for (const ext of ['', '.ts', '.tsx']) {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports -- CLI tool loads modules dynamically by path
             if (fs.existsSync(c + ext)) return require(c + ext);
         }
     }
@@ -151,6 +152,7 @@ function main() {
 
     if (cmd === 'card') {
         const isPresets = modArg === 'presets';
+        // eslint-disable-next-line @typescript-eslint/no-require-imports -- CLI shortcut for the library's own presets module
         const mod = isPresets ? require('./presets') : loadModule(modArg);
         const target = isPresets ? mod.PRESET_CARDS : mod[arg2];
         const rest = process.argv.slice(5).map(a => { try { return JSON.parse(a); } catch { return a; } });

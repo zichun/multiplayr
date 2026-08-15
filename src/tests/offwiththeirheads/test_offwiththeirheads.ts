@@ -369,7 +369,7 @@ describe('Off With Their Heads Game Logic', () => {
         it('starts a 2-player game with 9-card hands and reveals on the second pick', () => {
             const test = new GameRuleTest('offwiththeirheads', 1); // host + 1 client
             test.invokeHostMethod('startGame');
-            let gs = hostGS(test);
+            const gs = hostGS(test);
             let s = gs.get_data();
             assert.strictEqual(s.playerIds.length, 2);
             assert.strictEqual(s.status, 'Selecting');
@@ -413,7 +413,7 @@ describe('Off With Their Heads Game Logic', () => {
                     ? test.invokeHostMethod('resolveMark', ...args)
                     : test.invokeClientMethod(0, 'resolveMark', ...args);
                 if (!spaceId) {
-                    isHost ? test.invokeHostMethod('skipMark') : test.invokeClientMethod(0, 'skipMark');
+                    if (isHost) test.invokeHostMethod('skipMark'); else test.invokeClientMethod(0, 'skipMark');
                 } else {
                     const ace = head.kind === 'rank' && s.marks[pid]!.card.rank === 'A' ? 11 : undefined;
                     invoke(zone, spaceId, ace);

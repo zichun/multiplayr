@@ -71,7 +71,7 @@ export function toOrientation(cells: Cell[]): Orientation {
 export function freeOrientations(cells: Cell[]): Orientation[] {
     const seen = new Set<string>();
     const out: Orientation[] = [];
-    let base = normalize(cells);
+    const base = normalize(cells);
     for (let flip = 0; flip < 2; flip++) {
         let cur = flip === 0 ? base : reflect(base);
         for (let rot = 0; rot < 4; rot++) {

@@ -31,6 +31,7 @@ import './offwiththeirheads/test_offwiththeirheads';
 import './projectl/test_projectl';
 import './moonrollers/test_moonrollers';
 import './nightzoo/test_nightzoo';
+import './wingspanpocket/test_wingspan';
 import './dice-roller/test_dice_roller';
 import './test_cards';
 

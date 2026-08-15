@@ -218,7 +218,7 @@ describe('Cat in the Box Game Logic', () => {
                 g.play_card('alice', 2, 'blue'); // led blue 2
                 g.play_card('bob', 4, 'blue');   // blue 4 beats blue 2 (completes trick)
                 // Two-phase: the completed trick is frozen for the reveal animation.
-                let mid = g.get_data();
+                const mid = g.get_data();
                 assert.ok(mid.resolvingTrick, 'trick is frozen for resolution');
                 assert.strictEqual(mid.resolvingTrick!.winnerId, 'bob');
                 assert.strictEqual(mid.players['bob'].tricksWon, 0, 'not yet applied');

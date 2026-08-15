@@ -56,9 +56,9 @@ export const NightZooRule: GameRuleInterface = {
         };
         if (!started) return showLobby();
 
-        let raw = mp.getData('gameState');
+        const raw = mp.getData('gameState');
         if (!raw) return showLobby();
-        let gs = rehydrate(raw);
+        const gs = rehydrate(raw);
         if (typeof raw.get_data !== 'function') mp.setData('gameState', gs);
 
         const order = gs.get_player_order();

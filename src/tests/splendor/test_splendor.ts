@@ -93,7 +93,7 @@ describe('Splendor Game Logic', () => {
                 const g = new GameState(['a', 'b']); // 2p => 4 of each
                 g.start_game('a');
                 g.take2('a', 'red'); // 4 available -> ok
-                let d = g.get_data();
+                const d = g.get_data();
                 assert.strictEqual(d.players['a'].tokens.red, 2);
                 assert.strictEqual(d.supply.red, 2);
 

@@ -744,6 +744,32 @@ export const MPRULES = {
         icon: '🐾',
         minPlayers: 1,
         maxPlayers: 4
+    },
+    'wingspanpocket': {
+        description: 'Wingspan (Pocket) - Bird Engine Builder',
+        mechanics: ['Engine Building', 'Set Collection', 'Card Drafting'],
+        glyph: GAME_ICONS.wingspanpocket,
+        enabled: true,
+        rules: ['lobby', 'gameshell', 'wingspanpocket'],
+        rule: () => import('./wingspanpocket/wingspan').then(m => m.WingspanRule),
+        icon: '🐦',
+        minPlayers: 2,
+        maxPlayers: 5
+    },
+    'wingspanpocket-debug': {
+        description: 'Wingspan (Pocket) (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'wingspanpocket', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./wingspanpocket/wingspan')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('wingspanpocket', orig.WingspanRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🐦',
+        minPlayers: 2,
+        maxPlayers: 5
     }
 };
 

@@ -154,7 +154,7 @@ export class PolyPlacer extends React.Component<PolyPlacerProps, PlacerState> {
         const hPx = this.props.height * unit;
         const scaleX = wPx / rect.width;
         const scaleY = hPx / rect.height;
-        let localX = (e.clientX - rect.left) * scaleX;
+        const localX = (e.clientX - rect.left) * scaleX;
         let localY = (e.clientY - rect.top) * scaleY;
         if (e.pointerType === 'touch') {
             localY -= (this.props.fingerOffsetCells ?? 1.15) * unit;

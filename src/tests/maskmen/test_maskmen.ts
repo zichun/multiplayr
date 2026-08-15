@@ -260,6 +260,7 @@ describe('Maskmen Game Logic', () => {
             });
 
             it('should compute season points gained correctly', () => {
+                // eslint-disable-next-line @typescript-eslint/no-require-imports -- lazy require avoids loading the view (and its styles) at module load
                 const { getSeasonPointsGained } = require('../../rules/maskmen/views/MaskmenViews');
                 
                 // 3+ players mode

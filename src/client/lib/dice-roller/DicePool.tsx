@@ -89,7 +89,6 @@ const OverlayPool: React.FC<DicePoolProps & { anim: Required<RollAnimation> | Ro
         const done = setTimeout(() => setFlight(f => (f && f.nonce === nonce ? null : f)), (anim.duration || 0) + 460);
         timers.current.push(flyAt, done);
         return clearTimers;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.rollNonce]);
 
     const flying = flight !== null;

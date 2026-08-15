@@ -365,5 +365,14 @@ export const GAME_ICONS: Record<string, IconObject> = {
         S('t2', 'circle', 43, 30, 0.4, 0.46),
         S('t3', 'circle', 57, 30, 0.4, 0.46),
         S('t4', 'circle', 70, 40, 0.4, 0.46)
+    ]),
+
+    // 🐦 Wingspan Pocket — a flat geometric bird head with a bullseye eye + beak
+    wingspanpocket: icon('bird', [
+        S('body', 'circle', 44, 60, 1.36, 1.28),
+        S('tail', 'triangle', 16, 52, 0.5, 0.42, -60),
+        S('head', 'circle', 62, 40, 0.94, 0.94),
+        S('beak', 'triangle', 80, 40, 0.36, 0.32, 90),
+        CUT('eye', 'circle', 64, 37, 0.2, 0.2)
     ])
 };

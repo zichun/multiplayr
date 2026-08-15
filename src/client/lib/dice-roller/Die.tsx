@@ -98,7 +98,6 @@ export const Die: React.FC<DieProps> = (props) => {
         timers.current.push(begin);
         return clearTimers;
         // Replay on an explicit roll signal or a new result; also on mount.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.rollNonce, props.faceId]);
 
     const face = faceset[displayId] || faceset[props.faceId] || faceset[Object.keys(faceset)[0]];
