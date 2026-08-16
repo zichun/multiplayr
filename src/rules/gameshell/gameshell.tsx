@@ -476,12 +476,149 @@ export const Shell: GameRuleInterface = {
 
         'ConnectedClientsView': class extends React.Component<
             ViewPropsInterface,
-            { copied: boolean, copiedClientId: string | null }
+            {
+                copied: boolean,
+                copiedClientId: string | null,
+                pending: { [clientId: string]: 'disconnect' | 'remove' },
+                errors: { [clientId: string]: string }
+            }
         > {
+            // Fallback timers keyed by clientId, in case an action never resolves.
+            private pendingTimers: { [clientId: string]: any } = {};
+
             constructor(props: any) {
                 super(props);
-                this.state = { copied: false, copiedClientId: null };
+                this.state = { copied: false, copiedClientId: null, pending: {}, errors: {} };
                 this.copyRoomId = this.copyRoomId.bind(this);
+            }
+
+            public componentDidUpdate() {
+                // The player list is derived from live host state, so reconcile pending
+                // actions against it after every re-render (each host tick triggers one).
+                this.reconcilePending();
+            }
+
+            public componentWillUnmount() {
+                Object.keys(this.pendingTimers).forEach((id) => clearTimeout(this.pendingTimers[id]));
+                this.pendingTimers = {};
+            }
+
+            // Clear a pending action once the world reflects it: a disconnected client
+            // shows as offline; a removed client drops off the list entirely.
+            private reconcilePending() {
+                const mp = this.props.MP;
+                if (!mp || !mp.getLobbyPlayersInfo) {
+                    return;
+                }
+                const pendingIds = Object.keys(this.state.pending);
+                if (pendingIds.length === 0) {
+                    return;
+                }
+
+                const players = mp.getLobbyPlayersInfo();
+                const byId: { [id: string]: any } = {};
+                players.forEach((p: any) => { byId[p.clientId] = p; });
+
+                const resolved: string[] = [];
+                pendingIds.forEach((clientId) => {
+                    const action = this.state.pending[clientId];
+                    if (action === 'disconnect') {
+                        if (byId[clientId] && byId[clientId].isConnected === false) {
+                            resolved.push(clientId);
+                        }
+                    } else if (action === 'remove') {
+                        if (!byId[clientId]) {
+                            resolved.push(clientId);
+                        }
+                    }
+                });
+
+                if (resolved.length > 0) {
+                    const pending = { ...this.state.pending };
+                    const errors = { ...this.state.errors };
+                    resolved.forEach((clientId) => {
+                        if (this.pendingTimers[clientId]) {
+                            clearTimeout(this.pendingTimers[clientId]);
+                            delete this.pendingTimers[clientId];
+                        }
+                        delete pending[clientId];
+                        delete errors[clientId];
+                    });
+                    this.setState({ pending, errors });
+                }
+            }
+
+            private startPending(clientId: string, action: 'disconnect' | 'remove') {
+                if (this.pendingTimers[clientId]) {
+                    clearTimeout(this.pendingTimers[clientId]);
+                }
+                this.pendingTimers[clientId] = setTimeout(() => {
+                    this.failPending(clientId,
+                        action === 'disconnect'
+                            ? 'No response — the client may have already lost connection. You can try again.'
+                            : 'Taking longer than expected. The client may already be gone — try again.');
+                }, 8000);
+
+                const pending: { [id: string]: 'disconnect' | 'remove' } = { ...this.state.pending };
+                pending[clientId] = action;
+                const errors = { ...this.state.errors };
+                delete errors[clientId];
+                this.setState({ pending, errors });
+            }
+
+            private failPending(clientId: string, message: string) {
+                if (this.pendingTimers[clientId]) {
+                    clearTimeout(this.pendingTimers[clientId]);
+                    delete this.pendingTimers[clientId];
+                }
+                const pending = { ...this.state.pending };
+                delete pending[clientId];
+                const errors = { ...this.state.errors };
+                errors[clientId] = message;
+                this.setState({ pending, errors });
+            }
+
+            private handleDisconnect(clientId: string, name: string) {
+                if (this.state.pending[clientId]) {
+                    return;
+                }
+                if (!confirm(`Disconnect ${name}'s device? They will remain in the game and can reconnect.`)) {
+                    return;
+                }
+                const mp = this.props.MP;
+                this.startPending(clientId, 'disconnect');
+                try {
+                    mp.disconnectClientDevice(clientId, (res?: any) => {
+                        if (res && res.success === false) {
+                            this.failPending(clientId, res.message || 'Failed to disconnect the client.');
+                        }
+                    });
+                } catch (e) {
+                    this.failPending(clientId, 'Failed to disconnect the client.');
+                }
+            }
+
+            private handleRemove(clientId: string, name: string) {
+                if (this.state.pending[clientId]) {
+                    return;
+                }
+                if (!confirm(`Remove ${name} from the game entirely? This cannot be undone.`)) {
+                    return;
+                }
+                const mp = this.props.MP;
+                this.startPending(clientId, 'remove');
+                try {
+                    mp.disconnectClientDevice(clientId, (res?: any) => {
+                        // Non-fatal for removal: the player is still dropped from the game
+                        // below. Just note if the device teardown reported a problem.
+                        if (res && res.success === false) {
+                            console.warn('disconnectClientDevice failed during remove:', res.message);
+                        }
+                    });
+                    mp.removeClient(clientId);
+                } catch (e) {
+                    this.failPending(clientId, 'Failed to remove the client.');
+                }
             }
 
             public copyRoomId() {
@@ -605,6 +742,9 @@ export const Shell: GameRuleInterface = {
                     const { clientId, name, icon, accent, isConnected } = player;
                     const isCopied = this.state.copiedClientId === clientId;
                     const iconName = icons[icon] || 'user';
+                    const pendingAction = this.state.pending[clientId];
+                    const isPending = !!pendingAction;
+                    const errorMsg = this.state.errors[clientId];
 
                     rows.push(
                         <div 
@@ -649,34 +789,59 @@ export const Shell: GameRuleInterface = {
                                     <>
                                         <button
                                             className="player-kick-btn"
+                                            disabled={isPending}
                                             title="Disconnect this player's device. The player stays in the game and can reconnect."
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                if (confirm(`Disconnect ${name}'s device? They will remain in the game and can reconnect.`)) {
-                                                    mp.disconnectClientDevice(clientId);
-                                                }
+                                                this.handleDisconnect(clientId, name);
                                             }}
                                         >
-                                            <FontAwesomeIcon icon="plug" style={{ marginRight: '6px' }} />
-                                            Disconnect
+                                            {pendingAction === 'disconnect' ? (
+                                                <>
+                                                    <FontAwesomeIcon icon="cog" spin style={{ marginRight: '6px' }} />
+                                                    Disconnecting…
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FontAwesomeIcon icon="plug" style={{ marginRight: '6px' }} />
+                                                    Disconnect
+                                                </>
+                                            )}
                                         </button>
                                         <button
                                             className="player-remove-btn"
+                                            disabled={isPending}
                                             title="Remove this player from the game entirely and disconnect their device."
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                if (confirm(`Remove ${name} from the game entirely? This cannot be undone.`)) {
-                                                    mp.disconnectClientDevice(clientId);
-                                                    mp.removeClient(clientId);
-                                                }
+                                                this.handleRemove(clientId, name);
                                             }}
                                         >
-                                            <FontAwesomeIcon icon="user-slash" style={{ marginRight: '6px' }} />
-                                            Remove
+                                            {pendingAction === 'remove' ? (
+                                                <>
+                                                    <FontAwesomeIcon icon="cog" spin style={{ marginRight: '6px' }} />
+                                                    Removing…
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FontAwesomeIcon icon="user-slash" style={{ marginRight: '6px' }} />
+                                                    Remove
+                                                </>
+                                            )}
                                         </button>
                                     </>
                                 )}
                             </div>
+
+                            {errorMsg ? (
+                                <div
+                                    className="player-card-error"
+                                    onClick={(e) => { e.stopPropagation(); }}
+                                >
+                                    <FontAwesomeIcon icon="exclamation-triangle" style={{ marginRight: '8px' }} />
+                                    <span>{errorMsg}</span>
+                                </div>
+                            ) : null}
                         </div>
                     );
                 }

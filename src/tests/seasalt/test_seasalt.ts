@@ -203,11 +203,33 @@ describe('Sea Salt & Paper Game Logic', () => {
                     d.turnPhase = 'play';
                 });
                 g.play_duo('a', b1.id, b2.id);
-                let d = g.get_data();
+                const d = g.get_data();
                 assert.strictEqual(d.players['a'].tableau.length, 2);
+                // a's hand is now empty (no duo, below the gate), so the boat's extra
+                // turn begins automatically: a stays current and returns to the draw
+                // phase, with the extra turn already consumed.
+                assert.strictEqual(d.currentPlayerId, 'a');
+                assert.strictEqual(d.turnPhase, 'draw');
+                assert.strictEqual(d.boatExtraTurns, 0);
+            });
+
+            it('holds the play phase while a further duo is still available', () => {
+                // Boat + boat + fish + fish: after the boat duo, a still holds a fish
+                // duo, so the turn does NOT auto-end — the extra turn stays pending.
+                const b1 = card('boat', 'blue');
+                const b2 = card('boat', 'teal');
+                const f1 = card('fish', 'blue');
+                const f2 = card('fish', 'teal');
+                const g = mockPlay(['a', 'b'], d => {
+                    d.players['a'].hand = [b1, b2, f1, f2];
+                    d.turnPhase = 'play';
+                });
+                g.play_duo('a', b1.id, b2.id);
+                let d = g.get_data();
+                assert.strictEqual(d.turnPhase, 'play');
                 assert.strictEqual(d.boatExtraTurns, 1);
 
-                // Passing consumes the extra turn (same player draws again).
+                // Manually passing now consumes the extra turn (same player draws again).
                 g.pass_turn('a');
                 d = g.get_data();
                 assert.strictEqual(d.currentPlayerId, 'a');
@@ -320,9 +342,9 @@ describe('Sea Salt & Paper Game Logic', () => {
                     d.turnPhase = 'play';
                 });
                 g.declare_last_chance('a');
-                // b's final turn: draw then pass.
+                // b's final turn: drawing is its only option (no duo, and Stop is blocked
+                // during a Last Chance), so taking a discard auto-ends b's turn and resolves.
                 g.take_discard('b', 'A');
-                g.pass_turn('b');
                 const d = g.get_data();
                 assert.strictEqual(d.roundResult!.kind, 'last_chance_won');
                 // a: 9 + 4 = 13
@@ -346,12 +368,57 @@ describe('Sea Salt & Paper Game Logic', () => {
                     d.turnPhase = 'play';
                 });
                 g.declare_last_chance('a');
+                // b's only option is to draw; taking a discard auto-ends its final turn.
                 g.take_discard('b', 'A');
-                g.pass_turn('b');
                 const d = g.get_data();
                 assert.strictEqual(d.roundResult!.kind, 'last_chance_lost');
                 assert.strictEqual(d.players['a'].score, 4);          // only colour bonus
                 assert.ok(d.players['b'].score >= 12);                // its card points
+            });
+        });
+
+        describe('Auto-ending a turn with no remaining options', () => {
+            it('ends the turn automatically after a draw when nothing can be played', () => {
+                // a draws its only option; the resulting hand has no duo and is below the
+                // 7-point gate, so the turn ends automatically without a pass.
+                const g = mockPlay(['a', 'b'], d => {
+                    d.players['a'].hand = [card('octopus', 'blue')];
+                    d.discardA = [card('shell', 'green')];
+                    d.deck = [card('boat', 'blue'), card('crab', 'teal')]; // non-empty so the round doesn't end
+                    d.currentPlayerId = 'a';
+                    d.turnPhase = 'draw';
+                });
+                g.take_discard('a', 'A');
+                const d = g.get_data();
+                assert.strictEqual(d.currentPlayerId, 'b', 'turn passed to b automatically');
+                assert.strictEqual(d.turnPhase, 'draw');
+            });
+
+            it('does NOT auto-end when a duo is still playable', () => {
+                const g = mockPlay(['a', 'b'], d => {
+                    d.players['a'].hand = [card('crab', 'blue')];
+                    d.discardA = [card('crab', 'green')]; // draw makes a crab duo playable
+                    d.currentPlayerId = 'a';
+                    d.turnPhase = 'draw';
+                });
+                g.take_discard('a', 'A');
+                const d = g.get_data();
+                assert.strictEqual(d.currentPlayerId, 'a', 'a keeps the turn to play the duo');
+                assert.strictEqual(d.turnPhase, 'play');
+            });
+
+            it('does NOT auto-end when the player can Stop / Last Chance (≥ 7 pts)', () => {
+                const g = mockPlay(['a', 'b'], d => {
+                    // sailor×2 + captain (drawn) = 11 pts, no duo — but the gate is open.
+                    d.players['a'].hand = [card('sailor', 'pink'), card('sailor', 'orange')];
+                    d.discardA = [card('captain', 'peach')];
+                    d.currentPlayerId = 'a';
+                    d.turnPhase = 'draw';
+                });
+                g.take_discard('a', 'A');
+                const d = g.get_data();
+                assert.strictEqual(d.currentPlayerId, 'a', 'a keeps the turn to decide Stop / Last Chance');
+                assert.strictEqual(d.turnPhase, 'play');
             });
         });
 

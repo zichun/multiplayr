@@ -27,6 +27,46 @@ if (fs.existsSync(dotenvPath)) {
     });
 }
 
+// Build version stamp = local build time (YYYYMMDD-HHMM), with the short git commit
+// appended when available. Injected into the static HTML pages by BuildVersionPlugin
+// (replacing the __MP_BUILD_VERSION__ token) so every published distribution is
+// identifiable and cache-busted.
+function computeBuildVersion() {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const stamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
+    let commit = '';
+    try {
+        commit = require('child_process')
+            .execSync('git rev-parse --short HEAD', { cwd: __dirname, stdio: ['ignore', 'pipe', 'ignore'] })
+            .toString()
+            .trim();
+    } catch (e) {
+        // git unavailable (e.g. building from a tarball) — the timestamp alone is fine.
+    }
+    // Keep it URL-safe (no spaces/parens) since it is also used as a ?v= cache-buster.
+    return commit ? `${stamp}-${commit}` : stamp;
+}
+
+const BUILD_VERSION = computeBuildVersion();
+
+// Replaces the __MP_BUILD_VERSION__ token in every HTML page emitted by
+// html-webpack-plugin with the computed build version.
+class BuildVersionPlugin {
+    constructor(version) {
+        this.version = version;
+    }
+    apply(compiler) {
+        compiler.hooks.compilation.tap('BuildVersionPlugin', (compilation) => {
+            const hooks = HtmlWebPackPlugin.getHooks(compilation);
+            hooks.beforeEmit.tapAsync('BuildVersionPlugin', (data, cb) => {
+                data.html = data.html.split('__MP_BUILD_VERSION__').join(this.version);
+                cb(null, data);
+            });
+        });
+    }
+}
+
 module.exports = (env, argv) => {
     const mode = (argv && argv.mode === 'production' ? 'production' : 'development');
     
@@ -193,6 +233,7 @@ function HostJoinPages(mode, outputPath, isStaticDist) {
         },
         plugins: [
             ...plugins,
+            new BuildVersionPlugin(BUILD_VERSION),
             new webpack.DefinePlugin({
                 'process.env.TURN_URL': JSON.stringify(process.env.TURN_URL || ''),
                 'process.env.TURN_USERNAME': JSON.stringify(process.env.TURN_USERNAME || ''),

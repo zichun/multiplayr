@@ -42,6 +42,14 @@ $(() => {
         const transport = new _mplib.WebRTCTransport(
             transportOpts,
             (data) => {
+                if (data && data.success === false) {
+                    console.error('Connection failed:', data.message);
+                    $('#error').text(data.message);
+                    // Let the player retry / edit the room manually.
+                    setupJoinButton(clientId, transport, hash.clientId);
+                    return;
+                }
+
                 _mplib.messages.checkReturnMessage(data, 'clientId');
                 clientId = data.message;
 
@@ -75,6 +83,13 @@ $(() => {
         const transport = new _mplib.WebRTCTransport(
             transportOpts,
             (data) => {
+                if (data && data.success === false) {
+                    console.error('Connection failed:', data.message);
+                    $('#error').text(data.message);
+                    $joinButton.removeAttr('disabled').text('Join Game');
+                    return;
+                }
+
                 _mplib.messages.checkReturnMessage(data, 'clientId');
                 clientId = data.message;
                 $('#clientId').val(clientId);

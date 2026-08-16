@@ -17,6 +17,7 @@ import {
     HAND_SIZE, RESERVE_BIRD_AT_SETUP, SUPPLY_BIRDS, FOOD_DECKS,
     NEST_EGG_LIMIT, START_NEST_EGGS, FLOCK_TARGET, MAX_LAY_EGGS
 } from './WingspanData';
+import { describePower } from './WingspanAssets';
 
 export enum Phase {
     Setup = 'setup',
@@ -70,14 +71,37 @@ export interface ActivationChoices {
     foodDeck?: number;         // deck to draw / peek / hunt from (and for from_1_deck)
     supplyBird?: number;       // supply-bird slot for draw_bird
     drawCardKind?: 'bird' | 'food';
+    drawPicks?: DrawPick[];    // staged card picks for multi-step draw powers
     eggTargets?: number[];     // flock index (or -1 Nest) per egg
     tuckCardId?: number;       // reserve card to tuck
+    tuckCardIds?: number[];    // reserve cards to tuck in order (for multi-step tucks)
     branch?: number;           // choose_one option index
     copyIndex?: number;        // copy_brown: own flock index
     copyPlayer?: string;       // copy_brown: neighbour id
     payFoodCardId?: number;    // gated pay: reserve food card to discard
     discardEggFrom?: number;   // gated pay: flock index (or -1 Nest) to spend an egg
     allPlayersStart?: string;  // all_players: player to start the effect from
+}
+
+export interface PendingAllPlayersAction {
+    type: 'lay_egg';
+    sourceCardId: number;
+    initiatorPlayerId: string;
+    pendingPlayers: string[];
+    choices: Record<string, { eggTarget: number | null }>;
+}
+
+export type MoveItem =
+    | { kind: 'text'; text: string }
+    | { kind: 'bird'; cardId: number; name: string }
+    | { kind: 'food'; food: FoodType; foods?: FoodType[] }
+    | { kind: 'egg'; count: number; target: string }
+    | { kind: 'icon'; iconId: string; count?: number; title?: string }
+    | { kind: 'player'; playerId: string };
+
+export interface PlayerMoveEvent {
+    type: 'play' | 'draw' | 'lay' | 'power';
+    items: MoveItem[];
 }
 
 export interface GameStateData {
@@ -101,6 +125,9 @@ export interface GameStateData {
     winnerIds: string[] | null;
     lastMove: LastMove | null;
     moveCounter: number;
+    pendingAllPlayersAction: PendingAllPlayersAction | null;
+    pendingDraw: { count: number; items: MoveItem[] } | null;
+    playerTurnLogs: Record<string, PlayerMoveEvent[]>;
 }
 
 // deterministic-ish shuffle (uses injected rng)
@@ -126,20 +153,22 @@ function mulberry32(seed: number): () => number {
 }
 
 export class WingspanGameState {
-    private data: GameStateData;
     private readonly playerIds: string[];
-    private rng: () => number = Math.random;
+    private data: GameStateData;
+    private rng: () => number;
 
-    constructor(playerIds: string[]) {
+    constructor(playerIds: string[], rng?: () => number) {
         this.playerIds = [...playerIds];
-        this.data = WingspanGameState.blankData(this.playerIds);
+        this.rng = rng || Math.random;
+        this.data = WingspanGameState.create_initial_state(this.playerIds);
     }
 
-    private static blankData(ids: string[]): GameStateData {
+    public static create_initial_state(playerIds: string[]): GameStateData {
+        const ids = [...playerIds];
         const players: Record<string, PlayerState> = {};
         const turnCount: Record<string, number> = {};
         for (const id of ids) {
-            players[id] = { id, nestEggs: 0, flock: [], reserve: [], tokenIndex: 0 };
+            players[id] = { id, nestEggs: START_NEST_EGGS, flock: [], reserve: [], tokenIndex: 0 };
             turnCount[id] = 0;
         }
         return {
@@ -159,8 +188,15 @@ export class WingspanGameState {
             scores: null,
             winnerIds: null,
             lastMove: null,
-            moveCounter: 0
+            moveCounter: 0,
+            pendingAllPlayersAction: null,
+            pendingDraw: null,
+            playerTurnLogs: Object.fromEntries(ids.map(id => [id, []]))
         };
+    }
+
+    public static blankData(ids: string[]): GameStateData {
+        return WingspanGameState.create_initial_state(ids);
     }
 
     public static from_data(data: GameStateData, playerIds: string[]): WingspanGameState {
@@ -176,7 +212,7 @@ export class WingspanGameState {
 
     public start_game(opts: StartOptions = {}): void {
         this.rng = opts.seed != null ? mulberry32(opts.seed) : Math.random;
-        this.data = WingspanGameState.blankData(this.playerIds);
+        this.data = WingspanGameState.create_initial_state(this.playerIds);
         this.data.advanced = !!opts.advanced;
 
         const deck = shuffleWith(ALL_CARD_IDS, this.rng);
@@ -250,6 +286,17 @@ export class WingspanGameState {
         this.data.lastMove = { moveId: this.data.moveCounter, playerId, kind, text };
     }
 
+    private clearTurnLog(id: string): void {
+        if (!this.data.playerTurnLogs) this.data.playerTurnLogs = {};
+        this.data.playerTurnLogs[id] = [];
+    }
+
+    private addTurnLog(id: string, event: PlayerMoveEvent): void {
+        if (!this.data.playerTurnLogs) this.data.playerTurnLogs = {};
+        if (!this.data.playerTurnLogs[id]) this.data.playerTurnLogs[id] = [];
+        this.data.playerTurnLogs[id].push(event);
+    }
+
     private eggLimitOf(p: PlayerState, flockIdx: number): number {
         if (flockIdx === -1) return NEST_EGG_LIMIT;
         const c = p.flock[flockIdx];
@@ -289,21 +336,57 @@ export class WingspanGameState {
     // ========================================================================
     // Supply / food-deck plumbing (§9)
     // ========================================================================
+    // Food deck draw & replenish
+    // ========================================================================
 
-    /** Ensure a deck can be drawn from; reshuffle discard bottom-half if empty. */
-    private ensureDeck(i: number): void {
+    /**
+     * When a food deck is empty, take the bottom half of the discard pile
+     * (or the bottom half of the largest food deck if there is no discard pile),
+     * shuffle it, and use it as the new food deck.
+     */
+    public ensureDeck(i: number): void {
+        if (i < 0 || i >= FOOD_DECKS) return;
         if (this.data.foodDecks[i].length > 0) return;
-        // take the bottom half of the discard (or of the largest deck if no discard)
-        let source = this.data.discard;
-        if (source.length === 0) {
-            let largest = 0;
-            for (let d = 0; d < FOOD_DECKS; d++) if (this.data.foodDecks[d].length > this.data.foodDecks[largest].length) largest = d;
-            source = this.data.foodDecks[largest];
+
+        // 1. Take the bottom half of the discard pile
+        if (this.data.discard.length > 0) {
+            const half = Math.max(1, Math.floor(this.data.discard.length / 2));
+            const taken = this.data.discard.splice(0, half);
+            this.data.foodDecks[i] = shuffleWith(taken, this.rng);
+            return;
         }
-        if (source.length === 0) return; // truly exhausted
-        const half = Math.max(1, Math.floor(source.length / 2));
-        const taken = source.splice(0, half);
-        this.data.foodDecks[i] = shuffleWith(taken, this.rng);
+
+        // 2. Or the bottom half of the largest food deck if there is no discard pile
+        let largest = -1;
+        for (let d = 0; d < FOOD_DECKS; d++) {
+            if (d === i) continue;
+            if (largest === -1 || this.data.foodDecks[d].length > this.data.foodDecks[largest].length) {
+                largest = d;
+            }
+        }
+        if (largest !== -1 && this.data.foodDecks[largest].length > 1) {
+            const half = Math.floor(this.data.foodDecks[largest].length / 2);
+            if (half > 0) {
+                const taken = this.data.foodDecks[largest].splice(0, half);
+                this.data.foodDecks[i] = shuffleWith(taken, this.rng);
+            }
+        }
+    }
+
+    /**
+     * Pop the top card of foodDecks[deckIdx]. If that causes the deck to run out,
+     * immediately replenish it.
+     */
+    public drawFromFoodDeck(deckIdx: number): number | null {
+        if (deckIdx < 0 || deckIdx >= FOOD_DECKS) return null;
+        this.ensureDeck(deckIdx);
+        const d = this.data.foodDecks[deckIdx];
+        if (d.length === 0) return null;
+        const cardId = d.pop() as number;
+        if (d.length === 0) {
+            this.ensureDeck(deckIdx);
+        }
+        return cardId;
     }
 
     private anyDeckWithCards(prefer?: number): number {
@@ -324,13 +407,13 @@ export class WingspanGameState {
                 const d = this.data.foodDecks[i];
                 if (d && d.length > 0 && this.card(d[d.length - 1]).reverse_food.includes(food)) { deckIdx = i; break; }
             }
+            if (deckIdx === -1) return null; // No deck shows this specific food
+        } else {
+            deckIdx = this.anyDeckWithCards(preferDeck);
         }
-        if (deckIdx === -1) deckIdx = this.anyDeckWithCards(preferDeck);
         if (deckIdx === -1) return null;
-        this.ensureDeck(deckIdx);
-        const d = this.data.foodDecks[deckIdx];
-        if (d.length === 0) return null;
-        const cardId = d.pop() as number;
+        const cardId = this.drawFromFoodDeck(deckIdx);
+        if (cardId == null) return null;
         p.reserve.push({ cardId, face: 'food' });
         return cardId;
     }
@@ -339,9 +422,8 @@ export class WingspanGameState {
     private refillSupplyBirds(): void {
         for (let i = 0; i < SUPPLY_BIRDS; i++) {
             if (this.data.supplyBirds[i] != null) continue;
-            this.ensureDeck(i);
-            const d = this.data.foodDecks[i];
-            this.data.supplyBirds[i] = d.length > 0 ? (d.pop() as number) : null;
+            const cardId = this.drawFromFoodDeck(i);
+            this.data.supplyBirds[i] = cardId;
         }
     }
 
@@ -525,6 +607,15 @@ export class WingspanGameState {
         p.reserve.splice(p.reserve.findIndex(r => r.cardId === cardId && r.face === 'bird'), 1);
         p.flock.push({ cardId, eggs: 0, tucked: [] });
 
+        this.clearTurnLog(id);
+        this.addTurnLog(id, {
+            type: 'play',
+            items: [
+                { kind: 'text', text: 'Played ' },
+                { kind: 'bird', cardId, name: card.common_name }
+            ]
+        });
+
         this.note(id, 'play', `played ${card.common_name}`);
         this.beginActivation(p);
     }
@@ -533,31 +624,95 @@ export class WingspanGameState {
     // Nest action 2 — DRAW 2 CARDS (§5.2)
     // ========================================================================
 
+    private executeSingleDraw(p: PlayerState, pick: DrawPick, id: string): MoveItem {
+        if (pick.kind === 'bird') {
+            const slot = pick.index;
+            const cardId = this.data.supplyBirds[slot];
+            if (cardId == null) throw new Error('No supply bird there');
+            this.data.supplyBirds[slot] = null; // refilled at end of turn
+            p.reserve.push({ cardId, face: 'bird' });
+            return { kind: 'bird', cardId, name: this.card(cardId).common_name };
+        } else {
+            const deckIdx = pick.index;
+            const cardId = this.drawFromFoodDeck(deckIdx);
+            if (cardId == null) throw new Error('That food deck is empty');
+            p.reserve.push({ cardId, face: 'food' });
+            const fc = this.card(cardId);
+            return { kind: 'food', food: fc.reverse_food[0], foods: fc.reverse_food };
+        }
+    }
+
+    /**
+     * Draw 1 or 2 cards in batch (e.g. tests or fast path).
+     */
     public draw_2(id: string, picks: DrawPick[]): void {
         const p = this.requireNest(id);
         if (!picks || picks.length === 0 || picks.length > 2) throw new Error('Pick 1 or 2 cards');
-        let birds = 0, foods = 0;
+        this.clearTurnLog(id);
+        const drawItems: MoveItem[] = [{ kind: 'text', text: 'Drew ' }];
+        let hasDrawn = false;
         for (const pick of picks) {
-            if (pick.kind === 'bird') {
-                if (birds >= 2) throw new Error('At most 2 birds');
-                const slot = pick.index;
-                const cardId = this.data.supplyBirds[slot];
-                if (cardId == null) throw new Error('No supply bird there');
-                this.data.supplyBirds[slot] = null; // refilled at end of turn
-                p.reserve.push({ cardId, face: 'bird' });
-                birds++;
-            } else {
-                if (foods >= 2) throw new Error('At most 2 food');
-                const deckIdx = pick.index;
-                this.ensureDeck(deckIdx);
-                const d = this.data.foodDecks[deckIdx];
-                if (!d || d.length === 0) throw new Error('That food deck is empty');
-                const cardId = d.pop() as number;
-                p.reserve.push({ cardId, face: 'food' });
-                foods++;
-            }
+            const item = this.executeSingleDraw(p, pick, id);
+            if (hasDrawn) drawItems.push({ kind: 'text', text: ' + ' });
+            drawItems.push(item);
+            hasDrawn = true;
         }
+        this.data.pendingDraw = null;
+        this.addTurnLog(id, { type: 'draw', items: drawItems });
         this.note(id, 'draw', `drew ${picks.length} card${picks.length > 1 ? 's' : ''}`);
+        this.beginActivation(p);
+    }
+
+    /**
+     * Step-by-step draw: take 1 card now, revealing the new deck top / empty bird slot.
+     * If finish is true or this is the 2nd card drawn, turn advances to activation.
+     */
+    public draw_card(id: string, pick: DrawPick, finish = false): void {
+        const p = this.player(id);
+        if (id !== this.currentPlayerId()) throw new Error('Not your turn');
+        if (this.data.phase !== Phase.Nest) throw new Error('Not in nest phase');
+
+        if (!this.data.pendingDraw) {
+            // First card of draw action
+            if (this.data.nestActionTaken) throw new Error('Already took a nest action');
+            this.clearTurnLog(id);
+            const item = this.executeSingleDraw(p, pick, id);
+            const items: MoveItem[] = [{ kind: 'text', text: 'Drew ' }, item];
+            this.addTurnLog(id, { type: 'draw', items });
+            this.data.nestActionTaken = true;
+
+            if (finish) {
+                this.data.pendingDraw = null;
+                this.note(id, 'draw', 'drew 1 card');
+                this.beginActivation(p);
+            } else {
+                this.data.pendingDraw = { count: 1, items };
+            }
+        } else if (this.data.pendingDraw.count === 1) {
+            // Second card of draw action
+            const item = this.executeSingleDraw(p, pick, id);
+            const items = [...this.data.pendingDraw.items, { kind: 'text' as const, text: ' + ' }, item];
+            this.clearTurnLog(id);
+            this.addTurnLog(id, { type: 'draw', items });
+            this.data.pendingDraw = null;
+            this.note(id, 'draw', 'drew 2 cards');
+            this.beginActivation(p);
+        } else {
+            throw new Error('Already completed draw action');
+        }
+    }
+
+    /**
+     * Finish draw action after taking 1 card without taking a 2nd card.
+     */
+    public finish_draw(id: string): void {
+        const p = this.player(id);
+        if (id !== this.currentPlayerId()) throw new Error('Not your turn');
+        if (this.data.phase !== Phase.Nest) throw new Error('Not in nest phase');
+        if (!this.data.pendingDraw) throw new Error('No pending draw to finish');
+
+        this.data.pendingDraw = null;
+        this.note(id, 'draw', 'drew 1 card');
         this.beginActivation(p);
     }
 
@@ -574,6 +729,27 @@ export class WingspanGameState {
             if (this.eggsOn(p, t) >= this.eggLimitOf(p, t)) throw new Error('That card is at its egg limit');
         }
         for (const t of targets) this.addEgg(p, t);
+
+        this.clearTurnLog(id);
+        const nestCount = targets.filter(t => t === -1).length;
+        const birdCounts: Record<number, number> = {};
+        targets.filter(t => t >= 0).forEach(t => { birdCounts[t] = (birdCounts[t] || 0) + 1; });
+        const layItems: MoveItem[] = [{ kind: 'text', text: 'Laid ' }];
+        let firstLay = true;
+        if (nestCount > 0) {
+            layItems.push({ kind: 'egg', count: nestCount, target: 'Nest' });
+            firstLay = false;
+        }
+        for (const biStr of Object.keys(birdCounts)) {
+            const bi = Number(biStr);
+            const c = p.flock[bi];
+            const card = c ? this.card(c.cardId) : null;
+            if (!firstLay) layItems.push({ kind: 'text', text: ', ' });
+            layItems.push({ kind: 'egg', count: birdCounts[bi], target: card ? card.common_name : `Bird ${bi + 1}` });
+            firstLay = false;
+        }
+        this.addTurnLog(id, { type: 'lay', items: layItems });
+
         this.note(id, 'lay', `laid ${targets.length} egg${targets.length > 1 ? 's' : ''}`);
         this.beginActivation(p);
     }
@@ -603,9 +779,61 @@ export class WingspanGameState {
         if (idx >= p.flock.length) throw new Error('No bird to activate');
         if (this.isGreen(p.flock[idx].cardId)) throw new Error('Green birds are passive');
         const card = this.card(p.flock[idx].cardId);
-        this.resolveEffect(p, idx, card.power.effect, choices, 0);
+        const outcome: MoveItem[] = [];
+        this.resolveEffect(p, idx, card.power.effect, choices, 0, outcome);
+
+        const powerItems: MoveItem[] = [
+            { kind: 'bird', cardId: card.id, name: card.common_name },
+            { kind: 'text', text: ': ' }
+        ];
+        if (outcome.length > 0) {
+            powerItems.push(...outcome);
+        } else {
+            powerItems.push({ kind: 'text', text: describePower(card.power.effect) });
+        }
+        this.addTurnLog(id, { type: 'power', items: powerItems });
+
         this.note(id, 'activate', `activated ${card.common_name}`);
-        this.advanceToken(p);
+        if (!this.data.pendingAllPlayersAction) {
+            this.advanceToken(p);
+        }
+    }
+
+    /** Handle a player's response to an interactive all_players action (e.g. laying an egg). */
+    public respond_all_players(playerId: string, choice: { eggTarget?: number | null } = {}): void {
+        const pending = this.data.pendingAllPlayersAction;
+        if (!pending) throw new Error('No pending all_players action');
+        if (!pending.pendingPlayers.includes(playerId)) throw new Error('You have already committed your choice');
+
+        const p = this.player(playerId);
+        if (pending.type === 'lay_egg') {
+            if (choice.eggTarget != null) {
+                const target = choice.eggTarget;
+                if (!this.addEgg(p, target)) {
+                    throw new Error('Cannot lay egg on that target (limit reached or invalid)');
+                }
+                pending.choices[playerId] = { eggTarget: target };
+                const targetName = target === -1 ? 'Nest' : (p.flock[target] ? this.card(p.flock[target].cardId).common_name : 'Bird');
+                const sourceCard = pending.sourceCardId >= 0 ? this.card(pending.sourceCardId) : null;
+                const items: MoveItem[] = [
+                    { kind: 'text', text: 'Laid ' },
+                    { kind: 'egg', count: 1, target: targetName }
+                ];
+                if (sourceCard) {
+                    items.push({ kind: 'text', text: ` (${sourceCard.common_name})` });
+                }
+                this.addTurnLog(playerId, { type: 'power', items });
+            } else {
+                pending.choices[playerId] = { eggTarget: null };
+            }
+        }
+
+        pending.pendingPlayers = pending.pendingPlayers.filter(id => id !== playerId);
+        if (pending.pendingPlayers.length === 0) {
+            const initiator = this.player(pending.initiatorPlayerId);
+            this.data.pendingAllPlayersAction = null;
+            this.advanceToken(initiator);
+        }
     }
 
     /** Skip the current brown bird (its power is optional). */
@@ -655,7 +883,7 @@ export class WingspanGameState {
     // ========================================================================
 
     /** Returns true if the effect "did something" (used by gated pay). */
-    private resolveEffect(p: PlayerState, birdIdx: number, e: PowerEffect, ch: ActivationChoices, depth: number): boolean {
+    private resolveEffect(p: PlayerState, birdIdx: number, e: PowerEffect, ch: ActivationChoices, depth: number, outcome?: MoveItem[]): boolean {
         const greens = this.greenSets(p);
         const remap = (f: FoodType | 'any'): FoodType | 'any' =>
             (f !== 'any' && greens.foodInPowersAny.has(f)) ? 'any' : f;
@@ -666,6 +894,10 @@ export class WingspanGameState {
             case 'draw_food':
             case 'gain_food': {
                 const got = this.drawFoodToReserve(p, remap(e.food), ch.foodDeck);
+                if (got != null && outcome) {
+                    const fc = this.card(got);
+                    outcome.push({ kind: 'text', text: 'Drew ' }, { kind: 'food', food: fc.reverse_food[0], foods: fc.reverse_food });
+                }
                 return got != null;
             }
 
@@ -675,10 +907,36 @@ export class WingspanGameState {
                 const cardId = this.data.supplyBirds[slot] as number;
                 this.data.supplyBirds[slot] = null;
                 p.reserve.push({ cardId, face: 'bird' });
+                if (outcome) {
+                    outcome.push({ kind: 'text', text: 'Drew ' }, { kind: 'bird', cardId, name: this.card(cardId).common_name });
+                }
                 return true;
             }
 
             case 'draw_card': {
+                if (ch.drawPicks && ch.drawPicks.length > 0) {
+                    const pick = ch.drawPicks.shift()!;
+                    if (pick.kind === 'bird') {
+                        const slot = pick.index;
+                        if (this.data.supplyBirds[slot] != null) {
+                            const cardId = this.data.supplyBirds[slot] as number;
+                            this.data.supplyBirds[slot] = null;
+                            p.reserve.push({ cardId, face: 'bird' });
+                            if (outcome) {
+                                outcome.push({ kind: 'text', text: 'Drew ' }, { kind: 'bird', cardId, name: this.card(cardId).common_name });
+                            }
+                            return true;
+                        }
+                    } else {
+                        const deckIdx = pick.index;
+                        const got = this.drawFoodToReserve(p, 'any', deckIdx);
+                        if (got != null && outcome) {
+                            const fc = this.card(got);
+                            outcome.push({ kind: 'text', text: 'Drew ' }, { kind: 'food', food: fc.reverse_food[0], foods: fc.reverse_food });
+                        }
+                        return got != null;
+                    }
+                }
                 // prefer a supply bird, else a food deck top
                 const kind = ch.drawCardKind || (this.data.supplyBirds.some(s => s != null) ? 'bird' : 'food');
                 if (kind === 'bird') {
@@ -688,18 +946,42 @@ export class WingspanGameState {
                         const cardId = this.data.supplyBirds[slot] as number;
                         this.data.supplyBirds[slot] = null;
                         p.reserve.push({ cardId, face: 'bird' });
+                        if (outcome) {
+                            outcome.push({ kind: 'text', text: 'Drew ' }, { kind: 'bird', cardId, name: this.card(cardId).common_name });
+                        }
                         return true;
                     }
                 }
-                return this.drawFoodToReserve(p, 'any', ch.foodDeck) != null;
+                const got = this.drawFoodToReserve(p, 'any', ch.foodDeck);
+                if (got != null && outcome) {
+                    const fc = this.card(got);
+                    outcome.push({ kind: 'text', text: 'Drew ' }, { kind: 'food', food: fc.reverse_food[0], foods: fc.reverse_food });
+                }
+                return got != null;
             }
 
             case 'tuck': {
-                const cardId = this.pickTuckCard(p, e.from, e.food, ch.tuckCardId);
+                let preferId: number | undefined;
+                if (ch.tuckCardIds !== undefined) {
+                    if (ch.tuckCardIds.length === 0) return false;
+                    preferId = ch.tuckCardIds.shift();
+                } else {
+                    preferId = ch.tuckCardId;
+                }
+                const cardId = this.pickTuckCard(p, e.from, e.food, preferId);
                 if (cardId == null) return false;
                 const ri = p.reserve.findIndex(r => r.cardId === cardId);
+                const isBirdFace = ri !== -1 && p.reserve[ri].face === 'bird';
                 p.reserve.splice(ri, 1);
                 p.flock[birdIdx].tucked.push(cardId);
+                if (outcome) {
+                    const tc = this.card(cardId);
+                    if (isBirdFace || e.from === 'bird') {
+                        outcome.push({ kind: 'text', text: 'Tucked ' }, { kind: 'bird', cardId, name: tc.common_name });
+                    } else {
+                        outcome.push({ kind: 'text', text: 'Tucked ' }, { kind: 'food', food: tc.reverse_food[0], foods: tc.reverse_food });
+                    }
+                }
                 return true;
             }
 
@@ -707,11 +989,25 @@ export class WingspanGameState {
                 const n = e.count || 1;
                 let laid = 0;
                 const targets = (ch.eggTargets && ch.eggTargets.length) ? ch.eggTargets.slice() : this.autoEggTargets(p, birdIdx, e.target, n);
+                const targetCounts: Record<number, number> = {};
                 for (const t of targets) {
                     if (laid >= n) break;
                     if (e.target === 'this' && t !== birdIdx) continue;
                     if (e.target === 'another' && t === birdIdx) continue;
-                    if (this.addEgg(p, t)) laid++;
+                    if (this.addEgg(p, t)) {
+                        laid++;
+                        targetCounts[t] = (targetCounts[t] || 0) + 1;
+                    }
+                }
+                if (laid > 0 && outcome) {
+                    let first = true;
+                    for (const tStr of Object.keys(targetCounts)) {
+                        const t = Number(tStr);
+                        const targetName = t === -1 ? 'Nest' : (p.flock[t] ? this.card(p.flock[t].cardId).common_name : 'Bird');
+                        if (!first) outcome.push({ kind: 'text', text: ', ' });
+                        outcome.push({ kind: 'text', text: 'Laid ' }, { kind: 'egg', count: targetCounts[t], target: targetName });
+                        first = false;
+                    }
                 }
                 return laid > 0;
             }
@@ -719,55 +1015,76 @@ export class WingspanGameState {
             case 'hunt': {
                 const deckIdx = this.anyDeckWithCards(ch.foodDeck);
                 if (deckIdx === -1) return false;
-                this.ensureDeck(deckIdx);
-                const d = this.data.foodDecks[deckIdx];
-                if (d.length === 0) return false;
-                const cardId = d.pop() as number;
-                if (this.card(cardId).wingspan_cm < e.max) {
+                const cardId = this.drawFromFoodDeck(deckIdx);
+                if (cardId == null) return false;
+                const hunted = this.card(cardId);
+                if (hunted.wingspan_cm < e.max) {
                     p.flock[birdIdx].tucked.push(cardId); // caught → tuck (1 pt)
+                    if (outcome) {
+                        outcome.push({ kind: 'text', text: 'Hunt caught ' }, { kind: 'bird', cardId, name: hunted.common_name });
+                    }
                     return true;
                 }
                 this.data.discard.push(cardId); // escaped → discard
+                if (outcome) {
+                    outcome.push({ kind: 'text', text: `Hunt failed (${hunted.common_name} escaped)` });
+                }
                 return false;
             }
 
             case 'discard': {
                 if (e.what === 'egg') {
                     const from = ch.discardEggFrom != null ? ch.discardEggFrom : this.autoEggSource(p);
-                    return from != null && this.removeEgg(p, from);
+                    const ok = from != null && this.removeEgg(p, from);
+                    if (ok && outcome) {
+                        const targetName = from === -1 ? 'Nest' : (p.flock[from] ? this.card(p.flock[from].cardId).common_name : 'Bird');
+                        outcome.push({ kind: 'text', text: `Discarded egg from ${targetName}` });
+                    }
+                    return ok;
                 }
                 if (e.what === 'bird') {
                     const ri = p.reserve.findIndex(r => r.face === 'bird');
                     if (ri === -1) return false;
                     const cardId = p.reserve.splice(ri, 1)[0].cardId;
                     this.data.discard.push(cardId);
+                    if (outcome) {
+                        outcome.push({ kind: 'text', text: 'Discarded ' }, { kind: 'bird', cardId, name: this.card(cardId).common_name });
+                    }
                     return true;
                 }
                 // food
                 const want = e.food && e.food !== 'any' ? e.food : null;
                 const ri = ch.payFoodCardId != null
-                    ? p.reserve.findIndex(r => r.cardId === ch.payFoodCardId && r.face === 'food')
+                    ? p.reserve.findIndex(r => r.cardId === ch.payFoodCardId && r.face === 'food' && (!want || this.card(r.cardId).reverse_food.includes(want)))
                     : p.reserve.findIndex(r => r.face === 'food' && (!want || this.card(r.cardId).reverse_food.includes(want)));
                 if (ri === -1) return false;
                 const cardId = p.reserve.splice(ri, 1)[0].cardId;
                 this.data.discard.push(cardId);
+                if (outcome) {
+                    const fc = this.card(cardId);
+                    outcome.push({ kind: 'text', text: 'Discarded ' }, { kind: 'food', food: fc.reverse_food[0], foods: fc.reverse_food });
+                }
                 return true;
             }
 
             case 'gated': {
-                const paid = this.resolveEffect(p, birdIdx, e.pay, ch, depth);
+                const paid = this.resolveEffect(p, birdIdx, e.pay, ch, depth, outcome);
                 if (!paid) return false;
-                return this.resolveEffect(p, birdIdx, e.gain, ch, depth);
+                if (outcome) outcome.push({ kind: 'text', text: ' → ' });
+                return this.resolveEffect(p, birdIdx, e.gain, ch, depth, outcome);
             }
 
             case 'choose_one': {
                 const b = Math.min(Math.max(0, ch.branch || 0), e.options.length - 1);
-                return this.resolveEffect(p, birdIdx, e.options[b], ch, depth);
+                return this.resolveEffect(p, birdIdx, e.options[b], ch, depth, outcome);
             }
 
             case 'sequence': {
                 let any = false;
-                for (const s of e.steps) any = this.resolveEffect(p, birdIdx, s, ch, depth) || any;
+                for (let i = 0; i < e.steps.length; i++) {
+                    if (i > 0 && outcome && outcome.length > 0) outcome.push({ kind: 'text', text: ', ' });
+                    any = this.resolveEffect(p, birdIdx, e.steps[i], ch, depth, outcome) || any;
+                }
                 return any;
             }
 
@@ -775,24 +1092,64 @@ export class WingspanGameState {
                 if (depth > 2) return false;
                 const copied = this.pickBrownToCopy(p, e.scope, ch);
                 if (!copied) return false;
-                return this.resolveEffect(p, birdIdx, copied, ch, depth + 1);
+                return this.resolveEffect(p, birdIdx, copied, ch, depth + 1, outcome);
             }
 
             case 'all_players': {
+                if (e.effect.op === 'lay_egg') {
+                    this.data.pendingAllPlayersAction = {
+                        type: 'lay_egg',
+                        sourceCardId: p.flock[birdIdx]?.cardId ?? -1,
+                        initiatorPlayerId: p.id,
+                        pendingPlayers: [...this.playerIds],
+                        choices: {}
+                    };
+                    return true;
+                }
                 const order = this.allPlayersOrder(ch.allPlayersStart);
                 let any = false;
-                for (const pid of order) {
+                for (let idx = 0; idx < order.length; idx++) {
+                    const pid = order[idx];
                     const pp = this.player(pid);
                     if (e.from_1_deck && (e.effect.op === 'draw_food' || e.effect.op === 'gain_food')) {
                         const deckIdx = this.anyDeckWithCards(ch.foodDeck);
                         if (deckIdx !== -1) {
-                            this.ensureDeck(deckIdx);
-                            const d = this.data.foodDecks[deckIdx];
-                            if (d.length > 0) { pp.reserve.push({ cardId: d.pop() as number, face: 'food' }); any = true; }
+                            const cardId = this.drawFromFoodDeck(deckIdx);
+                            if (cardId != null) {
+                                pp.reserve.push({ cardId, face: 'food' });
+                                any = true;
+                                if (outcome) {
+                                    const fc = this.card(cardId);
+                                    if (idx > 0) outcome.push({ kind: 'text', text: ', ' });
+                                    outcome.push(
+                                        { kind: 'player', playerId: pid },
+                                        { kind: 'text', text: ': ' },
+                                        { kind: 'food', food: fc.reverse_food[0], foods: fc.reverse_food }
+                                    );
+                                }
+                            }
+                        }
+                    } else if (e.from_1_deck && e.effect.op === 'draw_bird') {
+                        const deckIdx = this.anyDeckWithCards(ch.foodDeck);
+                        if (deckIdx !== -1) {
+                            const cardId = this.drawFromFoodDeck(deckIdx);
+                            if (cardId != null) {
+                                pp.reserve.push({ cardId, face: 'bird' });
+                                any = true;
+                                if (outcome) {
+                                    const bc = this.card(cardId);
+                                    if (idx > 0) outcome.push({ kind: 'text', text: ', ' });
+                                    outcome.push(
+                                        { kind: 'player', playerId: pid },
+                                        { kind: 'text', text: ': ' },
+                                        { kind: 'bird', cardId, name: bc.common_name }
+                                    );
+                                }
+                            }
                         }
                     } else {
                         // resolve the effect for pp against their own last flock bird (best effort)
-                        any = this.resolveEffect(pp, Math.max(0, pp.flock.length - 1), e.effect, {}, depth + 1) || any;
+                        any = this.resolveEffect(pp, Math.max(0, pp.flock.length - 1), e.effect, {}, depth + 1, outcome) || any;
                     }
                 }
                 return any;
@@ -968,6 +1325,7 @@ export class WingspanGameState {
     public get_nest_taken(): boolean { return this.data.nestActionTaken; }
     public get_supply_birds(): (number | null)[] { return [...this.data.supplyBirds]; }
     public get_food_deck_counts(): number[] { return this.data.foodDecks.map(d => d.length); }
+    public get_food_decks(): number[][] { return this.data.foodDecks.map(d => [...d]); }
     /** The (visible) top card of each food deck — the food you would draw next. */
     public get_food_deck_tops(): (number | null)[] { return this.data.foodDecks.map(d => d.length > 0 ? d[d.length - 1] : null); }
     public get_discard_count(): number { return this.data.discard.length; }
@@ -976,6 +1334,11 @@ export class WingspanGameState {
     public get_winners(): string[] | null { return this.data.winnerIds; }
     public get_last_move(): LastMove | null { return this.data.lastMove; }
     public get_token_index(id: string): number { return this.player(id).tokenIndex; }
+    public get_pending_all_players(): PendingAllPlayersAction | null { return this.data.pendingAllPlayersAction; }
+    public get_pending_draw(): { count: number; items: MoveItem[] } | null { return this.data.pendingDraw || null; }
+    public get_turn_log(id: string): PlayerMoveEvent[] {
+        return (this.data.playerTurnLogs && this.data.playerTurnLogs[id]) ? this.data.playerTurnLogs[id] : [];
+    }
 
     /** The current activation target (flock index) if in the activate phase, else -1. */
     public get_active_bird_index(): number {

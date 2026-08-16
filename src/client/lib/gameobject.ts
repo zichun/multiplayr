@@ -358,13 +358,15 @@ export class GameObject {
         return info;
     }
 
-    public disconnectClientDevice(clientId: string) {
+    public disconnectClientDevice(clientId: string, cb?: (res?: any) => void) {
         if (!this.isHost) {
             throw (new Error('Only host can disconnect client devices'));
         }
         const rootSession = this.getRootSession();
         if (rootSession) {
-            rootSession.disconnectClientDevice(clientId);
+            rootSession.disconnectClientDevice(clientId, cb);
+        } else if (isFunction(cb)) {
+            cb({ success: false, message: 'No active session to disconnect through.' });
         }
     }
 

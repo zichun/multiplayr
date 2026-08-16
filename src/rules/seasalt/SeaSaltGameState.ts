@@ -332,6 +332,7 @@ export class SeaSaltGameState {
             this.data.drawnPair = null;
             this.log(actorId, 'drew the last deck card', 'draw', { animType: 'deck' });
             this.check_mermaid_win(actorId);
+            this.auto_pass_if_no_options(actorId);
             return;
         }
         const second = this.data.deck.pop() as Card;
@@ -363,6 +364,7 @@ export class SeaSaltGameState {
             animType: 'deck', pile: target, revealCard: toss
         });
         this.check_mermaid_win(actorId);
+        this.auto_pass_if_no_options(actorId);
     }
 
     public take_discard(actorId: string, pileId: PileId) {
@@ -374,6 +376,7 @@ export class SeaSaltGameState {
         this.data.turnPhase = 'play';
         this.log(actorId, `took a ${card.type} from a discard pile`, 'take', { animType: 'take', pile: pileId });
         this.check_mermaid_win(actorId);
+        this.auto_pass_if_no_options(actorId);
     }
 
     // ==========================================================
@@ -426,6 +429,10 @@ export class SeaSaltGameState {
                 }
                 break;
         }
+
+        // Playing a duo may have left the player with no remaining options
+        // (no other duo, still under the 7-point gate) — end the turn if so.
+        this.auto_pass_if_no_options(actorId);
     }
 
     // Crab: look through a discard pile and take any one card.
@@ -443,6 +450,7 @@ export class SeaSaltGameState {
         // Card kept secret from others (Crab is private) — desc & animation stay generic.
         this.log(actorId, 'took a card from a discard pile (crab)', 'effect', { animType: 'take', pile: pileId });
         this.check_mermaid_win(actorId);
+        this.auto_pass_if_no_options(actorId);
     }
 
     // Swimmer + Shark: steal a random card from a chosen opponent.
@@ -464,6 +472,7 @@ export class SeaSaltGameState {
         this.data.turnPhase = 'play';
         this.log(actorId, 'stole a random card', 'effect', { animType: 'steal', fromPlayer: targetId });
         this.check_mermaid_win(actorId);
+        this.auto_pass_if_no_options(actorId);
     }
 
     private stealable_targets(actorId: string): string[] {
@@ -516,6 +525,30 @@ export class SeaSaltGameState {
         if (this.data.lastChance) {
             throw new Error('A Last Chance is already in progress');
         }
+    }
+
+    // Does this player hold any pair of cards that forms a playable duo?
+    private has_duo_available(playerId: string): boolean {
+        const hand = this.data.players[playerId].hand;
+        for (let i = 0; i < hand.length; i++) {
+            for (let j = i + 1; j < hand.length; j++) {
+                if (isDuoPair(hand[i], hand[j])) return true;
+            }
+        }
+        return false;
+    }
+
+    // Called after landing in the PLAY phase. If the actor's only legal move is to
+    // pass — no playable duo, and not eligible to Stop / Last Chance — end their
+    // turn automatically so the game doesn't stall on a meaningless "End turn" click.
+    private auto_pass_if_no_options(actorId: string) {
+        if (this.data.status !== Phase.Play) return;      // round/game already ended (e.g. mermaid win)
+        if (this.data.turnPhase !== 'play') return;        // still choosing / resolving an effect
+        if (this.data.currentPlayerId !== actorId) return;
+        // Stop and Last Chance are both gated behind can_end_round + no Last Chance in progress.
+        if (!this.data.lastChance && this.can_end_round(actorId)) return;
+        if (this.has_duo_available(actorId)) return;
+        this.advance_after_turn(actorId);
     }
 
     private advance_after_turn(actorId: string) {

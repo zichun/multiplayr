@@ -34,6 +34,39 @@ interface PlayingCardProps {
     animation?: 'fade-out-down' | 'fade-in';
 }
 
+function renderFooterContent(text: string | undefined, allIcons: Record<string, IconObject>, palette: Palette): React.ReactNode {
+    if (!text) return null;
+    const parts = text.split(/(\[icon:[a-zA-Z0-9_-]+\])/g);
+    if (parts.length === 1) return text;
+    return parts.map((part, i) => {
+        const match = part.match(/^\[icon:([a-zA-Z0-9_-]+)\]$/);
+        if (match) {
+            const iconId = match[1];
+            const iconObj = allIcons[iconId];
+            if (iconObj) {
+                return (
+                    <span
+                        key={i}
+                        className="card-footer-inline-icon"
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            verticalAlign: '-0.15em',
+                            width: '1.2em',
+                            height: '1.2em',
+                            margin: '0 0.1em'
+                        }}
+                    >
+                        <ExpressiveIcon icon={iconObj} palette={palette} savedIcons={allIcons} />
+                    </span>
+                );
+            }
+        }
+        return part;
+    });
+}
+
 export const PlayingCard: React.FC<PlayingCardProps> = ({
     card,
     paletteOverride,
@@ -509,7 +542,7 @@ export const PlayingCard: React.FC<PlayingCardProps> = ({
                                     return (
                                         <div 
                                             key={idx} 
-                                            className="card-data-icons-list"
+                                            className={`card-data-icons-list icons-align-${listAlign}`}
                                             style={{
                                                 justifyContent: justifyMap[listAlign],
                                                 gap: `${gap}em`
@@ -593,7 +626,7 @@ export const PlayingCard: React.FC<PlayingCardProps> = ({
                                     fontWeight: card.footer.weight
                                 }}
                             >
-                                {card.footer.text}
+                                {renderFooterContent(card.footer.text, allIcons, palette)}
                             </div>
                         </div>
                     )}

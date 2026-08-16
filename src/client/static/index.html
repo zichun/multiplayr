@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Encourage the browser to revalidate this entry page rather than serve a stale copy. -->
+    <meta http-equiv="Cache-Control" content="no-cache">
     <title>Multiplayr</title>
     <!-- Grotesk Fonts for De Stijl Aesthetics -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -175,6 +177,44 @@
             text-shadow: 4px 4px 0px var(--mondrian-black);
         }
 
+        /* Build version + force-refresh control */
+        .version-bar {
+            position: fixed;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.72rem;
+            color: var(--mondrian-black);
+            background: rgba(244, 243, 235, 0.92);
+            padding: 6px 10px 6px 14px;
+            border: 2px solid var(--mondrian-black);
+            z-index: 100;
+        }
+        .version-label {
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+        .version-refresh {
+            font-family: inherit;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--mondrian-white);
+            background: var(--mondrian-black);
+            border: none;
+            padding: 5px 11px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .version-refresh:hover { background: var(--mondrian-red); }
+        .version-refresh:disabled { opacity: 0.6; cursor: default; }
+
         /* Responsive scaling adjustments */
         @media (max-width: 600px) {
             .art-frame {
@@ -228,6 +268,68 @@
         </div>
 
     </div>
+
+    <!-- Build version + manual cache buster -->
+    <div class="version-bar">
+        <span class="version-label">Build __MP_BUILD_VERSION__</span>
+        <button id="force-refresh" class="version-refresh" type="button"
+                title="Clear cached files and reload the latest published version">
+            &#8635; Force refresh
+        </button>
+    </div>
+
+    <script>
+        (function () {
+            var btn = document.getElementById('force-refresh');
+            if (!btn) { return; }
+
+            var navigated = false;
+            function reloadFresh() {
+                if (navigated) { return; }
+                navigated = true;
+                try {
+                    var url = new URL(window.location.href);
+                    // A changing query string forces the browser to re-request the
+                    // document from the server instead of serving it from cache.
+                    url.searchParams.set('_', Date.now().toString());
+                    window.location.replace(url.toString());
+                } catch (e) {
+                    window.location.reload();
+                }
+            }
+
+            btn.addEventListener('click', function () {
+                btn.disabled = true;
+                btn.textContent = 'Refreshing…';
+
+                var tasks = [];
+                try {
+                    if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
+                        tasks.push(
+                            navigator.serviceWorker.getRegistrations().then(function (regs) {
+                                return Promise.all(regs.map(function (r) { return r.unregister(); }));
+                            }).catch(function () {})
+                        );
+                    }
+                    if (window.caches && window.caches.keys) {
+                        tasks.push(
+                            window.caches.keys().then(function (keys) {
+                                return Promise.all(keys.map(function (k) { return window.caches.delete(k); }));
+                            }).catch(function () {})
+                        );
+                    }
+                } catch (e) { /* Storage APIs unavailable — just reload. */ }
+
+                if (tasks.length) {
+                    Promise.all(tasks).then(reloadFresh, reloadFresh);
+                } else {
+                    reloadFresh();
+                }
+                // Safety net in case the storage APIs never settle.
+                setTimeout(reloadFresh, 1500);
+            });
+        })();
+    </script>
 
 </body>
 </html>

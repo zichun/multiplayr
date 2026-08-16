@@ -17,7 +17,8 @@
 
 import { CardDefinition, Palette, IconObject, IconLayer, PrimitiveShape, DataRow } from '../../client/lib/card-renderer/types';
 import {
-    BirdCard, FoodType, FOOD_TYPES, PaletteId, ShapeId, SHAPE_IDS, PowerEffect
+    BirdCard, FoodType, FOOD_TYPES, PaletteId, ShapeId, SHAPE_IDS, PowerEffect,
+    GoalId, GOAL_BY_ID
 } from './WingspanData';
 
 // ---------------------------------------------------------------------------
@@ -398,6 +399,13 @@ const BEAK_ICONS: Record<string, IconObject> = {
     beak_R: icon('beak_R', [L('t', 'triangle', 50, 50, 0.6, 0.44, 90, 'charcoal')])
 };
 
+// A target / goal icon used when a bird in flock qualifies for a round goal.
+export const GOAL_ICON: IconObject = icon('goal_star', [
+    L('bg', 'circle', 50, 50, 0.95, 0.95, 0, '#e5a823'),
+    L('ring', 'circle', 50, 50, 0.65, 0.65, 0, '#ffffff'),
+    L('center', 'circle', 50, 50, 0.38, 0.38, 0, '#d48806')
+]);
+
 // ===========================================================================
 // Combined icon map (passed to <PlayingCard customIcons={…}> / ExpressiveIcon)
 // ===========================================================================
@@ -413,6 +421,7 @@ export const WINGSPAN_ICONS: Record<string, IconObject> = (() => {
     all['wing'] = WING_ICON;
     all['beak_L'] = BEAK_ICONS.beak_L;
     all['beak_R'] = BEAK_ICONS.beak_R;
+    all['goal_star'] = GOAL_ICON;
     return all;
 })();
 
@@ -424,43 +433,55 @@ export function getIcon(id: string): IconObject | undefined {
 // Human-readable power text (for the card footer + rules)
 // ===========================================================================
 
-const foodLabel = (f: FoodType | 'any'): string => f === 'any' ? 'any food' : f;
+const foodLabel = (f: FoodType | 'any', withIcons?: boolean): string => {
+    if (withIcons) {
+        return f === 'any' ? '[icon:any_coin]' : `[icon:${foodIconId(f)}]`;
+    }
+    return f === 'any' ? 'any food' : f;
+};
 
-export function describePower(e: PowerEffect): string {
+export function describePower(e: PowerEffect, opts: { icons?: boolean } = {}): string {
+    const icons = !!opts.icons;
+    const eggsIcon = (n: number) => icons ? `${n} [icon:egg]` : `${n} egg${n > 1 ? 's' : ''}`;
+
     switch (e.op) {
         case 'none': return 'No power';
-        case 'draw_food': return `Draw ${foodLabel(e.food)}`;
-        case 'gain_food': return `Gain ${foodLabel(e.food)}`;
+        case 'draw_food': return `Draw ${foodLabel(e.food, icons)}`;
+        case 'gain_food': return `Gain ${foodLabel(e.food, icons)}`;
         case 'draw_bird': {
             const f = e.filter;
             if (!f) return 'Draw a bird';
-            if (f.cost_contains) return `Draw a bird with ${f.cost_contains} in cost`;
-            if (f.egg_limit != null) return `Draw a bird (egg limit ${f.egg_limit})`;
-            if (f.egg_limit_min != null) return `Draw a bird (egg limit ${f.egg_limit_min}+)`;
+            if (f.cost_contains) return `Draw a bird with ${foodLabel(f.cost_contains, icons)} in cost`;
+            if (f.egg_limit != null) return `Draw a bird (limit ${eggsIcon(f.egg_limit)})`;
+            if (f.egg_limit_min != null) return `Draw a bird (limit ${f.egg_limit_min}+ ${icons ? '[icon:egg]' : 'eggs'})`;
             if (f.select === 'largest_wingspan') return 'Draw the largest-wingspan bird';
             if (f.select === 'smallest_wingspan') return 'Draw the smallest-wingspan bird';
             return 'Draw a bird';
         }
         case 'draw_card': return 'Draw any card';
-        case 'tuck': return e.food ? `Tuck a ${e.food} card (+1)` : 'Tuck a card (+1)';
+        case 'tuck': {
+            if (e.from === 'bird') return icons ? 'Tuck a bird (+1 [icon:feather])' : 'Tuck a bird (+1)';
+            if (e.from === 'food') return e.food ? (icons ? `Tuck a ${foodLabel(e.food, icons)} (+1 [icon:feather])` : `Tuck a ${e.food} card (+1)`) : (icons ? 'Tuck a food (+1 [icon:feather])' : 'Tuck a food card (+1)');
+            return e.food ? (icons ? `Tuck a ${foodLabel(e.food, icons)} (+1 [icon:feather])` : `Tuck a ${e.food} card (+1)`) : (icons ? 'Tuck a card (+1 [icon:feather])' : 'Tuck a card (+1)');
+        }
         case 'lay_egg': {
             const n = e.count || 1;
             const where = e.target === 'this' ? ' on this bird' : e.target === 'another' ? ' on another bird' : '';
-            return `Lay ${n} egg${n > 1 ? 's' : ''}${where}`;
+            return `Lay ${eggsIcon(n)}${where}`;
         }
         case 'hunt': return `Hunt (wingspan < ${e.max})`;
-        case 'discard': return e.what === 'egg' ? 'Discard an egg' : e.what === 'bird' ? 'Discard a bird' : `Discard ${foodLabel(e.food || 'any')}`;
-        case 'gated': return `${describePower(e.pay)} → ${describePower(e.gain)}`;
-        case 'choose_one': return e.options.map(describePower).join(' OR ');
-        case 'sequence': return e.steps.map(describePower).join(', ');
+        case 'discard': return e.what === 'egg' ? (icons ? 'Discard 1 [icon:egg]' : 'Discard an egg') : e.what === 'bird' ? 'Discard a bird' : `Discard ${foodLabel(e.food || 'any', icons)}`;
+        case 'gated': return `${describePower(e.pay, opts)} → ${describePower(e.gain, opts)}`;
+        case 'choose_one': return e.options.map(o => describePower(o, opts)).join(' OR ');
+        case 'sequence': return e.steps.map(s => describePower(s, opts)).join(', ');
         case 'copy_brown':
             return e.scope === 'own' ? 'Copy one of your brown powers'
                 : e.scope === 'right' ? 'Copy a brown power on your right'
                 : 'Copy left neighbour\'s rightmost brown power';
-        case 'all_players': return `All players: ${describePower(e.effect)}${e.from_1_deck ? ' (from 1 deck)' : ''}`;
-        case 'use_as_any': return `Use ${e.food} as any food when playing birds`;
-        case 'ignore_1_in_cost': return `Pay 1 fewer ${e.food} on bird costs`;
-        case 'food_in_powers_is_any': return `${e.food} in powers count as any food`;
+        case 'all_players': return `All players: ${describePower(e.effect, opts)}${e.from_1_deck ? ' (from 1 deck)' : ''}`;
+        case 'use_as_any': return `Use ${foodLabel(e.food, icons)} as any food when playing birds`;
+        case 'ignore_1_in_cost': return `Pay 1 fewer ${foodLabel(e.food, icons)} on bird costs`;
+        case 'food_in_powers_is_any': return `${foodLabel(e.food, icons)} in powers count as any food`;
         case 'copy_green_power': return 'Copy any green power (1/turn)';
         default: return '';
     }
@@ -484,34 +505,52 @@ function costList(card: BirdCard): NonNullable<DataRow['iconsList']> {
     for (const f of FOOD_TYPES) for (let i = 0; i < (card.cost.food[f] || 0); i++) list.push({ iconId: foodIconId(f) });
     for (let i = 0; i < (card.cost.any || 0); i++) list.push({ iconId: 'any_coin' });
     for (let i = 0; i < (card.cost.egg || 0); i++) list.push({ iconId: 'egg_coin' });
-    return list.length ? list : [{ iconId: 'any_coin' }];
+    return list;
 }
 
 /**
- * A Wingspan bird card. Composition (balanced: art on top, info panel below):
- *   top ~half  → the bird as the hero illustration + a VP feather chip (corner)
- *   panel      → a grouped bottom panel: cost coins, then the egg-limit /
- *                wingspan / beak stats, then the power text (tinted by class)
- * Layout is pinned by `.wingspan-card` in the scss.
+ * A Wingspan bird card. Composition:
+ *   top-left   → egg count & wingspan (two lines: egg, then wingspan)
+ *   top-right  → victory points feather chip
+ *   right side → cost coins (food + egg) vertically stacked below the VP chip
+ *   center     → hero bird illustration
+ *   footer     → power text
  */
-export function getWingspanCardDefinition(card: BirdCard, opts: { detail?: boolean } = {}): CardDefinition {
+export function getWingspanCardDefinition(
+    card: BirdCard,
+    opts: { detail?: boolean; matchingGoals?: GoalId[] } = {}
+): CardDefinition {
     const palette = getWingspanPalette(card.palette);
     const greenPower = card.color === 'green';
     const panelBg = greenPower ? '#eaf5ec' : '#f6ecdb';
     const panelInk = greenPower ? '#2b6b3a' : '#6b4f21';
 
     const rows: DataRow[] = [
-        // cost — one compact row of overlapping coins (no numbers)
-        { iconsList: costList(card), iconsListAlign: 'center', iconsListBg: 'none', iconsListIconSize: COST_ICON, iconsListGap: 0 },
-        // stats — egg-limit · wingspan
+        // row 0: Egg count (top-left line 1)
         {
-            iconsList: [
-                { iconId: 'egg_coin', value: String(card.egg_limit) },
-                { iconId: 'wing', value: `${card.wingspan_cm}` }
-            ],
-            iconsListAlign: 'center', iconsListBg: 'none', iconsListIconSize: STAT_ICON, iconsListGap: 0.5
+            iconsList: [{ iconId: 'egg_coin', value: String(card.egg_limit) }],
+            iconsListAlign: 'left', iconsListBg: 'none', iconsListIconSize: 2.2, iconsListGap: 0.25
+        },
+        // row 1: Wingspan (top-left line 2)
+        {
+            iconsList: [{ iconId: 'wing', value: `${card.wingspan_cm}` }],
+            iconsListAlign: 'left', iconsListBg: 'none', iconsListIconSize: 2.2, iconsListGap: 0.25
         }
     ];
+
+    if (opts.matchingGoals && opts.matchingGoals.length > 0) {
+        const goalIcons = opts.matchingGoals.map(g => GOAL_BY_ID[g]?.display_icon || '').filter(Boolean).join(' ');
+        rows.push({
+            iconsList: [{ iconId: 'goal_star', value: goalIcons }],
+            iconsListAlign: 'left', iconsListBg: 'none', iconsListIconSize: 1.8, iconsListGap: 0.2
+        });
+    }
+
+    // Cost (food + egg) vertically stacked on the right side below VP
+    rows.push({
+        iconsList: costList(card),
+        iconsListAlign: 'right', iconsListBg: 'none', iconsListIconSize: 2.85, iconsListGap: 0.25
+    });
 
     return {
         id: `bird-${card.id}`,
@@ -522,19 +561,19 @@ export function getWingspanCardDefinition(card: BirdCard, opts: { detail?: boole
         palette,
         borderWidth: 0,
         borderColor: 'border',
-        // No name header (saves real-estate). VP sits in a corner feather chip.
+        // VP sits in a corner feather chip (top-right).
         overlays: [
-            { position: 'top-right', shape: 'chip', iconId: 'feather', value: String(card.victory_points), backgroundColor: 'primary', color: '#ffffff', size: 3.9 }
+            { position: 'top-right', shape: 'chip', iconId: 'feather', value: String(card.victory_points), backgroundColor: 'primary', color: '#ffffff', size: 3.8 }
         ],
-        mainArt: { iconId: birdIconId(card.shape), frameStyle: 'none', scaling: 1.0 },
-        data: { rows, background: panelBg },
+        mainArt: { iconId: birdIconId(card.shape), frameStyle: 'none', scaling: 0.92 },
+        data: { rows, background: 'none' },
         footer: {
-            text: describePower(card.power.effect),
+            text: describePower(card.power.effect, { icons: true }),
             align: 'center',
             verticalAlign: 'center',
             background: panelBg,
             color: panelInk,
-            size: 1.4,
+            size: 1.35,
             italic: false
         }
     };

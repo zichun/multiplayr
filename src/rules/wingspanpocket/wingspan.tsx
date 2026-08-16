@@ -16,8 +16,9 @@ import { GameRuleInterface, MPType } from '../../common/interfaces';
 import { WingspanHostLobby, WingspanClientLobby, WingspanMainPage } from './views/WingspanViews';
 import {
     WingspanStartGame, WingspanSetAdvanced, WingspanRestartGame, WingspanBackToLobby,
-    WingspanPlayBird, WingspanDraw2, WingspanLayEggs,
-    WingspanActivate, WingspanSkipActivation, WingspanEndActivation, WingspanFinalize
+    WingspanPlayBird, WingspanDraw2, WingspanDrawCard, WingspanFinishDraw, WingspanLayEggs,
+    WingspanActivate, WingspanSkipActivation, WingspanEndActivation, WingspanRespondAllPlayers,
+    WingspanFinalize
 } from './WingspanMethods';
 import { WingspanGameState, Phase } from './WingspanGameState';
 
@@ -69,7 +70,8 @@ export const WingspanRule: GameRuleInterface = {
         const playerAccents: Record<string, string> = {};
         order.forEach((id, idx) => { playerNames[id] = resolveName(id, idx); playerAccents[id] = resolveAccent(id); });
 
-        // public per-player snapshot (all flocks are open information)
+        const isGameOver = gs.get_phase() === Phase.Scoring || gs.get_phase() === Phase.Done;
+        // public per-player snapshot (all flocks and reserves are open information)
         const publicPlayers: Record<string, any> = {};
         order.forEach((id) => {
             const p = gs.get_player(id)!;
@@ -77,9 +79,11 @@ export const WingspanRule: GameRuleInterface = {
                 nestEggs: p.nestEggs,
                 flock: p.flock,
                 reserveCount: p.reserve.length,
+                reserve: p.reserve,
                 flockSize: p.flock.length,
                 score: gs.computeScore(id),
-                turnCount: gs.get_turn_count(id)
+                turnCount: gs.get_turn_count(id),
+                turnLog: gs.get_turn_log(id)
             };
         });
 
@@ -87,6 +91,7 @@ export const WingspanRule: GameRuleInterface = {
             supplyBirds: gs.get_supply_birds(),
             foodDeckCounts: gs.get_food_deck_counts(),
             foodDeckTops: gs.get_food_deck_tops(),
+            foodDecks: gs.get_food_decks(),
             discardCount: gs.get_discard_count()
         };
 
@@ -121,6 +126,8 @@ export const WingspanRule: GameRuleInterface = {
             mp.setViewProps(clientId, 'isMyTurn', clientId === currentPlayerId);
             mp.setViewProps(clientId, 'activeBirdIndex',
                 clientId === currentPlayerId ? gs.get_active_bird_index() : -1);
+            mp.setViewProps(clientId, 'pendingAllPlayers', gs.get_pending_all_players());
+            mp.setViewProps(clientId, 'pendingDraw', gs.get_pending_draw());
 
             if (lastMove && lastMove.playerId !== clientId) {
                 mp.setViewProps(clientId, 'toastNotification', {
@@ -147,10 +154,13 @@ export const WingspanRule: GameRuleInterface = {
         'backToLobby': WingspanBackToLobby,
         'playBird': WingspanPlayBird,
         'draw2': WingspanDraw2,
+        'drawCard': WingspanDrawCard,
+        'finishDraw': WingspanFinishDraw,
         'layEggs': WingspanLayEggs,
         'activate': WingspanActivate,
         'skipActivation': WingspanSkipActivation,
         'endActivation': WingspanEndActivation,
+        'respondAllPlayers': WingspanRespondAllPlayers,
         'finalize': WingspanFinalize
     },
 

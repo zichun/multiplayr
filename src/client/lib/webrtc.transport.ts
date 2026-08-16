@@ -53,6 +53,12 @@ export class WebRTCTransport implements ClientTransportInterface {
     // Reconnection backoff bounds.
     private static readonly RECONNECT_BASE_MS = 2000;
     private static readonly RECONNECT_MAX_MS = 15000;
+    // How many times we retry the *initial* join (room not found / host offline) before
+    // giving up and surfacing an error. Established sessions reconnect without limit.
+    private static readonly MAX_JOIN_ATTEMPTS = 4;
+    // How many times we retry acquiring our peer ID when it is reported unavailable
+    // (e.g. a stale previous session still holding the ID) before surfacing an error.
+    private static readonly MAX_ID_ATTEMPTS = 3;
 
     private peer: any;
     private clientId: string;
@@ -86,6 +92,16 @@ export class WebRTCTransport implements ClientTransportInterface {
     private initialCallback?: (packet: ReturnPacketType) => any;
     private monitorInterval: any = null;
     private recreateTimeout: any = null;
+
+    // Initial-join tracking. pendingConnectCb is the join/rejoin callback awaiting the
+    // first successful connection; it is resolved on success or on give-up (error).
+    private pendingConnectCb: CallbackType<ReturnPacketType> = null;
+    private joinAttempts = 0;
+    private idAttempts = 0;
+    private hasEverConnected = false;
+    // Set once we have exhausted retries and reported a terminal join error, to stop
+    // the background retry loops from spinning.
+    private joinFailed = false;
 
     constructor(
         options: { roomId?: string; customPeerId?: string; iceServers?: any[] },
@@ -134,6 +150,8 @@ export class WebRTCTransport implements ClientTransportInterface {
         this.peer.on('open', (id: string) => {
             console.log('PeerJS connection established. My Peer ID is:', id);
             this.clientId = id;
+            // We successfully acquired our peer ID, so reset the collision counter.
+            this.idAttempts = 0;
             if (this.initialCallback) {
                 this.initialCallback({
                     success: true,
@@ -172,9 +190,24 @@ export class WebRTCTransport implements ClientTransportInterface {
         console.warn(`Handling PeerJS error: ${errType}`);
 
         if (errType === 'unavailable-id') {
-            console.warn('Peer ID is unavailable. Retrying in 2 seconds...');
+            this.idAttempts++;
 
-            // If the collision occurs on a generated ID, regenerate it before retrying
+            if (this.idAttempts > WebRTCTransport.MAX_ID_ATTEMPTS) {
+                console.error('Peer ID remained unavailable after retries. Giving up.');
+                if (this.options.customPeerId) {
+                    this.failInit('This player is already connected (client ID "' + this.clientId +
+                        '" is in use). Close the other tab or device using it and try again, or join as a new player.');
+                } else {
+                    this.failInit('Could not obtain an available client ID. Please refresh the page and try again.');
+                }
+                return;
+            }
+
+            console.warn(`Peer ID is unavailable (attempt ${this.idAttempts}/${WebRTCTransport.MAX_ID_ATTEMPTS}). Retrying in 2 seconds...`);
+
+            // If the collision occurs on a generated ID, regenerate it before retrying.
+            // For a custom (rejoin) ID we keep it and wait, in case the previous session
+            // is still being torn down by the signaling server.
             if (!this.options.customPeerId) {
                 this.clientId = 'mp-' + Math.floor(100000 + Math.random() * 900000).toString();
                 console.log('Regenerated client ID due to collision:', this.clientId);
@@ -187,6 +220,13 @@ export class WebRTCTransport implements ClientTransportInterface {
         } else if (errType === 'peer-unavailable') {
             console.warn('Target peer is unavailable (host offline). Retrying host connection...');
             this.markHostDisconnected();
+            // This connect attempt is definitively done; don't wait for the stall timeout
+            // so the bounded retry loop can proceed at the backoff cadence. (peer-unavailable
+            // is emitted on the peer, not the connection, so the conn's own close/error
+            // handlers that would normally reset these flags never fire.)
+            this.connecting = false;
+            this.isReconnecting = false;
+            this.clearConnectTimeout();
             this.scheduleReconnect();
         } else if (
             errType === 'network' ||
@@ -444,6 +484,13 @@ export class WebRTCTransport implements ClientTransportInterface {
         this.roomId = hostPeerId;
         console.log(`Connecting directly to Host Peer ID: ${hostPeerId}`);
 
+        // Fresh join/rejoin: reset the give-up state and remember the callback so the
+        // bounded-retry logic can resolve it on success or on final failure.
+        this.pendingConnectCb = cb || null;
+        this.joinAttempts = 0;
+        this.reconnectAttempts = 0;
+        this.joinFailed = false;
+
         this.connecting = true;
         const conn = this.peer.connect(hostPeerId, {
             reliable: true
@@ -459,6 +506,8 @@ export class WebRTCTransport implements ClientTransportInterface {
             this.connecting = false;
             console.log('WebRTC connection to host successfully established!');
             this.hostConnected = true;
+            this.hasEverConnected = true;
+            this.joinAttempts = 0;
             this.lastHostSeen = Date.now();
             this.reconnectAttempts = 0;
 
@@ -468,7 +517,8 @@ export class WebRTCTransport implements ClientTransportInterface {
                 clientId: this.clientId
             });
 
-            // Handshake return message
+            // Handshake return message resolves the pending join/rejoin callback.
+            this.pendingConnectCb = null;
             const res = createReturnMessage(true, 'hostId', hostPeerId);
             if (cb) cb(res);
         });
@@ -481,6 +531,8 @@ export class WebRTCTransport implements ClientTransportInterface {
             console.warn('Disconnected from Host.');
             this.connecting = false;
             this.markHostDisconnected();
+            // Do not resolve the join callback here; let the bounded retry loop decide
+            // whether this is a recoverable blip or a terminal failure.
             this.attemptReconnectToHost();
         });
 
@@ -488,7 +540,6 @@ export class WebRTCTransport implements ClientTransportInterface {
             console.error('WebRTC host connection error:', err);
             this.connecting = false;
             this.markHostDisconnected();
-            if (cb) returnError(cb, err.toString());
             this.attemptReconnectToHost();
         });
     }
@@ -652,9 +703,23 @@ export class WebRTCTransport implements ClientTransportInterface {
     private attemptReconnectToHost() {
         if (this.session && this.session.isHost()) return; // Host doesn't reconnect to itself
         if (this.kicked) return;
+        if (this.joinFailed) return; // Already gave up and reported a terminal error
         if (this.connecting) return; // A connection attempt (initial or reconnect) is already in flight
         if (this.isReconnecting) return;
         if (!this.roomId) return;
+
+        // While the initial join is still pending (we have never connected), cap the
+        // number of attempts so a non-existent room / offline host surfaces an error
+        // instead of retrying forever. Once connected at least once, we reconnect without
+        // limit so live games survive transient network drops.
+        if (this.pendingConnectCb && !this.hasEverConnected) {
+            if (this.joinAttempts >= WebRTCTransport.MAX_JOIN_ATTEMPTS) {
+                this.failJoin('Could not reach room "' + this.displayRoomId() +
+                    '". It may not exist, or the host may be offline. Check the Room ID and try again.');
+                return;
+            }
+            this.joinAttempts++;
+        }
 
         if (!this.peer || this.peer.destroyed) {
             console.warn('Reconnect: peer is destroyed or null. Reinitializing and retrying...');
@@ -696,6 +761,8 @@ export class WebRTCTransport implements ClientTransportInterface {
             console.log('WebRTC reconnection to host successfully established!');
             this.isReconnecting = false;
             this.hostConnected = true;
+            this.hasEverConnected = true;
+            this.joinAttempts = 0;
             this.lastHostSeen = Date.now();
             this.reconnectAttempts = 0;
 
@@ -709,6 +776,14 @@ export class WebRTCTransport implements ClientTransportInterface {
                 handshake: true,
                 clientId: this.clientId
             });
+
+            // If this connection resolved a still-pending initial join (the host came
+            // online during our retries), complete that callback with success.
+            if (this.pendingConnectCb) {
+                const joinCb = this.pendingConnectCb;
+                this.pendingConnectCb = null;
+                joinCb(createReturnMessage(true, 'hostId', this.roomId));
+            }
 
             // Trigger the session reconnect logic, which notifies host we are ready
             this.session.onReconnect();
@@ -735,9 +810,62 @@ export class WebRTCTransport implements ClientTransportInterface {
         });
     }
 
+    /** Room ID without the internal 'mp-' prefix, for user-facing messages. */
+    private displayRoomId(): string {
+        const id = this.roomId || '';
+        return id.indexOf('mp-') === 0 ? id.substring(3) : id;
+    }
+
+    /**
+     * Terminal failure of the initial join: stop all retry loops and report the error
+     * through the pending join/rejoin callback so the page can show it.
+     */
+    private failJoin(message: string) {
+        this.joinFailed = true;
+        if (this.reconnectTimeout) {
+            clearTimeout(this.reconnectTimeout);
+            this.reconnectTimeout = null;
+        }
+        if (this.recreateTimeout) {
+            clearTimeout(this.recreateTimeout);
+            this.recreateTimeout = null;
+        }
+        this.clearConnectTimeout();
+        this.connecting = false;
+        this.isReconnecting = false;
+
+        const cb = this.pendingConnectCb;
+        this.pendingConnectCb = null;
+        if (cb) {
+            returnError(cb, message);
+        }
+    }
+
+    /**
+     * Terminal failure while acquiring our own peer ID (e.g. the ID is already in use).
+     * Reported through the transport-init callback if the peer never opened, otherwise
+     * through the join callback.
+     */
+    private failInit(message: string) {
+        this.joinFailed = true;
+        if (this.recreateTimeout) {
+            clearTimeout(this.recreateTimeout);
+            this.recreateTimeout = null;
+        }
+
+        const initCb = this.initialCallback;
+        this.initialCallback = undefined;
+        if (initCb) {
+            returnError(initCb, message);
+        } else {
+            this.failJoin(message);
+        }
+    }
+
     private scheduleReconnect() {
         if (this.session && this.session.isHost()) return;
         if (this.kicked) return;
+        if (this.joinFailed) return; // Already gave up and reported a terminal error
         if (!this.roomId) return;
         if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
 

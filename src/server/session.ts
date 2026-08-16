@@ -80,6 +80,11 @@ export class Session implements ServerSessionInterface {
                 // Received a SendMessage from one client to another client. Route the message via the room object.
                 return this.routeMessage(packet, cb);
 
+            case SessionMessageType.DisconnectDevice:
+                // Host asked to disconnect another client's device. Route the instruction
+                // to that client so its transport tears down.
+                return this.routeDisconnectDevice(packet, cb);
+
             case SessionMessageType.RejoinRoom:
                 return this.rejoinRoom(packet, cb);
 
@@ -172,6 +177,33 @@ export class Session implements ServerSessionInterface {
         return this.room.sendMessage(
             toClientId,
             SessionMessageType.SendMessage,
+            packet,
+            cb);
+    }
+
+    private routeDisconnectDevice(
+        packet: PacketType,
+        cb?: CallbackType<ReturnPacketType>
+    ) {
+        const toClientId = packet.session.toClientId;
+        const fromClientId = packet.session.fromClientId;
+
+        if (fromClientId !== this.clientId) {
+            return returnError(cb, 'Invalid fromClientId');
+        }
+
+        if (this.room === undefined) {
+            return returnError(cb, 'Session of clientId ' + this.clientId + ' does not belong to a room');
+        }
+
+        // Only the host may disconnect another client's device.
+        if (fromClientId !== this.room.getHostId()) {
+            return returnError(cb, 'Only the host can disconnect a client device');
+        }
+
+        return this.room.sendMessage(
+            toClientId,
+            SessionMessageType.DisconnectDevice,
             packet,
             cb);
     }

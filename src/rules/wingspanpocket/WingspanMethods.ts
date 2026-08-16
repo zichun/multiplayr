@@ -75,6 +75,12 @@ export const WingspanPlayBird = (mp: MPType, clientId: string, cardId: number, p
 export const WingspanDraw2 = (mp: MPType, clientId: string, picks: DrawPick[]) =>
     act(mp, (gs) => gs.draw_2(clientId, picks));
 
+export const WingspanDrawCard = (mp: MPType, clientId: string, pick: DrawPick, finish?: boolean) =>
+    act(mp, (gs) => gs.draw_card(clientId, pick, finish));
+
+export const WingspanFinishDraw = (mp: MPType, clientId: string) =>
+    act(mp, (gs) => gs.finish_draw(clientId));
+
 export const WingspanLayEggs = (mp: MPType, clientId: string, targets: number[]) =>
     act(mp, (gs) => gs.lay_eggs(clientId, targets));
 
@@ -88,6 +94,9 @@ export const WingspanSkipActivation = (mp: MPType, clientId: string) =>
 
 export const WingspanEndActivation = (mp: MPType, clientId: string) =>
     act(mp, (gs) => gs.end_activation(clientId));
+
+export const WingspanRespondAllPlayers = (mp: MPType, clientId: string, choice: { eggTarget?: number | null }) =>
+    act(mp, (gs) => gs.respond_all_players(clientId, choice));
 
 // ---- scoring ----
 
