@@ -1,3 +1,5 @@
+@use "sass:color";
+
 $cellUnknownColor: #9ba;
 $cellImpossibleColor: #999;
 $cellWidth: 28px;
@@ -33,14 +35,14 @@ $blueTeamColor: #33c;
         }
 
         .cell.reveal-0 {
-            $backgroundColor: scale-color($blueTeamColor, $lightness: +85%);
+            $backgroundColor: color.scale($blueTeamColor, $lightness: 85%);
             background-color: $backgroundColor;
-            background-image: linear-gradient(135deg, $backgroundColor 0%, $backgroundColor 50%, scale-color($backgroundColor, $lightness: -15%) 100%);
+            background-image: linear-gradient(135deg, $backgroundColor 0%, $backgroundColor 50%, color.scale($backgroundColor, $lightness: -15%) 100%);
         }
         .cell.reveal-1 {
-            $backgroundColor: scale-color($redTeamColor, $lightness: +85%);
+            $backgroundColor: color.scale($redTeamColor, $lightness: 85%);
             background-color: $backgroundColor;
-            background-image: linear-gradient(135deg, $backgroundColor 0%, $backgroundColor 50%, scale-color($backgroundColor, $lightness: -15%) 100%);
+            background-image: linear-gradient(135deg, $backgroundColor 0%, $backgroundColor 50%, color.scale($backgroundColor, $lightness: -15%) 100%);
         }
         .mine.reveal-0 {
             color: $blueTeamColor;
@@ -65,13 +67,13 @@ $blueTeamColor: #33c;
 
         .cell.unknown {
             background-color: $cellUnknownColor;
-            background-image: linear-gradient(135deg, $cellUnknownColor 0%, $cellUnknownColor 30%, scale-color($cellUnknownColor, $lightness: -40%) 100%);
+            background-image: linear-gradient(135deg, $cellUnknownColor 0%, $cellUnknownColor 30%, color.scale($cellUnknownColor, $lightness: -40%) 100%);
             background-size: $cellWidth ($cellWidth * 2);
-            border: 1px solid scale-color($cellUnknownColor, $lightness: +25%);
+            border: 1px solid color.scale($cellUnknownColor, $lightness: 25%);
         }
         .cell.unknown.impossible {
             background-color: $cellImpossibleColor;
-            background-image: linear-gradient(135deg, $cellImpossibleColor 0%, $cellImpossibleColor 30%, scale-color($cellImpossibleColor, $lightness: -60%) 100%);
+            background-image: linear-gradient(135deg, $cellImpossibleColor 0%, $cellImpossibleColor 30%, color.scale($cellImpossibleColor, $lightness: -60%) 100%);
         }
         .mine,.empty {
             border: 1px solid #ccc;
@@ -110,9 +112,9 @@ $blueTeamColor: #33c;
 
     .cell.unknown:hover {
         background-position: 0 (-$cellWidth);
-/*        $newBackgroundColor: scale-color($cellUnknownColor, $lightness: -23%);
+/*        $newBackgroundColor: color.scale($cellUnknownColor, $lightness: -23%);
         background: $newBackgroundColor;
-        background: linear-gradient(135deg, $newBackgroundColor 0%, $newBackgroundColor 60%, scale-color($newBackgroundColor, $lightness: -40%) 100%);*/
+        background: linear-gradient(135deg, $newBackgroundColor 0%, $newBackgroundColor 60%, color.scale($newBackgroundColor, $lightness: -40%) 100%);*/
     }
 }
 

@@ -1,6 +1,7 @@
 /**
  * ito.scss - Styling for Ito game
  */
+@use "sass:color";
 
 .ito-lobby {
     text-align: center;
@@ -436,7 +437,7 @@
         transition: background-color 0.2s;
 
         &:hover {
-            background-color: darken(#48b975, 10%);
+            background-color: color.adjust(#48b975, $lightness: -10%);
         }
     }
 

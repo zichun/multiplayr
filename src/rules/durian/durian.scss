@@ -1,6 +1,7 @@
 /**
  * durian.scss - Flat, Pastel Redesign for the Durian Oink board game
  */
+@use "sass:color";
 
 // Flat Soft Pastel Color Palette
 $bg-color: #fbfbf9; // Soft warm paper cream background
@@ -67,7 +68,7 @@ $text-dark: #475569; // Soft slate dark text
     color: $text-dark;
 
     &:hover {
-        background-color: lighten($accent-orange, 5%);
+        background-color: color.adjust($accent-orange, $lightness: 5%);
     }
 
     &.secondary {
@@ -84,7 +85,7 @@ $text-dark: #475569; // Soft slate dark text
         color: $text-dark;
 
         &:hover {
-            background-color: lighten($accent-red, 5%);
+            background-color: color.adjust($accent-red, $lightness: 5%);
         }
     }
 }
@@ -137,7 +138,7 @@ $text-dark: #475569; // Soft slate dark text
     border: 1px solid rgba(0, 0, 0, 0.08);
 
     .turn-indicator {
-        color: darken($accent-orange, 15%);
+        color: color.adjust($accent-orange, $lightness: -15%);
         text-align: center;
         font-size: 1.1rem;
         margin-bottom: 16px;
@@ -155,7 +156,7 @@ $text-dark: #475569; // Soft slate dark text
         color: $text-dark;
 
         &:hover {
-            background-color: lighten($accent-yellow, 5%);
+            background-color: color.adjust($accent-yellow, $lightness: 5%);
         }
     }
 
@@ -167,7 +168,7 @@ $text-dark: #475569; // Soft slate dark text
         font-size: 1.1rem;
 
         &:hover {
-            background-color: lighten($accent-orange, 5%);
+            background-color: color.adjust($accent-orange, $lightness: 5%);
         }
     }
 
@@ -182,7 +183,7 @@ $text-dark: #475569; // Soft slate dark text
 
         .sub-text {
             font-size: 0.9rem;
-            color: lighten($text-dark, 20%);
+            color: color.adjust($text-dark, $lightness: 20%);
             margin: 6px 0 0 0;
         }
     }
@@ -226,7 +227,7 @@ $text-dark: #475569; // Soft slate dark text
 
         .side-label {
             font-size: 0.8rem;
-            color: lighten($text-dark, 15%);
+            color: color.adjust($text-dark, $lightness: 15%);
             text-transform: uppercase;
             font-weight: 800;
         }
@@ -294,7 +295,7 @@ $text-dark: #475569; // Soft slate dark text
     }
 
     .sub-instruction {
-        color: lighten($text-dark, 15%);
+        color: color.adjust($text-dark, $lightness: 15%);
         font-size: 0.9rem;
     }
 
@@ -397,7 +398,7 @@ $text-dark: #475569; // Soft slate dark text
 
     .no-orders {
         text-align: center;
-        color: lighten($text-dark, 20%);
+        color: color.adjust($text-dark, $lightness: 20%);
         padding: 24px 0;
         font-weight: 600;
     }
@@ -443,7 +444,7 @@ $text-dark: #475569; // Soft slate dark text
             justify-content: space-between;
             align-items: center;
             font-size: 0.7rem;
-            color: lighten($text-dark, 25%);
+            color: color.adjust($text-dark, $lightness: 25%);
             font-weight: 800;
             margin-bottom: 6px;
         }
@@ -484,8 +485,8 @@ $text-dark: #475569; // Soft slate dark text
                 transform: rotate(-15deg);
                 font-size: 0.65rem;
                 font-weight: 900;
-                color: darken($accent-red, 15%);
-                border: 1px solid darken($accent-red, 15%);
+                color: color.adjust($accent-red, $lightness: -15%);
+                border: 1px solid color.adjust($accent-red, $lightness: -15%);
                 padding: 1px 3px;
                 border-radius: 3px;
                 background-color: rgba(255, 255, 255, 0.9);
@@ -583,7 +584,7 @@ $text-dark: #475569; // Soft slate dark text
         &.active-clerk-glow {
             .wooden-stand-base {
                 border-color: $accent-orange;
-                background-color: lighten($wood-plate, 5%);
+                background-color: color.adjust($wood-plate, $lightness: 5%);
             }
         }
     }
@@ -641,7 +642,7 @@ $text-dark: #475569; // Soft slate dark text
         font-weight: 800;
 
         .chip-count {
-            color: lighten($text-dark, 15%);
+            color: color.adjust($text-dark, $lightness: 15%);
             font-size: 0.9rem;
             margin-left: 2px;
         }
@@ -742,7 +743,7 @@ $text-dark: #475569; // Soft slate dark text
             .mysterious-mark {
                 font-size: 2.8rem;
                 font-weight: 900;
-                color: darken($accent-orange, 15%);
+                color: color.adjust($accent-orange, $lightness: -15%);
                 z-index: 1;
                 text-shadow: none;
                 animation: bounce-slow 2s infinite alternate;
@@ -752,7 +753,7 @@ $text-dark: #475569; // Soft slate dark text
                 font-size: 0.55rem;
                 font-weight: 900;
                 letter-spacing: 0.1em;
-                color: lighten($text-dark, 15%);
+                color: color.adjust($text-dark, $lightness: 15%);
                 margin: 4px 0 0 0;
                 z-index: 1;
             }
@@ -807,7 +808,7 @@ $text-dark: #475569; // Soft slate dark text
                         font-size: 0.55rem;
                         font-weight: 800;
                         text-transform: uppercase;
-                        color: lighten($text-dark, 10%);
+                        color: color.adjust($text-dark, $lightness: 10%);
                         line-height: 1;
                     }
                 }
@@ -868,7 +869,7 @@ $text-dark: #475569; // Soft slate dark text
 
         .subtitle {
             margin: 0;
-            color: lighten($text-dark, 10%);
+            color: color.adjust($text-dark, $lightness: 10%);
             font-size: 0.95rem;
         }
     }
@@ -913,7 +914,7 @@ $text-dark: #475569; // Soft slate dark text
 
             th {
                 text-transform: uppercase;
-                color: lighten($text-dark, 15%);
+                color: color.adjust($text-dark, $lightness: 15%);
                 font-weight: 800;
                 font-size: 0.75rem;
             }
@@ -935,7 +936,7 @@ $text-dark: #475569; // Soft slate dark text
 
             .exceeded-row {
                 background-color: #fff5f5;
-                color: darken($accent-red, 20%);
+                color: color.adjust($accent-red, $lightness: -20%);
 
                 td {
                     border-bottom: 2px solid $accent-red;
@@ -962,7 +963,7 @@ $text-dark: #475569; // Soft slate dark text
             .negation-tally {
                 display: block;
                 font-size: 0.7rem;
-                color: lighten($text-dark, 20%);
+                color: color.adjust($text-dark, $lightness: 20%);
                 font-weight: normal;
             }
         }
@@ -975,7 +976,7 @@ $text-dark: #475569; // Soft slate dark text
             border-radius: 6px;
 
             h4 {
-                color: darken($accent-red, 20%);
+                color: color.adjust($accent-red, $lightness: -20%);
                 margin-bottom: 6px;
                 font-size: 0.8rem;
             }
@@ -1015,15 +1016,15 @@ $text-dark: #475569; // Soft slate dark text
             p {
                 margin: 6px 0 0 0;
                 font-size: 0.9rem;
-                color: lighten($text-dark, 10%);
+                color: color.adjust($text-dark, $lightness: 10%);
             }
 
             .text-green {
-                color: darken($accent-green, 20%);
+                color: color.adjust($accent-green, $lightness: -20%);
             }
 
             .text-red {
-                color: darken($accent-red, 20%);
+                color: color.adjust($accent-red, $lightness: -20%);
             }
         }
 
@@ -1061,7 +1062,7 @@ $text-dark: #475569; // Soft slate dark text
             font-size: 1.1rem;
 
             &:hover {
-                background-color: lighten($accent-yellow, 5%);
+                background-color: color.adjust($accent-yellow, $lightness: 5%);
             }
         }
     }
@@ -1144,14 +1145,14 @@ $text-dark: #475569; // Soft slate dark text
     .victory-celebration {
         h2 {
             font-size: 2rem;
-            color: darken($accent-yellow, 15%);
+            color: color.adjust($accent-yellow, $lightness: -15%);
             margin: 0;
             text-shadow: none;
         }
 
         .subtitle {
             margin: 6px 0 0 0;
-            color: lighten($text-dark, 15%);
+            color: color.adjust($text-dark, $lightness: 15%);
         }
     }
 
@@ -1172,7 +1173,7 @@ $text-dark: #475569; // Soft slate dark text
         }
 
         h3 {
-            color: lighten($text-dark, 15%);
+            color: color.adjust($text-dark, $lightness: 15%);
             font-size: 0.95rem;
             margin-bottom: 12px;
         }
@@ -1195,7 +1196,7 @@ $text-dark: #475569; // Soft slate dark text
             font-size: 0.95rem;
 
             strong {
-                color: darken($accent-orange, 15%);
+                color: color.adjust($accent-orange, $lightness: -15%);
                 font-size: 1.2rem;
             }
         }
@@ -1223,7 +1224,7 @@ $text-dark: #475569; // Soft slate dark text
             border: 1px solid rgba(0, 0, 0, 0.04);
 
             .rank {
-                color: lighten($text-dark, 20%);
+                color: color.adjust($text-dark, $lightness: 20%);
             }
 
             .name {
@@ -1232,7 +1233,7 @@ $text-dark: #475569; // Soft slate dark text
             }
 
             .score {
-                color: darken($accent-yellow, 15%);
+                color: color.adjust($accent-yellow, $lightness: -15%);
             }
         }
     }
@@ -1286,7 +1287,7 @@ $text-dark: #475569; // Soft slate dark text
             animation: slide-right-in 0.3s ease;
 
             h3 {
-                color: darken($accent-orange, 15%);
+                color: color.adjust($accent-orange, $lightness: -15%);
                 font-size: 1.05rem;
                 margin-top: 0;
             }
@@ -1342,7 +1343,7 @@ $text-dark: #475569; // Soft slate dark text
 
             &:disabled {
                 background-color: #cbd5e0;
-                color: lighten($text-dark, 20%);
+                color: color.adjust($text-dark, $lightness: 20%);
                 cursor: not-allowed;
             }
         }
@@ -1350,7 +1351,7 @@ $text-dark: #475569; // Soft slate dark text
         span {
             font-size: 0.85rem;
             font-weight: 800;
-            color: lighten($text-dark, 15%);
+            color: color.adjust($text-dark, $lightness: 15%);
         }
     }
 }

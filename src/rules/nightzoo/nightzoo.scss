@@ -6,6 +6,8 @@
  * there is no layout shift. All rules are scoped under .nz-* wrappers.
  */
 
+@use "sass:color";
+
 $paper: #fdfbf6;
 $panel: #fbf6ec;
 $ink: #4a4750;
@@ -61,9 +63,9 @@ $apricot: #f2a65a;
     &:disabled { opacity: 0.45; cursor: default; }
 
     &.primary { background: $teal; border-color: $teal; color: #fff; }
-    &.primary:hover:not(:disabled) { background: darken($teal, 6%); }
+    &.primary:hover:not(:disabled) { background: color.adjust($teal, $lightness: -6%); }
     &.ghost { background: transparent; }
-    &.on { background: lighten($teal, 38%); border-color: $teal; }
+    &.on { background: color.adjust($teal, $lightness: 38%); border-color: $teal; }
     &.tiny { padding: 5px 9px; min-height: 30px; font-size: 0.8rem; border-radius: 8px; }
     &.xtiny { padding: 3px 7px; min-height: 24px; font-size: 0.72rem; border-radius: 7px; }
 }
@@ -187,13 +189,13 @@ $apricot: #f2a65a;
     &.filled { border-style: solid; border-color: transparent; background: transparent; }
     &.zoo {
         border: 2px solid $teal;
-        background: lighten($teal, 42%);
+        background: color.adjust($teal, $lightness: 42%);
     }
     .nz-zoo-label { font-weight: 800; font-size: 0.7rem; letter-spacing: 1px; color: $teal; }
 
     &.paired { background: #f1ebfa; border-color: #cdb9e9; }
 
-    &.place-target { cursor: pointer; box-shadow: inset 0 0 0 2px rgba($teal, 0.5); background: lighten($teal, 44%); }
+    &.place-target { cursor: pointer; box-shadow: inset 0 0 0 2px rgba($teal, 0.5); background: color.adjust($teal, $lightness: 44%); }
     &.place-target:hover { box-shadow: inset 0 0 0 3px $teal; }
     &.move-target { cursor: pointer; box-shadow: inset 0 0 0 2px rgba($apricot, 0.7); }
     &.move-target:hover { box-shadow: inset 0 0 0 3px $apricot; }
@@ -322,7 +324,7 @@ $apricot: #f2a65a;
     padding: 10px 12px;
     margin: 8px 0;
 
-    &.move { border-color: rgba($apricot, 0.6); background: lighten($apricot, 32%); }
+    &.move { border-color: rgba($apricot, 0.6); background: color.adjust($apricot, $lightness: 32%); }
     &.discover { border-color: rgba($teal, 0.5); }
     .nz-prompt-title { font-weight: 700; font-size: 0.86rem; display: block; margin-bottom: 8px; }
 }
@@ -443,7 +445,7 @@ $apricot: #f2a65a;
     font-size: 0.9rem;
     span:not(:first-child), b { text-align: center; }
     &.head { background: $panel; font-weight: 700; font-size: 0.74rem; text-transform: uppercase; color: #857c70; }
-    &.winner { border-color: $teal; background: lighten($teal, 44%); }
+    &.winner { border-color: $teal; background: color.adjust($teal, $lightness: 44%); }
     b { color: $teal; font-size: 1.05rem; }
 }
 
@@ -480,7 +482,7 @@ $apricot: #f2a65a;
 .nz-rules-animal {
     display: flex; gap: 12px; align-items: flex-start;
     background: #fff; border: 1.5px solid $line; border-radius: 12px; padding: 8px 10px;
-    &.in-play { border-color: $teal; background: lighten($teal, 46%); }
+    &.in-play { border-color: $teal; background: color.adjust($teal, $lightness: 46%); }
 }
 .nz-inplay-tag {
     font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;

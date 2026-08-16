@@ -2,6 +2,8 @@
  * jaipur.scss - Neo-Brutalist Indian-flavored styling for Jaipur
  */
 
+@use "sass:color";
+
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;700&display=swap');
 
 // Jaipur Indian-Flavor color palette
@@ -66,17 +68,17 @@ $accent-sand: #E6D7C3;
     }
 
     &.panel-turmeric {
-        background-color: lighten($accent-turmeric, 35%);
+        background-color: color.adjust($accent-turmeric, $lightness: 35%);
         border-color: $border-color;
     }
 
     &.panel-indigo {
-        background-color: lighten($accent-indigo, 60%);
+        background-color: color.adjust($accent-indigo, $lightness: 60%);
         border-color: $border-color;
     }
 
     &.panel-terracotta {
-        background-color: lighten($accent-terracotta, 40%);
+        background-color: color.adjust($accent-terracotta, $lightness: 40%);
         border-color: $border-color;
     }
 }
@@ -249,12 +251,12 @@ $accent-sand: #E6D7C3;
 
         &.stack-diamonds {
             border-color: $accent-pink;
-            background-color: lighten($accent-pink, 40%);
+            background-color: color.adjust($accent-pink, $lightness: 40%);
         }
 
         &.stack-gold {
             border-color: $accent-turmeric;
-            background-color: lighten($accent-turmeric, 35%);
+            background-color: color.adjust($accent-turmeric, $lightness: 35%);
         }
 
         &.stack-silver {
@@ -264,12 +266,12 @@ $accent-sand: #E6D7C3;
 
         &.stack-cloth {
             border-color: $accent-terracotta;
-            background-color: lighten($accent-terracotta, 40%);
+            background-color: color.adjust($accent-terracotta, $lightness: 40%);
         }
 
         &.stack-spice {
             border-color: $accent-indigo;
-            background-color: lighten($accent-indigo, 60%);
+            background-color: color.adjust($accent-indigo, $lightness: 60%);
         }
 
         &.stack-leather {

@@ -1,10 +1,12 @@
+@use "sass:color";
+
 $blue: #0074D9;
 $orange: #FF851B;
 .bg-team-0 {
-    background-color: scale-color($blue, $lightness: +15%);
+    background-color: color.scale($blue, $lightness: 15%);
 }
 .bg-team-1 {
-    background-color: scale-color($orange, $lightness: +15%);
+    background-color: color.scale($orange, $lightness: 15%);
 }
 #decrypto-score {
     position: relative;
