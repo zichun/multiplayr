@@ -9,7 +9,7 @@ import { strict as assert } from 'assert';
 
 import { WingspanGameState, Phase, PlayPayment } from '../../rules/wingspanpocket/WingspanGameState';
 import {
-    BIRD_CARDS, CARD_BY_ID, cardMatchesStaticGoal
+    BIRD_CARDS, CARD_BY_ID, cardMatchesStaticGoal, FoodType
 } from '../../rules/wingspanpocket/WingspanData';
 import { GameRuleTest } from '../GameRuleTest';
 
@@ -37,6 +37,13 @@ describe('Wingspan (Pocket)', () => {
 
     // ======================================================================
     describe('Type A: engine', () => {
+        const setActivate = (gs: WingspanGameState, flock: any[]) => {
+            const d = gs.get_data();
+            d.players['a'].flock = flock;
+            d.phase = Phase.Activate;
+            d.current = 0;
+            d.players['a'].tokenIndex = 0;
+        };
 
         describe('Setup', () => {
             it('deals 6 cards (2 bird / 4 food), 1 nest egg, 4 supply birds & food decks', () => {
@@ -320,14 +327,6 @@ describe('Wingspan (Pocket)', () => {
         });
 
         describe('Activation — brown powers', () => {
-            const setActivate = (gs: WingspanGameState, flock: any[]) => {
-                const d = gs.get_data();
-                d.players['a'].flock = flock;
-                d.phase = Phase.Activate;
-                d.current = 0;
-                d.players['a'].tokenIndex = 0;
-            };
-
             it('honors the player-chosen deck for "draw any food"', () => {
                 const gs = fresh();
                 const d = gs.get_data();
@@ -439,7 +438,7 @@ describe('Wingspan (Pocket)', () => {
                 assert.equal(p.reserve.length, 0);
             });
 
-            it('Red-billed Quelea describes power as "Tuck a bird (+1), Tuck a bird (+1)" and tucks selected birds', () => {
+            it('Red-billed Quelea describes power as "Tuck a bird, Tuck a bird" and tucks selected birds', () => {
                 const gs = fresh();
                 const d = gs.get_data();
                 const quelea = byName('Red-billed Quelea'); // [tuck_bird] [tuck_bird]
@@ -699,6 +698,21 @@ describe('Wingspan (Pocket)', () => {
                 assert.equal(gs.get_supply_birds().indexOf(b2), -1, 'chosen bird left the supply');
             });
 
+            it('Scarlet Ibis (egg limit <= 1) can draw Common Cuckoo (egg limit 0) and 1-egg birds', () => {
+                const gs = fresh();
+                const d = gs.get_data();
+                const ibis = byName('Scarlet Ibis');
+                const cuckoo = byName('Common Cuckoo'); // egg_limit: 0
+                const ostrich = byName('Common Ostrich'); // egg_limit: 3 (should NOT match)
+                d.supplyBirds = [cuckoo, ostrich, null, null];
+                d.players['a'].reserve = [];
+                setActivate(gs, [{ cardId: ibis, eggs: 0, tucked: [] }]);
+                gs.activate('a', { supplyBird: 0 });
+                const res = gs.get_player('a')!.reserve;
+                assert.equal(res.length, 1);
+                assert.equal(res[0].cardId, cuckoo, 'drew Common Cuckoo with egg limit 0');
+            });
+
             it('[draw_seed] gains a food card into reserve', () => {
                 const gs = fresh();
                 const d = gs.get_data();
@@ -769,6 +783,85 @@ describe('Wingspan (Pocket)', () => {
                 assert.equal(gs.get_player('a')!.reserve.filter(r => r.face === 'food').length, 1);
             });
 
+            it('copy_brown executes the chosen bird power using player-specified foodDeck choice', () => {
+                const gs = fresh();
+                const d = gs.get_data();
+                const myna = byName('Common Myna');         // copy_brown (own)
+                const gull = byName('Black-headed Gull');   // draw_any_food
+                const seedFood = foodCardId('seed');
+                const fishFood = foodCardId('fish', [seedFood]);
+                d.foodDecks = [[seedFood], [fishFood], [], []];
+                d.players['a'].reserve = [];
+                setActivate(gs, [
+                    { cardId: gull, eggs: 0, tucked: [] },
+                    { cardId: myna, eggs: 0, tucked: [] }
+                ]);
+                d.players['a'].tokenIndex = 1; // activate myna
+
+                // Player chooses to copy gull (index 0) and specifically draw from food deck 1 (fish)
+                gs.activate('a', { copyIndex: 0, foodDeck: 1 });
+                const res = gs.get_player('a')!.reserve;
+                assert.equal(res.length, 1);
+                assert.equal(res[0].cardId, fishFood, 'drew the exact food from deck 1 specified by player');
+                assert.equal(d.foodDecks[1].length, 0, 'deck 1 emptied');
+                assert.equal(d.foodDecks[0].length, 1, 'deck 0 left untouched');
+            });
+
+            it('copy_brown executes the chosen bird power with choose_one branch and tuck choices', () => {
+                const gs = fresh();
+                const d = gs.get_data();
+                const myna = byName('Common Myna');         // copy_brown (own)
+                const toucan = byName('Keel-billed Toucan'); // branch 0: draw fruit, branch 1: tuck fruit
+                const fruitCard = foodCardId('fruit');
+                d.players['a'].reserve = [{ cardId: fruitCard, face: 'food' }];
+                setActivate(gs, [
+                    { cardId: toucan, eggs: 0, tucked: [] },
+                    { cardId: myna, eggs: 0, tucked: [] }
+                ]);
+                d.players['a'].tokenIndex = 1; // activate myna
+
+                // Copy toucan, choose branch 1 (tuck fruit), tuck fruitCard
+                gs.activate('a', { copyIndex: 0, branch: 1, tuckCardId: fruitCard });
+                const p = gs.get_player('a')!;
+                assert.equal(p.flock[1].tucked.length, 1, 'tucked on myna');
+                assert.equal(p.flock[1].tucked[0], fruitCard);
+                assert.equal(p.reserve.length, 0);
+            });
+
+            it('sequence power (Galah) allows performing step 1 (draw food) and skipping step 2 (tuck bird)', () => {
+                const gs = fresh();
+                const d = gs.get_data();
+                const galah = byName('Galah'); // [draw_any_food] [tuck_bird]
+                const robin = byName('American Robin');
+                d.players['a'].reserve = [{ cardId: robin, face: 'bird' }];
+                setActivate(gs, [{ cardId: galah, eggs: 0, tucked: [] }]);
+
+                // Perform step 0 (draw food deck 0), skip step 1 (tuck bird)
+                gs.activate('a', { foodDeck: 0, skippedSteps: [1] });
+                const p = gs.get_player('a')!;
+                // Drew 1 food into reserve, didn't tuck bird
+                assert.equal(p.reserve.length, 2, 'has robin + drawn food');
+                assert.equal(p.flock[0].tucked.length, 0, 'no bird tucked');
+                assert.ok(p.reserve.some(r => r.cardId === robin && r.face === 'bird'));
+            });
+
+            it('sequence power (Galah) allows skipping step 1 (draw food) and performing step 2 (tuck bird)', () => {
+                const gs = fresh();
+                const d = gs.get_data();
+                const galah = byName('Galah'); // [draw_any_food] [tuck_bird]
+                const robin = byName('American Robin');
+                d.players['a'].reserve = [{ cardId: robin, face: 'bird' }];
+                setActivate(gs, [{ cardId: galah, eggs: 0, tucked: [] }]);
+
+                // Skip step 0 (draw food), perform step 1 (tuck robin)
+                gs.activate('a', { tuckCardId: robin, skippedSteps: [0] });
+                const p = gs.get_player('a')!;
+                // Tucked robin, did not draw food
+                assert.equal(p.reserve.length, 0, 'robin was tucked');
+                assert.equal(p.flock[0].tucked.length, 1);
+                assert.equal(p.flock[0].tucked[0], robin);
+            });
+
             it('green birds are skipped in the activation walk', () => {
                 const gs = fresh();
                 const d = gs.get_data();
@@ -810,6 +903,130 @@ describe('Wingspan (Pocket)', () => {
                 ];
                 const pay = gs.computeAutoPayment('a', swift);
                 assert.ok(pay && pay.foods.length === 1, 'fish can cover the invertebrate pip');
+            });
+
+            it('Paradise Tanager [fruit in powers are any] allows [draw_fruit] to draw any food deck', () => {
+                const gs = fresh();
+                const d = gs.get_data();
+                const tanager = byName('Paradise Tanager');           // [fruit] in powers are [any]
+                const fruitDove = byName('Many-colored Fruit-Dove'); // [draw_fruit]
+                const rodentFood = foodCardId('rodent');
+                d.foodDecks = [[rodentFood], [], [], []];
+                d.players['a'].reserve = [];
+                setActivate(gs, [
+                    { cardId: tanager, eggs: 0, tucked: [] },
+                    { cardId: fruitDove, eggs: 0, tucked: [] }
+                ]);
+                d.players['a'].tokenIndex = 1; // activate fruitDove
+                gs.activate('a', { foodDeck: 0 });
+                const res = gs.get_player('a')!.reserve;
+                assert.equal(res.length, 1);
+                assert.equal(res[0].cardId, rodentFood, 'drew rodent food even though power requested fruit');
+            });
+
+            it('Paradise Tanager [fruit in powers are any] allows [tuck_fruit] to tuck any food card', () => {
+                const gs = fresh();
+                const d = gs.get_data();
+                const tanager = byName('Paradise Tanager');       // [fruit] in powers are [any]
+                const toucan = byName('Keel-billed Toucan');     // [draw_fruit] or [tuck_fruit]
+                const rodentCard = foodCardId('rodent');
+                d.players['a'].reserve = [{ cardId: rodentCard, face: 'food' }];
+                setActivate(gs, [
+                    { cardId: tanager, eggs: 0, tucked: [] },
+                    { cardId: toucan, eggs: 0, tucked: [] }
+                ]);
+                d.players['a'].tokenIndex = 1; // activate toucan
+                gs.activate('a', { branch: 1, tuckCardId: rodentCard });
+                const p = gs.get_player('a')!;
+                assert.equal(p.flock[1].tucked.length, 1);
+                assert.equal(p.flock[1].tucked[0], rodentCard, 'tucked rodent food with tuck_fruit');
+                assert.equal(p.reserve.length, 0);
+            });
+
+            it('Paradise Tanager [fruit in powers are any] allows [draw_bird] with fruit in cost to draw any bird', () => {
+                const gs = fresh();
+                const d = gs.get_data();
+                const tanager = byName('Paradise Tanager');
+                // Bird with draw_bird cost_contains: 'fruit'
+                const pelican = byName('American White Pelican');
+                const swift = byName('Common Swift'); // cost: 1 invertebrate (no fruit)
+                d.supplyBirds = [swift, null, null, null];
+                d.players['a'].reserve = [];
+                setActivate(gs, [
+                    { cardId: tanager, eggs: 0, tucked: [] },
+                    { cardId: pelican, eggs: 0, tucked: [] }
+                ]);
+                d.players['a'].tokenIndex = 1;
+                // Pelican power is passive green in data, but resolveEffect with draw_bird filter cost_contains 'fruit'
+                const e = { op: 'draw_bird', filter: { cost_contains: 'fruit' as FoodType } } as any;
+                (gs as any).resolveEffect(d.players['a'], 1, e, { supplyBird: 0 }, 0);
+                assert.ok(gs.get_player('a')!.reserve.some(r => r.cardId === swift && r.face === 'bird'), 'drew swift without fruit in cost');
+            });
+
+            it('stacking [fruit in powers are any] + [use fruit as any] makes all food cards wild', () => {
+                const gs = fresh();
+                const d = gs.get_data();
+                const tanager = byName('Paradise Tanager');   // [fruit] in powers are [any]
+                const lorikeet = byName('Rainbow Lorikeet'); // use [fruit] as [any] when playing birds
+                const falcon = byName('Peregrine Falcon');   // cost: egg:1, rodent:2
+                const seedCard = foodCardId('seed', [falcon]);
+                const invertCard = foodCardId('invertebrate', [falcon, seedCard]);
+                d.players['a'].flock = [
+                    { cardId: tanager, eggs: 0, tucked: [] },
+                    { cardId: lorikeet, eggs: 0, tucked: [] }
+                ];
+                d.players['a'].nestEggs = 1;
+                d.players['a'].reserve = [
+                    { cardId: falcon, face: 'bird' },
+                    { cardId: seedCard, face: 'food' },
+                    { cardId: invertCard, face: 'food' }
+                ];
+                // Check can_pay and auto payment: 1 seed + 1 invert covers 2 rodent cost because all food is wild
+                const pay = gs.computeAutoPayment('a', falcon)!;
+                assert.ok(pay, 'payment found');
+                assert.equal(pay.foods.length, 2, 'paid 2 food for 2 rodent pips');
+                assert.ok(gs.can_pay('a', falcon, pay), 'payment is valid');
+                gs.play_bird('a', falcon, pay);
+                assert.equal(gs.get_player('a')!.flock.length, 3, 'falcon played successfully');
+            });
+
+            it('stacking [fruit in powers are any] + [ignore 1 fruit in cost] ignores 1 of ANY food in bird costs', () => {
+                const gs = fresh();
+                const d = gs.get_data();
+                const tanager = byName('Paradise Tanager');       // [fruit] in powers are [any]
+                const quetzal = byName('Resplendent Quetzal');   // ignore 1 [fruit] in bird costs
+                // Woodpecker costs: egg:1, food: { invertebrate: 1, fruit: 1 }
+                const woodpecker = byName('Pileated Woodpecker');
+                const invertCard = foodCardId('invertebrate', [woodpecker]);
+                const fruitCard = foodCardId('fruit', [woodpecker, invertCard]);
+
+                d.players['a'].flock = [
+                    { cardId: tanager, eggs: 0, tucked: [] },
+                    { cardId: quetzal, eggs: 0, tucked: [] }
+                ];
+                d.players['a'].nestEggs = 1;
+
+                // Case A: Player only has 1 invertebrate -> ignores the fruit pip
+                d.players['a'].reserve = [
+                    { cardId: woodpecker, face: 'bird' },
+                    { cardId: invertCard, face: 'food' }
+                ];
+                const payA = gs.computeAutoPayment('a', woodpecker)!;
+                assert.ok(payA, 'affordable with only 1 invertebrate');
+                assert.equal(payA.foods.length, 1);
+                assert.equal(payA.foods[0].cardId, invertCard);
+                assert.ok(gs.can_pay('a', woodpecker, payA));
+
+                // Case B: Player only has 1 fruit -> ignores the invertebrate pip
+                d.players['a'].reserve = [
+                    { cardId: woodpecker, face: 'bird' },
+                    { cardId: fruitCard, face: 'food' }
+                ];
+                const payB = gs.computeAutoPayment('a', woodpecker)!;
+                assert.ok(payB, 'affordable with only 1 fruit');
+                assert.equal(payB.foods.length, 1);
+                assert.equal(payB.foods[0].cardId, fruitCard);
+                assert.ok(gs.can_pay('a', woodpecker, payB));
             });
         });
 

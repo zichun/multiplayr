@@ -81,6 +81,7 @@ export interface ActivationChoices {
     payFoodCardId?: number;    // gated pay: reserve food card to discard
     discardEggFrom?: number;   // gated pay: flock index (or -1 Nest) to spend an egg
     allPlayersStart?: string;  // all_players: player to start the effect from
+    skippedSteps?: number[];   // indices of sequence steps the player chose to skip
 }
 
 export interface PendingAllPlayersAction {
@@ -320,15 +321,37 @@ export class WingspanGameState {
     }
 
     // ---- green modifiers for the active player ----
-    private greenSets(p: PlayerState) {
+    public greenSets(p: PlayerState) {
         const useAsAny = new Set<FoodType>();
-        const ignore: FoodType[] = [];
+        const ignore: (FoodType | 'any')[] = [];
         const foodInPowersAny = new Set<FoodType>();
+
+        // Step 1: Collect all food_in_powers_is_any modifiers
         for (const c of p.flock) {
             const e = this.card(c.cardId).power.effect;
-            if (e.op === 'use_as_any') useAsAny.add(e.food);
-            else if (e.op === 'ignore_1_in_cost') ignore.push(e.food);
-            else if (e.op === 'food_in_powers_is_any') foodInPowersAny.add(e.food);
+            if (e.op === 'food_in_powers_is_any') {
+                foodInPowersAny.add(e.food);
+            }
+        }
+
+        // Step 2: Evaluate use_as_any and ignore_1_in_cost taking food_in_powers_is_any into account
+        for (const c of p.flock) {
+            const e = this.card(c.cardId).power.effect;
+            if (e.op === 'use_as_any') {
+                if (foodInPowersAny.has(e.food)) {
+                    // [e.food] in powers are [any] -> so "use [any] as [any] when playing birds"
+                    for (const f of FOOD_TYPES) useAsAny.add(f);
+                } else {
+                    useAsAny.add(e.food);
+                }
+            } else if (e.op === 'ignore_1_in_cost') {
+                if (foodInPowersAny.has(e.food)) {
+                    // [e.food] in powers are [any] -> so "ignore 1 [any] in bird costs"
+                    ignore.push('any');
+                } else {
+                    ignore.push(e.food);
+                }
+            }
         }
         return { useAsAny, ignore, foodInPowersAny };
     }
@@ -431,16 +454,80 @@ export class WingspanGameState {
     // Cost / payment (§5.1)
     // ========================================================================
 
-    /** The required specific food pips of a card, after green ignore-reductions. */
-    private requiredPips(p: PlayerState, card: BirdCard): FoodType[] {
-        const ignore = this.greenSets(p).ignore.slice();
-        const req: FoodType[] = [];
+    /**
+     * Compute all possible reduced (requiredSpecific, wildPips) tuples
+     * after applying the player's green ignore discounts (both specific and 'any').
+     */
+    public getPossibleReducedCosts(p: PlayerState, card: BirdCard): { req: FoodType[]; wildPips: number }[] {
+        const { ignore } = this.greenSets(p);
+        const specificIgnores: FoodType[] = [];
+        let anyIgnoreCount = 0;
+        for (const ig of ignore) {
+            if (ig === 'any') anyIgnoreCount++;
+            else specificIgnores.push(ig);
+        }
+
+        // 1. Build initial specific pips from card.cost.food
+        const pips: FoodType[] = [];
         for (const f of FOOD_TYPES) {
             let n = card.cost.food[f] || 0;
-            while (n > 0 && ignore.indexOf(f) !== -1) { n--; ignore.splice(ignore.indexOf(f), 1); }
-            for (let k = 0; k < n; k++) req.push(f);
+            while (n > 0 && specificIgnores.indexOf(f) !== -1) {
+                n--;
+                specificIgnores.splice(specificIgnores.indexOf(f), 1);
+            }
+            for (let k = 0; k < n; k++) pips.push(f);
         }
-        return req;
+
+        let baseWild = card.cost.any || 0;
+
+        // If no 'any' ignores, there is exactly one reduced cost configuration
+        if (anyIgnoreCount === 0) {
+            return [{ req: pips, wildPips: baseWild }];
+        }
+
+        // If there are 'any' ignores, each 'any' ignore can remove 1 pip from either
+        // specific pips (any food type in pips) or from baseWild!
+        const results: { req: FoodType[]; wildPips: number }[] = [];
+        const seen = new Set<string>();
+
+        const recurse = (currentPips: FoodType[], currentWild: number, remainingIgnores: number) => {
+            if (remainingIgnores === 0 || (currentPips.length === 0 && currentWild === 0)) {
+                const key = `${currentPips.slice().sort().join(',')}|${currentWild}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    results.push({ req: currentPips, wildPips: currentWild });
+                }
+                return;
+            }
+
+            // Option A: discount 1 wild pip if currentWild > 0
+            if (currentWild > 0) {
+                recurse(currentPips, currentWild - 1, remainingIgnores - 1);
+            }
+
+            // Option B: discount 1 of each distinct specific food type in currentPips
+            const distinctFoods = Array.from(new Set(currentPips));
+            for (const f of distinctFoods) {
+                const nextPips = currentPips.slice();
+                const idx = nextPips.indexOf(f);
+                nextPips.splice(idx, 1);
+                recurse(nextPips, currentWild, remainingIgnores - 1);
+            }
+
+            // Option C: if no pips or wild left to discount, finalize
+            if (currentWild === 0 && distinctFoods.length === 0) {
+                recurse(currentPips, currentWild, 0);
+            }
+        };
+
+        recurse(pips, baseWild, anyIgnoreCount);
+        return results;
+    }
+
+    /** The required specific food pips of a card, after green ignore-reductions. */
+    private requiredPips(p: PlayerState, card: BirdCard): FoodType[] {
+        const possible = this.getPossibleReducedCosts(p, card);
+        return possible[0]?.req || [];
     }
 
     /** A reserve food card as a payable resource: the types it can be + wild (green). */
@@ -475,14 +562,17 @@ export class WingspanGameState {
     /** Do these food cards (+ eggs) cover the cost? (2-for-1 allowed, proper matching). */
     private coverCost(p: PlayerState, card: BirdCard, foods: { options: FoodType[]; wild: boolean }[], eggCount: number): boolean {
         if (eggCount < (card.cost.egg || 0)) return false; // eggs are paid exactly, never converted
-        const req = this.requiredPips(p, card);
-        const wildPips = card.cost.any || 0;
-        const S = req.length;
+        const possibleCosts = this.getPossibleReducedCosts(p, card);
         const n = foods.length;
-        const M = this.matchPips(req, foods).filter(x => x >= 0).length;
-        // the M matched cards cover M specific pips; the remaining (n − M) cards must
-        // cover the wild pips (1 card each) and the unmatched specifics (2-for-1, 2 each)
-        return (n - M) >= wildPips + 2 * (S - M);
+        // Check if ANY possible reduced cost is covered by the provided foods
+        for (const { req, wildPips } of possibleCosts) {
+            const S = req.length;
+            const M = this.matchPips(req, foods).filter(x => x >= 0).length;
+            if ((n - M) >= wildPips + 2 * (S - M)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -519,7 +609,6 @@ export class WingspanGameState {
     public computeAutoPayment(id: string, cardId: number): PlayPayment | null {
         const p = this.player(id);
         const card = this.card(cardId);
-        const greens = this.greenSets(p);
         // egg sources: prefer Nest, then flock birds with eggs
         const eggSources: number[] = [];
         const eggNeed = card.cost.egg || 0;
@@ -528,36 +617,40 @@ export class WingspanGameState {
         p.flock.forEach((c, i) => { for (let k = 0; k < c.eggs; k++) eggCandidates.push(i); });
         for (let k = 0; k < eggNeed; k++) { if (k >= eggCandidates.length) return null; eggSources.push(eggCandidates[k]); }
 
-        // Assign reserve food cards via proper bipartite matching (a 2-food card
-        // can flexibly cover either of its types), then use leftovers for wild
-        // pips and 2-for-1 conversions.
         const foodCards = p.reserve.filter(r => r.face === 'food');
         const res = foodCards.map(r => this.foodRes(p, r.cardId));
-        const req = this.requiredPips(p, card);
-        const wildPips = card.cost.any || 0;
 
-        const cardPip = this.matchPips(req, res);
-        const chosen: FoodPayment[] = [];
-        const usedIdx = new Set<number>();
-        // matched cards → the specific pip they serve (as a valid printed type)
-        cardPip.forEach((pip, ci) => {
-            if (pip < 0) return;
-            usedIdx.add(ci);
-            const rf = res[ci].options;
-            const as = rf.indexOf(req[pip]) !== -1 ? req[pip] : rf[0];
-            chosen.push({ cardId: res[ci].cardId, as });
-        });
-        const unmatchedPips = req.length - usedIdx.size;
-        const leftover: number[] = [];
-        res.forEach((_, ci) => { if (!usedIdx.has(ci)) leftover.push(ci); });
-        // leftovers cover wild pips (1 each) then 2-for-1 for the unmatched specifics
-        const need = wildPips + 2 * unmatchedPips;
-        if (leftover.length < need) return null;
-        for (let k = 0; k < need; k++) {
-            const ci = leftover[k];
-            chosen.push({ cardId: res[ci].cardId, as: res[ci].options[0] });
+        const possibleCosts = this.getPossibleReducedCosts(p, card);
+        let bestPayment: PlayPayment | null = null;
+
+        for (const { req, wildPips } of possibleCosts) {
+            const cardPip = this.matchPips(req, res);
+            const chosen: FoodPayment[] = [];
+            const usedIdx = new Set<number>();
+            cardPip.forEach((pip, ci) => {
+                if (pip < 0) return;
+                usedIdx.add(ci);
+                const rf = res[ci].options;
+                const as = res[ci].wild ? req[pip] : (rf.indexOf(req[pip]) !== -1 ? req[pip] : rf[0]);
+                chosen.push({ cardId: res[ci].cardId, as });
+            });
+            const unmatchedPips = req.length - usedIdx.size;
+            const leftoverIndices: number[] = [];
+            res.forEach((_, ci) => { if (!usedIdx.has(ci)) leftoverIndices.push(ci); });
+            const neededLeftovers = wildPips + 2 * unmatchedPips;
+            if (leftoverIndices.length < neededLeftovers) continue;
+
+            for (let k = 0; k < neededLeftovers; k++) {
+                const ci = leftoverIndices[k];
+                chosen.push({ cardId: res[ci].cardId, as: res[ci].options[0] });
+            }
+
+            if (!bestPayment || chosen.length < bestPayment.foods.length) {
+                bestPayment = { foods: chosen, eggSources };
+            }
         }
-        return { foods: chosen, eggSources };
+
+        return bestPayment;
     }
 
     // ========================================================================
@@ -902,7 +995,7 @@ export class WingspanGameState {
             }
 
             case 'draw_bird': {
-                const slot = this.pickSupplyBird(e.filter, ch.supplyBird);
+                const slot = this.pickSupplyBird(p, e.filter, ch.supplyBird);
                 if (slot === -1) return false;
                 const cardId = this.data.supplyBirds[slot] as number;
                 this.data.supplyBirds[slot] = null;
@@ -1053,7 +1146,8 @@ export class WingspanGameState {
                     return true;
                 }
                 // food
-                const want = e.food && e.food !== 'any' ? e.food : null;
+                const rawWant = e.food && e.food !== 'any' ? e.food : null;
+                const want = (rawWant && greens.foodInPowersAny.has(rawWant)) ? null : rawWant;
                 const ri = ch.payFoodCardId != null
                     ? p.reserve.findIndex(r => r.cardId === ch.payFoodCardId && r.face === 'food' && (!want || this.card(r.cardId).reverse_food.includes(want)))
                     : p.reserve.findIndex(r => r.face === 'food' && (!want || this.card(r.cardId).reverse_food.includes(want)));
@@ -1082,8 +1176,12 @@ export class WingspanGameState {
             case 'sequence': {
                 let any = false;
                 for (let i = 0; i < e.steps.length; i++) {
-                    if (i > 0 && outcome && outcome.length > 0) outcome.push({ kind: 'text', text: ', ' });
-                    any = this.resolveEffect(p, birdIdx, e.steps[i], ch, depth, outcome) || any;
+                    if (ch.skippedSteps && ch.skippedSteps.includes(i)) {
+                        continue;
+                    }
+                    if (any && outcome && outcome.length > 0) outcome.push({ kind: 'text', text: ', ' });
+                    const res = this.resolveEffect(p, birdIdx, e.steps[i], ch, depth, outcome);
+                    any = res || any;
                 }
                 return any;
             }
@@ -1168,13 +1266,18 @@ export class WingspanGameState {
 
     // ---- resolver helpers ----
 
-    private pickSupplyBird(filter: any, prefer?: number): number {
+    private pickSupplyBird(p: PlayerState, filter: any, prefer?: number): number {
+        const greens = this.greenSets(p);
         const matches = (cardId: number | null): boolean => {
             if (cardId == null) return false;
             const c = this.card(cardId);
             if (!filter) return true;
-            if (filter.cost_contains) return (c.cost.food[filter.cost_contains] || 0) > 0; // [any] does NOT satisfy
-            if (filter.egg_limit != null) return c.egg_limit === filter.egg_limit;
+            if (filter.cost_contains) {
+                const target = filter.cost_contains;
+                if (target !== 'any' && greens.foodInPowersAny.has(target)) return true;
+                return (c.cost.food[target] || 0) > 0;
+            }
+            if (filter.egg_limit != null) return c.egg_limit <= filter.egg_limit;
             if (filter.egg_limit_min != null) return c.egg_limit >= filter.egg_limit_min;
             return true;
         };
@@ -1194,9 +1297,12 @@ export class WingspanGameState {
     }
 
     private pickTuckCard(p: PlayerState, from: 'bird' | 'food' | 'any', food: FoodType | undefined, prefer?: number): number | null {
+        const greens = this.greenSets(p);
+        const targetFood = (food && greens.foodInPowersAny.has(food)) ? undefined : food;
         const ok = (r: ReserveCard): boolean => {
             if (from === 'bird') return r.face === 'bird';
-            if (from === 'food') return r.face === 'food' && (!food || this.card(r.cardId).reverse_food.includes(food));
+            if (from === 'food') return r.face === 'food' && (!targetFood || this.card(r.cardId).reverse_food.includes(targetFood));
+            if (targetFood && r.face === 'food' && !this.card(r.cardId).reverse_food.includes(targetFood)) return false;
             return true;
         };
         if (prefer != null) { const r = p.reserve.find(x => x.cardId === prefer && ok(x)); if (r) return r.cardId; }
@@ -1241,6 +1347,7 @@ export class WingspanGameState {
         // left_rightmost
         const leftId = this.data.playerOrder[(myIdx - 1 + n) % n];
         const lp = this.player(leftId);
+        if (ch.copyIndex != null) { const e = brownEffect(lp, ch.copyIndex); if (e) return e; }
         for (let i = lp.flock.length - 1; i >= 0; i--) { const e = brownEffect(lp, i); if (e) return e; }
         return null;
     }

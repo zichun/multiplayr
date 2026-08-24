@@ -325,31 +325,50 @@ const FOOD_ICONS: Record<FoodType, IconObject> = {
         L('ant1', 'rectangle', 74, 42, 0.03, 0.18, 30, WHITE),
         L('ant2', 'rectangle', 80, 42, 0.03, 0.18, 10, WHITE)
     ]),
-    // two seeds — a pair of pointed teardrops
+    // seeds — two refined grain kernels with center crease
     seed: coin('food_seed', FOOD_DISC_COLOR.seed, [
-        L('sd1', 'bezier', 0, 0, 1, 1, 0, WHITE, { customPath: 'M 40 28 C 56 40 56 60 40 72 C 30 60 30 40 40 28 Z' }),
-        L('sd2', 'bezier', 0, 0, 1, 1, 0, WHITE, { customPath: 'M 62 34 C 74 44 74 62 62 72 C 54 62 54 44 62 34 Z', opacity: 0.9 })
+        L('sd1', 'bezier', 0, 0, 1, 1, 0, WHITE, {
+            customPath: 'M 38 26 C 50 36 50 62 38 72 C 28 62 28 36 38 26 Z'
+        }),
+        L('sd1_groove', 'bezier', 0, 0, 1, 1, 0, 'none', {
+            customPath: 'M 38 33 L 38 65', stroke: FOOD_DISC_COLOR.seed, strokeWidth: 2.5
+        }),
+        L('sd2', 'bezier', 0, 0, 1, 1, 0, WHITE, {
+            customPath: 'M 62 32 C 73 41 73 63 62 72 C 52 63 52 41 62 32 Z',
+            opacity: 0.95
+        }),
+        L('sd2_groove', 'bezier', 0, 0, 1, 1, 0, 'none', {
+            customPath: 'M 62 39 L 62 65', stroke: FOOD_DISC_COLOR.seed, strokeWidth: 2.2, opacity: 0.95
+        })
     ]),
-    // fish — teardrop body + triangular tail + eye dot
+    // fish — sleek tapered body + flared tail fin + dorsal fin + eye dot
     fish: coin('food_fish', FOOD_DISC_COLOR.fish, [
-        L('body', 'circle', 46, 50, 0.98, 0.66, 0, WHITE),
-        L('tail', 'triangle', 74, 50, 0.42, 0.5, 90, WHITE),
-        L('eye', 'circle', 34, 46, 0.09, 0.09, 0, FOOD_DISC_COLOR.fish)
+        L('tail', 'triangle', 72, 50, 0.46, 0.52, -90, WHITE),
+        L('fin_d', 'triangle', 46, 36, 0.24, 0.22, 15, WHITE),
+        L('body', 'circle', 44, 50, 1.08, 0.66, 0, WHITE),
+        L('head', 'triangle', 28, 50, 0.26, 0.46, -90, WHITE),
+        L('eye', 'circle', 30, 48, 0.09, 0.09, 0, FOOD_DISC_COLOR.fish)
     ]),
-    // cherries — two berries on stems
+    // cherries — two berries connected by graceful arching stems with leaf
     fruit: coin('food_fruit', FOOD_DISC_COLOR.fruit, [
-        L('stem1', 'rectangle', 45, 40, 0.03, 0.3, 20, WHITE),
-        L('stem2', 'rectangle', 58, 40, 0.03, 0.3, -20, WHITE),
-        L('leaf', 'triangle', 52, 28, 0.24, 0.16, 90, WHITE),
-        L('berry1', 'circle', 40, 62, 0.42, 0.42, 0, WHITE),
-        L('berry2', 'circle', 62, 62, 0.42, 0.42, 0, WHITE)
+        L('stems', 'bezier', 0, 0, 1, 1, 0, 'none', {
+            customPath: 'M 38 52 C 39 36 45 28 50 26 C 55 28 61 36 62 52',
+            stroke: WHITE, strokeWidth: 4
+        }),
+        L('leaf', 'bezier', 0, 0, 1, 1, 0, WHITE, {
+            customPath: 'M 50 26 C 56 16 70 18 72 25 C 66 32 55 31 50 26 Z'
+        }),
+        L('berry1', 'circle', 38, 62, 0.44, 0.44, 0, WHITE),
+        L('berry2', 'circle', 62, 62, 0.44, 0.44, 0, WHITE)
     ]),
-    // mouse — body + big ear + curled tail
+    // mouse (rodent) — cute plump body facing left, perky round ear on head, nose dot, curled tail
     rodent: coin('food_rodent', FOOD_DISC_COLOR.rodent, [
-        L('body', 'circle', 46, 56, 0.86, 0.72, 0, WHITE),
-        L('ear', 'circle', 60, 40, 0.36, 0.36, 0, WHITE),
-        L('nose', 'circle', 30, 58, 0.16, 0.16, 0, WHITE),
-        L('tail', 'bezier', 0, 0, 1, 1, 0, 'none', { customPath: 'M 62 66 C 78 66 80 50 72 46', stroke: WHITE, strokeWidth: 5 })
+        L('tail', 'bezier', 0, 0, 1, 1, 0, 'none', { customPath: 'M 64 64 C 80 64 82 48 74 44', stroke: WHITE, strokeWidth: 5 }),
+        L('body', 'circle', 50, 56, 0.90, 0.74, 0, WHITE),
+        L('snout', 'circle', 36, 57, 0.44, 0.38, 0, WHITE),
+        L('nose', 'circle', 28, 58, 0.14, 0.14, 0, WHITE),
+        L('ear', 'circle', 42, 41, 0.33, 0.33, 0, WHITE),
+        L('eye', 'circle', 34, 52, 0.08, 0.08, 0, FOOD_DISC_COLOR.rodent)
     ])
 };
 
@@ -357,20 +376,19 @@ const FOOD_ICONS: Record<FoodType, IconObject> = {
 // Egg / feather (VP) / wingspan / beak glyphs
 // ===========================================================================
 
-// A warm brown/orange egg — chosen so it is clearly distinct from the yellow
-// seed coin. Used for laid eggs and the egg cost/limit coin.
+// A warm brown/orange egg — smooth regular oval/ovoid
 const EGG_COLOR = '#c67536';   // brown-orange egg
 const EGG_DISC = '#eceef1';    // very faint grey disc it sits in
 export const EGG_ICON: IconObject = icon('egg', [
     L('egg', 'bezier', 0, 0, 1, 1, 0, EGG_COLOR, {
-        customPath: 'M 50 16 C 70 30 76 58 62 78 C 52 88 40 88 34 78 C 24 58 32 30 50 16 Z',
+        customPath: 'M 50 18 C 65 18 75 34 75 54 C 75 72 65 82 50 82 C 35 82 25 72 25 54 C 25 34 35 18 50 18 Z',
         stroke: '#9a561f', strokeWidth: 2
     })
 ]);
-// Egg as a coin: a very faint grey disc with the brown-orange egg on top.
+// Egg as a coin: a very faint grey disc with the smooth brown-orange egg on top.
 export const EGG_COIN: IconObject = coin('egg_coin', EGG_DISC, [
     L('egg', 'bezier', 0, 0, 1, 1, 0, EGG_COLOR, {
-        customPath: 'M 50 24 C 66 36 70 58 60 74 C 52 82 44 82 38 74 C 28 58 34 36 50 24 Z'
+        customPath: 'M 50 24 C 63 24 72 37 72 53 C 72 68 63 78 50 78 C 37 78 28 68 28 53 C 28 37 37 24 50 24 Z'
     })
 ]);
 // A wild "any food" coin — a rainbow-ish neutral disc with a star knockout.
@@ -452,7 +470,7 @@ export function describePower(e: PowerEffect, opts: { icons?: boolean } = {}): s
             const f = e.filter;
             if (!f) return 'Draw a bird';
             if (f.cost_contains) return `Draw a bird with ${foodLabel(f.cost_contains, icons)} in cost`;
-            if (f.egg_limit != null) return `Draw a bird (limit ${eggsIcon(f.egg_limit)})`;
+            if (f.egg_limit != null) return `Draw a bird (limit ≤ ${eggsIcon(f.egg_limit)})`;
             if (f.egg_limit_min != null) return `Draw a bird (limit ${f.egg_limit_min}+ ${icons ? '[icon:egg]' : 'eggs'})`;
             if (f.select === 'largest_wingspan') return 'Draw the largest-wingspan bird';
             if (f.select === 'smallest_wingspan') return 'Draw the smallest-wingspan bird';
@@ -460,9 +478,9 @@ export function describePower(e: PowerEffect, opts: { icons?: boolean } = {}): s
         }
         case 'draw_card': return 'Draw any card';
         case 'tuck': {
-            if (e.from === 'bird') return icons ? 'Tuck a bird (+1 [icon:feather])' : 'Tuck a bird (+1)';
-            if (e.from === 'food') return e.food ? (icons ? `Tuck a ${foodLabel(e.food, icons)} (+1 [icon:feather])` : `Tuck a ${e.food} card (+1)`) : (icons ? 'Tuck a food (+1 [icon:feather])' : 'Tuck a food card (+1)');
-            return e.food ? (icons ? `Tuck a ${foodLabel(e.food, icons)} (+1 [icon:feather])` : `Tuck a ${e.food} card (+1)`) : (icons ? 'Tuck a card (+1 [icon:feather])' : 'Tuck a card (+1)');
+            if (e.from === 'bird') return 'Tuck a bird';
+            if (e.from === 'food') return e.food ? `Tuck a ${foodLabel(e.food, icons)}` : (icons ? 'Tuck a food' : 'Tuck a food card');
+            return e.food ? `Tuck a ${foodLabel(e.food, icons)}` : 'Tuck a card';
         }
         case 'lay_egg': {
             const n = e.count || 1;

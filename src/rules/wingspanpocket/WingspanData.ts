@@ -28,7 +28,7 @@ export type BeakDir = 'L' | 'R';
 export interface DrawBirdFilter {
     /** bird whose printed cost contains this food ([any] pip does NOT satisfy) */
     cost_contains?: FoodType;
-    egg_limit?: number;        // exact egg limit
+    egg_limit?: number;        // egg limit <= n
     egg_limit_min?: number;    // egg limit >= n
     select?: 'largest_wingspan' | 'smallest_wingspan';
 }
@@ -422,7 +422,7 @@ export const BIRD_CARDS: BirdCard[] = [
         cost: { food: { invertebrate: 2 } },
         raw: '[lay_egg] on another bird', effect: E.layEgg('another', 1),
         rev: ['invertebrate'], shape: 'songbird', pal: 'slate',
-        flavor: 'As a brood parsite, the Common Cuckoo\'s eggs can match host species\' eggs in color and pattern.'
+        flavor: 'As a brood parasite, the Common Cuckoo\'s eggs can match host species\' eggs in color and pattern.'
     }),
     card({
         name: 'Common Myna', sci: 'Acridotheres tristis', vp: 4, egg: 2, color: 'brown', ws: 35, beak: 'L',
@@ -875,7 +875,7 @@ export const BIRD_CARDS: BirdCard[] = [
     card({
         name: 'Scarlet Ibis', sci: 'Eudocimus ruber', vp: 3, egg: 1, color: 'brown', ws: 100, beak: 'R',
         cost: { egg: 1, food: { invertebrate: 1, fish: 1 } },
-        raw: '[draw_bird] with egg limit of 1', effect: E.drawBird({ egg_limit: 1 }),
+        raw: '[draw_bird] with egg limit <= 1', effect: E.drawBird({ egg_limit: 1 }),
         rev: ['seed'], shape: 'heron', pal: 'cardinal',
         flavor: 'These birds will feed in both saltwater and freshwater, but the young need freshwater prey.'
     }),
@@ -949,13 +949,13 @@ export const BIRD_CARDS: BirdCard[] = [
         rev: ['fruit'], shape: 'kingfisher', pal: 'teal',
         flavor: 'Kingfishers use their strong bills to dig burrows in river banks, dead trees, or termite nests.'
     }),
-    card({
-        name: 'Superb Lyrebird', sci: 'Menura novaehollandiae', vp: 1, egg: 1, color: 'green', ws: 73, beak: 'L',
-        cost: { food: { invertebrate: 1 }, any: 1 },
-        raw: 'copy a green power in any flock (1 per turn)', effect: E.copyGreen(),
-        rev: ['fish'], shape: 'rooster', pal: 'slate',
-        flavor: 'Male lyrebirds attract mates with their huge tails and an extraordinary ability for mimicry.'
-    }),
+    // card({
+    //     name: 'Superb Lyrebird', sci: 'Menura novaehollandiae', vp: 1, egg: 1, color: 'green', ws: 73, beak: 'L',
+    //     cost: { food: { invertebrate: 1 }, any: 1 },
+    //     raw: 'copy a green power in any flock (1 per turn)', effect: E.copyGreen(),
+    //     rev: ['fish'], shape: 'rooster', pal: 'slate',
+    //     flavor: 'Male lyrebirds attract mates with their huge tails and an extraordinary ability for mimicry.'
+    // }),
     card({
         name: 'Tawny Frogmouth', sci: 'Podargus strigoides', vp: 4, egg: 1, color: 'brown', ws: 82, beak: 'L',
         cost: { egg: 1, food: { invertebrate: 1, rodent: 1 } },

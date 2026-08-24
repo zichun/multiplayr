@@ -376,6 +376,7 @@ $radius: 14px;
     flex: 1 1 260px; min-width: 0;
     background: #fff; border: 1px solid $line; border-left: 4px solid $line; border-radius: 12px; padding: 8px 10px;
     &.active { box-shadow: 0 2px 12px rgba(74,144,217,.18); }
+    &.is-me { background: #fafbfc; }
 }
 .ws-opp-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .ws-opp-name { font-weight: 700; }

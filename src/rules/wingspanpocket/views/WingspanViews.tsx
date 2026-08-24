@@ -69,7 +69,6 @@ function getPicks(e: PowerEffect): ActPick[] {
             return out;
         }
         case 'copy_brown':
-            if (e.scope === 'own') return [{ kind: 'copyOwn' }];
             return [];
         case 'all_players':
             if (e.from_1_deck && (e.effect.op === 'draw_food' || e.effect.op === 'gain_food')) {
@@ -98,11 +97,14 @@ function resolveBranchEffect(eff: PowerEffect, branch: number | null): PowerEffe
     return eff;
 }
 
-function birdMatchesFilter(cardId: number, filter?: DrawBirdFilter): boolean {
+function birdMatchesFilter(cardId: number, filter?: DrawBirdFilter, foodInPowersAny?: Set<FoodType>): boolean {
     const c = CARD_BY_ID[cardId];
     if (!filter) return true;
-    if (filter.cost_contains) return (c.cost.food[filter.cost_contains] || 0) > 0;
-    if (filter.egg_limit != null) return c.egg_limit === filter.egg_limit;
+    if (filter.cost_contains) {
+        if (foodInPowersAny && foodInPowersAny.has(filter.cost_contains)) return true;
+        return (c.cost.food[filter.cost_contains] || 0) > 0;
+    }
+    if (filter.egg_limit != null) return c.egg_limit <= filter.egg_limit;
     if (filter.egg_limit_min != null) return c.egg_limit >= filter.egg_limit_min;
     return true;
 }
@@ -312,6 +314,21 @@ const NestSlot: React.FC<{ eggs: number; selectable?: boolean; selected?: boolea
 // Goals strip
 // ============================================================================
 
+function renderGoalDescription(desc: string): React.ReactNode {
+    if (!desc.includes('[any]')) return desc;
+    const parts = desc.split('[any]');
+    return parts.map((part, i) => (
+        <React.Fragment key={i}>
+            {part}
+            {i < parts.length - 1 && (
+                <span className="ws-inline-icon" style={{ display: 'inline-flex', verticalAlign: 'middle', margin: '0 2px' }}>
+                    <Icon id="any_coin" size={15} />
+                </span>
+            )}
+        </React.Fragment>
+    ));
+}
+
 const GoalsStrip: React.FC<{ goals: GoalId[] | null }> = ({ goals }) => {
     if (!goals) return null;
     return (
@@ -321,7 +338,7 @@ const GoalsStrip: React.FC<{ goals: GoalId[] | null }> = ({ goals }) => {
                 return (
                     <div key={g} className="ws-goal">
                         <span className="ws-goal-icon">{def.display_icon}</span>
-                        <span className="ws-goal-desc">{def.description}</span>
+                        <span className="ws-goal-desc">{renderGoalDescription(def.description)}</span>
                     </div>
                 );
             })}
@@ -882,13 +899,14 @@ const OpponentFlock: React.FC<{
 
 const OpponentsPanel: React.FC<{ p: WingspanProps; onInspectBird?: (cardId: number) => void }> = ({ p, onInspectBird }) => (
     <div className="ws-opponents">
-        {p.playerOrder.filter(id => id !== p.MP.clientId).map((id) => {
+        {p.playerOrder.map((id) => {
             const pub = p.publicPlayers[id];
             if (!pub) return null;
             const isCurrent = id === p.currentPlayerId;
+            const isMe = id === p.MP.clientId;
             const accent = p.playerAccents[id];
             return (
-                <div key={id} className={['ws-opp', isCurrent ? 'active' : ''].join(' ')} style={{ borderColor: accent }}>
+                <div key={id} className={['ws-opp', isCurrent ? 'active' : '', isMe ? 'is-me' : ''].join(' ')} style={{ borderColor: accent }}>
                     <div className="ws-opp-head">
                         <span className="ws-opp-name" style={{ color: accent }}>{p.playerNames[id]}</span>
                         {isCurrent && <span className="ws-turn-badge" style={{ backgroundColor: accent }}>Turn</span>}
@@ -971,7 +989,7 @@ const OpponentsTableauView: React.FC<{
                                 <div className="ws-review-breakdown">
                                     {pub.score && (
                                         <>
-                                            <strong>{pub.score.vp}</strong> bird · <strong>{pub.score.eggs}</strong> egg · <strong>{pub.score.tucked}</strong> tuck{p.advanced ? ` · <strong>${pub.score.goals}</strong> goal` : ''}
+                                            <strong>{pub.score.vp}</strong> bird · <strong>{pub.score.eggs}</strong> egg · <strong>{pub.score.tucked}</strong> tuck{p.advanced && <> · <strong>{pub.score.goals}</strong> goal</>}
                                         </>
                                     )}
                                 </div>
@@ -1103,7 +1121,7 @@ const ScoringPanel: React.FC<{
                                 <div className="ws-review-breakdown">
                                     {pub.score && (
                                         <>
-                                            <strong>{pub.score.vp}</strong> bird · <strong>{pub.score.eggs}</strong> egg · <strong>{pub.score.tucked}</strong> tuck{p.advanced ? ` · <strong>${pub.score.goals}</strong> goal` : ''}
+                                            <strong>{pub.score.vp}</strong> bird · <strong>{pub.score.eggs}</strong> egg · <strong>{pub.score.tucked}</strong> tuck{p.advanced && <> · <strong>{pub.score.goals}</strong> goal</>}
                                         </>
                                     )}
                                 </div>
@@ -1219,7 +1237,7 @@ const RulesView: React.FC = () => {
             <p>Then move left→right along your flock: each <b>brown</b> bird may trigger its power (optional — you choose <i>what</i> to draw, tuck, etc.). <b>Green</b> birds are skipped; their power is already always on.</p>
 
             <h4>Paying a cost</h4>
-            <p>A cost is shown as coins: specific foods, a wild <b>[any]</b> that any one food covers, and sometimes an <b>egg</b>.</p>
+            <p>A cost is shown as coins: specific foods, a wild <span style={{ display: 'inline-flex', verticalAlign: 'middle', margin: '0 2px' }}><Icon id="any_coin" size={16} /></span> <b>any</b> that any one food covers, and sometimes an <b>egg</b>.</p>
             <ul>
                 <li>Spend matching <b>food cards</b> from your reserve. A card printed with <b>two</b> foods counts as <b>either</b> one.</li>
                 <li><b>2-for-1 conversion</b> — missing a food? Spend <b>any 2 food cards</b> as <b>1 food of the type you need</b>. A bird can therefore cost you extra cards when you lack the exact foods.</li>
@@ -1325,6 +1343,10 @@ interface ActivationModalProps {
     reserve: ReserveCard[];
     flock: CardInPlay[];
     nestEggs: number;
+    publicPlayers?: Record<string, any>;
+    playerOrder?: string[];
+    playerNames?: Record<string, string>;
+    myId?: string;
     onResolve: (choices: ActivationChoices) => void;
     onSkip: () => void;
     onClose: () => void;
@@ -1333,6 +1355,13 @@ interface ActivationModalState {
     branch: number | null;
     stepIndex: number;
     stagedChoices: ActivationChoices;
+    skippedSteps: number[];
+    copiedPower: {
+        cardId: number;
+        effect: PowerEffect;
+        copyIndex?: number;
+        copyPlayer?: string;
+    } | null;
     virtualReserve: ReserveCard[];
     virtualSupplyBirds: (number | null)[];
     virtualFoodDecks: number[][];
@@ -1364,6 +1393,8 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
             branch: null,
             stepIndex: 0,
             stagedChoices: {},
+            skippedSteps: [],
+            copiedPower: null,
             virtualReserve: props.reserve.map(r => ({ ...r })),
             virtualSupplyBirds: [...props.supply.supplyBirds],
             virtualFoodDecks: initialDecks,
@@ -1377,9 +1408,35 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
         };
     }
 
-    /** send choices, folding in the selected choose_one branch */
+    /** send choices, folding in stagedChoices, skippedSteps, and the selected choose_one branch */
     private resolve = (choices: ActivationChoices) => {
-        this.props.onResolve(this.state.branch !== null ? { ...choices, branch: this.state.branch } : choices);
+        const merged = { ...this.state.stagedChoices, ...choices };
+        if (this.state.branch !== null) merged.branch = this.state.branch;
+        if (this.state.skippedSteps.length > 0) {
+            const list = choices.skippedSteps ? [...choices.skippedSteps] : [];
+            for (const s of this.state.skippedSteps) {
+                if (!list.includes(s)) list.push(s);
+            }
+            merged.skippedSteps = list;
+        }
+        this.props.onResolve(merged);
+    };
+
+    private skipCurrentStep = () => {
+        const eff = this.state.copiedPower ? this.state.copiedPower.effect : this.props.card.power.effect;
+        const active = resolveBranchEffect(eff, this.state.branch);
+        const picks = getPicks(active);
+        const nextSkipped = [...this.state.skippedSteps, this.state.stepIndex];
+
+        if (this.state.stepIndex + 1 < picks.length) {
+            this.setState({
+                skippedSteps: nextSkipped,
+                pendingPick: null,
+                stepIndex: this.state.stepIndex + 1
+            });
+        } else {
+            this.resolve({ ...this.state.stagedChoices, skippedSteps: nextSkipped });
+        }
     };
 
     private handleSkip = () => {
@@ -1392,8 +1449,7 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
     };
 
     private advanceOrResolve = (stepChoices: ActivationChoices) => {
-        const { card } = this.props;
-        const eff = card.power.effect;
+        const eff = this.state.copiedPower ? this.state.copiedPower.effect : this.props.card.power.effect;
         const active = resolveBranchEffect(eff, this.state.branch);
         const picks = getPicks(active);
         const nextChoices = { ...this.state.stagedChoices };
@@ -1513,9 +1569,16 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
     }
 
     private birdPicker(filter: DrawBirdFilter | undefined, onPick: (slot: number) => void) {
+        const foodInPowersAny = new Set<FoodType>();
+        if (this.props.flock) {
+            for (const c of this.props.flock) {
+                const e = CARD_BY_ID[c.cardId]?.power?.effect;
+                if (e && e.op === 'food_in_powers_is_any') foodInPowersAny.add(e.food);
+            }
+        }
         const slots = this.state.virtualSupplyBirds
             .map((cid, slot) => ({ cid, slot }))
-            .filter(x => x.cid != null && birdMatchesFilter(x.cid, filter));
+            .filter(x => x.cid != null && birdMatchesFilter(x.cid, filter, foodInPowersAny));
         if (slots.length === 0) return <div className="ws-muted pad">No matching bird in the supply.</div>;
         return (
             <div className="ws-act-grid">
@@ -1538,10 +1601,117 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
     }
 
     public render() {
-        const { card } = this.props;
-        const eff = card.power.effect;
+        const { card, flock } = this.props;
+        const baseEff = card.power.effect;
+        const copiedCard = this.state.copiedPower ? CARD_BY_ID[this.state.copiedPower.cardId] : null;
+        const eff = this.state.copiedPower ? this.state.copiedPower.effect : baseEff;
         const isRevealed = this.state.revealedInfo || this.state.huntResult !== null;
         const canCancel = !isRevealed;
+
+        const modalTitle = copiedCard
+            ? `Activate ${card.common_name} (Copying ${copiedCard.common_name})`
+            : `Activate ${card.common_name}`;
+
+        if (eff.op === 'copy_brown' && !this.state.copiedPower) {
+            const { activeIndex, publicPlayers, playerOrder, myId } = this.props;
+            let candidates: { card: BirdCard; i: number; playerLabel?: string; copyPlayer?: string }[] = [];
+            let promptText = 'Choose a bird to copy its brown power:';
+
+            if (eff.scope === 'own') {
+                candidates = flock
+                    .map((c, i) => ({ card: CARD_BY_ID[c.cardId], i }))
+                    .filter(x => x.i !== activeIndex && x.card.color === 'brown' && x.card.power.effect.op !== 'copy_brown');
+                promptText = 'Choose one of your birds to copy its brown power:';
+            } else if (eff.scope === 'right' && publicPlayers && playerOrder && myId) {
+                const n = playerOrder.length;
+                const myIdx = playerOrder.indexOf(myId);
+                const rightId = playerOrder[(myIdx + 1) % n];
+                const rightFlock: CardInPlay[] = publicPlayers[rightId]?.flock || [];
+                const rightName = this.props.playerNames?.[rightId] || 'Right Opponent';
+                candidates = rightFlock
+                    .map((c, i) => ({ card: CARD_BY_ID[c.cardId], i, playerLabel: rightName, copyPlayer: rightId }))
+                    .filter(x => x.card.color === 'brown' && x.card.power.effect.op !== 'copy_brown');
+                promptText = `Choose a brown bird from ${rightName} (player to your right) to copy:`;
+            } else if (eff.scope === 'left_rightmost' && publicPlayers && playerOrder && myId) {
+                const n = playerOrder.length;
+                const myIdx = playerOrder.indexOf(myId);
+                const leftId = playerOrder[(myIdx - 1 + n) % n];
+                const leftFlock: CardInPlay[] = publicPlayers[leftId]?.flock || [];
+                const leftName = this.props.playerNames?.[leftId] || 'Left Opponent';
+                for (let i = leftFlock.length - 1; i >= 0; i--) {
+                    const c = CARD_BY_ID[leftFlock[i].cardId];
+                    if (c.color === 'brown' && c.power.effect.op !== 'copy_brown') {
+                        candidates = [{ card: c, i, playerLabel: leftName, copyPlayer: leftId }];
+                        break;
+                    }
+                }
+                promptText = `Copy the rightmost brown bird power from ${leftName} (player to your left):`;
+            }
+
+            if (candidates.length === 0) {
+                return (
+                    <Modal title={modalTitle} onClose={canCancel ? this.props.onClose : undefined} wide>
+                        <div className="ws-act">
+                            <div className="ws-act-prompt">{promptText}</div>
+                            <div className="ws-muted pad" style={{ textAlign: 'center' }}>
+                                No eligible brown bird available to copy.
+                                <div style={{ marginTop: 12, fontSize: '0.88em' }}>
+                                    Click <strong>Skip power</strong> below to finish your turn.
+                                </div>
+                            </div>
+                            <button className="ws-btn ghost small" onClick={this.props.onSkip}>Skip power</button>
+                        </div>
+                    </Modal>
+                );
+            }
+
+            return (
+                <Modal title={modalTitle} onClose={canCancel ? this.props.onClose : undefined} wide>
+                    <div className="ws-act">
+                        <div className="ws-act-prompt">{promptText}</div>
+                        <div className="ws-act-branches">
+                            {candidates.map(x => (
+                                <button
+                                    key={`${x.copyPlayer || 'own'}-${x.i}`}
+                                    className="ws-btn primary"
+                                    onClick={() => {
+                                        const copiedEffect = x.card.power.effect;
+                                        this.setState({
+                                            copiedPower: {
+                                                cardId: x.card.id,
+                                                effect: copiedEffect,
+                                                copyIndex: x.i,
+                                                copyPlayer: x.copyPlayer
+                                            },
+                                            stagedChoices: {
+                                                copyIndex: x.i,
+                                                ...(x.copyPlayer ? { copyPlayer: x.copyPlayer } : {})
+                                            },
+                                            branch: null,
+                                            stepIndex: 0,
+                                            pendingPick: null,
+                                            eggTargets: []
+                                        });
+                                    }}
+                                >
+                                    <strong>{x.card.common_name}</strong>{x.playerLabel ? ` (${x.playerLabel})` : ''}: {describePower(x.card.power.effect)}
+                                </button>
+                            ))}
+                        </div>
+                        <button className="ws-btn ghost small" onClick={this.props.onSkip}>Skip power</button>
+                    </div>
+                </Modal>
+            );
+        }
+
+        const foodInPowersAny = new Set<FoodType>();
+        if (flock) {
+            for (const c of flock) {
+                const e = CARD_BY_ID[c.cardId]?.power?.effect;
+                if (e && e.op === 'food_in_powers_is_any') foodInPowersAny.add(e.food);
+            }
+        }
+        const remapFood = (f: FoodType | 'any'): FoodType | 'any' => (f !== 'any' && foodInPowersAny.has(f)) ? 'any' : f;
 
         // choose_one: pick the branch first (supports top-level or gated.pay choose_one)
         const chooseOneInfo = getChooseOneOptions(eff);
@@ -1551,7 +1721,7 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
             if (isAllDrawFood) {
                 const drawFoodOptions = eff.options.map((o, idx) => ({
                     branch: idx,
-                    food: (o.op === 'draw_food' || o.op === 'gain_food') ? o.food : 'any'
+                    food: remapFood((o.op === 'draw_food' || o.op === 'gain_food') ? o.food : 'any')
                 }));
                 const wantedFoodNames = drawFoodOptions.map(o => o.food === 'any' ? 'food' : o.food);
                 const deckCounts = this.state.virtualFoodDeckCounts;
@@ -1615,7 +1785,7 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
                 }
 
                 return (
-                    <Modal title={`Activate ${card.common_name}`} onClose={canCancel ? this.props.onClose : undefined} wide>
+                    <Modal title={modalTitle} onClose={canCancel ? this.props.onClose : undefined} wide>
                         <div className="ws-act">
                             <div className="ws-act-prompt">{promptText}</div>
                             {bodyContent}
@@ -1630,7 +1800,7 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
             if (isAllDiscardFood) {
                 const discardOptions = chooseOneInfo.options.map((o, idx) => ({
                     branch: idx,
-                    food: (o.op === 'discard' && o.what === 'food') ? o.food : 'any'
+                    food: remapFood((o.op === 'discard' && o.what === 'food') ? o.food : 'any')
                 }));
                 const wantedFoodNames = discardOptions.map(o => !o.food || o.food === 'any' ? 'food' : o.food);
                 const foodCards = this.state.virtualReserve.filter(r => r.face === 'food');
@@ -1728,7 +1898,7 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
             }
 
             return (
-                <Modal title={`Activate ${card.common_name}`} onClose={canCancel ? this.props.onClose : undefined} wide>
+                <Modal title={modalTitle} onClose={canCancel ? this.props.onClose : undefined} wide>
                     <div className="ws-act">
                         <div className="ws-act-prompt">Choose one</div>
                         <div className="ws-act-branches">
@@ -1781,39 +1951,29 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
             const stepPrefix = picks.length > 1 ? `(Step ${this.state.stepIndex + 1} of ${picks.length}) ` : '';
 
             if (pick.kind === 'chooseFood') {
-                const eligible = eligibleDecks({ foodDeckCounts: this.state.virtualFoodDeckCounts, foodDeckTops: this.state.virtualFoodDeckTops }, pick.food);
+                const targetFood = remapFood(pick.food);
+                const eligible = eligibleDecks({ foodDeckCounts: this.state.virtualFoodDeckCounts, foodDeckTops: this.state.virtualFoodDeckTops }, targetFood);
                 if (eligible.length === 0) {
-                    const foodName = pick.food === 'any' ? 'food' : pick.food;
-                    const hasNext = this.state.stepIndex + 1 < picks.length;
+                    const foodName = targetFood === 'any' ? 'food' : targetFood;
                     prompt = `${stepPrefix}No ${foodName} available in the supply`;
                     body = (
                         <div className="ws-muted pad" style={{ textAlign: 'center' }}>
                             <div>There is currently no <strong>{foodName}</strong> visible on any food deck in the supply.</div>
-                            {hasNext ? (
-                                <div style={{ marginTop: 14 }}>
-                                    <button
-                                        className="ws-btn primary small"
-                                        onClick={() => {
-                                            const updatedMissed = this.state.missedFoods.includes(foodName)
-                                                ? this.state.missedFoods
-                                                : [...this.state.missedFoods, foodName];
-                                            this.setState({ missedFoods: updatedMissed }, () => {
-                                                this.advanceOrResolve({});
-                                            });
-                                        }}
-                                    >
-                                        Next Step →
+                            <div style={{ marginTop: 14 }}>
+                                {picks.length > 1 ? (
+                                    <button className="ws-btn primary small" onClick={this.skipCurrentStep}>
+                                        {this.state.stepIndex + 1 < picks.length ? 'Skip to next step →' : 'Finish activation'}
                                     </button>
-                                </div>
-                            ) : (
-                                <div style={{ marginTop: 12, fontSize: '0.88em' }}>
-                                    Click <strong>Skip power</strong> below to finish your turn.
-                                </div>
-                            )}
+                                ) : (
+                                    <div style={{ marginTop: 12, fontSize: '0.88em' }}>
+                                        Click <strong>Skip power</strong> below to finish your turn.
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     );
                 } else {
-                    prompt = `${stepPrefix}${pick.food === 'any' ? 'Choose a food deck to draw from' : `Choose which ${pick.food} to draw`}`;
+                    prompt = `${stepPrefix}${targetFood === 'any' ? 'Choose a food deck to draw from' : `Choose which ${targetFood} to draw`}`;
                     const pickInfo = this.state.pendingPick;
                     let pickLabel = '';
                     if (pickInfo && pickInfo.kind === 'food') {
@@ -1823,9 +1983,10 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
                     body = (
                         <>
                             {this.deckPicker(d => this.setState({ pendingPick: { kind: 'food', deck: d } }), eligible)}
-                            <div style={{ marginTop: 14 }}>
+                            <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                                 <button
-                                    className="ws-btn primary block"
+                                    className="ws-btn primary"
+                                    style={{ flex: 1, minWidth: 160 }}
                                     disabled={!pickInfo || pickInfo.kind !== 'food'}
                                     onClick={() => {
                                         if (pickInfo && pickInfo.kind === 'food') {
@@ -1835,6 +1996,11 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
                                 >
                                     {pickInfo && pickInfo.kind === 'food' ? `Confirm: Draw ${pickLabel} →` : 'Select a food deck above'}
                                 </button>
+                                {picks.length > 1 && (
+                                    <button className="ws-btn secondary" onClick={this.skipCurrentStep}>
+                                        {this.state.stepIndex + 1 < picks.length ? 'Skip drawing food →' : 'Skip drawing food (Finish)'}
+                                    </button>
+                                )}
                             </div>
                         </>
                     );
@@ -1864,7 +2030,7 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
                                 </div>
                                 <div className="ws-hunt-msg">
                                     {hr.success
-                                        ? 'The bird is tucked under this predator (+1 point).'
+                                        ? 'The bird is tucked under this predator.'
                                         : 'The bird was too large and escaped to the discard pile.'}
                                 </div>
                             </div>
@@ -1909,24 +2075,52 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
                     const cardId = this.state.virtualSupplyBirds[pickInfo.slot];
                     pickLabel = cardId != null ? CARD_BY_ID[cardId].common_name : 'Bird';
                 }
-                body = (
-                    <>
-                        {this.birdPicker(pick.filter, s => this.setState({ pendingPick: { kind: 'bird', slot: s } }))}
-                        <div style={{ marginTop: 14 }}>
-                            <button
-                                className="ws-btn primary block"
-                                disabled={!pickInfo || pickInfo.kind !== 'bird'}
-                                onClick={() => {
-                                    if (pickInfo && pickInfo.kind === 'bird') {
-                                        this.advanceOrResolve({ supplyBird: pickInfo.slot });
-                                    }
-                                }}
-                            >
-                                {pickInfo && pickInfo.kind === 'bird' ? `Confirm: Draw ${pickLabel} →` : 'Select a bird above'}
-                            </button>
+                const slots = this.state.virtualSupplyBirds
+                    .map((cid, slot) => ({ cid, slot }))
+                    .filter(x => x.cid != null && birdMatchesFilter(x.cid, pick.filter, foodInPowersAny));
+                if (slots.length === 0) {
+                    body = (
+                        <div className="ws-muted pad" style={{ textAlign: 'center' }}>
+                            <div>No matching bird in the supply.</div>
+                            <div style={{ marginTop: 14 }}>
+                                {picks.length > 1 ? (
+                                    <button className="ws-btn primary small" onClick={this.skipCurrentStep}>
+                                        {this.state.stepIndex + 1 < picks.length ? 'Skip to next step →' : 'Finish activation'}
+                                    </button>
+                                ) : (
+                                    <div style={{ fontSize: '0.88em' }}>
+                                        Click <strong>Skip power</strong> below to finish your turn.
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </>
-                );
+                    );
+                } else {
+                    body = (
+                        <>
+                            {this.birdPicker(pick.filter, s => this.setState({ pendingPick: { kind: 'bird', slot: s } }))}
+                            <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                <button
+                                    className="ws-btn primary"
+                                    style={{ flex: 1, minWidth: 160 }}
+                                    disabled={!pickInfo || pickInfo.kind !== 'bird'}
+                                    onClick={() => {
+                                        if (pickInfo && pickInfo.kind === 'bird') {
+                                            this.advanceOrResolve({ supplyBird: pickInfo.slot });
+                                        }
+                                    }}
+                                >
+                                    {pickInfo && pickInfo.kind === 'bird' ? `Confirm: Draw ${pickLabel} →` : 'Select a bird above'}
+                                </button>
+                                {picks.length > 1 && (
+                                    <button className="ws-btn secondary" onClick={this.skipCurrentStep}>
+                                        {this.state.stepIndex + 1 < picks.length ? 'Skip drawing bird →' : 'Skip drawing bird (Finish)'}
+                                    </button>
+                                )}
+                            </div>
+                        </>
+                    );
+                }
             } else if (pick.kind === 'drawCard') {
                 prompt = `${stepPrefix}Draw a bird or a food`;
                 const pickInfo = this.state.pendingPick;
@@ -1946,9 +2140,10 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
                         {this.birdPicker(undefined, s => this.setState({ pendingPick: { kind: 'bird', slot: s } }))}
                         <div className="ws-act-sub">Food decks</div>
                         {this.deckPicker(d => this.setState({ pendingPick: { kind: 'food', deck: d } }))}
-                        <div style={{ marginTop: 14 }}>
+                        <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                             <button
-                                className="ws-btn primary block"
+                                className="ws-btn primary"
+                                style={{ flex: 1, minWidth: 160 }}
                                 disabled={!pickInfo}
                                 onClick={() => {
                                     if (!pickInfo) return;
@@ -1961,20 +2156,26 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
                             >
                                 {pickInfo ? `Confirm: Draw ${pickLabel} →` : 'Select a card or food deck above'}
                             </button>
+                            {picks.length > 1 && (
+                                <button className="ws-btn secondary" onClick={this.skipCurrentStep}>
+                                    {this.state.stepIndex + 1 < picks.length ? 'Skip drawing card →' : 'Skip drawing card (Finish)'}
+                                </button>
+                            )}
                         </div>
                     </>
                 );
             } else if (pick.kind === 'tuck') {
-                const targetLabel = pick.food ? `a ${pick.food} card` : pick.from === 'bird' ? 'a bird' : pick.from === 'food' ? 'a food card' : 'a card';
-                prompt = `${stepPrefix}Choose ${targetLabel} to tuck (+1)`;
+                const targetFood = pick.food ? remapFood(pick.food) : undefined;
+                const targetLabel = targetFood === 'any' ? (pick.from === 'bird' ? 'a bird' : 'a food/card') : (targetFood ? `a ${targetFood} card` : pick.from === 'bird' ? 'a bird' : pick.from === 'food' ? 'a food card' : 'a card');
+                prompt = `${stepPrefix}Choose ${targetLabel} to tuck`;
                 const isTuckable = (r: ReserveCard) => {
                     if (pick.from === 'bird') return r.face === 'bird';
                     if (pick.from === 'food') {
                         if (r.face !== 'food') return false;
-                        if (pick.food && !CARD_BY_ID[r.cardId].reverse_food.includes(pick.food)) return false;
+                        if (targetFood && targetFood !== 'any' && !CARD_BY_ID[r.cardId].reverse_food.includes(targetFood)) return false;
                         return true;
                     }
-                    if (pick.food && r.face === 'food' && !CARD_BY_ID[r.cardId].reverse_food.includes(pick.food)) return false;
+                    if (targetFood && targetFood !== 'any' && r.face === 'food' && !CARD_BY_ID[r.cardId].reverse_food.includes(targetFood)) return false;
                     return true;
                 };
                 const cards = this.state.virtualReserve.filter(isTuckable);
@@ -1992,9 +2193,9 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
                             </div>
                         )}
                         <div style={{ marginTop: 12 }}>
-                            {this.state.stepIndex > 0 && Object.keys(this.state.stagedChoices).length > 0 ? (
-                                <button className="ws-btn primary small" onClick={() => this.resolve(this.state.stagedChoices)}>
-                                    Finish activation
+                            {picks.length > 1 ? (
+                                <button className="ws-btn primary small" onClick={this.skipCurrentStep}>
+                                    {this.state.stepIndex + 1 < picks.length ? 'Skip to next step →' : 'Finish activation'}
                                 </button>
                             ) : (
                                 <div style={{ fontSize: '0.88em', marginTop: 6 }}>
@@ -2004,15 +2205,24 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
                         </div>
                     </div>
                 ) : (
-                    <div className="ws-act-grid">
-                        {cards.map((r, i) => (
-                            <button key={`${r.cardId}-${i}`} type="button" className={['ws-act-tile', r.face === 'bird' ? 'wingspan-card' : ''].join(' ')} onClick={() => this.advanceOrResolve({ tuckCardId: r.cardId })}>
-                                {r.face === 'bird'
-                                    ? <PlayingCard card={getWingspanCardDefinition(CARD_BY_ID[r.cardId])} width="82px" customIcons={WINGSPAN_ICONS} />
-                                    : <FoodTile cardId={r.cardId} width={72} />}
-                            </button>
-                        ))}
-                    </div>
+                    <>
+                        <div className="ws-act-grid">
+                            {cards.map((r, i) => (
+                                <button key={`${r.cardId}-${i}`} type="button" className={['ws-act-tile', r.face === 'bird' ? 'wingspan-card' : ''].join(' ')} onClick={() => this.advanceOrResolve({ tuckCardId: r.cardId })}>
+                                    {r.face === 'bird'
+                                        ? <PlayingCard card={getWingspanCardDefinition(CARD_BY_ID[r.cardId])} width="82px" customIcons={WINGSPAN_ICONS} />
+                                        : <FoodTile cardId={r.cardId} width={72} />}
+                                </button>
+                            ))}
+                        </div>
+                        {picks.length > 1 && (
+                            <div style={{ marginTop: 14 }}>
+                                <button className="ws-btn secondary block" onClick={this.skipCurrentStep}>
+                                    {this.state.stepIndex + 1 < picks.length ? 'Skip tucking →' : 'Skip tucking (Finish)'}
+                                </button>
+                            </div>
+                        )}
+                    </>
                 );
             } else if (pick.kind === 'discard') {
                 if (pick.what === 'egg') {
@@ -2033,7 +2243,8 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
                         </div>
                     );
                 } else {
-                    const want = pick.food && pick.food !== 'any' ? pick.food : undefined;
+                    const rawWant = pick.food && pick.food !== 'any' ? pick.food : undefined;
+                    const want = (rawWant && foodInPowersAny.has(rawWant)) ? undefined : rawWant;
                     const isDiscardable = (r: ReserveCard) => {
                         if (pick.what === 'bird') return r.face === 'bird';
                         if (r.face !== 'food') return false;
@@ -2109,9 +2320,16 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
                                 );
                             })}
                         </div>
-                        <button className="ws-btn primary block" disabled={sel.length === 0} onClick={() => this.advanceOrResolve({ eggTargets: sel })}>
-                            Lay {sel.length} egg{sel.length === 1 ? '' : 's'}
-                        </button>
+                        <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                            <button className="ws-btn primary" style={{ flex: 1, minWidth: 160 }} disabled={sel.length === 0} onClick={() => this.advanceOrResolve({ eggTargets: sel })}>
+                                Lay {sel.length} egg{sel.length === 1 ? '' : 's'}
+                            </button>
+                            {picks.length > 1 && (
+                                <button className="ws-btn secondary" onClick={this.skipCurrentStep}>
+                                    {this.state.stepIndex + 1 < picks.length ? 'Skip laying eggs →' : 'Skip laying eggs (Finish)'}
+                                </button>
+                            )}
+                        </div>
                     </>
                 );
             } else if (pick.kind === 'copyOwn') {
@@ -2133,15 +2351,22 @@ class ActivationModal extends React.Component<ActivationModalProps, ActivationMo
         }
 
         return (
-            <Modal title={`Activate ${card.common_name}`} onClose={canCancel ? this.props.onClose : undefined} wide>
+            <Modal title={modalTitle} onClose={canCancel ? this.props.onClose : undefined} wide>
                 <div className="ws-act">
                     <div className="ws-act-prompt">{prompt}</div>
                     {body}
-                    {!this.state.huntResult && (
-                        <button className="ws-btn ghost small" onClick={this.handleSkip}>
-                            {isRevealed && this.state.stepIndex > 0 && Object.keys(this.state.stagedChoices).length > 0 ? 'Finish with current choices' : 'Skip power'}
-                        </button>
-                    )}
+                    <div className="ws-act-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }}>
+                        {!this.state.huntResult && (
+                            <button className="ws-btn ghost small" onClick={this.handleSkip}>
+                                {this.state.stepIndex > 0 ? 'Cancel activation' : 'Skip power'}
+                            </button>
+                        )}
+                        {picks.length > 1 && this.state.stepIndex > 0 && !this.state.huntResult && (
+                            <button className="ws-btn ghost small" onClick={() => this.resolve(this.state.stagedChoices)}>
+                                Finish activation now
+                            </button>
+                        )}
+                    </div>
                 </div>
             </Modal>
         );
@@ -2569,6 +2794,10 @@ export class WingspanMainPage extends React.Component<WingspanProps, MainState> 
                             reserve={p.myReserve}
                             flock={flock}
                             nestEggs={mine ? mine.nestEggs : 0}
+                            publicPlayers={p.publicPlayers}
+                            playerOrder={p.playerOrder}
+                            playerNames={p.playerNames}
+                            myId={this.mp().clientId}
                             onResolve={(choices) => { this.activate(choices); this.close(); }}
                             onSkip={() => { this.skipActivate(); this.close(); }}
                             onClose={this.close}
