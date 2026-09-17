@@ -11,6 +11,7 @@ const NAMESPACE_DELIMITER = '_';
 import { ClientTransportInterface } from '../../common/interfaces';
 import DataExchange from './dxc';
 import Session from './session';
+import { createSaveFile, getSessionStore, SaveFile } from './savedsessions';
 
 import * as DOM from 'react-dom';
 import { createRoot } from 'react-dom/client';
@@ -45,6 +46,8 @@ export class GameObject {
     protected isHost: boolean;
     protected container: any;
     protected rule: GameRuleInterface;
+    protected ruleName: string; // MPRULES key the root was hosted with
+    private autosaveSuspended = false;
 
     private namespace: string;
     private parent: GameObject;
@@ -127,6 +130,10 @@ export class GameObject {
         cb?: CallbackType<ReturnPacketType>
     ) {
         this.isHost = true;
+        this.ruleName = ruleName;
+        // Don't let the blank initial state overwrite the saved session, and keep
+        // the save intact if restoring it fails.
+        this.autosaveSuspended = true;
 
         this.dxc.rehost(
             ruleName,
@@ -151,6 +158,8 @@ export class GameObject {
                 }
 
                 this.setState(gameState);
+                this.autosaveSuspended = false;
+                this.autosave();
 
                 return forwardReturnMessage(res, cb);
             });
@@ -163,6 +172,7 @@ export class GameObject {
     ) {
 
         this.isHost = true;
+        this.ruleName = ruleName;
 
         this.dxc.host(ruleName, (res) => {
 
@@ -356,6 +366,55 @@ export class GameObject {
         }
         
         return info;
+    }
+
+    public getPlayers(): string[] {
+        const getRootGameObj = (go: GameObject): GameObject => {
+            if (go.parent) return getRootGameObj(go.parent);
+            return go;
+        };
+        const rootGo = getRootGameObj(this);
+        const lobbyPlugin = this.getAncestorPlugin('lobby') || (this.plugins && this.plugins['lobby']);
+
+        if (lobbyPlugin) {
+            try {
+                const playerOrder = lobbyPlugin.getData('playerOrder');
+                if (Array.isArray(playerOrder) && playerOrder.length > 0) {
+                    return playerOrder.slice();
+                }
+            } catch (e) {
+                // lobby plugin might not have initialized playerOrder yet
+            }
+        }
+
+        const showHost = this.rule ? !!this.rule.hostAsPlayer : (rootGo.rule ? !!rootGo.rule.hostAsPlayer : false);
+        const hostId = (rootGo.getRootSession() && rootGo.getRootSession().getHostId()) || rootGo.clientId;
+        const players: string[] = showHost ? [hostId] : [];
+        const clients = rootGo.clients || [];
+        for (let i = 0; i < clients.length; i++) {
+            players.push(clients[i]);
+        }
+        return players;
+    }
+
+    public reorderClients(newClientsOrder: string[]) {
+        if (!this.isHost) {
+            throw (new Error('Only host can reorder clients'));
+        }
+        const getRootGameObj = (go: GameObject): GameObject => {
+            if (go.parent) return getRootGameObj(go.parent);
+            return go;
+        };
+        const rootGo = getRootGameObj(this);
+        if (rootGo.clients) {
+            const valid = newClientsOrder.filter(id => rootGo.clients.indexOf(id) !== -1);
+            rootGo.clients.forEach(id => {
+                if (valid.indexOf(id) === -1) {
+                    valid.push(id);
+                }
+            });
+            rootGo.clients = valid;
+        }
     }
 
     public disconnectClientDevice(clientId: string, cb?: (res?: any) => void) {
@@ -669,8 +728,7 @@ export class GameObject {
                 const render = this.onDataChange(this.MP, this.rule);
 
                 if (!this.parent && this.container) {
-                    const gameState = this.getState();
-                    localStorage.setItem('gameState', gameState);
+                    this.autosave();
                 }
 
                 if (this.parent) {
@@ -1252,6 +1310,49 @@ export class GameObject {
         return pluginsStore;
     }
 
+    private autosave() {
+        const store = getSessionStore();
+        if (!store || this.autosaveSuspended || !this.ruleName || !this.roomId) {
+            return;
+        }
+        store.queue({
+            sessionId: this.roomId,
+            ruleName: this.ruleName,
+            roomId: this.roomId,
+            clientId: this.clientId,
+            gameState: this.getState(),
+            players: this.getSavePlayerNames()
+        });
+    }
+
+    private getSavePlayerNames(): string[] {
+        try {
+            return this.getLobbyPlayersInfo().map((p) => p.name);
+        } catch (e) {
+            return [];
+        }
+    }
+
+    /**
+     * Snapshot of the whole hosted game in the portable .mpsave format.
+     * Callable from any plugin; always captures the root game.
+     */
+    public getSaveData(): SaveFile {
+        if (!this.isHost) {
+            throw (new Error('Invalid call: only host can save the game'));
+        }
+        if (this.parent) {
+            return this.parent.getSaveData();
+        }
+        return createSaveFile({
+            ruleName: this.ruleName,
+            roomId: this.roomId,
+            clientId: this.clientId,
+            gameState: this.getState(),
+            players: this.getSavePlayerNames()
+        });
+    }
+
     public getState() {
         if (!this.isHost) {
             throw (new Error('Invalid call: only host can get state object'));
@@ -1418,7 +1519,8 @@ export class GameObject {
             ruleName: gameObj.rule ? gameObj.rule.name : '',
             hostAsPlayer: gameObj.rule ? !!gameObj.rule.hostAsPlayer : false,
             getConnectionInfo: () => gameObj.getConnectionInfo(),
-            hasAncestorPlugin: (pluginName: string) => gameObj.hasAncestorPlugin(pluginName)
+            hasAncestorPlugin: (pluginName: string) => gameObj.hasAncestorPlugin(pluginName),
+            getPlayers: hostExposedMethodWrapper('getPlayers')
         };
 
         forEach(methods, (method) => {
@@ -1437,7 +1539,8 @@ export class GameObject {
                 'getPlayerData', 'setPlayerData', 'getPlayersData',
                 'setView', 'setViewProps', 'deleteViewProps',
                 'playersForEach', 'playersCount',
-                'removeClient', 'disconnectClientDevice', 'getLobbyPlayersInfo'];
+                'removeClient', 'disconnectClientDevice', 'getLobbyPlayersInfo',
+                'getPlayers', 'reorderClients', 'getSaveData'];
             exposed.forEach((method) => {
                 obj[method] = hostExposedMethodWrapper(method);
             });

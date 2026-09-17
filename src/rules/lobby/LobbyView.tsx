@@ -71,7 +71,9 @@ interface LobbyViewInterface extends ViewPropsInterface {
     names: string[],
     icons: number[],
     accents: string[],
-    showHost?: boolean
+    showHost?: boolean,
+    clientIds?: string[],
+    playerOrder?: string[]
 }
 interface LobbySetNameViewInterface extends ViewPropsInterface {
     name: string,
@@ -114,12 +116,13 @@ export class LobbyNameView extends React.Component<{
     clientId?: string,
     clientIds?: string[],
     clientIndex?: number,
-    names?: string[]
+    names?: string[],
+    showHost?: boolean
 }, {}> {
     public render() {
         let i = undefined;
         if (this.props.clientIndex !== undefined) {
-            i = this.props.clientIndex;
+            i = this.props.showHost ? this.props.clientIndex : this.props.clientIndex + 1;
         } else if (this.props.clientId !== undefined && this.props.clientIds !== undefined) {
             for (i = 0; i < this.props.clientIds.length; i = i + 1) {
                 if (this.props.clientId === this.props.clientIds[i]) {
@@ -128,7 +131,7 @@ export class LobbyNameView extends React.Component<{
             }
         }
 
-        if (i === undefined || this.props.clientIds === undefined || i === this.props.clientIds.length || this.props.names === undefined) {
+        if (i === undefined || this.props.clientIds === undefined || i >= this.props.clientIds.length || this.props.names === undefined) {
             return (
                 <span>{this.props.name}</span>
             );
@@ -142,32 +145,98 @@ export class LobbyNameView extends React.Component<{
 export class LobbyHelloView extends React.Component<{
     name: string,
     icon: number,
-    accent: string
+    accent: string,
+    isItemHost?: boolean,
+    canReorder?: boolean,
+    onMoveUp?: () => void,
+    onMoveDown?: () => void,
+    isDragging?: boolean,
+    isDragOver?: boolean,
+    containerProps?: any,
+    dragHandleProps?: any
 }, {}> {
     public render() {
         const avatar = React.createElement(
             LobbyAvatarView,
             this.props);
 
+        const isDragging = this.props.isDragging;
+        const isDragOver = this.props.isDragOver;
+
         return (
-            <div className='lobby-player-card'>
+            <div
+                className={`lobby-player-card ${isDragging ? 'dragging' : ''} ${isDragOver ? 'drag-over' : ''} ${this.props.isItemHost ? 'is-host' : ''}`}
+                {...this.props.containerProps}
+            >
+                {this.props.canReorder && (
+                    <div
+                        className="lobby-card-drag-handle"
+                        {...this.props.dragHandleProps}
+                        title="Drag to change player order"
+                    >
+                        <FontAwesomeIcon icon="bars" />
+                    </div>
+                )}
                 {avatar}
-                <div className='lobby-name'>{this.props.name}</div>
+                <div className='lobby-name'>
+                    {this.props.name}
+                    {this.props.isItemHost && <span className="lobby-host-pill">Host</span>}
+                </div>
+                {this.props.canReorder && (
+                    <div className="lobby-card-reorder-btns">
+                        <button
+                            type="button"
+                            className="lobby-order-btn"
+                            disabled={!this.props.onMoveUp}
+                            onClick={this.props.onMoveUp}
+                            title="Move up in turn order"
+                        >
+                            ▲
+                        </button>
+                        <button
+                            type="button"
+                            className="lobby-order-btn"
+                            disabled={!this.props.onMoveDown}
+                            onClick={this.props.onMoveDown}
+                            title="Move down in turn order"
+                        >
+                            ▼
+                        </button>
+                    </div>
+                )}
             </div>
         );
     }
 }
-export class LobbyView extends React.Component<LobbyViewInterface, {}> {
+
+interface LobbyViewState {
+    draggingIndex: number | null;
+    dragOverIndex: number | null;
+}
+
+export class LobbyView extends React.Component<LobbyViewInterface, LobbyViewState> {
+    private touchStartY: number = 0;
+    private touchStartIndex: number | null = null;
+    private touchCurrentTargetIndex: number | null = null;
+
     constructor(props: LobbyViewInterface) {
         super(props);
+        this.state = {
+            draggingIndex: null,
+            dragOverIndex: null
+        };
         this.startGame = this.startGame.bind(this);
+        this.handleMove = this.handleMove.bind(this);
+        this.handleTouchStart = this.handleTouchStart.bind(this);
+        this.handleTouchMove = this.handleTouchMove.bind(this);
+        this.handleTouchEnd = this.handleTouchEnd.bind(this);
     }
 
     public startGame() {
         const mp = this.props.MP;
         const names = this.props.names;
         const showHost = this.props.showHost;
-        const namesToCheck = showHost ? names : names.slice(0, names.length - 1);
+        const namesToCheck = showHost ? names : (names ? names.slice(1) : []);
         if (!namesAllFilled(namesToCheck)) {
             alert('Please fill in all player names before starting the game.');
             return;
@@ -176,24 +245,106 @@ export class LobbyView extends React.Component<LobbyViewInterface, {}> {
         mp.parent.startGame();
     }
 
+    public handleMove(fromIndex: number, toIndex: number) {
+        const mp = this.props.MP;
+        if (mp && mp.reorderPlayer) {
+            mp.reorderPlayer(fromIndex, toIndex);
+        }
+    }
+
+    private handleTouchStart(e: React.TouchEvent, index: number) {
+        this.touchStartY = e.touches[0].clientY;
+        this.touchStartIndex = index;
+        this.touchCurrentTargetIndex = index;
+        this.setState({ draggingIndex: index, dragOverIndex: index });
+    }
+
+    private handleTouchMove(e: React.TouchEvent) {
+        if (this.touchStartIndex === null) return;
+        const touch = e.touches[0];
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (el) {
+            const cardEl = el.closest('[data-player-index]');
+            if (cardEl) {
+                const targetIdx = parseInt(cardEl.getAttribute('data-player-index') || '-1', 10);
+                if (targetIdx >= 0 && targetIdx !== this.state.dragOverIndex) {
+                    this.touchCurrentTargetIndex = targetIdx;
+                    this.setState({ dragOverIndex: targetIdx });
+                }
+            }
+        }
+    }
+
+    private handleTouchEnd() {
+        if (this.touchStartIndex !== null && this.touchCurrentTargetIndex !== null && this.touchStartIndex !== this.touchCurrentTargetIndex) {
+            this.handleMove(this.touchStartIndex, this.touchCurrentTargetIndex);
+        }
+        this.touchStartIndex = null;
+        this.touchCurrentTargetIndex = null;
+        this.setState({ draggingIndex: null, dragOverIndex: null });
+    }
+
     public render() {
+        const isHost = this.props.MP.clientId === this.props.MP.hostId;
         const createHello = (names, icons, accents) => {
             const tr = [];
-            const limit = this.props.showHost ? names.length : names.length - 1;
+            const startIndex = this.props.showHost ? 0 : 1;
+            const limit = names ? names.length : 0;
+            const clientIds = this.props.clientIds || [];
 
-            for (let i = 0; i < limit; i = i + 1) {
+            for (let i = startIndex; i < limit; i = i + 1) {
+                const isItemHost = clientIds[i] === this.props.MP.hostId;
+                const canMoveUp = i > startIndex;
+                const canMoveDown = i < limit - 1;
+
                 tr.push(
                     React.createElement(
                         LobbyHelloView,
                         {
-                            key: 'hello-' + i,
+                            key: 'hello-' + (clientIds[i] || i),
                             name: names[i],
                             icon: icons[i],
-                            accent: accents[i]
+                            accent: accents[i],
+                            isItemHost: isItemHost,
+                            canReorder: isHost && (limit - startIndex > 1),
+                            onMoveUp: canMoveUp ? () => this.handleMove(i, i - 1) : undefined,
+                            onMoveDown: canMoveDown ? () => this.handleMove(i, i + 1) : undefined,
+                            isDragging: this.state.draggingIndex === i,
+                            isDragOver: this.state.dragOverIndex === i && this.state.draggingIndex !== i,
+                            containerProps: {
+                                'data-player-index': i,
+                                draggable: isHost,
+                                onDragStart: (e: React.DragEvent) => {
+                                    e.dataTransfer.setData('text/plain', String(i));
+                                    this.setState({ draggingIndex: i });
+                                },
+                                onDragOver: (e: React.DragEvent) => {
+                                    e.preventDefault();
+                                    if (this.state.dragOverIndex !== i) {
+                                        this.setState({ dragOverIndex: i });
+                                    }
+                                },
+                                onDrop: (e: React.DragEvent) => {
+                                    e.preventDefault();
+                                    const from = this.state.draggingIndex;
+                                    if (from !== null && from !== i) {
+                                        this.handleMove(from, i);
+                                    }
+                                    this.setState({ draggingIndex: null, dragOverIndex: null });
+                                },
+                                onDragEnd: () => {
+                                    this.setState({ draggingIndex: null, dragOverIndex: null });
+                                }
+                            },
+                            dragHandleProps: {
+                                onTouchStart: (e: React.TouchEvent) => this.handleTouchStart(e, i),
+                                onTouchMove: (e: React.TouchEvent) => this.handleTouchMove(e),
+                                onTouchEnd: () => this.handleTouchEnd()
+                            }
                         }));
             }
 
-            if (limit === 0) {
+            if (limit - startIndex <= 0) {
                 tr.push(
                     React.createElement(
                         'div',
@@ -206,8 +357,6 @@ export class LobbyView extends React.Component<LobbyViewInterface, {}> {
 
             return tr;
         };
-
-        const isHost = this.props.MP.clientId === this.props.MP.hostId;
 
         return (
             <div>

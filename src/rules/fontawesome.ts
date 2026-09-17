@@ -108,6 +108,7 @@ import { faUnlock } from "@fortawesome/free-solid-svg-icons/faUnlock";
 import { faUserCircle } from "@fortawesome/free-solid-svg-icons/faUserCircle";
 import { faUserSlash } from "@fortawesome/free-solid-svg-icons/faUserSlash";
 import { faUsers } from "@fortawesome/free-solid-svg-icons/faUsers";
+import { faDownload } from "@fortawesome/free-solid-svg-icons/faDownload";
 import { faWrench } from "@fortawesome/free-solid-svg-icons/faWrench";
 
 import { faTelegram } from "@fortawesome/free-brands-svg-icons/faTelegram";
@@ -231,6 +232,7 @@ library.add(faUnlock);
 library.add(faUserCircle);
 library.add(faUserSlash);
 library.add(faUsers);
+library.add(faDownload);
 library.add(faWrench);
 library.add(faTelegram);
 library.add(faImdb);

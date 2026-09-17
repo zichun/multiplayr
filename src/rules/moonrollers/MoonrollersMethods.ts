@@ -21,6 +21,9 @@ const sync = (mp: MPType, gameState: MoonrollersGameState) => {
 };
 
 const collectPlayers = (mp: MPType): string[] => {
+    if (mp.getPlayers) {
+        return mp.getPlayers();
+    }
     const players = [mp.hostId];
     mp.playersForEach((clientId) => players.push(clientId));
     return players;

@@ -30,7 +30,8 @@ const DEFAULT_CLIENTS: Record<string, number> = {
     durian: 4,
     startups: 3,
     clever: 4,
-    ttykm: 1
+    ttykm: 1,
+    harmonies: 2
 };
 
 const GAME_NAMES: Record<string, string> = {
@@ -46,7 +47,8 @@ const GAME_NAMES: Record<string, string> = {
     durian: 'Durian',
     startups: 'Startups',
     clever: 'Clever',
-    ttykm: 'That Time You Killed Me'
+    ttykm: 'That Time You Killed Me',
+    harmonies: 'Harmonies'
 };
 
 function getDebugConfigs(): Record<string, any> {

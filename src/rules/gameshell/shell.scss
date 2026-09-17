@@ -257,7 +257,38 @@ $panelExtendWidth: 180px;
                         color: #16a085;
                     }
                 }
+
+                &.save-badge {
+                    margin-left: auto;
+                    font-family: inherit;
+                    color: #ffffff;
+                    background: #2c3e50;
+                    border-color: #2c3e50;
+                    font-weight: 600;
+                    cursor: pointer;
+
+                    &:hover {
+                        background: #34495e;
+                        transform: translateY(-1px);
+                    }
+
+                    &:active {
+                        transform: translateY(0);
+                    }
+                }
             }
+        }
+
+        .save-error {
+            display: flex;
+            align-items: center;
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: #fdf2f2;
+            border: 1px solid #f9d5d5;
+            border-radius: 6px;
+            color: #c0392b;
+            font-size: 0.82rem;
         }
     }
 

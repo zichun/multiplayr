@@ -36,6 +36,7 @@ import { ProjectLRule } from './projectl/projectl';
 import { MoonrollersRule } from './moonrollers/moonrollers';
 import { NightZooRule } from './nightzoo/nightzoo';
 import { WingspanRule } from './wingspanpocket/wingspan';
+import { HarmoniesRule } from './harmonies/harmonies';
 
 
 const CoupDebugger = NewDebuggerRule(
@@ -233,6 +234,14 @@ const MagicalAthletesDebugger = NewDebuggerRule(
 const OffWithTheirHeadsDebugger = NewDebuggerRule(
     'offwiththeirheads',
     OffWithTheirHeadsRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const HarmoniesDebugger = NewDebuggerRule(
+    'harmonies',
+    HarmoniesRule,
     {
         HistoryBufferSize: 10,
         HistoryInSessionStorage: true
@@ -711,7 +720,26 @@ export const MPRULES = {
         icon: '🐦',
         minPlayers: 2,
         maxPlayers: 5
+    },
+    'harmonies': {
+        description: 'Harmonies - Nature Habitat Builder',
+        rules: ['lobby', 'gameshell', 'harmonies'],
+        rule: HarmoniesRule,
+        icon: '🌿',
+        minPlayers: 1,
+        maxPlayers: 4
+    },
+    'harmonies-debug': {
+        description: 'Harmonies (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'harmonies', 'debugger'],
+        rule: HarmoniesDebugger,
+        icon: '🌿',
+        minPlayers: 1,
+        maxPlayers: 4
     }
 };
 
 export default MPRULES;
+
+

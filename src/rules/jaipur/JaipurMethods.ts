@@ -27,6 +27,15 @@ const syncGameStateToMP = (mp: MPType, gameState: JaipurGameState) => {
     mp.setData('gameState', gameState);
 };
 
+const collectPlayers = (mp: MPType): string[] => {
+    if (mp.getPlayers) {
+        return mp.getPlayers();
+    }
+    const players = [mp.hostId];
+    mp.playersForEach((clientId) => players.push(clientId));
+    return players;
+};
+
 export const JaipurStartGame = (mp: MPType) => {
     const playerCount = mp.playersCount() + 1; // Host is a player
 
@@ -34,8 +43,7 @@ export const JaipurStartGame = (mp: MPType) => {
         throw new Error('Jaipur is strictly a 2-player game. Ensure exactly 2 players are in the lobby.');
     }
 
-    const players = [mp.hostId];
-    mp.playersForEach((clientId) => players.push(clientId));
+    const players = collectPlayers(mp);
 
     const gameState = new JaipurGameState(players);
     gameState.start_game();

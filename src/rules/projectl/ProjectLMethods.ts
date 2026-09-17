@@ -56,6 +56,9 @@ function resolveState(mp: MPType, clientId: string): Resolved {
 export const getGameState = (mp: MPType): ProjectLGameState => resolveState(mp, mp.hostId).gs;
 
 const collectPlayers = (mp: MPType): string[] => {
+    if (mp.getPlayers) {
+        return mp.getPlayers();
+    }
     const players = [mp.hostId];
     mp.playersForEach((clientId) => players.push(clientId));
     return players;

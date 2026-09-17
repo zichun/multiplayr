@@ -28,6 +28,15 @@ const syncGameStateToMP = (mp: MPType, gameState: CockroachGameState) => {
     mp.setData('gameState', gameState);
 };
 
+const collectPlayers = (mp: MPType): string[] => {
+    if (mp.getPlayers) {
+        return mp.getPlayers();
+    }
+    const players = [mp.hostId];
+    mp.playersForEach((clientId) => players.push(clientId));
+    return players;
+};
+
 export const CockroachStartGame = (mp: MPType) => {
     const playerCount = mp.playersCount() + 1; // Host is a player
 
@@ -39,8 +48,7 @@ export const CockroachStartGame = (mp: MPType) => {
         throw new Error('Maximum 6 players allowed for Cockroach Poker');
     }
 
-    const players = [mp.hostId];
-    mp.playersForEach((clientId) => players.push(clientId));
+    const players = collectPlayers(mp);
 
     const gameState = new CockroachGameState(players);
     gameState.start_game();

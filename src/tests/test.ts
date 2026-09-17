@@ -34,4 +34,8 @@ import './nightzoo/test_nightzoo';
 import './wingspanpocket/test_wingspan';
 import './dice-roller/test_dice_roller';
 import './test_cards';
+import './lobby/test_lobby';
+import './savedsessions/test_savedsessions';
+import './harmonies/test_harmonies_gamestate';
+import './harmonies/test_harmonies';
 

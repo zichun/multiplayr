@@ -156,40 +156,131 @@ button {
     border-radius: 4px;
 }
 
-.lobby-name {
-    float: left;
-    display: inline-block;
-    height: 64px;
-    margin: 0 0 0 4px;
-    font-size: 1.2em;
-    font-weight: bold;
-    line-height: 64px;
-}
-
 .lobby-player-card {
-    margin: 6px 0 6px 0;
-    height: 64px;
-    line-height: 64px;
-}
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+    padding: 6px 12px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    user-select: none;
+    box-sizing: border-box;
 
-.lobby-avatar {
-    float: left;
-    display: inline-block;
-    height: 64px;
-    width: 64px;
-    text-align: center;
-    line-height: 92px;
-    border-radius: 64px;
-    margin: 0 3px 0 0;
-}
+    &:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+    }
 
-.lobby-avatar .lobby-avatar-icon {
-    line-height: 64px;
-    text-align: center;
-}
+    &.dragging {
+        opacity: 0.45;
+        transform: scale(0.98);
+        border: 2px dashed #3b82f6;
+    }
 
-.lobby-avatar-icon {
-    color: white;
+    &.drag-over {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+        transform: translateY(-2px);
+    }
+
+    &.is-host {
+        border-left: 4px solid #3b82f6;
+    }
+
+    .lobby-card-drag-handle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: grab;
+        touch-action: none;
+        padding: 8px 10px 8px 4px;
+        color: #94a3b8;
+        transition: color 0.15s ease;
+
+        &:hover {
+            color: #334155;
+        }
+
+        &:active {
+            cursor: grabbing;
+        }
+    }
+
+    .lobby-avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 48px;
+        width: 48px;
+        border-radius: 50%;
+        margin-right: 12px;
+        flex-shrink: 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        .lobby-avatar-icon {
+            font-size: 24px;
+            color: white;
+            line-height: 1;
+        }
+    }
+
+    .lobby-name {
+        flex: 1;
+        font-size: 1.15em;
+        font-weight: bold;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        .lobby-host-pill {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            font-size: 0.65em;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            margin-left: 8px;
+            letter-spacing: 0.5px;
+        }
+    }
+
+    .lobby-card-reorder-btns {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        margin-left: 12px;
+        flex-shrink: 0;
+
+        .lobby-order-btn {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 3px 7px;
+            font-size: 10px;
+            cursor: pointer;
+            color: #475569;
+            line-height: 1;
+            transition: all 0.15s ease;
+
+            &:hover:not(:disabled) {
+                background: #e2e8f0;
+                color: #0f172a;
+                border-color: #94a3b8;
+            }
+
+            &:disabled {
+                opacity: 0.3;
+                cursor: not-allowed;
+            }
+        }
+    }
 }
 
 .lobby-player-tag {

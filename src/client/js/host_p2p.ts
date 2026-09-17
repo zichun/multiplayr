@@ -37,6 +37,23 @@ function accentFor(name: string) {
     return CARD_ACCENTS[hash % CARD_ACCENTS.length];
 }
 
+const RESUME_SESSION_KEY = 'mp-resume-session';
+
+function prettyRuleName(name: string) {
+    return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+function timeAgo(timestamp: number) {
+    const minutes = Math.floor((Date.now() - timestamp) / 60000);
+    if (minutes < 1) return 'just now';
+    if (minutes < 60) return minutes + ' min ago';
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return hours + (hours === 1 ? ' hour ago' : ' hours ago');
+    const days = Math.floor(hours / 24);
+    if (days < 30) return days + (days === 1 ? ' day ago' : ' days ago');
+    return new Date(timestamp).toLocaleDateString();
+}
+
 function escapeHtml(str: string) {
     return String(str)
         .replace(/&/g, '&amp;')
@@ -52,77 +69,237 @@ $(() => {
     const iceServers = getIceServersConfig();
     const transportOpts: any = { iceServers };
 
-    // Check if we can resume an existing P2P game from localStorage
-    if (localStorage.getItem('gameState') &&
-        localStorage.getItem('roomId') &&
-        localStorage.getItem('clientId') &&
-        localStorage.getItem('ruleName')) {
+    const sessionStore = _mplib.savedsessions.getSessionStore();
+    let transport: any = null;
 
-        const roomId = localStorage.getItem('roomId');
-        const ruleName = localStorage.getItem('ruleName');
-        const savedClientId = localStorage.getItem('clientId');
-        const gameState = localStorage.getItem('gameState');
+    // Resuming (from the saved-games list or a loaded .mpsave file) needs a
+    // transport that reclaims the saved room's peer id, so the choice is stashed
+    // here and the page reloaded rather than swapping peers mid-page.
+    const resumeSessionId = sessionStorage.getItem(RESUME_SESSION_KEY);
+    sessionStorage.removeItem(RESUME_SESSION_KEY);
 
-        const displayRoomId = roomId.startsWith('mp-') ? roomId.substring(3) : roomId;
-        if (confirm('An existing P2P game at room ' + displayRoomId + ' (' + ruleName + ') detected. Click OK to resume the game, and cancel to host a new game.')) {
-            console.log(`Attempting to resume P2P game at room ${roomId}...`);
-
-            transportOpts.customPeerId = savedClientId;
-            const transport = new _mplib.WebRTCTransport(
-                transportOpts,
-                (data) => {
-                    _mplib.messages.checkReturnMessage(data, 'clientId');
-
-                    // Update UI status
-                    const displayId = savedClientId.startsWith('mp-') ? savedClientId.substring(3) : savedClientId;
-                    $('#room-info')
-                        .removeClass('connecting')
-                        .addClass('connected')
-                        .text('Host P2P is established. Room Code: ' + displayId);
-
-                    // Hide host setup UI, show game container, and set hash
-                    $('#host-setup-ui').hide();
-                    $('#game-container').show().empty();
-                    location.hash = ruleName;
-
-                    // Rehost the game using the saved state
-                    _mplib.MultiplayR.ReHost(
-                        ruleName,
-                        roomId,
-                        savedClientId,
-                        gameState,
-                        transport,
-                        document.getElementById('game-container')
-                    );
-                }
-            );
-            return;
-        } else {
-            // Clean up local storage if the user chooses to start fresh
-            localStorage.removeItem('gameState');
-            localStorage.removeItem('roomId');
-            localStorage.removeItem('clientId');
-            localStorage.removeItem('ruleName');
-        }
+    if (resumeSessionId && sessionStore) {
+        sessionStore.get(resumeSessionId).then((session) => {
+            if (session) {
+                resumeSession(session);
+            } else {
+                startFresh('That saved game is no longer available.');
+            }
+        }).catch((err) => {
+            console.error('Failed to read saved game', err);
+            startFresh('Could not read the saved game.');
+        });
+    } else {
+        startFresh();
     }
 
-    // Instantiate WebRTC Transport (fresh game hosting)
-    const transport = new _mplib.WebRTCTransport(
-        transportOpts,
-        (data) => {
-            _mplib.messages.checkReturnMessage(data, 'clientId');
-            clientId = data.message;
+    function resumeSession(session: any) {
+        const roomId = session.roomId;
+        const ruleName = session.ruleName;
+        const savedClientId = session.clientId;
 
-            // Update UI status
-            const displayId = clientId.startsWith('mp-') ? clientId.substring(3) : clientId;
-            $('#room-info')
-                .removeClass('connecting')
-                .addClass('connected')
-                .text('Host P2P is established. Room Code: ' + displayId);
-
-            renderGameBrowser();
+        if (!_mprules.MPRULES[ruleName]) {
+            startFresh('This saved game (' + ruleName + ') is not available in this version of Multiplayr.');
+            return;
         }
-    );
+
+        console.log(`Attempting to resume P2P game at room ${roomId}...`);
+        sessionStore.touch(session.sessionId);
+
+        const displayRoomId = roomId.startsWith('mp-') ? roomId.substring(3) : roomId;
+        $('#room-info').text('Resuming ' + prettyRuleName(ruleName) + ' in room ' + displayRoomId + '…');
+        $('#saved-games, #mechanic-filter, #rules, #actions').hide();
+
+        transportOpts.customPeerId = savedClientId;
+        transport = new _mplib.WebRTCTransport(
+            transportOpts,
+            (data) => {
+                if (data && data.success === false) {
+                    showResumeFailure(data.message);
+                    return;
+                }
+                _mplib.messages.checkReturnMessage(data, 'clientId');
+
+                // Update UI status
+                const displayId = savedClientId.startsWith('mp-') ? savedClientId.substring(3) : savedClientId;
+                $('#room-info')
+                    .removeClass('connecting')
+                    .addClass('connected')
+                    .text('Host P2P is established. Room Code: ' + displayId);
+
+                // Hide host setup UI, show game container, and set hash
+                $('#host-setup-ui').hide();
+                $('#game-container').show().empty();
+                location.hash = ruleName;
+
+                // Rehost the game using the saved state
+                _mplib.MultiplayR.ReHost(
+                    ruleName,
+                    roomId,
+                    savedClientId,
+                    session.gameState,
+                    transport,
+                    document.getElementById('game-container'),
+                    (res) => {
+                        if (res && res.success === false) {
+                            $('#game-container').hide().empty();
+                            $('#host-setup-ui').show();
+                            showResumeFailure(res.message);
+                        }
+                    }
+                );
+            }
+        );
+    }
+
+    function showResumeFailure(message: string) {
+        console.error('Resume failed:', message);
+        $('#room-info')
+            .removeClass('connected')
+            .addClass('connecting')
+            .text('Could not resume the saved game: ' + (message || 'unknown error') + ' ');
+        $('<button class="saved-games__btn saved-games__btn--ghost">Back to games</button>')
+            .on('click', () => {
+                history.replaceState(null, '', location.pathname + location.search);
+                location.reload();
+            })
+            .appendTo('#room-info');
+    }
+
+    function startFresh(notice?: string) {
+        renderSavedGames(notice);
+
+        // Instantiate WebRTC Transport (fresh game hosting)
+        transport = new _mplib.WebRTCTransport(
+            transportOpts,
+            (data) => {
+                _mplib.messages.checkReturnMessage(data, 'clientId');
+                clientId = data.message;
+
+                // Update UI status
+                const displayId = clientId.startsWith('mp-') ? clientId.substring(3) : clientId;
+                $('#room-info')
+                    .removeClass('connecting')
+                    .addClass('connected')
+                    .text('Host P2P is established. Room Code: ' + displayId);
+
+                renderGameBrowser();
+            }
+        );
+    }
+
+    function renderSavedGames(notice?: string) {
+        const $section = $('#saved-games').empty().show();
+
+        const $head = $('<div class="saved-games__head" />').appendTo($section);
+        $('<p class="filter-bar__label">Continue a saved game</p>').appendTo($head);
+
+        const $fileInput = $('<input type="file" accept=".mpsave,application/json" hidden />')
+            .on('change', (ev) => {
+                const input = ev.target as HTMLInputElement;
+                const file = input.files && input.files[0];
+                input.value = '';
+                if (file) {
+                    loadSaveFile(file);
+                }
+            })
+            .appendTo($head);
+        $('<button class="saved-games__btn saved-games__btn--ghost"><i class="fa fa-upload"></i> Load .mpsave file</button>')
+            .on('click', () => $fileInput.trigger('click'))
+            .appendTo($head);
+
+        const $error = $('<p class="saved-games__error" />').appendTo($section);
+        if (notice) {
+            $error.text(notice);
+        }
+
+        const $list = $('<div class="saved-games__list" />').appendTo($section);
+
+        if (!sessionStore) {
+            $list.append('<p class="saved-games__empty">Saved games are unavailable in this browser.</p>');
+            return;
+        }
+
+        sessionStore.list().then((sessions) => {
+            $list.empty();
+            if (sessions.length === 0) {
+                $list.append('<p class="saved-games__empty">Games you host are saved here automatically. The last ' +
+                    _mplib.savedsessions.SESSION_CAPACITY + ' are kept.</p>');
+                return;
+            }
+            sessions.forEach((session) => $list.append(makeSavedGameCard(session, $error)));
+        }).catch((err) => {
+            console.error('Failed to list saved games', err);
+            $list.empty().append('<p class="saved-games__empty">Could not read saved games.</p>');
+        });
+    }
+
+    function makeSavedGameCard(session: any, $error: JQuery) {
+        const accent = accentFor(session.ruleName);
+        const available = !!_mprules.MPRULES[session.ruleName];
+        const displayRoomId = session.roomId.startsWith('mp-') ? session.roomId.substring(3) : session.roomId;
+        const players = session.players && session.players.length
+            ? session.players.join(', ')
+            : 'No players joined';
+
+        const $card = $('<div class="saved-game" />').css('border-left-color', accent.bg);
+        const $info = $('<div class="saved-game__info" />').appendTo($card);
+        $('<div class="saved-game__title" />').text(prettyRuleName(session.ruleName)).appendTo($info);
+        $('<div class="saved-game__meta" />')
+            .text('Room ' + displayRoomId + ' · ' + timeAgo(session.updatedAt))
+            .appendTo($info);
+        $('<div class="saved-game__players" />').text(players).appendTo($info);
+
+        const $actions = $('<div class="saved-game__actions" />').appendTo($card);
+        const $resume = $('<button class="saved-games__btn"><i class="fa fa-play"></i> Resume</button>')
+            .appendTo($actions);
+        if (available) {
+            $resume.on('click', () => {
+                sessionStorage.setItem(RESUME_SESSION_KEY, session.sessionId);
+                location.reload();
+            });
+        } else {
+            $resume.attr('disabled', 'disabled').attr('title', 'This game is not available in this version.');
+        }
+
+        $('<button class="saved-games__icon-btn" title="Forget this saved game"><i class="fa fa-trash"></i></button>')
+            .on('click', () => {
+                if (!confirm('Forget the saved ' + prettyRuleName(session.ruleName) + ' game in room ' + displayRoomId + '?')) {
+                    return;
+                }
+                sessionStore.remove(session.sessionId)
+                    .then(() => renderSavedGames())
+                    .catch((err) => {
+                        console.error('Failed to delete saved game', err);
+                        $error.text('Could not delete that saved game.');
+                    });
+            })
+            .appendTo($actions);
+
+        return $card;
+    }
+
+    function loadSaveFile(file: File) {
+        const $error = $('#saved-games .saved-games__error').text('');
+        if (!sessionStore) {
+            $error.text('Saved games are unavailable in this browser.');
+            return;
+        }
+
+        file.text().then((text) => {
+            const session = _mplib.savedsessions.parseSaveFile(text);
+            if (!_mprules.MPRULES[session.ruleName]) {
+                throw new Error('This save is for "' + session.ruleName + '", which is not available in this version of Multiplayr.');
+            }
+            return sessionStore.save(session).then(() => {
+                sessionStorage.setItem(RESUME_SESSION_KEY, session.sessionId);
+                location.reload();
+            });
+        }).catch((err) => {
+            console.error('Failed to load save file', err);
+            $error.text(err && err.message ? err.message : 'Could not load that save file.');
+        });
+    }
 
     // Currently selected mechanic filters (OR semantics; empty = show everything).
     const activeMechanics: { [mechanic: string]: boolean } = {};
@@ -212,7 +389,7 @@ $(() => {
 
     function makeCard(name: string, rule: any) {
         const accent = accentFor(name);
-        const prettyName = name.charAt(0).toUpperCase() + name.slice(1);
+        const prettyName = prettyRuleName(name);
 
         const $card = $('<div class="game-card" />').on('click', hostGame(name));
 

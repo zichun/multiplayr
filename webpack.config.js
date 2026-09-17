@@ -143,6 +143,7 @@ function DebuggerPages(outputPath) {
                 filename: './cards.html',
                 inject: false
             }),
+            new BuildVersionPlugin(BUILD_VERSION),
             ...ForkTsChecker,
             ESLintPluginConfig(),
             new webpack.NoEmitOnErrorsPlugin()

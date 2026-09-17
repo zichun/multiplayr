@@ -770,7 +770,35 @@ export const MPRULES = {
         icon: '🐦',
         minPlayers: 2,
         maxPlayers: 5
+    },
+    'harmonies': {
+        description: 'Harmonies - Nature Habitat Builder',
+        mechanics: ['Tile Placement', 'Pattern Building', 'Card Drafting'],
+        glyph: GAME_ICONS.harmonies,
+        enabled: true,
+        rules: ['lobby', 'gameshell', 'harmonies'],
+        rule: () => import('./harmonies/harmonies').then(m => m.HarmoniesRule),
+        icon: '🌿',
+        minPlayers: 1,
+        maxPlayers: 4
+    },
+    'harmonies-debug': {
+        description: 'Harmonies (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'harmonies', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./harmonies/harmonies')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('harmonies', orig.HarmoniesRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🌿',
+        minPlayers: 1,
+        maxPlayers: 4
     }
 };
 
 export default MPRULES;
+
+

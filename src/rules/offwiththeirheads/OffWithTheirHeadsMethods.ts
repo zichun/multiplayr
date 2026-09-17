@@ -23,6 +23,9 @@ export const getGameState = (mp: MPType): GameState => {
 const sync = (mp: MPType, gs: GameState) => mp.setData('gameState', gs);
 
 const collectPlayers = (mp: MPType): string[] => {
+    if (mp.getPlayers) {
+        return mp.getPlayers();
+    }
     const players = [mp.hostId];
     mp.playersForEach((clientId) => players.push(clientId));
     return players;

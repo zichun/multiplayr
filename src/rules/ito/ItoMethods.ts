@@ -21,6 +21,15 @@ const syncGameStateToMP = (mp: MPType, gameState: GameState) => {
     mp.setData('gameState', gameState);
 };
 
+const collectPlayers = (mp: MPType): string[] => {
+    if (mp.getPlayers) {
+        return mp.getPlayers();
+    }
+    const players = [mp.hostId];
+    mp.playersForEach((clientId) => players.push(clientId));
+    return players;
+};
+
 export const ItoStartGame = (mp: MPType) => {
     const playerCount = mp.playersCount() + 1; // Host is a player
 
@@ -34,8 +43,7 @@ export const ItoStartGame = (mp: MPType) => {
         return;
     }
 
-    const players = [mp.hostId];
-    mp.playersForEach((clientId) => players.push(clientId));
+    const players = collectPlayers(mp);
     const gameState = new GameState(players);
     gameState.start_game();
     syncGameStateToMP(mp, gameState);

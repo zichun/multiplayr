@@ -106,6 +106,108 @@
             #room-info.connecting { background-color: var(--mustard); color: var(--ink); }
             #room-info.connected  { background-color: var(--teal);    color: var(--cream); }
 
+            /* ---------- Saved games ---------- */
+            .saved-games { margin-bottom: 44px; }
+
+            .saved-games__head {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 16px;
+                flex-wrap: wrap;
+                margin-bottom: 16px;
+            }
+            .saved-games__head .filter-bar__label { margin: 0; }
+
+            .saved-games__list {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                gap: 14px;
+            }
+
+            .saved-games__empty {
+                grid-column: 1 / -1;
+                margin: 0;
+                color: var(--ink-soft);
+                font-size: 0.95rem;
+            }
+
+            .saved-games__error:empty { display: none; }
+            .saved-games__error {
+                margin: 0 0 14px;
+                padding: 10px 16px;
+                background: var(--coral);
+                color: var(--cream);
+                font-weight: 600;
+                font-size: 0.92rem;
+            }
+
+            .saved-game {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                background: var(--surface);
+                border-left: 8px solid var(--ink);
+                padding: 16px 16px 16px 18px;
+            }
+            .saved-game__info { flex: 1; min-width: 0; }
+            .saved-game__title {
+                font-family: 'Outfit', sans-serif;
+                font-size: 1.2rem;
+                font-weight: 800;
+                letter-spacing: -0.01em;
+            }
+            .saved-game__meta {
+                font-size: 0.82rem;
+                font-weight: 600;
+                color: var(--ink-soft);
+                margin-top: 2px;
+            }
+            .saved-game__players {
+                font-size: 0.88rem;
+                margin-top: 6px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .saved-game__actions {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .saved-games__btn {
+                font-family: 'Outfit', sans-serif;
+                font-size: 0.95rem;
+                font-weight: 800;
+                padding: 9px 18px;
+                border: 2px solid var(--ink);
+                border-radius: 999px;
+                background: var(--ink);
+                color: var(--cream);
+                cursor: pointer;
+                white-space: nowrap;
+                transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+            }
+            .saved-games__btn .fa { margin-right: 6px; }
+            .saved-games__btn:hover { transform: translateY(-1px); }
+            .saved-games__btn[disabled] { opacity: 0.4; cursor: not-allowed; transform: none; }
+            .saved-games__btn--ghost { background: transparent; color: var(--ink); }
+            .saved-games__btn--ghost:hover { background: var(--ink); color: var(--cream); }
+            #room-info .saved-games__btn { margin-left: 12px; font-size: 0.85rem; padding: 6px 14px; }
+
+            .saved-games__icon-btn {
+                width: 36px;
+                height: 36px;
+                border: none;
+                border-radius: 50%;
+                background: transparent;
+                color: var(--ink-soft);
+                cursor: pointer;
+                transition: background-color 0.15s ease, color 0.15s ease;
+            }
+            .saved-games__icon-btn:hover { background: var(--coral); color: var(--cream); }
+
             /* ---------- Filter bar ---------- */
             .filter-bar { margin-bottom: 44px; }
 
@@ -301,6 +403,8 @@
             <div id="room-info" class="connecting">
                 Connecting to WebRTC&hellip;
             </div>
+
+            <div id="saved-games" class="saved-games" style="display: none;"></div>
 
             <div id="mechanic-filter" class="filter-bar"></div>
 

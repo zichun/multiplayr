@@ -125,6 +125,7 @@ describe('Splendor Duel Game Logic', () => {
                 data.board[1][0] = 'blue';
                 data.board[1][1] = 'blue';
                 data.board[1][2] = 'blue';
+                data.board[2][0] = 'green';
                 data.players['bob'].privileges = 0;
                 data.privilegesAboveBoard = 3;
 
@@ -137,7 +138,7 @@ describe('Splendor Duel Game Logic', () => {
                 assert.strictEqual(nextData.privilegesAboveBoard, 2);
 
                 // Pass turn back to Alice
-                mockedGame.take_tokens('bob', [[2, 2]]);
+                mockedGame.take_tokens('bob', [[2, 0]]);
 
                 // Alice takes 3 same-colored blue gems -> Bob gets another Privilege
                 mockedGame.take_tokens('alice', [[1, 0], [1, 1], [1, 2]]);

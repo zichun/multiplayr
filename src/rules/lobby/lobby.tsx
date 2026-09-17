@@ -38,7 +38,8 @@ export const Lobby: GameRuleInterface = {
         accent: () => {
             return '';
         },
-        uniqueColorAndIcon: true
+        uniqueColorAndIcon: true,
+        playerOrder: () => []
     },
 
     playerData: {
@@ -61,26 +62,72 @@ export const Lobby: GameRuleInterface = {
         const icons = mp.getPlayersData('icon');
         const accents = mp.getPlayersData('accent');
         const connected = mp.getPlayersData('__isConnected');
-        const orderedNames = [];
-        const orderedIcons = [];
-        const orderedAccents = [];
-        const clientIds = [];
-        const playersConnection = [];
 
         const showHost = mp.parent && mp.parent.hostAsPlayer;
         const uniqueColorAndIcon = mp.getData('uniqueColorAndIcon') !== false;
 
+        // Collect all currently active player IDs
+        const activeIds: string[] = [];
+        const clientIndexMap: { [id: string]: number } = {};
+        if (showHost) {
+            activeIds.push(mp.hostId);
+        }
         mp.playersForEach((client, i) => {
-            clientIds.push(client);
-            orderedNames.push(names[i]);
-            orderedIcons.push(icons[i]);
-            orderedAccents.push(accents[i]);
-            playersConnection.push(connected[i]);
+            activeIds.push(client);
+            clientIndexMap[client] = i;
         });
-        clientIds.push(mp.hostId);
-        orderedNames.push(mp.getData('name'));
-        orderedIcons.push(mp.getData('icon'));
-        orderedAccents.push(mp.getData('accent'));
+
+        // Reconcile playerOrder: preserve existing custom order, drop removed, append new
+        let currentOrder: string[] = mp.getData('playerOrder') || [];
+        if (!Array.isArray(currentOrder)) {
+            currentOrder = [];
+        }
+
+        // Filter out IDs that are no longer active
+        const newOrder = currentOrder.filter(id => activeIds.indexOf(id) !== -1);
+        // Append any new active IDs not in current order
+        activeIds.forEach(id => {
+            if (newOrder.indexOf(id) === -1) {
+                newOrder.push(id);
+            }
+        });
+
+        // If order changed, update playerOrder in globalData
+        const orderChanged = newOrder.length !== currentOrder.length ||
+            newOrder.some((id, idx) => id !== currentOrder[idx]);
+        if (orderChanged) {
+            mp.setData('playerOrder', newOrder);
+        }
+
+        // Also sync non-host clients order in root GameObject for legacy games
+        const nonHostClients = newOrder.filter(id => id !== mp.hostId);
+        if (mp.reorderClients) {
+            mp.reorderClients(nonHostClients);
+        } else if (mp.parent && mp.parent.reorderClients) {
+            mp.parent.reorderClients(nonHostClients);
+        }
+
+        const orderedNames: string[] = [];
+        const orderedIcons: number[] = [];
+        const orderedAccents: string[] = [];
+        const clientIds: string[] = [];
+        const playersConnection: boolean[] = [];
+
+        newOrder.forEach((pid) => {
+            clientIds.push(pid);
+            if (pid === mp.hostId) {
+                orderedNames.push(mp.getData('name'));
+                orderedIcons.push(mp.getData('icon'));
+                orderedAccents.push(mp.getData('accent'));
+                playersConnection.push(true);
+            } else {
+                const idx = clientIndexMap[pid];
+                orderedNames.push(names[idx]);
+                orderedIcons.push(icons[idx]);
+                orderedAccents.push(accents[idx]);
+                playersConnection.push(connected[idx]);
+            }
+        });
 
         mp.playersForEach((client, ind) => {
             mp.setViewProps(client, 'clientId', client);
@@ -96,6 +143,7 @@ export const Lobby: GameRuleInterface = {
             mp.setViewProps(client, 'accents', orderedAccents);
             mp.setViewProps(client, 'showHost', showHost);
             mp.setViewProps(client, 'uniqueColorAndIcon', uniqueColorAndIcon);
+            mp.setViewProps(client, 'playerOrder', newOrder);
         });
 
         mp.setViewProps(mp.hostId, 'name', mp.getData('name'));
@@ -110,6 +158,7 @@ export const Lobby: GameRuleInterface = {
         mp.setViewProps(mp.hostId, 'playersConnection', playersConnection);
         mp.setViewProps(mp.hostId, 'showHost', showHost);
         mp.setViewProps(mp.hostId, 'uniqueColorAndIcon', uniqueColorAndIcon);
+        mp.setViewProps(mp.hostId, 'playerOrder', newOrder);
 
         return false;
     },
@@ -139,6 +188,28 @@ export const Lobby: GameRuleInterface = {
             }
         },
 
+        reorderPlayer: (mp: MPType, clientId: string, fromIndex: number, toIndex: number) => {
+            if (clientId !== mp.hostId) {
+                throw new Error('Only host can reorder players');
+            }
+            const currentOrder = (mp.getData('playerOrder') || []).slice();
+            if (fromIndex < 0 || fromIndex >= currentOrder.length || toIndex < 0 || toIndex >= currentOrder.length) {
+                return;
+            }
+            const [moved] = currentOrder.splice(fromIndex, 1);
+            currentOrder.splice(toIndex, 0, moved);
+            mp.setData('playerOrder', currentOrder);
+        },
+
+        setPlayerOrder: (mp: MPType, clientId: string, newOrder: string[]) => {
+            if (clientId !== mp.hostId) {
+                throw new Error('Only host can reorder players');
+            }
+            if (Array.isArray(newOrder)) {
+                mp.setData('playerOrder', newOrder);
+            }
+        },
+
         disconnectClient: (mp: MPType, clientId: string, toDisconnectId: string) => {
             if (clientId === mp.hostId) {
                 mp.removeClient(toDisconnectId);
@@ -163,15 +234,16 @@ export const Lobby: GameRuleInterface = {
             size?: string,
             invertColors?: boolean,
             className?: string,
-            border?: boolean
+            border?: boolean,
+            showHost?: boolean
         }, {}> {
             public render() {
                 let i = undefined;
                 const invertColors = this.props.invertColors;
 
                 if (this.props.clientIndex !== undefined) {
-                    i = this.props.clientIndex;
-                } else if (this.props.clientId !== undefined) {
+                    i = this.props.showHost ? this.props.clientIndex : this.props.clientIndex + 1;
+                } else if (this.props.clientId !== undefined && this.props.clientIds !== undefined) {
 
                     for (i = 0; i < this.props.clientIds.length; i = i + 1) {
                         if (this.props.clientId === this.props.clientIds[i]) {
@@ -180,7 +252,7 @@ export const Lobby: GameRuleInterface = {
                     }
                 }
 
-                if (i === this.props.clientIds.length || i === undefined) {
+                if (this.props.clientIds === undefined || i === this.props.clientIds.length || i === undefined) {
                     return (<div />);
                 }
 

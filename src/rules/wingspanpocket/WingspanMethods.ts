@@ -23,6 +23,9 @@ export const getGameState = (mp: MPType): WingspanGameState => {
 };
 
 const collectPlayers = (mp: MPType): string[] => {
+    if (mp.getPlayers) {
+        return mp.getPlayers();
+    }
     const players = [mp.hostId as string];
     mp.playersForEach((clientId) => players.push(clientId));
     return players;

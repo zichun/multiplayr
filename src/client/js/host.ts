@@ -5,7 +5,7 @@
  *
  */
 
-export {};
+import { ROOMINACTIVELIFESPAN } from '../../common/constants';
 
 /* eslint-disable no-var */
 declare var io;
@@ -24,51 +24,61 @@ $(() => {
             uri: location.protocol + '//' + location.host
         },
         (data) => {
-            if (localStorage.getItem('gameState') &&
-                localStorage.getItem('roomId') &&
-                localStorage.getItem('clientId') &&
-                localStorage.getItem('ruleName')) {
-
-                const roomId = localStorage.getItem('roomId');
-                const ruleName = localStorage.getItem('ruleName');
-                const clientId = localStorage.getItem('clientId');
-                const gameState = localStorage.getItem('gameState');
-
-                if (confirm('An existing game at room ' + roomId + ' (' + ruleName + ') detected. Click OK to resume the game, and cancel to host a new game')) {
-                    return rehost(ruleName, roomId, clientId, gameState);
-                } else {
-                    localStorage.removeItem('gameState');
-                    localStorage.removeItem('roomId');
-                    localStorage.removeItem('clientId');
-                    localStorage.removeItem('ruleName');
-                }
+            const sessionStore = _mplib.savedsessions.getSessionStore();
+            if (!sessionStore) {
+                return showRules(data);
             }
 
-            _mplib.messages.checkReturnMessage(data, 'clientId');
-            clientId = data.message;
-
-            Object.keys(_mprules.MPRULES).forEach((ruleName) => {
-                const rule = _mprules.MPRULES[ruleName];
-                if (!rule.debug) {
-                    $('#rules').append(makeRule(ruleName, rule));
+            // Offer to resume the most recently hosted game while its server room can
+            // still be alive. Declining keeps it in the saved sessions.
+            sessionStore.list().then((sessions) => {
+                const latest = sessions[0];
+                if (latest && _mprules.MPRULES[latest.ruleName] &&
+                    Date.now() - latest.updatedAt < ROOMINACTIVELIFESPAN &&
+                    confirm('An existing game at room ' + latest.roomId + ' (' + latest.ruleName + ') detected. Click OK to resume the game, and cancel to host a new game')) {
+                    sessionStore.touch(latest.sessionId);
+                    return rehost(latest.ruleName, latest.roomId, latest.clientId, latest.gameState, data);
                 }
+                showRules(data);
+            }).catch((err) => {
+                console.error('Failed to read saved games', err);
+                showRules(data);
             });
-
-            $('#rules').append('<a href="/join" style="font-size:1.5em; margin: 5px;">Join games</a>');
         });
+
+    function showRules(data: any) {
+        _mplib.messages.checkReturnMessage(data, 'clientId');
+        clientId = data.message;
+
+        Object.keys(_mprules.MPRULES).forEach((ruleName) => {
+            const rule = _mprules.MPRULES[ruleName];
+            if (!rule.debug) {
+                $('#rules').append(makeRule(ruleName, rule));
+            }
+        });
+
+        $('#rules').append('<a href="/join" style="font-size:1.5em; margin: 5px;">Join games</a>');
+    }
 
     function rehost(
         ruleName: string,
         roomId: string,
         clientId: string,
-        gameState: string
+        gameState: string,
+        connectData: any
     ) {
         _mplib.MultiplayR.ReHost(ruleName,
                                  roomId,
                                  clientId,
                                  gameState,
                                  transport,
-                                 document.getElementById('rules'));
+                                 document.getElementById('rules'),
+                                 (res) => {
+                                     if (res && res.success === false) {
+                                         alert('Could not resume the game: ' + res.message);
+                                         showRules(connectData);
+                                     }
+                                 });
     }
 
     function makeRule(

@@ -374,5 +374,15 @@ export const GAME_ICONS: Record<string, IconObject> = {
         S('head', 'circle', 62, 40, 0.94, 0.94),
         S('beak', 'triangle', 80, 40, 0.36, 0.32, 90),
         CUT('eye', 'circle', 64, 37, 0.2, 0.2)
+    ]),
+
+    // 🌿 Harmonies — nature landscape disc (mountain peak, tree crown, water wave)
+    harmonies: icon('nature', [
+        S('disc', 'circle', 50, 50, 1.84, 1.84),
+        CUT('mtn', 'triangle', 36, 46, 0.72, 0.76),
+        CUT('tree_top', 'circle', 64, 42, 0.54, 0.54),
+        CUT('tree_trunk', 'rectangle', 64, 58, 0.12, 0.32),
+        CUT('wave', 'rectangle', 50, 72, 1.3, 0.12)
     ])
 };
+

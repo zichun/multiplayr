@@ -19,6 +19,7 @@ import {
 } from '../../common/interfaces';
 
 import { forEach } from '../../common/utils';
+import { SaveFile, saveFileName } from '../../client/lib/savedsessions';
 
 export interface ToastNotification {
     id: string;
@@ -480,7 +481,8 @@ export const Shell: GameRuleInterface = {
                 copied: boolean,
                 copiedClientId: string | null,
                 pending: { [clientId: string]: 'disconnect' | 'remove' },
-                errors: { [clientId: string]: string }
+                errors: { [clientId: string]: string },
+                saveError: string | null
             }
         > {
             // Fallback timers keyed by clientId, in case an action never resolves.
@@ -488,7 +490,7 @@ export const Shell: GameRuleInterface = {
 
             constructor(props: any) {
                 super(props);
-                this.state = { copied: false, copiedClientId: null, pending: {}, errors: {} };
+                this.state = { copied: false, copiedClientId: null, pending: {}, errors: {}, saveError: null };
                 this.copyRoomId = this.copyRoomId.bind(this);
             }
 
@@ -618,6 +620,26 @@ export const Shell: GameRuleInterface = {
                     mp.removeClient(clientId);
                 } catch (e) {
                     this.failPending(clientId, 'Failed to remove the client.');
+                }
+            }
+
+            private downloadSave() {
+                const mp = this.props.MP;
+                try {
+                    const saveFile: SaveFile = mp.getSaveData();
+                    const blob = new Blob([JSON.stringify(saveFile)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = saveFileName(saveFile);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    this.setState({ saveError: null });
+                } catch (e) {
+                    console.error('Failed to download save', e);
+                    this.setState({ saveError: 'Could not create the save file.' });
                 }
             }
 
@@ -868,7 +890,23 @@ export const Shell: GameRuleInterface = {
                                     <span className="info-badge-label">Total:</span>
                                     <span className="info-badge-value">{playersInfo.length}</span>
                                 </div>
+                                {mp.getSaveData ? (
+                                    <button
+                                        className="info-badge save-badge"
+                                        onClick={() => this.downloadSave()}
+                                        title="Download this game as a .mpsave file. Load it from the host page to resume later."
+                                    >
+                                        <FontAwesomeIcon icon="download" style={{ marginRight: '6px' }} />
+                                        Download save
+                                    </button>
+                                ) : null}
                             </div>
+                            {this.state.saveError ? (
+                                <div className="save-error">
+                                    <FontAwesomeIcon icon="exclamation-triangle" style={{ marginRight: '8px' }} />
+                                    <span>{this.state.saveError}</span>
+                                </div>
+                            ) : null}
                         </div>
 
                         <div className="room-players-list">

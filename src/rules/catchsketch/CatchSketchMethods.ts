@@ -17,8 +17,16 @@ export function CatchSketchStartGame(mp: MPType, clientId: string): void {
         return;
     }
 
-    const players = [mp.hostId];
-    mp.playersForEach((clientId) => players.push(clientId));
+    const collectPlayers = (mp: MPType): string[] => {
+        if (mp.getPlayers) {
+            return mp.getPlayers();
+        }
+        const p = [mp.hostId];
+        mp.playersForEach((clientId) => p.push(clientId));
+        return p;
+    };
+
+    const players = collectPlayers(mp);
     const gameState = new CatchSketchGameState(players);
     gameState.start_game();
 

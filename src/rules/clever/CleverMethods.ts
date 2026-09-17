@@ -26,8 +26,16 @@ export const CleverStartGame = (mp: MPType) => {
         return;
     }
 
-    const players = [mp.hostId];
-    mp.playersForEach((clientId) => players.push(clientId));
+    const collectPlayers = (mp: MPType): string[] => {
+        if (mp.getPlayers) {
+            return mp.getPlayers();
+        }
+        const p = [mp.hostId];
+        mp.playersForEach((clientId) => p.push(clientId));
+        return p;
+    };
+
+    const players = collectPlayers(mp);
     const gameState = new GameState(players);
     gameState.start_game();
     syncGameStateToMP(mp, gameState);

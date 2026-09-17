@@ -478,7 +478,7 @@ export class WingspanGameState {
             for (let k = 0; k < n; k++) pips.push(f);
         }
 
-        let baseWild = card.cost.any || 0;
+        const baseWild = card.cost.any || 0;
 
         // If no 'any' ignores, there is exactly one reduced cost configuration
         if (anyIgnoreCount === 0) {

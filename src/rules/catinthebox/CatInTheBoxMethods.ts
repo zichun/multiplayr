@@ -41,9 +41,17 @@ export const CatInTheBoxSetMode = (mp: MPType, clientId: string, mode: CatMode) 
     mp.setData('catMode', mode);
 };
 
-export const CatInTheBoxStartGame = (mp: MPType) => {
+const collectPlayers = (mp: MPType): string[] => {
+    if (mp.getPlayers) {
+        return mp.getPlayers();
+    }
     const players = [mp.hostId];
     mp.playersForEach((clientId) => players.push(clientId));
+    return players;
+};
+
+export const CatInTheBoxStartGame = (mp: MPType) => {
+    const players = collectPlayers(mp);
 
     if (players.length < 2 || players.length > 5) {
         throw new Error('Cat in the Box requires 2 to 5 players.');
@@ -100,8 +108,7 @@ export const CatInTheBoxRestartGame = (mp: MPType, clientId: string) => {
     if (clientId !== mp.hostId) {
         throw new Error('Only the host can restart the game');
     }
-    const players = [mp.hostId];
-    mp.playersForEach((cid) => players.push(cid));
+    const players = collectPlayers(mp);
     // Restart picks up the currently selected mode (from lobby or the Settings tab).
     const gameState = new CatInTheBoxGameState(players, getMode(mp));
     gameState.start_game(players[0]);
