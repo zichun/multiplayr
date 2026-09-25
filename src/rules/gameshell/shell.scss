@@ -298,6 +298,91 @@ $panelExtendWidth: 180px;
         gap: 12px;
     }
 
+    .undo-section {
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 2px solid #f0f3f4;
+
+        .undo-title {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 4px 10px;
+            margin: 0 0 12px 0;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .undo-subtitle {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: #7f8c8d;
+        }
+
+        .undo-empty {
+            padding: 16px;
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            font-size: 0.85rem;
+            border: 1px dashed #bdc3c7;
+            border-radius: 8px;
+            background: #fafbfc;
+        }
+
+        .undo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .undo-entry {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: #fafbfc;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .undo-entry-time {
+            flex-shrink: 0;
+            color: #7f8c8d;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.82rem;
+        }
+
+        .undo-entry-label {
+            flex: 1;
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .undo-btn {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #e67e22;
+            background: #fff;
+            color: #d35400;
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: #e67e22;
+                color: #fff;
+            }
+        }
+    }
+
     .room-player-card {
         display: flex;
         align-items: center;

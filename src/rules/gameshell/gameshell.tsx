@@ -20,6 +20,7 @@ import {
 
 import { forEach } from '../../common/utils';
 import { SaveFile, saveFileName } from '../../client/lib/savedsessions';
+import type { UndoHistoryEntry } from '../../client/lib/gameobject';
 
 export interface ToastNotification {
     id: string;
@@ -643,6 +644,79 @@ export const Shell: GameRuleInterface = {
                 }
             }
 
+            private handleUndo(steps: number) {
+                const mp = this.props.MP;
+                const what = steps === 1 ? 'the last change' : `the last ${steps} changes`;
+                if (!confirm(`Undo ${what}? Every player's screen will revert.`)) {
+                    return;
+                }
+                try {
+                    mp.undo(steps);
+                } catch (e) {
+                    console.error('Failed to undo', e);
+                    alert('Could not undo to that state.');
+                }
+            }
+
+            private renderUndoSection(playersInfo: any[]) {
+                const mp = this.props.MP;
+                if (!mp.getUndoHistory) {
+                    return null;
+                }
+                const history: UndoHistoryEntry[] = mp.getUndoHistory();
+
+                const nameOf = (clientId: string | null) => {
+                    if (clientId === null) return 'Game';
+                    if (clientId === mp.hostId) return 'Host';
+                    const player = playersInfo.find((p: any) => p.clientId === clientId);
+                    return player ? player.name : 'Player';
+                };
+
+                // 'lobby_startGame' -> 'start game'
+                const describe = (method: string | null) => {
+                    if (!method) return 'state changed';
+                    const name = method.split('_').pop() || method;
+                    return name.replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase();
+                };
+
+                const formatTime = (time: number) =>
+                    new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                return (
+                    <div className="undo-section">
+                        <h3 className="undo-title">
+                            <FontAwesomeIcon icon="history" style={{ marginRight: '8px' }} />
+                            Undo
+                            <span className="undo-subtitle">last {history.length} of up to 5 changes</span>
+                        </h3>
+                        {history.length === 0 ? (
+                            <div className="undo-empty">Nothing to undo yet. Joining or removing players clears the history.</div>
+                        ) : (
+                            <div className="undo-list">
+                                {history.map((entry) => (
+                                    <div className="undo-entry" key={'undo-' + entry.steps + '-' + entry.time}>
+                                        <span className="undo-entry-time">{formatTime(entry.time)}</span>
+                                        <span className="undo-entry-label">
+                                            <strong>{nameOf(entry.clientId)}</strong> — {describe(entry.method)}
+                                        </span>
+                                        <button
+                                            className="undo-btn"
+                                            title={entry.steps === 1
+                                                ? 'Revert the game to just before this change.'
+                                                : `Revert the game to just before this change, discarding the ${entry.steps} most recent changes.`}
+                                            onClick={() => this.handleUndo(entry.steps)}
+                                        >
+                                            <FontAwesomeIcon icon="undo" style={{ marginRight: '6px' }} />
+                                            {entry.steps === 1 ? 'Undo' : `Undo ${entry.steps}`}
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
             public copyRoomId() {
                 const mp = this.props.MP;
                 const roomId = mp.roomId;
@@ -916,6 +990,8 @@ export const Shell: GameRuleInterface = {
                                 </div>
                             )}
                         </div>
+
+                        {this.renderUndoSection(playersInfo)}
                     </div>
                 );
             }

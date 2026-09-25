@@ -943,7 +943,8 @@ export class FarawayMainPage extends React.Component<FarawayProps, MainState> {
                 <div className="fw-prompt">
                     {p.myLastRegion == null
                         ? 'Choose your first region — no sanctuaries this round.'
-                        : <>Choose a region. Beat <b>{p.myLastRegion}</b> to find sanctuaries.</>}
+                        // one span, so the flex prompt doesn't split the bold number into its own column
+                        : <span>Choose a region. Beat <b>{p.myLastRegion}</b> to find sanctuaries.</span>}
                 </div>
             );
         }
@@ -1040,8 +1041,15 @@ export class FarawayMainPage extends React.Component<FarawayProps, MainState> {
                                     }}
                                 />
                                 {choosing && (
-                                    <span className={['fw-gain', pv && pv.qualifies ? 'yes' : ''].join(' ').trim()}>
-                                        {pv && pv.qualifies ? `draw ${pv.draws}` : 'no draw'}
+                                    // How many sanctuaries this play would draw: 1 + every
+                                    // clue in view if it beats the last region, else none.
+                                    <span
+                                        className={['fw-gain', pv && pv.qualifies ? 'yes' : ''].join(' ').trim()}
+                                        title={pv && pv.qualifies
+                                            ? `Beats ${p.myLastRegion}: draw ${pv.draws} sanctuar${pv.draws === 1 ? 'y' : 'ies'}`
+                                            : 'Does not beat your last region: no sanctuaries'}
+                                    >
+                                        +{pv && pv.qualifies ? pv.draws : 0} <Icon id="sanctuary" size={13} />
                                     </span>
                                 )}
                                 {!choosing && !drafting && p.myCommitted === cardId && (

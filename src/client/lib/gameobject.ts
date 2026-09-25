@@ -7,6 +7,14 @@
  */
 
 const NAMESPACE_DELIMITER = '_';
+const MAX_UNDO_STATES = 5;
+
+export interface UndoHistoryEntry {
+    steps: number;          // how many states back this entry is (1 = most recent)
+    time: number;           // when the change away from this state happened
+    clientId: string | null; // who triggered the change, if it came from a method call
+    method: string | null;   // namespaced method that triggered the change
+}
 
 import { ClientTransportInterface } from '../../common/interfaces';
 import DataExchange from './dxc';
@@ -48,6 +56,15 @@ export class GameObject {
     protected rule: GameRuleInterface;
     protected ruleName: string; // MPRULES key the root was hosted with
     private autosaveSuspended = false;
+
+    // Undo history (root host only). Each entry is a state the game was in
+    // before a change; `lastState` is the state as of the last tick.
+    private undoHistory: { state: string, time: number, clientId: string | null, method: string | null }[] = [];
+    private lastState: string | null = null;
+    private lastClientsKey: string | null = null;
+    private pendingAction: { clientId: string, method: string } | null = null;
+    private methodDepth = 0;
+    private restoringHistory = false;
 
     private namespace: string;
     private parent: GameObject;
@@ -158,6 +175,8 @@ export class GameObject {
                 }
 
                 this.setState(gameState);
+                // The blank pre-restore state isn't something to undo back to.
+                this.undoHistory = [];
                 this.autosaveSuspended = false;
                 this.autosave();
 
@@ -746,12 +765,96 @@ export class GameObject {
 
                 changed = true;
             }
+            if (!this.parent) {
+                this.recordHistory();
+            }
         } else {
             // todo: proper convention for error
             // or better still, don't expose this to client in the first place
         }
 
         return changed;
+    }
+
+    /**
+     * Root host only: snapshot the state after a tick, and if it differs from
+     * the previous tick's state, push the previous one onto the undo history.
+     * Ticks from nested method calls are skipped so that only whole moves are
+     * recorded, never a half-applied method.
+     */
+    private recordHistory() {
+        if (this.methodDepth > 0) {
+            return;
+        }
+
+        const state = this.getState();
+        const clientsKey = this.clients.slice().sort().join(',');
+
+        if (this.lastClientsKey !== null && clientsKey !== this.lastClientsKey) {
+            // Joins/removals change the shape of the state; restoring across
+            // them would resurrect or orphan players, so start afresh.
+            this.undoHistory = [];
+        } else if (!this.restoringHistory && this.lastState !== null && state !== this.lastState) {
+            this.undoHistory.push({
+                state: this.lastState,
+                time: Date.now(),
+                clientId: this.pendingAction ? this.pendingAction.clientId : null,
+                method: this.pendingAction ? this.pendingAction.method : null
+            });
+            if (this.undoHistory.length > MAX_UNDO_STATES) {
+                this.undoHistory.shift();
+            }
+        }
+
+        this.lastState = state;
+        this.lastClientsKey = clientsKey;
+        this.pendingAction = null;
+    }
+
+    private getRootGameObject(): GameObject {
+        return this.parent ? this.parent.getRootGameObject() : this;
+    }
+
+    /**
+     * Undo states available to the host, most recent first.
+     */
+    public getUndoHistory(): UndoHistoryEntry[] {
+        if (!this.isHost) {
+            throw (new Error('Only host can view undo history'));
+        }
+        const root = this.getRootGameObject();
+        const count = root.undoHistory.length;
+        return root.undoHistory.map((entry, i) => ({
+            steps: count - i,
+            time: entry.time,
+            clientId: entry.clientId,
+            method: entry.method
+        })).reverse();
+    }
+
+    /**
+     * Revert the game `steps` states back (1 = undo the latest change).
+     * States newer than the target are discarded.
+     */
+    public undo(steps = 1): boolean {
+        if (!this.isHost) {
+            throw (new Error('Only host can undo'));
+        }
+        const root = this.getRootGameObject();
+        if (steps < 1 || steps > root.undoHistory.length) {
+            return false;
+        }
+
+        const target = root.undoHistory[root.undoHistory.length - steps];
+        root.undoHistory = root.undoHistory.slice(0, root.undoHistory.length - steps);
+
+        root.restoringHistory = true;
+        try {
+            root.setState(target.state);
+        } finally {
+            root.restoringHistory = false;
+        }
+        return true;
     }
 
     private tick() {
@@ -965,7 +1068,19 @@ export class GameObject {
                 execMethodsCallArgs.push(args[i]);
             }
 
-            const tr = this.methods[method].apply(this.MP, execMethodsCallArgs);
+            const root = this.getRootGameObject();
+            if (root.methodDepth === 0) {
+                const prefix = this.namespace === '' ? '' : this.namespace + NAMESPACE_DELIMITER;
+                root.pendingAction = { clientId: fromClientId, method: prefix + method };
+            }
+
+            let tr;
+            root.methodDepth = root.methodDepth + 1;
+            try {
+                tr = this.methods[method].apply(this.MP, execMethodsCallArgs);
+            } finally {
+                root.methodDepth = root.methodDepth - 1;
+            }
             this.tick();
 
             return tr;
@@ -1540,7 +1655,8 @@ export class GameObject {
                 'setView', 'setViewProps', 'deleteViewProps',
                 'playersForEach', 'playersCount',
                 'removeClient', 'disconnectClientDevice', 'getLobbyPlayersInfo',
-                'getPlayers', 'reorderClients', 'getSaveData'];
+                'getPlayers', 'reorderClients', 'getSaveData',
+                'getUndoHistory', 'undo'];
             exposed.forEach((method) => {
                 obj[method] = hostExposedMethodWrapper(method);
             });
