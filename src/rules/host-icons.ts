@@ -383,6 +383,15 @@ export const GAME_ICONS: Record<string, IconObject> = {
         CUT('tree_top', 'circle', 64, 42, 0.54, 0.54),
         CUT('tree_trunk', 'rectangle', 64, 58, 0.12, 0.32),
         CUT('wave', 'rectangle', 50, 72, 1.3, 0.12)
+    ]),
+
+    // 🧭 Faraway — a compass rose inside a ring: the game's clue glyph, which is
+    // also the emblem of the whole expedition.
+    faraway: icon('compass', [
+        S('disc', 'circle', 50, 50, 1.86, 1.86),
+        S('rose', 'bezier', 0, 0, 1, 1, 0, 'background', {
+            customPath: 'M 50 8 L 61 39 L 92 50 L 61 61 L 50 92 L 39 61 L 8 50 L 39 39 Z'
+        })
     ])
 };
 

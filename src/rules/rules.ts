@@ -796,6 +796,32 @@ export const MPRULES = {
         icon: '🌿',
         minPlayers: 1,
         maxPlayers: 4
+    },
+    'faraway': {
+        description: 'Faraway - Afterglow Expedition',
+        mechanics: ['Card Drafting', 'Simultaneous Action', 'Set Collection'],
+        glyph: GAME_ICONS.faraway,
+        enabled: true,
+        rules: ['lobby', 'gameshell', 'faraway'],
+        rule: () => import('./faraway/faraway').then(m => m.FarawayRule),
+        icon: '🧭',
+        minPlayers: 2,
+        maxPlayers: 6
+    },
+    'faraway-debug': {
+        description: 'Faraway (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'faraway', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./faraway/faraway')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('faraway', orig.FarawayRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🧭',
+        minPlayers: 2,
+        maxPlayers: 6
     }
 };
 

@@ -37,6 +37,7 @@ import { MoonrollersRule } from './moonrollers/moonrollers';
 import { NightZooRule } from './nightzoo/nightzoo';
 import { WingspanRule } from './wingspanpocket/wingspan';
 import { HarmoniesRule } from './harmonies/harmonies';
+import { FarawayRule } from './faraway/faraway';
 
 
 const CoupDebugger = NewDebuggerRule(
@@ -737,6 +738,14 @@ export const MPRULES = {
         icon: '🌿',
         minPlayers: 1,
         maxPlayers: 4
+    },
+    'faraway': {
+        description: 'Faraway - Afterglow Expedition',
+        rules: ['lobby', 'gameshell', 'faraway'],
+        rule: FarawayRule,
+        icon: '🧭',
+        minPlayers: 2,
+        maxPlayers: 6
     }
 };
 
