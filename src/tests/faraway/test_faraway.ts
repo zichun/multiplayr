@@ -245,7 +245,22 @@ describe('Faraway', () => {
             setArea(gs, 'a', [9, 13], ['S45']);
             const s = gs.computeScore('a');
             assert.equal(s.sanctuaryFame, 3);
+            assert.deepEqual(s.sanctuaries, [{ id: 'S45', hasQuest: true, fame: 3 }]);
             assert.equal(s.total, s.regions.reduce((n, r) => n + r.fame, 0) + 3);
+        });
+
+        it('reports each sanctuary separately, in shelf order', () => {
+            const gs = freshGame();
+            // S07 has no quest; S45 = "1 per blue card" (itself + 9 + 13 = 3);
+            // S21 = flat 5.
+            setArea(gs, 'a', [9, 13], ['S07', 'S45', 'S21']);
+            const s = gs.computeScore('a');
+            assert.deepEqual(s.sanctuaries, [
+                { id: 'S07', hasQuest: false, fame: 0 },
+                { id: 'S45', hasQuest: true, fame: 3 },
+                { id: 'S21', hasQuest: true, fame: 5 }
+            ]);
+            assert.equal(s.sanctuaryFame, 8);
         });
     });
 

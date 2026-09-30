@@ -416,7 +416,8 @@ describe('Cockroach Poker Royal Logic', () => {
                 
                 // Active player is currently Bob
                 data.currentPlayerId = 'bob';
-                const card = data.hands['bob'][0];
+                // Use a regular animal: jokers/blanks go to SpecialResolution and royals cascade
+                const card = data.hands['bob'].find(c => c.type === 'animal')!;
 
                 const mockedGame = GameState.from_data(data, players);
 
@@ -528,7 +529,8 @@ describe('Cockroach Poker Royal Logic', () => {
             };
 
             // Get state
-            const card = stateData.hands[activePlayerId][0];
+            // Use a regular animal: jokers/blanks go to SpecialResolution instead of NewRound
+            const card = stateData.hands[activePlayerId].find((c: Card) => c.type === 'animal');
             
             // Find a target player who is NOT the active player
             let receiverId = '';

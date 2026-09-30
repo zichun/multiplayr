@@ -57,8 +57,16 @@ export interface RegionScore {
     missing: Resource[];
 }
 
+/** One kept Sanctuary's quest, scored last with the whole area visible. */
+export interface SanctuaryScore {
+    id: string;
+    fame: number;
+    hasQuest: boolean;
+}
+
 export interface ScoreBreakdown {
-    regions: RegionScore[];      // left → right, same order as the tableau
+    regions: RegionScore[];          // left → right, same order as the tableau
+    sanctuaries: SanctuaryScore[];   // same order as the sanctuary shelf
     sanctuaryFame: number;
     total: number;
     durationSum: number;
@@ -450,12 +458,16 @@ export class FarawayGameState {
             ...sanctuaryScorables,
             ...FarawayGameState.asScorable(p.tableau.map(id => REGION_BY_ID[id]))
         ];
-        let sanctuaryFame = 0;
-        for (const s of sanctuaries) if (s.quest) sanctuaryFame += evalQuest(s.quest, everything);
+        const sanctuaryScores: SanctuaryScore[] = sanctuaries.map(s => ({
+            id: s.id,
+            hasQuest: !!s.quest,
+            fame: s.quest ? evalQuest(s.quest, everything) : 0
+        }));
+        const sanctuaryFame = sanctuaryScores.reduce((n, s) => n + s.fame, 0);
 
         const total = regions.reduce((n, r) => n + r.fame, 0) + sanctuaryFame;
         const durationSum = p.tableau.reduce((n, id) => n + id, 0);
-        return { regions, sanctuaryFame, total, durationSum };
+        return { regions, sanctuaries: sanctuaryScores, sanctuaryFame, total, durationSum };
     }
 
     public score(): void {

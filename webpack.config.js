@@ -124,6 +124,8 @@ function DebuggerPages(outputPath) {
         devtool: 'source-map',
         mode: 'development',
         optimization: { minimize: false },
+        // Local debugging tools, deliberately unminified; bundle-size hints don't apply.
+        performance: { hints: false },
         externals: {
             react: 'React',
             'react-dom': 'ReactDOM'
@@ -311,7 +313,9 @@ function MultiplayrLibConfig(mode, outputPath) {
         target: 'web',
         devtool: mode === 'production' ? false : 'source-map',
         mode: mode,
-        optimization: { minimize: false },
+        optimization: { minimize: mode === 'production' },
+        // locallib only backs the local debug page; keep the size budget on lib, which every host/join page loads.
+        performance: { assetFilter: (file) => file.endsWith('.js') && !file.startsWith('locallib') },
         module: WebModule(true),
         resolve: {
             extensions: ['.tsx', '.ts', '.js'],

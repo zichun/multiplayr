@@ -56,18 +56,19 @@ describe('Jaipur Game Logic', () => {
                 game.start_game('alice');
 
                 const data = game.get_data();
-                
-                // Find a non-camel card in the market
-                const targetCard = data.market.find(c => c.type !== 'camels');
-                assert.ok(targetCard, 'There should be at least one non-camel card in the market');
+
+                // The dealt market can be all camels; guarantee a good to take
+                data.market[4] = { id: 900, type: 'leather' };
+                const targetCard = data.market[4];
+                const mockedGame = GameState.from_data(data, players);
 
                 const initialHandSize = data.players['alice'].hand.length;
                 const initialDeckSize = data.deck.length;
 
                 // Alice takes it
-                game.take_single_good('alice', targetCard.id);
+                mockedGame.take_single_good('alice', targetCard.id);
 
-                const nextData = game.get_data();
+                const nextData = mockedGame.get_data();
                 assert.strictEqual(nextData.players['alice'].hand.length, initialHandSize + 1, 'Alice hand size should increase by 1');
                 assert.ok(nextData.players['alice'].hand.some(c => c.id === targetCard.id), 'Target card should be in Alice hand');
                 
@@ -110,8 +111,10 @@ describe('Jaipur Game Logic', () => {
                     { id: 106, type: 'leather' },
                     { id: 107, type: 'leather' }
                 ];
-                const targetCard = data.market.find(c => c.type !== 'camels')!;
-                
+                // The dealt market can be all camels; guarantee a good to take
+                data.market[4] = { id: 900, type: 'leather' };
+                const targetCard = data.market[4];
+
                 const mockedGame = GameState.from_data(data, players);
                 assert.throws(() => {
                     mockedGame.take_single_good('alice', targetCard.id);

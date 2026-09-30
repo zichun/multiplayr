@@ -25,7 +25,7 @@ import {
     getFarawayPalette, resourceIconId, resourceIconIdOk, resourceIconIdNeed,
     swatchId, COLOUR_HEX, resourceListLabel
 } from '../FarawayAssets';
-import { Phase, ScoreBreakdown, RegionScore } from '../FarawayGameState';
+import { Phase, ScoreBreakdown, RegionScore, SanctuaryScore } from '../FarawayGameState';
 
 // ---------------------------------------------------------------------------
 // Sizes (px). Cards are rendered in pixel-scaled mode, so these are the true
@@ -194,6 +194,19 @@ const QuestStatus: React.FC<{ rs: RegionScore }> = ({ rs }) => {
 };
 
 /**
+ * The same badge for a kept Sanctuary. Sanctuaries have no requirement, so the
+ * only states are "scores N" and "no quest"; a quest worth 0 so far is grey.
+ */
+const SanctuaryStatus: React.FC<{ ss: SanctuaryScore }> = ({ ss }) => {
+    if (!ss.hasQuest) return <span className="fw-slot-fame none" title="No quest">—</span>;
+    return (
+        <span className={['fw-slot-fame', ss.fame === 0 ? 'zero' : 'met'].join(' ')} title="Sanctuary quest">
+            <Icon id="fame" size={11} /> {ss.fame}
+        </span>
+    );
+};
+
+/**
  * One player's play area: the ordered Region row, then the Sanctuary shelf.
  * Regions score right to left, so the row carries an explicit direction rail —
  * without it, "the cards to the LEFT don't count" is the single most-missed rule.
@@ -239,6 +252,7 @@ const PlayArea: React.FC<TableauProps> = ({
                         selectable={!!onInspectSanctuary}
                         onClick={onInspectSanctuary ? () => onInspectSanctuary(id) : undefined}
                     />
+                    {score && score.sanctuaries[i] && <SanctuaryStatus ss={score.sanctuaries[i]} />}
                 </div>
             ))}
         </div>
