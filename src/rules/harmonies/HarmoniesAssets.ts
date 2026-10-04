@@ -2,10 +2,11 @@
  * HarmoniesAssets.ts
  *
  * Vector iconography, curated palettes, and card definitions for Harmonies.
- * - 7 Geometric Animal Shapes (Fox, Owl, Frog, Bear, Deer, Fish, Rabbit)
- *   authored with clean negative-space cutouts and geometric primitives.
+ * - 12 Geometric Animal Shapes (Fox, Owl, Frog, Bear, Deer, Fish, Rabbit,
+ *   Wolf, Eagle, Squirrel, Ibex, Turtle) authored with clean negative-space
+ *   cutouts and geometric primitives.
  * - 5 Habitat Palettes (Water, Field, Mountain, Building, Tree).
- * - 35 Animal Cards (7 shapes x 5 palettes) with habitat patterns, cube tracks, and point ladders.
+ * - 35 Animal Cards (12 shapes across 5 palettes) with habitat patterns, cube tracks, and point ladders.
  * - Token & animal cube icons for boards, markets, and player aids.
  */
 
@@ -100,7 +101,7 @@ export function getHabitatPalette(habitat: HabitatType): Palette {
 }
 
 // ============================================================================
-// 2. The 7 Geometric Animal Shapes (with clean negative-space layering)
+// 2. The 12 Geometric Animal Shapes (with clean negative-space layering)
 // ============================================================================
 
 // Helper shorthands for shape layers
@@ -311,6 +312,176 @@ export const HARMONIES_ANIMAL_ICONS: Record<string, IconObject> = {
             CUT('eye_l', 'circle', 34, 54, 0.15, 0.15, 0),
             CUT('eye_r', 'circle', 66, 54, 0.15, 0.15, 0)
         ]
+    },
+
+    // 8. Geometric Wolf
+    harmonies_wolf: {
+        id: 'harmonies_wolf',
+        name: 'Geometric Wolf',
+        layers: [
+            S('bg_disc', 'circle', 50, 50, 1.6, 1.6, 0, 'secondary', { opacity: 0.35 }),
+            // Upright pointed ears
+            S('ear_l', 'triangle', 33, 20, 0.42, 0.72, -8, 'primary'),
+            S('ear_r', 'triangle', 67, 20, 0.42, 0.72, 8, 'primary'),
+            CUT('ear_in_l', 'triangle', 34, 21, 0.22, 0.42, -8),
+            CUT('ear_in_r', 'triangle', 66, 21, 0.22, 0.42, 8),
+            // Angular cheek ruff
+            S('ruff_l1', 'triangle', 23, 46, 0.38, 0.5, -45, 'primary'),
+            S('ruff_r1', 'triangle', 77, 46, 0.38, 0.5, 45, 'primary'),
+            S('ruff_l2', 'triangle', 26, 60, 0.38, 0.5, -35, 'primary'),
+            S('ruff_r2', 'triangle', 74, 60, 0.38, 0.5, 35, 'primary'),
+            // Head wedge
+            S('head', 'triangle', 50, 54, 1.45, 1.25, 180, 'primary'),
+            S('crown', 'arch', 50, 40, 1.2, 0.8, 0, 'primary'),
+            // Light snout mask
+            CUT('snout', 'triangle', 50, 67, 0.65, 0.72, 180),
+            // Nose bridge
+            S('bridge', 'rectangle', 50, 51, 0.16, 0.35, 0, 'primary'),
+            // Fierce slanted eyes
+            CUT('eye_l', 'rectangle', 38, 43, 0.18, 0.08, 20),
+            CUT('eye_r', 'rectangle', 62, 43, 0.18, 0.08, -20),
+            S('pupil_l', 'circle', 38, 43, 0.07, 0.07, 0, 'charcoal'),
+            S('pupil_r', 'circle', 62, 43, 0.07, 0.07, 0, 'charcoal'),
+            // Nose & chin
+            S('nose', 'triangle', 50, 73, 0.22, 0.18, 180, 'charcoal'),
+            S('chin', 'triangle', 50, 81, 0.28, 0.2, 0, 'primary')
+        ]
+    },
+
+    // 9. Geometric Eagle (Bird of Prey)
+    harmonies_eagle: {
+        id: 'harmonies_eagle',
+        name: 'Geometric Eagle',
+        layers: [
+            S('bg_disc', 'circle', 50, 50, 1.6, 1.6, 0, 'secondary', { opacity: 0.35 }),
+            // Head crest
+            S('crest_l', 'triangle', 43, 24, 0.3, 0.45, -20, 'primary'),
+            S('crest_r', 'triangle', 57, 24, 0.3, 0.45, 20, 'primary'),
+            S('crest_c', 'triangle', 50, 21, 0.32, 0.5, 0, 'primary'),
+            // Head and feathered shoulders
+            S('head', 'arch', 50, 44, 1.35, 1.15, 0, 'primary'),
+            S('ruff_l', 'triangle', 27, 62, 0.5, 0.7, -35, 'primary'),
+            S('ruff_r', 'triangle', 73, 62, 0.5, 0.7, 35, 'primary'),
+            S('body', 'triangle', 50, 68, 1.25, 0.95, 0, 'primary'),
+            // Brow mask
+            CUT('face_mask', 'triangle', 50, 53, 0.95, 0.65, 180),
+            // Stern brow ridges
+            S('brow_l', 'rectangle', 37, 41, 0.26, 0.08, 18, 'primary'),
+            S('brow_r', 'rectangle', 63, 41, 0.26, 0.08, -18, 'primary'),
+            // Eyes
+            CUT('eye_w_l', 'circle', 36, 46, 0.2, 0.2, 0),
+            CUT('eye_w_r', 'circle', 64, 46, 0.2, 0.2, 0),
+            S('pupil_l', 'circle', 36, 46, 0.1, 0.1, 0, 'charcoal'),
+            S('pupil_r', 'circle', 64, 46, 0.1, 0.1, 0, 'charcoal'),
+            // Hooked beak
+            S('beak_up', 'triangle', 50, 56, 0.4, 0.62, 180, 'accent'),
+            S('beak_hook', 'triangle', 50, 68, 0.22, 0.36, 180, 'accent'),
+            S('cere', 'rectangle', 50, 49, 0.32, 0.09, 0, 'charcoal'),
+            // Breast feather cuts
+            CUT('chev_1', 'triangle', 50, 78, 0.42, 0.24, 180),
+            CUT('chev_2', 'triangle', 50, 86, 0.32, 0.18, 180)
+        ]
+    },
+
+    // 10. Geometric Squirrel
+    harmonies_squirrel: {
+        id: 'harmonies_squirrel',
+        name: 'Geometric Squirrel',
+        layers: [
+            S('bg_disc', 'circle', 50, 50, 1.6, 1.6, 0, 'secondary', { opacity: 0.35 }),
+            // Giant curled bushy tail (left side)
+            S('tail_base', 'circle', 29, 56, 0.9, 1.25, 15, 'primary'),
+            S('tail_plume', 'circle', 25, 35, 1.25, 1.25, 0, 'primary'),
+            S('tail_tip', 'circle', 35, 20, 0.85, 0.85, 0, 'primary'),
+            CUT('tail_inner', 'circle', 37, 36, 0.52, 0.72, 18),
+            // Body and belly
+            S('body', 'arch', 59, 62, 0.95, 1.15, 0, 'primary'),
+            CUT('belly', 'circle', 55, 66, 0.42, 0.62, 0),
+            // Head and snout
+            S('head', 'circle', 63, 38, 0.95, 0.95, 0, 'primary'),
+            S('snout', 'circle', 75, 43, 0.42, 0.42, 0, 'primary'),
+            // Ears
+            S('ear_l', 'triangle', 58, 22, 0.24, 0.45, -15, 'primary'),
+            S('ear_r', 'triangle', 66, 22, 0.24, 0.45, 15, 'primary'),
+            CUT('ear_in', 'triangle', 62, 23, 0.13, 0.26, 0),
+            // Eye
+            CUT('eye_w', 'circle', 65, 36, 0.24, 0.24, 0),
+            S('pupil', 'circle', 65, 36, 0.13, 0.13, 0, 'charcoal'),
+            S('eye_shine', 'circle', 67, 34, 0.05, 0.05, 0, 'background'),
+            // Nose
+            S('nose', 'circle', 82, 43, 0.08, 0.08, 0, 'charcoal'),
+            // Acorn held in front paws
+            S('nut_cap', 'semi-circle', 67, 56, 0.34, 0.24, 180, 'charcoal'),
+            S('nut_body', 'circle', 67, 62, 0.28, 0.32, 0, 'accent'),
+            S('paw', 'circle', 63, 58, 0.15, 0.15, 0, 'primary')
+        ]
+    },
+
+    // 11. Geometric Ibex (Alpine Horned Herbivore)
+    harmonies_ibex: {
+        id: 'harmonies_ibex',
+        name: 'Geometric Ibex',
+        layers: [
+            S('bg_disc', 'circle', 50, 52, 1.6, 1.6, 0, 'secondary', { opacity: 0.35 }),
+            // Swept-back ridged mountain horns
+            S('horn_l1', 'rectangle', 38, 26, 0.14, 0.52, -25, 'primary'),
+            S('horn_l2', 'rectangle', 28, 15, 0.14, 0.45, -55, 'primary'),
+            S('horn_l3', 'rectangle', 18, 9, 0.12, 0.38, -85, 'primary'),
+            S('hridge_l1', 'circle', 33, 21, 0.12, 0.12, 0, 'accent'),
+            S('hridge_l2', 'circle', 24, 12, 0.11, 0.11, 0, 'accent'),
+            S('hridge_l3', 'circle', 15, 8, 0.1, 0.1, 0, 'accent'),
+            S('horn_r1', 'rectangle', 62, 26, 0.14, 0.52, 25, 'primary'),
+            S('horn_r2', 'rectangle', 72, 15, 0.14, 0.45, 55, 'primary'),
+            S('horn_r3', 'rectangle', 82, 9, 0.12, 0.38, 85, 'primary'),
+            S('hridge_r1', 'circle', 67, 21, 0.12, 0.12, 0, 'accent'),
+            S('hridge_r2', 'circle', 76, 12, 0.11, 0.11, 0, 'accent'),
+            S('hridge_r3', 'circle', 85, 8, 0.1, 0.1, 0, 'accent'),
+            // Ears
+            S('ear_l', 'triangle', 25, 43, 0.28, 0.48, -60, 'primary'),
+            S('ear_r', 'triangle', 75, 43, 0.28, 0.48, 60, 'primary'),
+            // Head diamonds
+            S('head_up', 'triangle', 50, 48, 1.15, 0.75, 0, 'primary'),
+            S('head_dn', 'triangle', 50, 64, 1.05, 0.95, 180, 'primary'),
+            // Muzzle
+            CUT('muzzle', 'triangle', 50, 72, 0.5, 0.42, 180),
+            S('nose', 'rectangle', 50, 75, 0.16, 0.08, 0, 'charcoal'),
+            // Goat eyes
+            CUT('eye_w_l', 'circle', 38, 48, 0.16, 0.16, 0),
+            CUT('eye_w_r', 'circle', 62, 48, 0.16, 0.16, 0),
+            S('pupil_l', 'rectangle', 38, 48, 0.14, 0.05, 0, 'charcoal'),
+            S('pupil_r', 'rectangle', 62, 48, 0.14, 0.05, 0, 'charcoal'),
+            // Goatee beard
+            S('beard', 'triangle', 50, 83, 0.28, 0.4, 180, 'primary')
+        ]
+    },
+
+    // 12. Geometric Turtle
+    harmonies_turtle: {
+        id: 'harmonies_turtle',
+        name: 'Geometric Turtle',
+        layers: [
+            S('bg_disc', 'circle', 50, 50, 1.6, 1.6, 0, 'secondary', { opacity: 0.35 }),
+            // Flippers / feet
+            S('flipper_tl', 'triangle', 26, 32, 0.5, 0.65, -45, 'primary'),
+            S('flipper_tr', 'triangle', 74, 32, 0.5, 0.65, 45, 'primary'),
+            S('flipper_bl', 'triangle', 29, 72, 0.4, 0.5, -135, 'primary'),
+            S('flipper_br', 'triangle', 71, 72, 0.4, 0.5, 135, 'primary'),
+            S('tail', 'triangle', 50, 84, 0.22, 0.35, 180, 'primary'),
+            // Head
+            S('head', 'arch', 50, 23, 0.55, 0.65, 0, 'primary'),
+            S('eye_l', 'circle', 45, 19, 0.07, 0.07, 0, 'charcoal'),
+            S('eye_r', 'circle', 55, 19, 0.07, 0.07, 0, 'charcoal'),
+            // Carapace rim and body
+            S('shell_rim', 'circle', 50, 53, 1.55, 1.65, 0, 'accent'),
+            S('shell_body', 'circle', 50, 53, 1.38, 1.48, 0, 'primary'),
+            // Scutes cutout pattern
+            CUT('scute_c', 'circle', 50, 53, 0.48, 0.48, 0),
+            S('scute_c_in', 'circle', 50, 53, 0.24, 0.24, 0, 'accent'),
+            CUT('scute_t', 'triangle', 50, 39, 0.38, 0.32, 0),
+            CUT('scute_b', 'triangle', 50, 67, 0.38, 0.32, 180),
+            CUT('scute_l', 'triangle', 36, 53, 0.32, 0.38, -90),
+            CUT('scute_r', 'triangle', 64, 53, 0.32, 0.38, 90)
+        ]
     }
 };
 
@@ -450,9 +621,9 @@ export const ANIMAL_CARD_SPECS: AnimalCardSpec[] = [
     // ------------------------------------------------------------------------
     {
         id: 'W1',
-        animalKey: 'harmonies_fox',
+        animalKey: 'harmonies_turtle',
         habitat: 'water',
-        animalName: 'Fox',
+        animalName: 'Turtle',
         cubeColor: 'blue',
         otherColor: 'yellow',
         pattern: [
@@ -465,9 +636,9 @@ export const ANIMAL_CARD_SPECS: AnimalCardSpec[] = [
     },
     {
         id: 'W2',
-        animalKey: 'harmonies_owl',
+        animalKey: 'harmonies_eagle',
         habitat: 'water',
-        animalName: 'Owl',
+        animalName: 'Eagle',
         cubeColor: 'blue',
         otherColor: 'gray',
         pattern: [
@@ -571,9 +742,9 @@ export const ANIMAL_CARD_SPECS: AnimalCardSpec[] = [
     },
     {
         id: 'Y2',
-        animalKey: 'harmonies_owl',
+        animalKey: 'harmonies_eagle',
         habitat: 'field',
-        animalName: 'Owl',
+        animalName: 'Hawk',
         cubeColor: 'yellow',
         otherColor: 'gray',
         pattern: [
@@ -664,9 +835,9 @@ export const ANIMAL_CARD_SPECS: AnimalCardSpec[] = [
     // ------------------------------------------------------------------------
     {
         id: 'M1',
-        animalKey: 'harmonies_fox',
+        animalKey: 'harmonies_wolf',
         habitat: 'mountain',
-        animalName: 'Fox',
+        animalName: 'Wolf',
         cubeColor: 'gray',
         otherColor: 'blue',
         pattern: [
@@ -679,9 +850,9 @@ export const ANIMAL_CARD_SPECS: AnimalCardSpec[] = [
     },
     {
         id: 'M2',
-        animalKey: 'harmonies_owl',
+        animalKey: 'harmonies_eagle',
         habitat: 'mountain',
-        animalName: 'Owl',
+        animalName: 'Eagle',
         cubeColor: 'gray',
         otherColor: 'blue',
         pattern: [
@@ -694,9 +865,9 @@ export const ANIMAL_CARD_SPECS: AnimalCardSpec[] = [
     },
     {
         id: 'M3',
-        animalKey: 'harmonies_frog',
+        animalKey: 'harmonies_ibex',
         habitat: 'mountain',
-        animalName: 'Treefrog',
+        animalName: 'Chamois',
         cubeColor: 'gray',
         otherColor: 'yellow',
         pattern: [
@@ -723,7 +894,7 @@ export const ANIMAL_CARD_SPECS: AnimalCardSpec[] = [
     },
     {
         id: 'M5',
-        animalKey: 'harmonies_deer',
+        animalKey: 'harmonies_ibex',
         habitat: 'mountain',
         animalName: 'Ibex',
         cubeColor: 'gray',
@@ -844,9 +1015,9 @@ export const ANIMAL_CARD_SPECS: AnimalCardSpec[] = [
     },
     {
         id: 'B6',
-        animalKey: 'harmonies_fish',
+        animalKey: 'harmonies_turtle',
         habitat: 'building',
-        animalName: 'Carp',
+        animalName: 'Turtle',
         cubeColor: 'red',
         otherColor: 'blue',
         pattern: [
@@ -858,9 +1029,9 @@ export const ANIMAL_CARD_SPECS: AnimalCardSpec[] = [
     },
     {
         id: 'B7',
-        animalKey: 'harmonies_rabbit',
+        animalKey: 'harmonies_squirrel',
         habitat: 'building',
-        animalName: 'Bunny',
+        animalName: 'Squirrel',
         cubeColor: 'red',
         otherColor: 'yellow',
         pattern: [
@@ -876,9 +1047,9 @@ export const ANIMAL_CARD_SPECS: AnimalCardSpec[] = [
     // ------------------------------------------------------------------------
     {
         id: 'T1',
-        animalKey: 'harmonies_fox',
+        animalKey: 'harmonies_wolf',
         habitat: 'tree',
-        animalName: 'Fox',
+        animalName: 'Wolf',
         cubeColor: 'green',
         otherColor: 'blue',
         pattern: [
@@ -952,9 +1123,9 @@ export const ANIMAL_CARD_SPECS: AnimalCardSpec[] = [
     },
     {
         id: 'T6',
-        animalKey: 'harmonies_fish',
+        animalKey: 'harmonies_squirrel',
         habitat: 'tree',
-        animalName: 'Archerfish',
+        animalName: 'Squirrel',
         cubeColor: 'green',
         otherColor: 'red',
         pattern: [

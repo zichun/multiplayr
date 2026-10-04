@@ -41,6 +41,7 @@ import {
 import { PlayingCard } from '../../../client/lib/card-renderer/PlayingCard';
 import { ExpressiveIcon } from '../../../client/lib/card-renderer/IconEngine';
 import { HarmoniesRulesView } from './HarmoniesRulesView';
+import { HarmoniesCardsGalleryView } from './HarmoniesCardsGalleryView';
 import { TOKEN_COLORS, TokenGlyph, TokenDisc, TokenSvg } from './TokenVisuals';
 
 // ============================================================================
@@ -98,6 +99,11 @@ export class HarmoniesHostLobby extends React.Component<ViewPropsInterface, {}> 
                 'label': 'Players',
                 'view': mp.getPluginView('lobby', 'host-roommanagement')
             },
+            'cards': {
+                'icon': 'paw',
+                'label': 'Cards',
+                'view': <HarmoniesCardsGalleryView />
+            },
             'rules': {
                 'icon': 'book',
                 'label': 'Rules',
@@ -136,6 +142,11 @@ export class HarmoniesClientLobby extends React.Component<ViewPropsInterface, {}
                     </div>
                 )
             },
+            'cards': {
+                'icon': 'paw',
+                'label': 'Cards',
+                'view': <HarmoniesCardsGalleryView />
+            },
             'rules': {
                 'icon': 'book',
                 'label': 'Rules',
@@ -153,6 +164,18 @@ export class HarmoniesClientLobby extends React.Component<ViewPropsInterface, {}
 // ============================================================================
 // 2. Hex Board SVG Component
 // ============================================================================
+
+/**
+ * Returns an id prefix that is unique per component instance and safe to use
+ * inside SVG `url(#...)` references. Multiple boards render on the same page
+ * (main board + opponents' tableaux, possibly in hidden tabs); sharing filter
+ * ids would make `url(#id)` resolve to the first match in the DOM, which may
+ * live in a `display: none` subtree and cause the referencing shapes to vanish.
+ */
+function useSvgIdPrefix(base: string): string {
+    const raw = React.useId();
+    return `${base}-${raw.replace(/[^a-zA-Z0-9_-]/g, '')}`;
+}
 
 interface HexBoardProps {
     player: PlayerState;
@@ -191,6 +214,10 @@ export const HarmoniesHexBoard: React.FC<HexBoardProps> = ({
 
     const validCubeCoords = new Set(cubeMatches.map(m => coordKey(m.cubeCoord)));
 
+    const idPrefix = useSvgIdPrefix('hb');
+    const hexShadowId = `${idPrefix}-hex-shadow`;
+    const tokenShadowId = `${idPrefix}-token-shadow`;
+
     return (
         <div className="harmonies-hex-board-wrapper">
             <svg
@@ -198,10 +225,10 @@ export const HarmoniesHexBoard: React.FC<HexBoardProps> = ({
                 className="harmonies-hex-svg"
             >
                 <defs>
-                    <filter id="hex-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <filter id={hexShadowId} x="-20%" y="-20%" width="140%" height="140%">
                         <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.12" />
                     </filter>
-                    <filter id="token-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <filter id={tokenShadowId} x="-20%" y="-20%" width="140%" height="140%">
                         <feDropShadow dx="0" dy="1.5" stdDeviation="1" floodColor="#000000" floodOpacity="0.18" />
                     </filter>
                 </defs>
@@ -263,7 +290,7 @@ export const HarmoniesHexBoard: React.FC<HexBoardProps> = ({
                                         color={color}
                                         r={R * 0.68}
                                         isTop={isTop}
-                                        filter="url(#token-shadow)"
+                                        filter={`url(#${tokenShadowId})`}
                                     />
                                 );
                             })}
@@ -361,6 +388,8 @@ export const HabitatPatternPreview: React.FC<{ pattern: AnimalCardSpec['pattern'
     // Sort cells by cy (back-to-front) so foreground cells overlap background stacks naturally
     const sortedCells = [...cellData].sort((a, b) => a.cy - b.cy);
 
+    const patternShadowId = `${useSvgIdPrefix('hp')}-pattern-token-shadow`;
+
     return (
         <svg
             viewBox={`${minX.toFixed(1)} ${minY.toFixed(1)} ${viewBoxW.toFixed(1)} ${viewBoxH.toFixed(1)}`}
@@ -368,7 +397,7 @@ export const HabitatPatternPreview: React.FC<{ pattern: AnimalCardSpec['pattern'
             className="habitat-pattern-svg"
         >
             <defs>
-                <filter id="pattern-token-shadow" x="-30%" y="-30%" width="160%" height="160%">
+                <filter id={patternShadowId} x="-30%" y="-30%" width="160%" height="160%">
                     <feDropShadow dx="0" dy="1.2" stdDeviation="1" floodColor="#000000" floodOpacity="0.18" />
                 </filter>
             </defs>
@@ -431,7 +460,7 @@ export const HabitatPatternPreview: React.FC<{ pattern: AnimalCardSpec['pattern'
                                     color={color}
                                     r={tokenR}
                                     isTop={isTop}
-                                    filter="url(#pattern-token-shadow)"
+                                    filter={`url(#${patternShadowId})`}
                                 />
                             );
                         })}
@@ -691,6 +720,19 @@ export class HarmoniesMainPage extends React.Component<HarmoniesMainPageProps, H
                 'icon': 'gamepad',
                 'label': 'Arena',
                 'view': this.renderArenaView(isMyTurn, currentActiveId, myPlayer)
+            },
+            'cards': {
+                'icon': 'paw',
+                'label': 'Cards',
+                'view': (
+                    <HarmoniesCardsGalleryView
+                        gameState={gs}
+                        myPlayer={myPlayer}
+                        isMyTurn={isMyTurn}
+                        onTakeCard={(cardId) => mp.takeCard(cardId)}
+                        onSelectCardForCube={(card) => this.setState({ selectedCardForCube: card })}
+                    />
+                )
             },
             'rules': {
                 'icon': 'book',
