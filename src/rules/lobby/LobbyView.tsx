@@ -13,7 +13,17 @@ export const icons: IconName[] = [
     'mortar-pestle', 'pen', 'pencil-alt', 'phone', 'chart-pie', 'power-off', 'trash', 'binoculars', 'bug', 'cog', 'cubes',
     'female', 'flag', 'flask', 'chart-line', 'sign-language', 'sitemap', 'space-shuttle', 'tags', 'wrench',
     'ticket-alt', 'tree', 'unlock', 'street-view', 'plug', 'money-bill', 'male', 'fighter-jet', 'cut', 'bus', 'birthday-cake',
-    'bed', 'beer', 'bomb', 'blind', 'cloud', 'cookie', 'fax', 'futbol', 'map', 'map-signs', 'paw', 'ship', 'grin'
+    'bed', 'beer', 'bomb', 'blind', 'cloud', 'cookie', 'fax', 'futbol', 'map', 'map-signs', 'paw', 'ship', 'grin',
+    // animals
+    'cat', 'dog', 'fish', 'dragon', 'frog', 'horse', 'kiwi-bird', 'spider',
+    // food
+    'carrot', 'lemon', 'pizza-slice', 'ice-cream', 'pepper-hot',
+    // nature & space
+    'moon', 'sun', 'snowflake', 'leaf', 'mountain', 'rocket',
+    // music & art
+    'music', 'guitar', 'palette',
+    // fantasy & curios
+    'hat-wizard', 'ghost', 'chess-knight', 'crown', 'gem', 'robot', 'anchor', 'puzzle-piece'
 ];
 
 function getCookie(name: string): string {
@@ -65,7 +75,7 @@ function getTakenIcons(props: any): number[] {
 }
 
 const colors_default = ['#0074D9', '#7FDBFF', '#39CCCC', '#3D9970', '#2ECC40', '#01FF70', '#EEAB00', '#FF851B', '#FF4136',
-    '#F012BE', '#B10DC9'];
+    '#F012BE', '#B10DC9', '#85144B', '#8D6E63', '#546E7A', '#3F51B5'];
 
 interface LobbyViewInterface extends ViewPropsInterface {
     names: string[],

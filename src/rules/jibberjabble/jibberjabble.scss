@@ -1,0 +1,1151 @@
+/**
+ * jibberjabble.scss — flat, geometric, pastel skin for Jibber Jabble.
+ *
+ * Chunky letter blocks with a flat offset "shadow" edge, soft lavender paper,
+ * hard ink outlines. Everything is scoped under `.jj-*` so no other game is
+ * affected. Motion lives here too: block drop/flip/pop, the STOP slam, speech
+ * bubbles, confetti and a slow floating backdrop. All of it backs off under
+ * prefers-reduced-motion.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap');
+
+$ink: #2e2a47;
+$muted: #7c7896;
+$panel: #ffffff;
+$line: #e4dff2;
+$coral: #ff9aa2;
+$peach: #ffc28f;
+$butter: #ffe38f;
+$mint: #a8e6c4;
+$sky: #9fd3f5;
+$lilac: #c6b6f7;
+$stop: #ff6f7d;
+$radius: 16px;
+$edge: 3px;          // ink outline width
+
+// ---------------------------------------------------------------------------
+// Root
+// ---------------------------------------------------------------------------
+
+.jj-root {
+    position: relative;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+    background: transparent;   // let the shell's white body show through seamlessly
+    min-height: 100%;
+    padding: 12px 12px 28px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+
+    *, *::before, *::after { box-sizing: border-box; }
+    > * { position: relative; z-index: 1; }
+
+    b { font-weight: 800; }
+    p { line-height: 1.45; }
+}
+
+.jj-muted { color: $muted; font-size: 0.88em; }
+.center { text-align: center; justify-content: center; }
+.jj-label {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: $muted;
+    margin: 6px 0 4px;
+}
+.jj-section-title {
+    font-weight: 900;
+    font-size: 15px;
+    margin-bottom: 8px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    flex-wrap: wrap;
+    .jj-muted { font-weight: 600; font-size: 12px; }
+}
+
+.jj-panel {
+    background: $panel;
+    border: $edge solid $ink;
+    border-radius: $radius;
+    box-shadow: 0 4px 0 $ink;
+    padding: 12px;
+    margin: 12px 0;
+}
+
+.jj-stage { display: flex; flex-direction: column; gap: 6px; }
+
+.jj-prompt {
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    margin: 8px 0;
+    &.big { font-size: 17px; }
+    // Inline flow, not flex: a flex gap would split "<b>name</b>." apart.
+    .jj-stop-sign { vertical-align: middle; margin-right: 6px; }
+}
+
+.jj-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 10px 0; }
+
+// ---------------------------------------------------------------------------
+// Buttons
+// ---------------------------------------------------------------------------
+
+.jj-btn {
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 15px;
+    color: $ink;
+    background: $panel;
+    border: $edge solid $ink;
+    border-radius: 12px;
+    padding: 10px 16px;
+    box-shadow: 0 4px 0 $ink;
+    cursor: pointer;
+    transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s;
+    &:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 0 $ink; }
+    &:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 $ink; }
+    &:disabled { opacity: 0.4; cursor: default; }
+    &.primary { background: $mint; }
+    &.ghost { background: transparent; box-shadow: none; border-style: dashed; }
+    &.small { font-size: 13px; padding: 6px 10px; border-radius: 10px; box-shadow: 0 3px 0 $ink; }
+    &.big { font-size: 18px; padding: 12px 22px; }
+    &.block { display: block; width: 100%; }
+}
+
+// ---------------------------------------------------------------------------
+// Letter blocks
+// ---------------------------------------------------------------------------
+
+.jj-word, .jj-clue-blocks, .jj-blanks, .jj-guess-preview {
+    // Block edge: as big as --max, shrunk so --n blocks fit the row, never
+    // below a readable floor (long clues wrap instead). cqw resolves against
+    // this element, which each block reads --bs from.
+    --max: 44px;
+    --n: 5;
+    --bs: max(20px, min(var(--max), calc(100cqw / (var(--n) * 1.14 + 0.25))));
+    container-type: inline-size;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+}
+.jj-word { justify-content: center; margin: 4px 0; }
+.jj-word-gap { width: calc(var(--bs) * 0.4); }
+
+.jj-block {
+    --c: #{$lilac};
+    --r: 0deg;
+    --d: 0ms;
+    position: relative;
+    display: inline-flex;
+    width: var(--bs);
+    height: var(--bs);
+    flex: 0 0 auto;
+    transform: rotate(var(--r));
+
+    .jj-block-face {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--c);
+        color: $ink;
+        border: calc(#{$edge} - 0.5px) solid $ink;
+        border-radius: calc(var(--bs) * 0.2);
+        box-shadow: 0 calc(var(--bs) * 0.09) 0 $ink, inset 0 calc(var(--bs) * -0.08) 0 rgba(46, 42, 71, 0.12);
+        font-weight: 900;
+        font-size: calc(var(--bs) * 0.62);
+        line-height: 1;
+        user-select: none;
+    }
+    .jj-block-dot {
+        position: absolute;
+        right: calc(var(--bs) * 0.1);
+        top: calc(var(--bs) * 0.1);
+        width: max(5px, calc(var(--bs) * 0.13));
+        height: max(5px, calc(var(--bs) * 0.13));
+        border-radius: 50%;
+        border: 1.5px solid $ink;
+    }
+    &.ghost .jj-block-face {
+        background: #f0edf9;
+        color: #b4aecb;
+        border-style: dashed;
+        box-shadow: none;
+    }
+
+    &.anim-drop { animation: jj-drop 0.62s cubic-bezier(.3, 1.4, .5, 1) var(--d) both; }
+    &.anim-flip { animation: jj-flip 0.55s cubic-bezier(.3, 1.3, .5, 1) var(--d) both; }
+    &.anim-pop { animation: jj-pop 0.35s cubic-bezier(.3, 1.6, .5, 1) var(--d) both; }
+    &.anim-shake { animation: jj-shake 0.5s ease var(--d) both; }
+}
+
+@keyframes jj-drop {
+    0% { transform: translateY(calc(var(--bs) * -2.6)) rotate(calc(var(--r) - 40deg)) scale(0.6); opacity: 0; }
+    45% { opacity: 1; }
+    62% { transform: translateY(calc(var(--bs) * 0.08)) rotate(var(--r)) scale(1.14, 0.82); }
+    80% { transform: translateY(calc(var(--bs) * -0.12)) rotate(var(--r)) scale(0.96, 1.05); }
+    100% { transform: translateY(0) rotate(var(--r)) scale(1); opacity: 1; }
+}
+@keyframes jj-flip {
+    0% { transform: perspective(300px) rotateY(-100deg) rotate(var(--r)); opacity: 0; }
+    60% { transform: perspective(300px) rotateY(15deg) rotate(var(--r)); opacity: 1; }
+    100% { transform: perspective(300px) rotateY(0) rotate(var(--r)); opacity: 1; }
+}
+@keyframes jj-pop {
+    0% { transform: scale(0.2) rotate(var(--r)); opacity: 0; }
+    70% { transform: scale(1.18) rotate(var(--r)); opacity: 1; }
+    100% { transform: scale(1) rotate(var(--r)); }
+}
+@keyframes jj-shake {
+    0%, 100% { transform: translateX(0) rotate(var(--r)); }
+    20% { transform: translateX(-6px) rotate(-8deg); }
+    40% { transform: translateX(6px) rotate(8deg); }
+    60% { transform: translateX(-4px) rotate(-4deg); }
+    80% { transform: translateX(3px) rotate(3deg); }
+}
+
+// ---------------------------------------------------------------------------
+// Title
+// ---------------------------------------------------------------------------
+
+.jj-title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px 0 16px;
+    .jj-word { margin: 2px 0; }
+    .second { padding-left: 1.4em; }
+}
+.jj-lede { text-align: center; font-weight: 600; color: $muted; margin-top: -6px; }
+
+// ---------------------------------------------------------------------------
+// Lobby
+// ---------------------------------------------------------------------------
+
+.jj-options { display: flex; flex-direction: column; gap: 12px; }
+.jj-opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.jj-opt-label { font-weight: 800; }
+.jj-stepper {
+    display: flex; align-items: center; gap: 10px;
+    b { font-size: 22px; min-width: 28px; text-align: center; }
+}
+.jj-seg {
+    display: inline-flex;
+    border: $edge solid $ink;
+    border-radius: 12px;
+    overflow: hidden;
+    button {
+        font-family: inherit; font-weight: 800; font-size: 13px;
+        border: none; background: $panel; color: $ink; padding: 7px 10px; cursor: pointer;
+        & + button { border-left: $edge solid $ink; }
+        &.on { background: $butter; }
+    }
+}
+.jj-warn {
+    background: #ffe4e1; border: 2px dashed $stop; border-radius: 12px;
+    padding: 10px; font-weight: 600; text-align: center;
+}
+.jj-waiting {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    font-weight: 800; margin: 18px 0;
+}
+
+// ---------------------------------------------------------------------------
+// Top bar & mute
+// ---------------------------------------------------------------------------
+
+.jj-topbar {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'Outfit', sans-serif; font-weight: 800;
+    .sep { opacity: 0.5; }
+    .star { color: inherit; }
+}
+.jj-mute {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px;
+    border-radius: 50%; border: 2px solid currentColor;
+    background: transparent; color: inherit; cursor: pointer; padding: 0;
+}
+
+// ---------------------------------------------------------------------------
+// Round track & player strip
+// ---------------------------------------------------------------------------
+
+.jj-track {
+    display: flex; justify-content: center; gap: 6px; margin: 2px 0 6px; flex-wrap: wrap;
+}
+.jj-pip {
+    width: 26px; height: 26px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 2.5px solid $ink; border-radius: 8px;
+    font-weight: 900; font-size: 12px; color: $muted;
+    background: $panel;
+    transform: rotate(-3deg);
+    &:nth-child(even) { transform: rotate(3deg); }
+    &.win { background: $mint; color: $ink; }
+    &.miss { background: $coral; color: $ink; }
+    &.now { background: $butter; color: $ink; animation: jj-bob 1.2s ease-in-out infinite; }
+}
+
+.jj-strip {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 34px 4px 6px;
+    margin: -20px -4px 0;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+}
+.jj-seat {
+    position: relative;
+    flex: 0 0 auto;
+    width: 64px;
+    display: flex; flex-direction: column; align-items: center;
+    .jj-seat-name {
+        font-weight: 800; font-size: 12px; max-width: 64px;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 3px;
+    }
+    .jj-seat-role { font-size: 10px; color: $muted; height: 12px; font-weight: 600; }
+    &.turn .jj-avatar { animation: jj-bob 0.9s ease-in-out infinite; box-shadow: 0 0 0 4px $butter, 0 3px 0 4px $ink; }
+    &.guesser .jj-avatar { border-style: dashed; }
+}
+.jj-seat-badge {
+    position: absolute;
+    top: -6px; right: 6px;
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid $ink;
+    font-size: 10px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    &.guess { background: $sky; }
+    &.turn { background: $butter; top: auto; bottom: 26px; right: -2px; font-size: 8px; }
+}
+
+.jj-avatar {
+    --a: #{$lilac};
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    border: 2.5px solid $ink;
+    background: color-mix(in srgb, var(--a) 32%, white);
+    color: color-mix(in srgb, var(--a) 80%, #{$ink});
+    font-size: 0.45em;
+    flex: 0 0 auto;
+    svg { width: 48%; height: 48%; }
+}
+
+// ---------------------------------------------------------------------------
+// Speech bubbles
+// ---------------------------------------------------------------------------
+
+.jj-bubble {
+    position: absolute;
+    top: -32px;
+    left: 50%;
+    z-index: 5;
+    white-space: nowrap;
+    font-weight: 900;
+    font-size: 13px;
+    padding: 4px 9px;
+    border: 2.5px solid $ink;
+    border-radius: 12px;
+    transform-origin: 30% 120%;
+    animation: jj-bubble 2.6s cubic-bezier(.3, 1.5, .5, 1) both;
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: -8px; left: 12px;
+        width: 10px; height: 10px;
+        background: inherit;
+        border-right: 2.5px solid $ink;
+        border-bottom: 2.5px solid $ink;
+        transform: rotate(45deg) skew(10deg, 10deg);
+    }
+    &.jibber { background: $mint; }
+    &.jabble { background: $peach; animation-name: jj-bubble-wobble; }
+}
+@keyframes jj-bubble {
+    0% { transform: translateX(-30%) scale(0) rotate(-20deg); opacity: 0; }
+    12% { transform: translateX(-30%) scale(1.2) rotate(6deg); opacity: 1; }
+    20% { transform: translateX(-30%) scale(1) rotate(-3deg); }
+    85% { transform: translateX(-30%) scale(1) rotate(-3deg); opacity: 1; }
+    100% { transform: translateX(-30%) translateY(-10px) scale(0.8); opacity: 0; }
+}
+@keyframes jj-bubble-wobble {
+    0% { transform: translateX(-30%) scale(0); opacity: 0; }
+    12% { transform: translateX(-30%) scale(1.15) rotate(-8deg); opacity: 1; }
+    20% { transform: translateX(-30%) rotate(8deg); }
+    28% { transform: translateX(-30%) rotate(-6deg); }
+    36% { transform: translateX(-30%) rotate(4deg); }
+    44%, 85% { transform: translateX(-30%) rotate(0); opacity: 1; }
+    100% { transform: translateX(-30%) translateY(-10px) scale(0.8); opacity: 0; }
+}
+
+@keyframes jj-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+// ---------------------------------------------------------------------------
+// Choose: the word card / card back
+// ---------------------------------------------------------------------------
+
+.jj-wordcard, .jj-cardback {
+    width: 100%;
+    max-width: 360px;
+    margin: 4px auto 8px;
+    border: $edge solid $ink;
+    border-radius: 20px;
+    box-shadow: 0 6px 0 $ink;
+    &.flip-in { animation: jj-card-in 0.7s cubic-bezier(.3, 1.3, .5, 1) both; }
+}
+@keyframes jj-card-in {
+    0% { transform: perspective(700px) rotateY(-110deg) translateY(-30px) scale(0.8); opacity: 0; }
+    60% { transform: perspective(700px) rotateY(12deg) scale(1.02); opacity: 1; }
+    100% { transform: perspective(700px) rotateY(0) scale(1); }
+}
+.jj-wordcard {
+    background: $panel;
+    overflow: hidden;
+    padding-bottom: 6px;
+}
+.jj-wordcard-head {
+    background: $lilac;
+    border-bottom: $edge solid $ink;
+    padding: 8px 14px;
+    font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; font-size: 12px;
+    display: flex; justify-content: space-between;
+    background-image: repeating-linear-gradient(-45deg, transparent 0 10px, rgba(255, 255, 255, 0.35) 10px 20px);
+}
+.jj-wordrow {
+    display: flex; align-items: center; gap: 12px;
+    width: calc(100% - 16px);
+    margin: 6px 8px 0;
+    padding: 8px 10px;
+    font-family: inherit; color: $ink; text-align: left;
+    background: transparent;
+    border: 2.5px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.15s, background 0.15s, opacity 0.2s;
+    .num {
+        width: 30px; height: 30px; flex: 0 0 auto;
+        display: flex; align-items: center; justify-content: center;
+        border: 2.5px solid $ink; border-radius: 50%;
+        font-weight: 900;
+    }
+    .word { flex: 1; font-weight: 900; font-size: 19px; letter-spacing: 0.04em; }
+    .tick { font-weight: 900; font-size: 20px; }
+    &.easy .num { background: $mint; }
+    &.medium .num { background: $butter; }
+    &.hard .num { background: $coral; }
+    &:hover:not(:disabled) { background: #f6f3ff; transform: translateX(3px); }
+    &:disabled { cursor: default; opacity: 1; }
+    &.picked { border-color: $ink; background: $butter; transform: scale(1.03) rotate(-1deg); box-shadow: 0 3px 0 $ink; }
+    &.faded { opacity: 0.45; }
+}
+.jj-cardback {
+    height: 230px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    background-color: $sky;
+    background-image:
+        radial-gradient(circle at 20% 25%, rgba(255, 255, 255, .55) 0 10px, transparent 11px),
+        radial-gradient(circle at 80% 70%, rgba(255, 255, 255, .45) 0 14px, transparent 15px),
+        repeating-linear-gradient(45deg, transparent 0 14px, rgba(46, 42, 71, .07) 14px 28px);
+    .jj-blabbit { animation: jj-bob 1.6s ease-in-out infinite; }
+}
+.jj-cardback-text { font-weight: 900; font-size: 22px; letter-spacing: 0.04em; }
+
+// ---------------------------------------------------------------------------
+// Tier pills
+// ---------------------------------------------------------------------------
+
+.jj-tier {
+    display: inline-flex; align-items: center; gap: 5px;
+    border: 2px solid $ink; border-radius: 999px;
+    padding: 2px 9px;
+    font-size: 12px; font-weight: 800;
+    b { font-weight: 900; }
+    i { font-style: normal; font-weight: 600; opacity: 0.7; font-size: 11px; }
+    &.easy { background: $mint; }
+    &.medium { background: $butter; }
+    &.hard { background: $coral; }
+}
+.jj-tier-row {
+    display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; margin: 6px 0;
+    &.small { font-size: 13px; font-weight: 800; gap: 5px; }
+}
+
+// ---------------------------------------------------------------------------
+// Secret / mystery panels
+// ---------------------------------------------------------------------------
+
+.jj-secret {
+    background: $butter;
+    background-image: repeating-linear-gradient(-45deg, transparent 0 12px, rgba(255, 255, 255, .3) 12px 24px);
+    padding: 8px 10px 10px;
+    margin-top: 6px;
+}
+.jj-secret-head { display: flex; justify-content: space-between; align-items: center; .jj-label { margin: 0; color: $ink; } }
+.jj-leak {
+    margin-top: 6px; font-size: 13px; font-weight: 800; text-align: center;
+    background: $panel; border: 2px dashed $stop; border-radius: 10px; padding: 4px 8px;
+    animation: jj-shake-x 0.5s ease both;
+}
+@keyframes jj-shake-x {
+    20% { transform: translateX(-5px); } 40% { transform: translateX(5px); }
+    60% { transform: translateX(-3px); } 80% { transform: translateX(2px); }
+}
+
+.jj-mystery {
+    display: flex; align-items: center; gap: 12px;
+    background: #e8f4fd;
+    margin-top: 6px;
+    .jj-mystery-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; .jj-blanks { align-self: stretch; } }
+    .jj-label { margin: 0; }
+}
+.jj-ellipsis { font-weight: 900; font-size: 22px; margin-left: 4px; }
+
+// ---------------------------------------------------------------------------
+// Clue board
+// ---------------------------------------------------------------------------
+
+.jj-board { display: flex; flex-direction: column; gap: 10px; margin: 8px 0; }
+.jj-board.compact { gap: 6px; opacity: 0.95; }
+
+.jj-clue-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 10px 12px;
+    background: $panel;
+    border: $edge solid $ink;
+    border-radius: $radius;
+    box-shadow: 0 4px 0 $ink;
+    min-height: 64px;
+    transition: background 0.25s, transform 0.25s;
+
+    &.current { background: #fffbe9; transform: scale(1.01); }
+    &.stopped { background: #faf9fd; }
+    &.starred { background: #fff4c9; }
+    &.ghost {
+        background: transparent; box-shadow: none; border-style: dashed; border-color: #cbc4e2;
+        min-height: 46px;
+        .jj-clue-label { color: #b4aecb; }
+    }
+    .jj-clue-blocks { flex: 1; min-width: 0; padding: 2px 0 4px; }
+    .jj-clue-blocks.empty { color: #b4aecb; font-size: 13px; font-weight: 600; min-height: 0; }
+    .jj-stop-sign { flex: 0 0 auto; }
+}
+.jj-board.compact .jj-clue-row { min-height: 44px; padding: 6px 8px 8px; }
+.jj-clue-label {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 10px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; color: $muted;
+    display: flex; align-items: center; gap: 4px;
+}
+.jj-star { color: #f5a623; font-size: 14px; animation: jj-popin 0.4s both; }
+
+.jj-caret {
+    --a: #{$lilac};
+    display: inline-block;
+    width: calc(var(--bs) * 0.86);
+    height: var(--bs);
+    border: 3px dashed var(--a);
+    border-radius: calc(var(--bs) * 0.2);
+    background: color-mix(in srgb, var(--a) 12%, white);
+    animation: jj-caret 1s ease-in-out infinite;
+}
+@keyframes jj-caret {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(0.92); }
+}
+
+// ---------------------------------------------------------------------------
+// STOP sign
+// ---------------------------------------------------------------------------
+
+.jj-stop-sign {
+    display: inline-flex; align-items: center; justify-content: center;
+    position: relative;
+    background: $ink;
+    clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 0.02em;
+    transform: rotate(-8deg);
+    flex: 0 0 auto;
+    span {
+        position: absolute; inset: 3px;
+        display: flex; align-items: center; justify-content: center;
+        background: $stop;
+        clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
+    }
+    &.slam { animation: jj-slam 0.5s cubic-bezier(.2, 1.6, .4, 1) both; }
+}
+@keyframes jj-slam {
+    0% { transform: scale(3) rotate(-30deg); opacity: 0; }
+    55% { transform: scale(0.85) rotate(-4deg); opacity: 1; }
+    75% { transform: scale(1.1) rotate(-10deg); }
+    100% { transform: scale(1) rotate(-8deg); }
+}
+
+.jj-stop-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: inherit; font-weight: 900; font-size: 16px; color: $ink;
+    background: #ffe4e6;
+    border: $edge solid $ink; border-radius: 16px;
+    padding: 6px 16px 6px 8px;
+    box-shadow: 0 4px 0 $ink;
+    cursor: pointer;
+    transition: transform 0.08s, box-shadow 0.08s;
+    &.wide { width: 100%; justify-content: center; margin-top: 10px; }
+    &:hover:not(:disabled) .jj-stop-sign { animation: jj-wiggle 0.4s ease; }
+    &:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 $ink; }
+    &:disabled { opacity: 0.35; cursor: default; }
+}
+@keyframes jj-wiggle {
+    25% { transform: rotate(-18deg); } 50% { transform: rotate(4deg); } 75% { transform: rotate(-12deg); }
+}
+
+// ---------------------------------------------------------------------------
+// Keyboard & controls
+// ---------------------------------------------------------------------------
+
+.jj-controls { margin-top: 4px; }
+.jj-controls.mine .jj-prompt { animation: jj-popin 0.35s both; }
+
+.jj-keys {
+    display: flex; flex-direction: column; gap: 6px; align-items: center;
+    margin: 6px 0;
+    &.stop { background: #ffe4e6; border-radius: 14px; padding: 8px 2px; }
+}
+.jj-keyrow { display: flex; gap: 4px; justify-content: center; width: 100%; }
+.jj-key {
+    --c: #{$lilac};
+    flex: 1 1 0;
+    max-width: 44px;
+    height: 48px;
+    font-family: inherit; font-weight: 900; font-size: 19px; color: $ink;
+    background: var(--c);
+    border: 2.5px solid $ink;
+    border-radius: 10px;
+    box-shadow: 0 4px 0 $ink;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.06s, box-shadow 0.06s;
+    &:hover:not(:disabled) { transform: translateY(-2px) rotate(-3deg); box-shadow: 0 6px 0 $ink; }
+    &:active:not(:disabled) { transform: translateY(4px) scale(0.96); box-shadow: 0 0 0 $ink; }
+    &:disabled { opacity: 0.35; cursor: default; }
+}
+
+.jj-signals { display: flex; gap: 10px; margin-top: 12px; }
+.jj-say {
+    flex: 1;
+    font-family: inherit; font-weight: 900; font-size: 18px; color: $ink;
+    border: $edge solid $ink; border-radius: 18px 18px 18px 4px;
+    box-shadow: 0 4px 0 $ink;
+    padding: 8px 6px 6px;
+    cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; line-height: 1.1;
+    small { font-size: 11px; font-weight: 600; opacity: 0.7; }
+    &.jibber { background: $mint; }
+    &.jabble { background: $peach; border-radius: 18px 18px 4px 18px; }
+    &:active:not(:disabled) { transform: translateY(3px) rotate(-2deg); box-shadow: 0 1px 0 $ink; }
+    &:disabled { opacity: 0.5; cursor: default; }
+}
+
+.jj-waitline {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 15px; font-weight: 600; text-align: center;
+    padding: 10px; margin-top: 4px;
+    border: 2.5px dashed #cbc4e2; border-radius: 14px;
+    .jj-muted { display: block; font-size: 12px; }
+}
+
+// ---------------------------------------------------------------------------
+// Guessing
+// ---------------------------------------------------------------------------
+
+.jj-guessbox { background: #eef8ff; text-align: center; }
+.jj-guess-preview { justify-content: center; min-height: 64px; margin: 8px 0; }
+.jj-tried { display: flex; gap: 8px; justify-content: center; font-weight: 800; color: $stop; }
+.jj-input {
+    width: 100%;
+    font-family: inherit; font-size: 22px; font-weight: 900; letter-spacing: 0.12em;
+    text-transform: uppercase; text-align: center;
+    color: $ink; background: $panel;
+    border: $edge solid $ink; border-radius: 12px;
+    padding: 10px; margin-bottom: 10px;
+    outline: none;
+    &:focus { box-shadow: 0 0 0 4px $butter; }
+}
+.jj-thinking { display: flex; align-items: center; gap: 12px; font-size: 16px; }
+.jj-dots i {
+    display: inline-block; font-style: normal; font-weight: 900;
+    animation: jj-bob 0.9s ease-in-out infinite;
+    &:nth-child(2) { animation-delay: 0.15s; }
+    &:nth-child(3) { animation-delay: 0.3s; }
+}
+
+// ---------------------------------------------------------------------------
+// Reveal & done
+// ---------------------------------------------------------------------------
+
+.jj-reveal { position: relative; text-align: center; padding-top: 4px; }
+.jj-reveal-top { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 6px 0; }
+.jj-stamp {
+    font-weight: 900;
+    font-size: 30px;
+    letter-spacing: 0.02em;
+    padding: 6px 14px;
+    border: 4px solid $ink;
+    border-radius: 14px;
+    transform: rotate(-6deg);
+    box-shadow: 0 5px 0 $ink;
+    .win & { background: $mint; }
+    .miss & { background: $coral; }
+    &.slam { animation: jj-stamp 0.6s cubic-bezier(.2, 1.6, .4, 1) 0.2s both; }
+}
+@keyframes jj-stamp {
+    0% { transform: scale(3.2) rotate(-25deg); opacity: 0; }
+    60% { transform: scale(0.9) rotate(-4deg); opacity: 1; }
+    100% { transform: scale(1) rotate(-6deg); }
+}
+.jj-wobble { animation: jj-wobble 0.7s ease 0.6s both; }
+@keyframes jj-wobble {
+    0%, 100% { transform: rotate(0); }
+    20% { transform: rotate(-4deg) translateX(-6px); }
+    40% { transform: rotate(4deg) translateX(6px); }
+    60% { transform: rotate(-2deg) translateX(-3px); }
+    80% { transform: rotate(1deg); }
+}
+
+.jj-done { text-align: center; align-items: center; position: relative; }
+.jj-done .jj-panel { width: 100%; text-align: left; }
+.jj-rank {
+    font-weight: 900; font-size: 26px; margin: 4px 0 6px;
+    padding: 4px 14px; border: $edge solid $ink; border-radius: 999px;
+    box-shadow: 0 4px 0 $ink;
+    animation: jj-popin 0.5s 0.6s both;
+    &.r0 { background: $sky; }
+    &.r1 { background: $butter; }
+    &.r2 { background: $mint; }
+    &.r3 { background: $coral; }
+}
+.jj-badges { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.jj-badge {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 8px; border: 2px dashed #cbc4e2; border-radius: 12px;
+    opacity: 0.7;
+    .medal { font-size: 18px; }
+    small { font-size: 11px; color: $muted; line-height: 1.3; }
+    &.got { opacity: 1; border: 2.5px solid $ink; background: $butter; box-shadow: 0 3px 0 $ink; animation: jj-popin 0.4s both; }
+    &.honour .medal { color: $muted; }
+}
+
+// ---------------------------------------------------------------------------
+// Hints
+// ---------------------------------------------------------------------------
+
+.jj-hints { background: #fbfaff; }
+.jj-hintcard {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px;
+    border: 2.5px solid $ink; border-radius: 14px;
+    background: $lilac;
+    background-image: repeating-linear-gradient(45deg, transparent 0 10px, rgba(255, 255, 255, .25) 10px 20px);
+    .glyph {
+        width: 44px; height: 44px; flex: 0 0 auto;
+        display: flex; align-items: center; justify-content: center;
+        background: $panel; border: 2.5px solid $ink; border-radius: 12px;
+        transform: rotate(-4deg);
+    }
+    .body { flex: 1; display: flex; flex-direction: column; font-size: 13px; line-height: 1.3; b { font-size: 15px; } }
+    &.ready { animation: jj-ready 1.6s ease-in-out infinite; }
+    &.used { filter: grayscale(1); opacity: 0.6; }
+}
+@keyframes jj-ready {
+    0%, 100% { box-shadow: 0 3px 0 $ink; }
+    50% { box-shadow: 0 3px 0 $ink, 0 0 0 5px rgba(255, 227, 143, 0.9); }
+}
+.jj-used-stamp {
+    font-weight: 900; font-size: 12px; letter-spacing: 0.12em;
+    border: 2.5px solid $ink; border-radius: 6px; padding: 2px 6px; transform: rotate(-10deg);
+}
+.jj-starpick {
+    display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 8px;
+    span { font-weight: 800; }
+}
+.jj-hint-others { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.jj-hint-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 800;
+    padding: 3px 8px 3px 3px;
+    border: 2px solid $ink; border-radius: 999px;
+    background: $panel;
+    &.used { opacity: 0.45; text-decoration: line-through; }
+}
+
+// ---------------------------------------------------------------------------
+// Scorebook & rules
+// ---------------------------------------------------------------------------
+
+.jj-scorebook { padding-top: 4px; }
+.jj-done .jj-scorebook { background: transparent; padding: 0; width: 100%; text-align: left; }
+.jj-recap {
+    border: 2.5px solid $ink; border-radius: 14px; background: $panel;
+    padding: 8px 10px; margin: 8px 0;
+    box-shadow: 0 3px 0 $ink;
+    border-left-width: 10px;
+    &.win { border-left-color: #6cc99b; }
+    &.miss { border-left-color: $stop; }
+}
+.jj-recap-head {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    .rnd { font-weight: 900; color: $muted; font-size: 12px; }
+    .word { font-size: 17px; letter-spacing: 0.04em; }
+    .res { margin-left: auto; font-weight: 900; }
+}
+.jj-recap-sub { font-size: 12px; color: $muted; margin: 3px 0; }
+.jj-recap-clues { display: flex; gap: 5px; flex-wrap: wrap; }
+.jj-clue-chip {
+    font-weight: 900; font-size: 12px; letter-spacing: 0.08em;
+    background: #f0edf9; border-radius: 6px; padding: 2px 6px;
+}
+
+.jj-rules {
+    section { margin: 14px 0; }
+    h3 { font-weight: 900; font-size: 17px; margin: 0 0 4px; }
+    p { margin: 4px 0; font-size: 14px; }
+}
+.jj-ranks { display: flex; flex-direction: column; gap: 4px; }
+.jj-rank-row {
+    display: flex; gap: 12px; font-weight: 700; font-size: 14px;
+    .pts { width: 40px; font-weight: 900; }
+}
+.jj-hint-list { display: flex; flex-direction: column; gap: 6px; }
+.jj-hint-mini {
+    display: flex; gap: 8px; align-items: flex-start;
+    background: $panel; border: 2px solid $line; border-radius: 10px; padding: 6px 8px;
+    div { display: flex; flex-direction: column; font-size: 13px; }
+}
+.jj-settings { display: flex; flex-direction: column; gap: 12px; }
+
+// ---------------------------------------------------------------------------
+// Mascot
+// ---------------------------------------------------------------------------
+
+.jj-blabbit {
+    flex: 0 0 auto;
+    overflow: visible;
+    .bb-pupil { animation: jj-look 3.2s ease-in-out infinite; }
+    &.mood-confused .bb-pupil { animation-duration: 1.4s; }
+    &.mood-party { animation: jj-party 0.6s ease-in-out infinite alternate; }
+    &.mood-shock { animation: jj-shake-x 0.5s ease 0.4s both; }
+}
+@keyframes jj-look {
+    0%, 40%, 100% { transform: translate(0, 0); }
+    50%, 70% { transform: translate(3px, -1px); }
+    80% { transform: translate(-3px, 1px); }
+}
+@keyframes jj-party {
+    from { transform: rotate(-6deg) translateY(0); }
+    to { transform: rotate(6deg) translateY(-4px); }
+}
+
+// ---------------------------------------------------------------------------
+// Confetti & backdrop
+// ---------------------------------------------------------------------------
+
+.jj-confetti {
+    position: absolute; inset: -20px 0 auto 0; height: 0; z-index: 20; pointer-events: none;
+    .bit {
+        --c: #{$coral};
+        position: absolute; top: 0;
+        width: 10px; height: 10px;
+        background: var(--c);
+        border: 1.5px solid $ink;
+        animation: jj-fall 1.8s cubic-bezier(.25, .6, .5, 1) both;
+        &.ci { border-radius: 50%; }
+        &.bar { width: 5px; height: 14px; }
+        &.tri { width: 0; height: 0; border: none; background: none; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 12px solid var(--c); }
+    }
+}
+@keyframes jj-fall {
+    0% { transform: translateY(-20px) rotate(0); opacity: 0; }
+    10% { opacity: 1; }
+    100% { transform: translateY(520px) rotate(var(--spin)); opacity: 0; }
+}
+
+.jj-backdrop {
+    position: absolute !important; inset: 0; z-index: 0 !important; pointer-events: none; overflow: hidden;
+    .fl {
+        position: absolute; opacity: 0.35;
+        animation: jj-float 14s ease-in-out infinite alternate;
+        &:nth-child(2) { animation-duration: 17s; animation-delay: -4s; }
+        &:nth-child(3) { animation-duration: 12s; animation-delay: -7s; }
+        &:nth-child(4) { animation-duration: 19s; }
+        &:nth-child(5) { animation-duration: 15s; animation-delay: -2s; }
+    }
+    .ci { width: 46px; height: 46px; border-radius: 50%; background: $coral; &.sm { width: 22px; height: 22px; background: $sky; } }
+    .tri { width: 0; height: 0; border-left: 24px solid transparent; border-right: 24px solid transparent; border-bottom: 40px solid $butter; }
+    .sq { width: 34px; height: 34px; border-radius: 8px; background: $mint; }
+    .plus {
+        width: 36px; height: 36px;
+        background: linear-gradient($lilac, $lilac) center / 100% 30% no-repeat, linear-gradient($lilac, $lilac) center / 30% 100% no-repeat;
+    }
+    .squig {
+        width: 60px; height: 18px;
+        background: radial-gradient(circle at 10px 0, transparent 8px, $peach 9px 13px, transparent 14px) 0 0 / 20px 18px repeat-x;
+    }
+}
+@keyframes jj-float {
+    from { transform: translate(0, 0) rotate(0); }
+    to { transform: translate(14px, -22px) rotate(40deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .jj-root *, .jj-root *::before, .jj-root *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+
+@media (min-width: 640px) {
+    .jj-play, .jj-lobby, .jj-rules, .jj-scorebook { max-width: 560px; margin: 0 auto; }
+}
+
+@keyframes jj-popin {
+    0% { transform: scale(0.3); opacity: 0; }
+    70% { transform: scale(1.12); opacity: 1; }
+    100% { transform: scale(1); }
+}
+
+// ---------------------------------------------------------------------------
+// Emotes — a row of flat faces under Jibber!/Jabble?, and their bubbles
+// ---------------------------------------------------------------------------
+
+.jj-emotes {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    margin-top: 10px;
+    padding: 6px 8px;
+    background: #fff;
+    border: 2.5px dashed #cbc4e2;
+    border-radius: 999px;
+}
+.jj-emote-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    padding: 2px;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.12s cubic-bezier(.3, 1.6, .5, 1);
+    svg { display: block; }
+    &:nth-child(odd):hover:not(:disabled) { transform: translateY(-3px) rotate(-10deg) scale(1.15); }
+    &:nth-child(even):hover:not(:disabled) { transform: translateY(-3px) rotate(10deg) scale(1.15); }
+    &:active:not(:disabled) { transform: scale(0.85); }
+    &:disabled { opacity: 0.45; cursor: default; }
+}
+.jj-bubble.emote {
+    top: -40px;
+    padding: 2px;
+    background: #fff;
+    border-radius: 50%;
+    animation-name: jj-emote-pop;
+    &::after { left: 10px; bottom: -6px; }
+    svg { display: block; }
+}
+@keyframes jj-emote-pop {
+    0% { transform: translateX(-30%) translateY(16px) scale(0) rotate(-30deg); opacity: 0; }
+    14% { transform: translateX(-30%) translateY(-4px) scale(1.3) rotate(12deg); opacity: 1; }
+    22% { transform: translateX(-30%) scale(0.95) rotate(-6deg); }
+    30%, 80% { transform: translateX(-30%) scale(1) rotate(0); opacity: 1; }
+    100% { transform: translateX(-30%) translateY(-18px) scale(0.7); opacity: 0; }
+}
+
+// ---------------------------------------------------------------------------
+// Team mode — Team Jibber (mint) vs Team Jabber (peach). Team colour comes in
+// as --tc (fill) / --td (deep accent) on whatever element belongs to a team.
+// ---------------------------------------------------------------------------
+
+.jj-teams-editor {
+    .jj-shuffle { margin-left: auto; }
+}
+.jj-team-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.jj-team-col {
+    --tc: #{$mint};
+    --td: #3fae7a;
+    background: color-mix(in srgb, var(--tc) 30%, white);
+    border: 2.5px solid $ink;
+    border-radius: 14px;
+    padding: 8px;
+    display: flex; flex-direction: column; gap: 6px;
+    min-width: 0;
+}
+.jj-team-name {
+    font-weight: 900; font-size: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    span {
+        background: var(--tc); border: 2px solid $ink; border-radius: 999px;
+        min-width: 24px; text-align: center; font-size: 12px; padding: 0 6px;
+    }
+}
+.jj-team-chip {
+    display: flex; align-items: center; gap: 6px;
+    width: 100%;
+    font-family: inherit; font-weight: 800; font-size: 13px; color: $ink; text-align: left;
+    background: #fff; border: 2px solid $ink; border-radius: 999px;
+    padding: 2px 8px 2px 2px;
+    cursor: pointer;
+    transition: transform 0.12s;
+    .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    i { font-style: normal; color: var(--td); font-weight: 900; }
+    &:hover:not(:disabled) { transform: translateX(2px); }
+    &:disabled { cursor: default; opacity: 1; }
+}
+.jj-team-short { font-size: 12px; font-weight: 800; color: $stop; text-align: center; }
+
+// in-game scoreline
+.jj-teambar {
+    display: flex; gap: 8px; margin: 0 0 8px;
+}
+.jj-teambar-side {
+    flex: 1;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 6px 4px 12px;
+    background: color-mix(in srgb, var(--tc) 45%, white);
+    border: 2.5px solid $ink; border-radius: 14px;
+    .nm { font-weight: 900; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+    small {
+        font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+        background: $ink; color: #fff; border-radius: 6px; padding: 1px 5px;
+    }
+    .sc {
+        min-width: 34px; height: 34px;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--tc); border: 2.5px solid $ink; border-radius: 10px;
+        font-size: 20px; font-weight: 900;
+        box-shadow: 0 3px 0 $ink;
+    }
+    &.mine { box-shadow: 0 4px 0 $ink; }
+}
+
+// player strip, grouped
+.jj-strip.teams .jj-seat .jj-avatar { box-shadow: 0 0 0 3px var(--tc, transparent); }
+.jj-strip.teams .jj-seat.turn .jj-avatar { box-shadow: 0 0 0 4px $butter, 0 3px 0 4px $ink; }
+.jj-seat.rival { opacity: 0.8; }
+.jj-strip-vs {
+    flex: 0 0 auto; align-self: center;
+    font-weight: 900; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;
+    background: var(--tc, #{$lilac}); border: 2px solid $ink; border-radius: 999px;
+    padding: 2px 7px; transform: rotate(-8deg); margin: 0 2px 18px;
+}
+
+// rival progress line
+.jj-rival {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    font-size: 13px; font-weight: 600;
+    background: color-mix(in srgb, var(--tc) 25%, white);
+    border: 2px dashed var(--td); border-radius: 12px;
+    padding: 6px 10px; margin: 6px 0 2px;
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--td); animation: jj-caret 1s ease-in-out infinite; }
+    &.done { border-style: solid; .dot { animation: none; } }
+}
+
+// difficulty pick
+.jj-tier-pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0 10px; }
+.jj-tier-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    font-family: inherit; color: $ink;
+    border: $edge solid $ink; border-radius: 16px; box-shadow: 0 4px 0 $ink;
+    padding: 12px 4px; cursor: pointer;
+    transition: transform 0.1s;
+    b { font-size: 18px; font-weight: 900; }
+    small { font-size: 11px; font-weight: 700; opacity: 0.7; }
+    &.easy { background: $mint; }
+    &.medium { background: $butter; }
+    &.hard { background: $coral; }
+    &:hover { transform: translateY(-2px) rotate(-2deg); }
+    &:active { transform: translateY(3px); box-shadow: 0 1px 0 $ink; }
+}
+
+// per-team results
+.jj-result {
+    position: relative;
+    background: color-mix(in srgb, var(--tc, #fff) 22%, white);
+    border: $edge solid $ink; border-radius: $radius; box-shadow: 0 4px 0 $ink;
+    padding: 10px 8px 8px;
+    text-align: center;
+    min-width: 0;
+    .jj-label { margin-top: 8px; }
+}
+.jj-result-team {
+    position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+    background: var(--tc, $lilac); border: 2px solid $ink; border-radius: 999px;
+    font-size: 11px; font-weight: 900; padding: 1px 10px; white-space: nowrap;
+}
+.jj-stamp.small { font-size: 18px; border-width: 3px; padding: 3px 9px; box-shadow: 0 3px 0 $ink; margin-top: 6px; display: inline-block; }
+.jj-result.win .jj-stamp { background: $mint; }
+.jj-result.miss .jj-stamp { background: $coral; }
+.jj-result-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 18px 0 4px; }
+
+// spectating
+.jj-spectate {
+    margin-top: 12px;
+    padding: 8px;
+    border: 2.5px dashed var(--td); border-radius: $radius;
+    background: color-mix(in srgb, var(--tc) 18%, white);
+}
+.jj-spectate-head {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    font-weight: 700; font-size: 14px; margin-bottom: 4px;
+    .eye { font-size: 18px; animation: jj-look 2.4s ease-in-out infinite; display: inline-block; }
+    .jj-muted { margin-left: auto; }
+}
+
+// reveal: both boards
+.jj-board-pair { display: flex; flex-direction: column; gap: 6px; }
+.jj-board-side {
+    border-left: 6px solid var(--td); padding-left: 8px;
+}
+.jj-board-title { font-weight: 900; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: $muted; margin-top: 6px; }
+
+// final
+.jj-final-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.jj-final-side {
+    background: color-mix(in srgb, var(--tc) 30%, white);
+    border: $edge solid $ink; border-radius: $radius; box-shadow: 0 4px 0 $ink;
+    padding: 8px 6px;
+    .nm { font-weight: 900; font-size: 14px; small { font-weight: 600; } }
+    &.winner { background: var(--tc); transform: rotate(-2deg) scale(1.03); }
+}
+.jj-team-tag {
+    font-size: 11px; font-weight: 900;
+    background: var(--tc); border: 2px solid $ink; border-radius: 999px; padding: 0 7px;
+}
+
+// ---------------------------------------------------------------------------
+// Team scoring — points earned per word, and the ⚡ speed bonus
+// ---------------------------------------------------------------------------
+
+.jj-points { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+.jj-pts {
+    font-weight: 900; font-size: 15px;
+    background: $butter; border: 2.5px solid $ink; border-radius: 999px;
+    padding: 1px 10px; box-shadow: 0 3px 0 $ink;
+    &.bonus { background: $sky; font-size: 13px; }
+    &.pop { animation: jj-popin 0.45s 0.7s both; }
+    &.bonus.pop { animation-delay: 1s; }
+}
+.jj-zap { font-style: normal; margin-left: 2px; }
+.jj-teambar-side .sc { padding: 0 4px; }

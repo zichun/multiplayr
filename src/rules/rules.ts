@@ -822,9 +822,111 @@ export const MPRULES = {
         icon: '🧭',
         minPlayers: 2,
         maxPlayers: 6
+    },
+    'quacks': {
+        description: 'Quacks - Potion Bag Builder',
+        mechanics: ['Bag Building', 'Push Your Luck', 'Simultaneous Action'],
+        glyph: GAME_ICONS.quacks,
+        enabled: true,
+        rules: ['lobby', 'gameshell', 'quacks'],
+        rule: () => import('./quacks/quacks').then(m => m.QuacksRule),
+        icon: '⚗️',
+        minPlayers: 2,
+        maxPlayers: 4
+    },
+    'quacks-debug': {
+        description: 'Quacks (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'quacks', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./quacks/quacks')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('quacks', orig.QuacksRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '⚗️',
+        minPlayers: 2,
+        maxPlayers: 4
+    },
+    'parks': {
+        description: 'Parks - National Park Hiking',
+        mechanics: ['Worker Placement', 'Set Collection', 'Solo'],
+        glyph: GAME_ICONS.parks,
+        enabled: true,
+        rules: ['lobby', 'gameshell', 'parks'],
+        rule: () => import('./parks/parks').then(m => m.ParksRule),
+        icon: '🏞️',
+        minPlayers: 1,
+        maxPlayers: 5
+    },
+    'parks-debug': {
+        description: 'Parks (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'parks', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./parks/parks')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('parks', orig.ParksRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🏞️',
+        minPlayers: 1,
+        maxPlayers: 5
+    },
+    'jibberjabble': {
+        description: 'Jibber Jabble - Letter-by-Letter Cooperative Clues',
+        mechanics: ['Cooperative', 'Word Game', 'Party'],
+        glyph: GAME_ICONS.jibberjabble,
+        enabled: true,
+        rules: ['lobby', 'gameshell', 'jibberjabble'],
+        rule: () => import('./jibberjabble/jibberjabble').then(m => m.JibberJabbleRule),
+        icon: '🗯️',
+        minPlayers: 3,
+        maxPlayers: 12
+    },
+    'jibberjabble-debug': {
+        description: 'Jibber Jabble (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'jibberjabble', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./jibberjabble/jibberjabble')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('jibberjabble', orig.JibberJabbleRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🗯️',
+        minPlayers: 3,
+        maxPlayers: 12
+    },
+    'hooky': {
+        description: "Hooky - Who's Skipping Class? Letter Deduction",
+        mechanics: ['Deduction', 'Word Game'],
+        glyph: GAME_ICONS.hooky,
+        enabled: true,
+        rules: ['lobby', 'gameshell', 'hooky'],
+        rule: () => import('./hooky/hooky').then(m => m.HookyRule),
+        icon: '🔔',
+        minPlayers: 3,
+        maxPlayers: 6
+    },
+    'hooky-debug': {
+        description: 'Hooky (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'hooky', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./hooky/hooky')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('hooky', orig.HookyRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🔔',
+        minPlayers: 3,
+        maxPlayers: 6
     }
 };
 
 export default MPRULES;
-
-

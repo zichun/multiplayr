@@ -39,5 +39,11 @@ import './savedsessions/test_savedsessions';
 import './harmonies/test_harmonies_gamestate';
 import './harmonies/test_harmonies';
 import './faraway/test_faraway';
+import './quacks/test_quacks';
+import './quacks/test_quacks_herbwitches';
+import './quacks/test_quacks_alchemists';
+import './parks/test_parks';
+import './jibberjabble/test_jibberjabble';
+import './hooky/test_hooky';
 
 import './undo/test_undo';

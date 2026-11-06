@@ -55,7 +55,7 @@ for (const key of Object.keys(paths)) {
     }
 }
 
-const debugGames = ['avalon', 'coup', 'theoddone', 'decrypto', 'minesweeperflags', 'tictactoepoker', 'ito', 'drawing', 'catchsketch', 'durian', 'startups', 'clever', 'ttykm', 'harmonies'];
+const debugGames = ['avalon', 'coup', 'theoddone', 'decrypto', 'minesweeperflags', 'tictactoepoker', 'ito', 'drawing', 'catchsketch', 'durian', 'startups', 'clever', 'ttykm', 'harmonies', 'quacks', 'parks', 'jibberjabble', 'hooky'];
 debugGames.forEach(game => {
     app.get('/' + game, (req, res) => {
         res.redirect('/debug?game=' + game);

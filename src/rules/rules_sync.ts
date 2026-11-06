@@ -38,6 +38,10 @@ import { NightZooRule } from './nightzoo/nightzoo';
 import { WingspanRule } from './wingspanpocket/wingspan';
 import { HarmoniesRule } from './harmonies/harmonies';
 import { FarawayRule } from './faraway/faraway';
+import { QuacksRule } from './quacks/quacks';
+import { ParksRule } from './parks/parks';
+import { JibberJabbleRule } from './jibberjabble/jibberjabble';
+import { HookyRule } from './hooky/hooky';
 
 
 const CoupDebugger = NewDebuggerRule(
@@ -746,9 +750,39 @@ export const MPRULES = {
         icon: '🧭',
         minPlayers: 2,
         maxPlayers: 6
+    },
+    'quacks': {
+        description: 'Quacks - Potion Bag Builder',
+        rules: ['lobby', 'gameshell', 'quacks'],
+        rule: QuacksRule,
+        icon: '⚗️',
+        minPlayers: 2,
+        maxPlayers: 4
+    },
+    'parks': {
+        description: 'Parks - National Park Hiking',
+        rules: ['lobby', 'gameshell', 'parks'],
+        rule: ParksRule,
+        icon: '🏞️',
+        minPlayers: 1,
+        maxPlayers: 5
+    },
+    'jibberjabble': {
+        description: 'Jibber Jabble - Letter-by-Letter Cooperative Clues',
+        rules: ['lobby', 'gameshell', 'jibberjabble'],
+        rule: JibberJabbleRule,
+        icon: '🗯️',
+        minPlayers: 3,
+        maxPlayers: 12
+    },
+    'hooky': {
+        description: "Hooky - Who's Skipping Class? Letter Deduction",
+        rules: ['lobby', 'gameshell', 'hooky'],
+        rule: HookyRule,
+        icon: '🔔',
+        minPlayers: 3,
+        maxPlayers: 6
     }
 };
 
 export default MPRULES;
-
-

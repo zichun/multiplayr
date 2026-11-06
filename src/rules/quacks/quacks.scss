@@ -1,0 +1,1315 @@
+/**
+ * quacks.scss — flat, bright storybook skin for The Quacks of Quedlinburg.
+ *
+ * A Flat Minimalist skin (DESIGN_GUIDE §10.10), not the platform neo-brutalist
+ * one: hairline borders, soft radii, no offset shadows, candy colours on a pale
+ * lilac ground. Everything is scoped under `.qk-*` so no other game is touched.
+ *
+ * Two things here are sized relative to their own box rather than in px:
+ *   • the pot cells (`container-type: inline-size` + `cqi`), so the 7-wide grid
+ *     keeps its proportions from a 320px phone up to a desktop column;
+ *   • the card regions (percentages of the card box, never `em`), because the
+ *     footer region carries its own inline font-size and an `em` height there
+ *     would compound (DESIGN_GUIDE §10.5).
+ */
+
+$ink: #3b3553;
+$muted: #8a84a3;
+$line: #e9e4f3;
+$paper: #faf8ff;
+$panel: #ffffff;
+$accent: #6a5be2;
+$accent-soft: #eeebff;
+$gold: #f9bb2d;
+$gold-ink: #5b3d00;
+$boom: #ff5a48;
+$ok: #23b06c;
+$teal: #17b6a7;
+$radius: 14px;
+
+.qk-arena, .qk-lobby, .qk-rules, .qk-settings {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+}
+
+.qk-arena, .qk-lobby {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    max-width: 560px;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+.qk-settings { display: flex; flex-direction: column; gap: 10px; padding: 14px; max-width: 420px; margin: 0 auto; }
+
+// ===========================================================================
+// Atoms
+// ===========================================================================
+
+.qk-ic {
+    display: inline-flex;
+    flex: 0 0 auto;
+    width: 1.2em;
+    height: 1.2em;
+    svg { width: 100%; height: 100%; display: block; }
+}
+
+// An ingredient chip. `font-size` is set to the chip's own diameter so the value
+// badge can be sized in `em` of the chip.
+.qk-chip {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    font-size: 34px;
+    line-height: 1;
+
+    svg { width: 100%; height: 100%; display: block; }
+
+    // sized in `em` of its own (scaled-down) font, so it tracks the chip
+    .qk-chip-val {
+        position: absolute;
+        right: -0.2em;
+        bottom: -0.2em;
+        width: 1.5em;
+        height: 1.5em;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 0 0 0.13em rgba($ink, 0.22);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $ink;
+        font-size: 0.3em;
+        font-weight: 800;
+    }
+
+    &.plain .qk-chip-val { display: none; }
+    &.fluid { width: 86%; height: 86%; font-size: 86cqi; }
+}
+
+.qk-coin {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: $gold;
+    box-shadow: inset 0 0 0 2px rgba(#fff, 0.45);
+    color: $gold-ink;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.qk-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.92em;
+    b { font-weight: 700; }
+}
+
+.qk-muted { color: $muted; font-size: 0.85em; margin: 0; line-height: 1.35; }
+.qk-warn { color: #b3261e; background: #ffe9e6; border-radius: 10px; padding: 8px 10px; font-size: 0.88em; margin: 0; }
+.qk-spacer { flex: 1 1 auto; }
+.qk-sub { color: $muted; font-size: 0.82em; font-weight: 500; text-transform: none; letter-spacing: 0; }
+
+.qk-panel {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: $radius;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+.qk-center { align-items: center; text-align: center; }
+
+.qk-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.1px;
+    color: $muted;
+    min-height: 24px;
+}
+
+.qk-btn {
+    font-family: inherit;
+    border: 1px solid $line;
+    background: $panel;
+    color: $ink;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 0.95em;
+    font-weight: 600;
+    min-height: 44px;
+    cursor: pointer;
+    transition: transform .12s, background .12s;
+
+    &:active { transform: translateY(1px); }
+    &.primary { background: $accent; border-color: $accent; color: #fff; }
+    &.ghost { background: transparent; color: $muted; }
+    &.small { padding: 7px 12px; min-height: 40px; font-size: 0.88em; }
+    &.block { display: block; width: 100%; }
+    &:disabled { opacity: .4; cursor: default; }
+
+    &.option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-align: left;
+        width: 100%;
+        background: $accent-soft;
+        border-color: transparent;
+        small { display: block; color: $muted; font-weight: 500; font-size: 0.82em; }
+    }
+}
+
+.qk-opt-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+// the host's choice, shown to everyone else as a static chip rather than a button
+.qk-readonly { display: inline-flex; align-items: center; cursor: default; }
+
+// per-ingredient book picker (custom mix)
+.qk-picker { display: flex; flex-direction: column; gap: 4px; }
+.qk-picker-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 0;
+    border-top: 1px solid $line;
+    &:first-child { border-top: 0; padding-top: 2px; }
+}
+.qk-picker-head { display: flex; align-items: center; gap: 8px; }
+.qk-picker-name { flex: 1 1 auto; min-width: 0; font-weight: 700; font-size: 0.92em; }
+.qk-seg {
+    flex: 0 0 auto;
+    display: inline-flex;
+    background: #f0edf7;
+    border-radius: 12px;
+    padding: 3px;
+    gap: 2px;
+    button {
+        font-family: inherit;
+        width: 40px;
+        height: 38px;
+        border: 0;
+        border-radius: 9px;
+        background: transparent;
+        color: $muted;
+        font-weight: 800;
+        font-size: 0.95em;
+        cursor: pointer;
+        &.on { background: $accent; color: #fff; }
+    }
+}
+.qk-ruletext {
+    font-size: 0.84em;
+    line-height: 1.4;
+    color: $ink;
+    .qk-ic { vertical-align: -3px; margin: 0 1px; }
+}
+
+.qk-pill {
+    flex: 0 0 auto;
+    border-radius: 999px;
+    padding: 3px 9px;
+    font-size: 0.74em;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: none;
+    background: #f0edf7;
+    color: $muted;
+    &.busy { background: #fff3d1; color: #7a5600; }
+    &.ok { background: #dff6ea; color: #136c41; }
+    &.boom { background: #ffe1dc; color: #a8261a; }
+}
+
+.qk-banner {
+    border-radius: $radius;
+    padding: 10px 14px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    font-size: 0.92em;
+    background: $accent-soft;
+    &.waiting { color: #554c8f; }
+    &.boom { background: #ffe1dc; color: #a8261a; }
+}
+
+// ===========================================================================
+// The pot
+// ===========================================================================
+
+.qk-potpanel { gap: 10px; }
+
+.qk-pot {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+}
+
+.qk-cell {
+    position: relative;
+    aspect-ratio: 1;
+    container-type: inline-size;
+    border-radius: 24%;
+    background: #f5f2fb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    // an empty space: gold coin value top-left, star points bottom-right, ruby top-right
+    .qk-cell-coin {
+        position: absolute;
+        top: 7cqi;
+        left: 7cqi;
+        width: 52cqi;
+        height: 52cqi;
+        border-radius: 50%;
+        background: $gold;
+        color: $gold-ink;
+        font-size: 27cqi;
+        font-weight: 800;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .qk-cell-vp {
+        position: absolute;
+        right: 7cqi;
+        bottom: 5cqi;
+        display: flex;
+        align-items: center;
+        gap: 2cqi;
+        color: $accent;
+        font-size: 28cqi;
+        font-weight: 800;
+        line-height: 1;
+        .qk-ic { width: 24cqi; height: 24cqi; }
+    }
+    .qk-cell-ruby { position: absolute; top: 4cqi; right: 6cqi; .qk-ic { width: 30cqi; height: 30cqi; } }
+    .qk-cell-start { font-size: 30cqi; font-weight: 800; color: $muted; letter-spacing: 1px; }
+    .qk-cell-spoon { position: absolute; inset: 0; opacity: 0.22; .qk-ic { width: 100%; height: 100%; } }
+
+    &.start { background: transparent; border: 1.5px dashed #d6cfe8; }
+    &.skipped > :not(.qk-mark) { opacity: 0.28; }
+    &.filled { background: transparent; }
+    &.spoon { background: #fff3d1; }
+    &.gone .qk-chip { opacity: 0.35; }
+    &.scoring {
+        background: $accent-soft;
+        box-shadow: inset 0 0 0 2px $accent;
+        animation: qk-pulse 1.6s ease-in-out infinite;
+    }
+    &.latest .qk-chip { animation: qk-pop .28s ease-out; }
+}
+
+// droplet / rat stone: small markers pinned to a space's lower corners
+.qk-mark {
+    position: absolute;
+    bottom: -8cqi;
+    width: 46cqi;
+    height: 46cqi;
+    z-index: 2;
+    filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff);
+    .qk-ic { width: 100%; height: 100%; }
+    &.drop { left: -8cqi; }
+    &.rat { right: -8cqi; }
+}
+
+.qk-pot.mini {
+    gap: 3px;
+    .qk-cell-coin { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 62cqi; height: 62cqi; font-size: 32cqi; }
+    .qk-cell.scoring { animation: none; }
+}
+
+@keyframes qk-pulse {
+    0%, 100% { box-shadow: inset 0 0 0 2px $accent; }
+    50% { box-shadow: inset 0 0 0 2px rgba($accent, 0.35); }
+}
+@keyframes qk-pop {
+    0% { transform: scale(0.4); }
+    70% { transform: scale(1.12); }
+    100% { transform: scale(1); }
+}
+
+// white total vs explosion limit
+.qk-meter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .qk-meter-pips { flex: 1 1 auto; display: flex; gap: 3px; }
+    .qk-meter-pip { flex: 1 1 0; height: 12px; border-radius: 6px; background: #ece8f5; transition: background .2s; }
+    .qk-meter-num { font-size: 0.95em; color: $muted; b { color: $ink; font-size: 1.15em; } }
+
+    &.calm .qk-meter-pip.on { background: $ok; }
+    &.warm .qk-meter-pip.on { background: $gold; }
+    &.hot .qk-meter-pip.on { background: #ff8a3c; }
+    &.boom .qk-meter-pip.on { background: $boom; }
+    &.boom .qk-meter-num b { color: $boom; }
+}
+
+.qk-reward {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: $paper;
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 0.9em;
+    font-weight: 600;
+    color: $muted;
+    min-height: 44px;
+}
+.qk-reward-items { display: inline-flex; align-items: center; gap: 10px; color: $ink; }
+.qk-reward-vp { display: inline-flex; align-items: center; gap: 3px; b { font-size: 1.25em; font-weight: 800; } }
+.qk-shield { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; color: #1f6fb8; font-weight: 800; }
+
+.qk-aside {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82em;
+    font-weight: 600;
+    color: $muted;
+}
+
+// draw / stop / flask — one thumb-reachable row
+.qk-actions {
+    display: grid;
+    grid-template-columns: 1fr 1.7fr 1fr;
+    gap: 8px;
+    position: sticky;
+    bottom: 8px;
+    z-index: 5;
+}
+.qk-act {
+    font-family: inherit;
+    min-height: 68px;
+    border-radius: 18px;
+    border: 2px solid $line;
+    background: $panel;
+    color: $ink;
+    font-size: 0.95em;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    transition: transform .12s;
+
+    small { display: block; font-size: 0.72em; font-weight: 600; opacity: 0.85; }
+    &:active { transform: scale(0.97); }
+    &:disabled { opacity: .4; cursor: default; }
+
+    &.draw {
+        flex-direction: row;
+        gap: 10px;
+        background: $accent;
+        border-color: $accent;
+        color: #fff;
+        font-size: 1.15em;
+        span { text-align: left; }
+    }
+    &.stop { border-color: $ok; color: #136c41; }
+    &.chosen { box-shadow: 0 0 0 3px rgba($gold, 0.9); }
+}
+
+.qk-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: $radius;
+    padding: 9px 12px;
+    &.compact { border: 0; padding: 0; background: transparent; }
+}
+
+// ===========================================================================
+// Prompts, roster, results
+// ===========================================================================
+
+.qk-prompt { border-color: $accent; box-shadow: inset 0 0 0 1px $accent; }
+.qk-prompt-text { margin: 0; font-weight: 600; line-height: 1.35; }
+.qk-held { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 0; justify-content: center; }
+.qk-options { display: flex; flex-direction: column; gap: 6px; }
+
+.qk-roster { display: flex; flex-direction: column; gap: 6px; }
+.qk-roster-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    &.me { background: $paper; }
+    &.winner { background: #fff3d1; }
+}
+.qk-roster-name { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 6px; overflow: hidden; }
+.qk-roster-nums { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; }
+.qk-first { font-size: 0.68em; font-weight: 800; color: $accent; background: $accent-soft; border-radius: 6px; padding: 1px 5px; }
+
+.qk-notes {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    ul { margin: 0; padding-left: 18px; font-size: 0.9em; line-height: 1.5; flex: 1 1 auto; }
+}
+.qk-dice { display: flex; gap: 6px; flex: 0 0 auto; }
+
+.qk-collection { display: flex; flex-wrap: wrap; gap: 8px 12px; }
+.qk-count { display: inline-flex; align-items: center; gap: 4px; b { font-size: 0.9em; } }
+
+.qk-bag {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    background: $paper;
+    border-radius: 12px;
+    padding: 8px 12px 10px;
+}
+.qk-bag-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.1px;
+    color: $muted;
+    b { color: $ink; font-size: 1.15em; letter-spacing: 0; }
+}
+
+.qk-final-title { font-size: 1.25em; font-weight: 800; }
+
+// fortune strip above the pot
+.qk-fortune-strip {
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    border: 0;
+    border-radius: $radius;
+    padding: 8px 12px;
+    min-height: 52px;
+    color: $ink;
+    cursor: pointer;
+    &.now { background: #f2e9fe; }
+    &.round { background: #e3f1fe; }
+}
+.qk-fortune-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    font-size: 0.84em;
+    line-height: 1.3;
+    b { font-size: 1.06em; }
+}
+.qk-fortune-event { color: $accent; font-weight: 700; }
+
+// ===========================================================================
+// Shop
+// ===========================================================================
+
+.qk-budget { display: inline-flex; align-items: center; gap: 6px; color: $ink; text-transform: none; letter-spacing: 0; }
+.qk-shop-rows { display: flex; flex-direction: column; gap: 6px; }
+.qk-shop-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 4px 0;
+    border-top: 1px solid $line;
+    &:first-child { border-top: 0; }
+}
+.qk-shop-name { flex: 1 1 84px; font-size: 0.86em; font-weight: 600; line-height: 1.15; }
+.qk-shop-items { display: flex; gap: 5px; }
+.qk-offer {
+    position: relative;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 44px;
+    padding: 4px 7px 4px 5px;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background: #f5f2fb;
+    cursor: pointer;
+    &.picked { border-color: $accent; background: $accent-soft; }
+    &:disabled { opacity: .35; cursor: default; }
+}
+.qk-sold {
+    position: absolute;
+    inset: auto 0 -7px 0;
+    text-align: center;
+    font-size: 0.6em;
+    font-weight: 800;
+    color: #a8261a;
+}
+
+// ===========================================================================
+// Card rows + modal
+// ===========================================================================
+
+.qk-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.qk-row {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 6px 2px 10px;
+    justify-content: safe center;
+    -webkit-overflow-scrolling: touch;
+    > * { flex: 0 0 auto; }
+}
+
+.qk-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba($ink, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 1200;
+}
+.qk-modal {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+    background: $panel;
+    border-radius: 18px;
+    padding: 14px;
+    max-width: 340px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.qk-modal-card { display: flex; justify-content: center; }
+.qk-detail { margin: 0; font-size: 0.92em; line-height: 1.45; }
+.qk-detail-stock {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    font-size: 0.85em;
+    color: $muted;
+    span { display: inline-flex; align-items: center; gap: 5px; }
+}
+
+// ===========================================================================
+// Cards (ingredient books + fortune cards)
+//
+//   ┌──────────────────────────┐ 0%
+//   │        TOADSTOOL         │      colour band — name + when it fires
+//   │        when drawn        │ 17%
+//   │           (◉)            │      the chip
+//   │                          │ 46%
+//   │   (•)⑥  (••)⑩  (::)⑯    │      pips = chip value, gold disc = price
+//   ├──────────────────────────┤ 61%
+//   │    rule text, with       │      tinted rule panel
+//   │      inline icons        │
+//   └──────────────────────────┘ 100%
+// ===========================================================================
+
+$band: 17%;
+$art-end: 46%;
+$rule: 61%;
+
+.qk-card {
+    position: relative;
+    display: inline-block;
+    line-height: 1;
+    border-radius: 10px;
+    box-shadow: 0 0 0 1px $line;
+
+    .playing-card-container { font-family: 'Outfit', 'Inter', sans-serif; }
+
+    .playing-card-face.face-front {
+        display: block !important;
+        position: relative;
+        padding: 0 !important;
+        overflow: hidden;
+    }
+
+    .card-header-region {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: $band;
+        min-height: 0;
+        padding: 0 0.6em !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+    .card-header-text { flex: 1 1 auto; min-width: 0; align-items: center; }
+    .card-header-title {
+        font-size: 1.6em !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.04em !important;
+        line-height: 1.05 !important;
+        white-space: normal !important;
+        overflow: visible !important;
+    }
+    .card-header-subtitle {
+        font-size: 0.98em !important;
+        letter-spacing: 0.14em !important;
+        opacity: 0.92 !important;
+        margin-top: 0.3em !important;
+    }
+    .card-header-meta { display: none !important; }
+
+    .card-art-region {
+        position: absolute;
+        top: $band; left: 0; right: 0;
+        height: $art-end - $band;
+        margin: 0 !important;
+    }
+    .card-art-frame, .card-art-content {
+        width: 100%; height: 100%;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .card-art-content .expressive-vector-icon {
+        width: auto !important;
+        height: 94% !important;
+        max-height: 94% !important;
+        aspect-ratio: 1;
+    }
+
+    .card-data-region {
+        position: absolute;
+        top: $art-end; left: 0; right: 0;
+        height: $rule - $art-end;
+        padding: 0 !important;
+        justify-content: center;
+    }
+    .card-data-icons-list { padding: 0 !important; align-items: center; }
+    // Sized here rather than from the definition: the item's font-size drives
+    // both the pip disc and the price, so one number keeps them matched.
+    .card-data-icon-item {
+        background: transparent !important;
+        padding: 0 !important;
+        font-size: 1.5em !important;
+        gap: 0.16em;
+        // the price: a gold coin, the same one that marks every pot space
+        span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.75em;
+            height: 1.75em;
+            border-radius: 0.9em;
+            background: $gold;
+            color: $gold-ink !important;
+            font-weight: 800;
+            line-height: 1;
+        }
+    }
+    .card-data-icon-glyph { width: 1.75em !important; height: 1.75em !important; margin-right: 0 !important; }
+
+    .card-footer-region {
+        position: absolute;
+        top: $rule; left: 0; right: 0; bottom: 0;
+        min-height: 0;
+        padding: 0 7% !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .card-footer-text {
+        opacity: 1 !important;
+        line-height: 1.24 !important;
+        white-space: normal;
+    }
+    .card-footer-inline-icon {
+        width: 1.3em !important;
+        height: 1.3em !important;
+        vertical-align: -0.28em !important;
+    }
+}
+
+// a single-price book has room to make its one price bigger
+.qk-book.single .card-data-icon-item { font-size: 1.8em !important; }
+
+.qk-book.locked .playing-card-container { opacity: 0.45; filter: grayscale(0.5); }
+.qk-lock {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    background: $ink;
+    color: #fff;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    font-size: 0.74em;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 999px;
+    pointer-events: none;
+}
+
+// fortune cards have no price row: a taller band (names wrap) and a longer rule
+.qk-fortune {
+    $f-band: 21%;
+    $f-rule: 54%;
+    .card-header-region { height: $f-band; }
+    .card-header-title { font-size: 1.45em !important; }
+    .card-art-region { top: $f-band; height: $f-rule - $f-band; }
+    .card-art-content .expressive-vector-icon { height: 74% !important; max-height: 74% !important; }
+    .card-footer-region { top: $f-rule; }
+}
+
+// ===========================================================================
+// Rules + lobby + top bar
+// ===========================================================================
+
+.qk-rules {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 12px 14px 24px;
+    line-height: 1.45;
+    font-size: 0.95em;
+    h3 { font-size: 0.86em; text-transform: uppercase; letter-spacing: 1.2px; color: $accent; margin: 18px 0 6px; border: 0; padding: 0; }
+    h3:first-child { margin-top: 4px; }
+    p { margin: 0 0 8px; }
+}
+.qk-rule-line { display: flex; align-items: flex-start; gap: 10px; > :first-child { margin-top: 1px; } }
+
+.qk-topbar { display: inline-flex; align-items: center; gap: 5px; font-family: 'Outfit', 'Inter', sans-serif; }
+.qk-topbar-sep { opacity: 0.4; }
+
+$pin: 13px;
+
+// ===========================================================================
+// Rivals on your pot: a translucent marker in each rival's colour + lobby icon
+// above their scoring space (just past their last chip). Brewing markers breathe; a stopped one
+// turns solid with a green ring; an exploded one shows a burst and jolts.
+// ===========================================================================
+
+.qk-ghosts {
+    position: absolute;
+    left: -2px;
+    right: -2px;
+    bottom: calc(100% + 1px);
+    height: $pin;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    pointer-events: none;
+}
+
+// Rivals ride in a lane above each row of spaces, so the pot grid opens up
+// its row gap to make room and never has a marker over a coin or a chip.
+.qk-pot.with-ghosts {
+    row-gap: $pin + 3px;
+    padding-top: $pin + 1px;
+}
+
+.qk-ghost {
+    position: relative;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: $pin;
+    height: $pin;
+    font-size: 7px;
+    color: #fff;
+    background: color-mix(in srgb, var(--c) 55%, transparent);
+    box-shadow: 0 0 0 1.5px var(--c);
+
+    .qk-ic { width: 11px; height: 11px; }
+    &.brewing { animation: qk-ghost-breathe 1.8s ease-in-out infinite; }
+    &.stopped { background: var(--c); box-shadow: 0 0 0 1.5px var(--c), 0 0 0 3px $ok; }
+    &.boom {
+        background: #ece8f5;
+        box-shadow: 0 0 0 1.5px $boom;
+        animation: qk-ghost-jolt .5s ease-out 1;
+    }
+}
+
+@keyframes qk-ghost-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(0.86); }
+}
+@keyframes qk-ghost-jolt {
+    0% { transform: scale(1.5) rotate(0); }
+    30% { transform: scale(0.9) rotate(-12deg); }
+    60% { transform: scale(1.05) rotate(8deg); }
+    100% { transform: scale(1) rotate(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .qk-ghost { animation: none !important; }
+}
+
+// ===========================================================================
+// The Herb Witches expansion
+// ===========================================================================
+
+// three witch tiles in one row; a callable one lights up in her metal
+.qk-witchbar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+.qk-witch-tile {
+    --metal: #a3adbd;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 12px;
+    padding: 6px;
+    min-width: 0;
+    &.bronze { --metal: #c9864f; }
+    &.gold { --metal: #e5ad22; }
+    &.live { border-color: var(--metal); box-shadow: inset 0 0 0 1px var(--metal); }
+    &.spent { opacity: 0.45; }
+}
+.qk-witch-face {
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: $ink;
+    text-align: left;
+    cursor: pointer;
+    min-width: 0;
+}
+.qk-witch-name {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    font-size: 0.78em;
+    font-weight: 700;
+    line-height: 1.15;
+    small { color: $muted; font-weight: 500; font-size: 0.92em; }
+}
+.qk-witch-call { width: 100%; min-height: 34px; padding: 4px 8px; }
+
+// the 1–6 picker needs narrower segments to fit a phone
+.qk-seg.wide button { width: 32px; font-size: 0.88em; }
+.qk-seg.wide button:first-child:not(:only-child) { min-width: 32px; width: auto; padding: 0 6px; }
+
+.qk-reserve { flex-wrap: wrap; color: #a8261a; }
+.option-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 40px;
+    padding: 4px 10px 4px 5px;
+    background: #ffe8eb;
+    border-color: transparent;
+    color: $ink;
+}
+.qk-overflow {
+    flex-wrap: wrap;
+    background: #fff3d1;
+    border-radius: 10px;
+    padding: 6px 10px;
+}
+.qk-overflow-vp { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; color: $accent; font-weight: 800; }
+
+.qk-pennies {
+    display: flex;
+    gap: 6px;
+    span.spent { opacity: 0.25; filter: grayscale(1); }
+}
+
+// ===========================================================================
+// Rules diagrams
+// ===========================================================================
+
+.qk-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin: 4px 0 6px;
+    font-size: 0.86em;
+    span { display: inline-flex; align-items: center; gap: 5px; }
+}
+
+// one round: four pills joined by arrows
+.qk-steps {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 4px;
+}
+.qk-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: 999px;
+    padding: 4px 10px 4px 5px;
+    font-size: 0.82em;
+    font-weight: 700;
+}
+.qk-step-arrow {
+    width: 14px;
+    height: 10px;
+    flex: 0 0 auto;
+    background: $muted;
+    clip-path: polygon(0 35%, 55% 35%, 55% 0, 100% 50%, 55% 100%, 55% 65%, 0 65%);
+    opacity: 0.6;
+}
+
+// the nine rounds, three to a row
+.qk-timeline {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 6px;
+}
+.qk-round {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-height: 74px;
+    padding: 6px 7px 7px;
+    border-radius: 12px;
+    background: $panel;
+    border: 1px solid $line;
+    &.quiet { background: #f7f5fb; }
+    &.past { opacity: 0.5; }
+    &.now { border-color: $accent; box-shadow: inset 0 0 0 1px $accent; }
+}
+.qk-round-num { font-size: 1.25em; font-weight: 800; line-height: 1; color: $ink; }
+.qk-round-ev {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72em;
+    font-weight: 600;
+    line-height: 1.15;
+    &.unlock { color: #136c41; }
+    &.add { color: #7a5600; }
+    &.final { color: $accent; }
+    &.herb { color: #8a5a1c; }
+    &.muted { color: $muted; font-weight: 500; }
+}
+.qk-round-here {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 0.62em;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #fff;
+    background: $accent;
+    border-radius: 6px;
+    padding: 1px 5px;
+}
+
+// the explosion moment
+.qk-boomstrip {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: #fff1ef;
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    ul { margin: 0; padding-left: 18px; font-size: 0.88em; }
+}
+.qk-boomstrip-chips {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    b { margin: 0 4px; color: #a8261a; font-size: 1.1em; }
+}
+
+// after brewing: safe vs exploded, phase by phase
+.qk-flow {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) minmax(0, 1fr);
+    gap: 4px;
+    margin-bottom: 6px;
+    font-size: 0.8em;
+    line-height: 1.3;
+}
+.qk-flow-head {
+    grid-column: auto;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    font-weight: 800;
+    &.safe { grid-column: 2; background: #dff6ea; color: #136c41; }
+    &.boom { grid-column: 3; background: #ffe1dc; color: #a8261a; }
+}
+.qk-flow-corner { grid-column: 1; }
+.qk-flow-letter {
+    grid-column: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: $muted;
+    font-size: 0.86em;
+    font-weight: 600;
+    line-height: 1.1;
+    b { color: $accent; font-size: 1.5em; line-height: 1; }
+}
+.qk-flow-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 7px 8px;
+    border-radius: 10px;
+    background: $panel;
+    border: 1px solid $line;
+    &.safe { grid-column: 2; border-color: #c9ecd8; }
+    &.boom { grid-column: 3; border-color: #f7cbc4; background: #fffafa; }
+    &.both { grid-column: 2 / span 2; }
+    &.tall { grid-row: span 2; justify-content: center; }
+    &.off { color: $muted; background: #f5f3f8; .qk-flow-text { text-decoration: line-through; } }
+}
+.qk-flow-witch {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    align-self: flex-start;
+    font-size: 0.92em;
+    font-weight: 700;
+    color: #6b4f1c;
+    background: #fdf3d6;
+    border-radius: 6px;
+    padding: 2px 6px;
+}
+
+// expansion tab
+.qk-adds {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+    font-size: 0.84em;
+    line-height: 1.25;
+    span { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; align-items: center; }
+    span > :first-child { grid-row: span 2; }
+    b { font-weight: 800; }
+}
+.qk-bowl {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+.qk-bowl-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.76em;
+    color: $muted;
+    font-weight: 600;
+}
+.qk-bowl-cell {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #fff3d1;
+    box-shadow: inset 0 0 0 2px $accent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: $ink;
+    font-size: 1.2em;
+}
+.qk-bowl-dish {
+    display: flex;
+    gap: 2px;
+    padding: 6px 8px;
+    background: #fff3d1;
+    border-radius: 6px 6px 22px 22px;
+}
+.qk-bowl-score {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 40px;
+    font-size: 1.4em;
+    font-weight: 800;
+    color: $accent;
+}
+.qk-pennyrow { display: inline-flex; gap: 2px; flex: 0 0 auto; }
+.qk-metals { display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
+.qk-metal {
+    --metal: #a3adbd;
+    border-radius: 12px;
+    border: 1px solid $line;
+    border-left: 4px solid var(--metal);
+    padding: 8px 10px;
+    background: $panel;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    &.bronze { --metal: #c9864f; }
+    &.gold { --metal: #e5ad22; }
+}
+.qk-metal-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    b { text-transform: capitalize; }
+    span { color: $muted; font-size: 0.84em; }
+}
+.qk-metal-witch {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    b { font-size: 0.88em; }
+}
+
+// Rules tab: base game / expansion sub-tabs, a segmented control at the top
+.qk-rules-tabs { font-family: 'Outfit', 'Inter', sans-serif; }
+.qk-subtabs {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    display: flex;
+    gap: 4px;
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 10px 14px 4px;
+    background: $paper;
+    button {
+        flex: 1 1 0;
+        font-family: inherit;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 44px;
+        border: 1px solid $line;
+        border-radius: 12px;
+        background: $panel;
+        color: $muted;
+        font-weight: 700;
+        font-size: 0.88em;
+        cursor: pointer;
+        &.on { background: $accent; border-color: $accent; color: #fff; }
+    }
+}
+.qk-subtab-on {
+    font-size: 0.7em;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: #dff6ea;
+    color: #136c41;
+    border-radius: 6px;
+    padding: 1px 5px;
+}
+
+// ===========================================================================
+// The Alchemists
+// ===========================================================================
+
+$essence: #d1495b;
+
+// lobby: one row per expansion with an Off / On switch
+.qk-exp-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    border-top: 1px solid $line;
+    &:first-of-type { border-top: 0; }
+    .qk-opt-buttons { flex: 0 0 auto; flex-wrap: nowrap; }
+}
+.qk-exp-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    font-weight: 700;
+    font-size: 0.92em;
+    small { font-weight: 500; color: $muted; font-size: 0.84em; line-height: 1.3; }
+}
+
+// the essence track: 13 flask spaces, seven to a row
+.qk-ess-track {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 3px;
+}
+.qk-ess-cell {
+    position: relative;
+    aspect-ratio: 1;
+    container-type: inline-size;
+    border-radius: 22%;
+    background: #f7f2f3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    &.glass { background: #fde8ea; }
+    &.reach { box-shadow: inset 0 0 0 2px rgba($essence, 0.55); }
+    &.at { background: $essence; color: #fff; .qk-ess-num { color: #fff; } }
+}
+.qk-ess-num {
+    position: absolute;
+    top: 5cqi;
+    left: 8cqi;
+    font-size: 24cqi;
+    font-weight: 800;
+    color: $muted;
+    line-height: 1;
+}
+.qk-ess-glass {
+    display: inline-flex;
+    align-items: center;
+    gap: 2cqi;
+    margin-top: 16cqi;
+    font-size: 26cqi;
+    font-weight: 800;
+    color: $ink;
+    .qk-ic { width: 40cqi; height: 40cqi; }
+    b { line-height: 1; }
+}
+.qk-ess-cell.at .qk-ess-glass { color: #fff; }
+
+.qk-essence { border-color: #f4c7cd; }
+
+.qk-hand { flex-wrap: wrap; color: #1f6fb8; }
+
+// a fourth, visiting witch squeezes into the bar
+.qk-witchbar.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.qk-witch-tile.guest { border-style: dashed; }
+
+.qk-metal.patient { --metal: #{$essence}; }
+.qk-patient.mine .playing-card-container { box-shadow: 0 0 0 3px $essence; border-radius: 10px; }
+.qk-patient.mine .qk-lock { top: auto; bottom: 8px; transform: translateX(-50%); background: $essence; }

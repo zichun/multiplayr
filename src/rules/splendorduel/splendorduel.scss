@@ -793,10 +793,7 @@
 // Modals — flat with a soft elevation
 .brutalist-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   background-color: rgba(30, 24, 48, 0.5);
   display: flex;
   justify-content: center;

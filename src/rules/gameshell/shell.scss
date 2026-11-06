@@ -7,6 +7,8 @@ $panelExtendWidth: 180px;
     position: relative;
     height: 100%;
     box-sizing: border-box;
+    // a transform makes this the containing block for position: fixed, so a client's toast stays in its own shell
+    transform: translate(0);
 
     .shell-header {
         background: #353535;
@@ -113,6 +115,19 @@ $panelExtendWidth: 180px;
         position: absolute;
         top: $headerHeight;
         left: $panelWidth;
+        bottom: 0px;
+        right: 0px;
+        overflow: hidden;
+        // as above: a rule's overlays and popups fill this box, not the window. The debugger
+        // shows several clients on one page, and they must not cover each other.
+        transform: translate(0);
+    }
+
+    // The scrolling lives a level down, so a position: fixed overlay stays put while the page scrolls under it.
+    .shell-body-container {
+        position: absolute;
+        top: 0px;
+        left: 0px;
         bottom: 0px;
         right: 0px;
         box-sizing: border-box;

@@ -392,6 +392,52 @@ export const GAME_ICONS: Record<string, IconObject> = {
         S('rose', 'bezier', 0, 0, 1, 1, 0, 'background', {
             customPath: 'M 50 8 L 61 39 L 92 50 L 61 61 L 50 92 L 39 61 L 8 50 L 39 39 Z'
         })
+    ]),
+
+    // ⚗️ Quacks — a bubbling cauldron: three rising bubbles over a round pot
+    quacks: icon('cauldron', [
+        S('bub_a', 'circle', 34, 22, 0.36, 0.36),
+        S('bub_b', 'circle', 56, 12, 0.24, 0.24),
+        S('bub_c', 'circle', 68, 26, 0.28, 0.28),
+        S('pot', 'semi-circle', 50, 46, 1.64, 1.64, 180),
+        S('rim', 'rectangle', 50, 44, 1.8, 0.16),
+        S('leg_l', 'rectangle', 30, 89, 0.14, 0.18),
+        S('leg_r', 'rectangle', 70, 89, 0.14, 0.18),
+        CUT('brew', 'circle', 50, 60, 0.5, 0.5)
+    ]),
+
+    // 🏞️ Parks — a poster landscape in a round frame: sun, peak, a line of water
+    parks: icon('landscape', [
+        S('disc', 'circle', 50, 50, 1.86, 1.86),
+        CUT('sun', 'circle', 68, 30, 0.34, 0.34),
+        S('peak_shape', 'bezier', 0, 0, 1, 1, 0, 'background', {
+            customPath: 'M 14 66 L 40 26 L 52 44 L 60 34 L 86 66 Z'
+        }),
+        S('peak_notch', 'bezier', 0, 0, 1, 1, 0, 'primary', {
+            customPath: 'M 40 26 L 48 38 L 42 42 L 38 36 L 33 41 Z'
+        }),
+        CUT('water', 'rectangle', 50, 74, 1.1, 0.08),
+        CUT('water2', 'rectangle', 50, 82, 0.66, 0.08)
+    ]),
+
+    // 🗯️ Jibber Jabble — a speech bubble with three jumbled letter blocks punched out
+    jibberjabble: icon('bubble', [
+        S('bubble', 'bezier', 0, 0, 1, 1, 0, 'primary', {
+            customPath: 'M 16 14 L 84 14 Q 94 14 94 24 L 94 62 Q 94 72 84 72 L 46 72 L 24 92 L 28 72 L 16 72 Q 6 72 6 62 L 6 24 Q 6 14 16 14 Z'
+        }),
+        CUT('blk_a', 'rectangle', 28, 43, 0.34, 0.34, -12),
+        CUT('blk_b', 'rectangle', 50, 41, 0.34, 0.34, 6),
+        CUT('blk_c', 'rectangle', 72, 44, 0.34, 0.34, -6)
+    ]),
+
+    // 🔔 Hooky — a school bell with a letter-tile slot punched out
+    hooky: icon('bell', [
+        S('bell', 'bezier', 0, 0, 1, 1, 0, 'primary', {
+            customPath: 'M 50 8 Q 22 8 22 42 L 22 62 L 12 76 L 88 76 L 78 62 L 78 42 Q 78 8 50 8 Z'
+        }),
+        S('clapper', 'circle', 50, 86, 0.24, 0.24),
+        CUT('tile', 'rectangle', 50, 46, 0.36, 0.36, -8),
+        CUT('rim', 'rectangle', 50, 68, 0.9, 0.06)
     ])
 };
 

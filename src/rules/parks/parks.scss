@@ -1,0 +1,1225 @@
+/**
+ * parks.scss — a flat, soft, national-park-poster skin for Parks.
+ *
+ * Deliberately the Flat Minimalist skin (DESIGN_GUIDE §10.10), taken further: the
+ * only colour behind the game is the current Season's sky. Cards are the only filled shapes
+ * on screen; grouping comes from white rounded panels, and state from one ring. Everything is scoped
+ * under `.pk-*`. Card regions are positioned in **percentages of the card box**,
+ * never `em`, so a region carrying its own inline font-size can't scale its own
+ * height (DESIGN_GUIDE §10.5).
+ */
+
+$ink: #2e3b36;
+$muted: #7f8a82;
+$line: #e4dfd2;
+$rule: #cfcbbf;
+$paper: #fbf7ee;
+$panel: #ffffff;
+$accent: #4c9a6e;
+$accent-deep: #347d5d;
+$gold: #eda92c;
+$radius: 12px;
+
+.pk-arena, .pk-lobby, .pk-rules, .pk-settings {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+}
+
+.pk-icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    line-height: 0;
+    svg, .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+}
+
+// A white disc with a coloured rim, so any lobby colour holds up on any scene and can't be mistaken for a token coin.
+.pk-pawn {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    background: #fff;
+    vertical-align: middle;
+    svg { width: 72% !important; height: 72% !important; }
+
+    // the Hiker lined up to move breathes a faint glow in its own colour
+    &.moving {
+        position: relative;
+        &::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 50%;
+            box-shadow: 0 0 5px 3px currentColor;
+            pointer-events: none;
+            animation: pk-pawn-pulse 1.6s ease-in-out infinite;
+        }
+    }
+}
+@keyframes pk-pawn-pulse {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.85; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .pk-pawn.moving::after { animation: none; opacity: 0.6; }
+}
+.pk-ranger { display: inline-flex; line-height: 0; filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff); }
+
+.pk-iconline {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.pk-coinrun { display: inline-flex; gap: 2px; align-items: center; }
+.pk-spacer { flex: 1 1 auto; }
+
+// ===========================================================================
+// Shared card behaviour
+// ===========================================================================
+
+.pk-card {
+    display: inline-block;
+    position: relative;
+    line-height: 1;
+    flex: 0 0 auto;
+
+    &.dimmed { opacity: 0.42; }
+
+    // flat, no blurred drop shadow: the card's own tone lifts it off the white page
+    .playing-card-container:not(.is-selected), .playing-card-inner, .playing-card-face { box-shadow: none !important; }
+
+    .playing-card-face.face-front {
+        display: block !important;
+        position: relative;
+        padding: 0 !important;
+        overflow: hidden;
+    }
+
+    .card-art-frame, .card-art-content {
+        width: 100%; height: 100%;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .card-art-region { margin: 0 !important; }
+
+    .card-data-region {
+        position: absolute;
+        inset: 0;
+        padding: 0 !important;
+        background: transparent !important;
+        pointer-events: none;
+    }
+    .card-data-icon-item {
+        padding: 0 !important;
+        background: transparent !important;
+        font-size: 1em !important;
+        span { display: none !important; }
+    }
+    .card-data-icon-glyph { margin: 0 !important; }
+
+    .card-footer-region {
+        position: absolute;
+        left: 0; right: 0; bottom: 0;
+        min-height: 0;
+        padding: 0 3% !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 3;
+    }
+    .card-footer-text {
+        width: 100%;
+        font-style: normal !important;
+        opacity: 1 !important;
+        line-height: 1 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.04em;
+        white-space: nowrap;
+    }
+    .card-footer-inline-icon { width: 1.1em !important; height: 1.1em !important; margin: 0 0.02em !important; }
+}
+
+.pk-card-bonus {
+    position: absolute;
+    top: 4%;
+    right: 5%;
+    z-index: 5;
+    line-height: 0;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px #fff;
+}
+// a Gear's price sits top right, so its Season token goes bottom left, over the art
+.pk-card-gear .pk-card-bonus { top: auto; right: auto; bottom: 8%; left: 4%; }
+
+// ===========================================================================
+// Park card
+//
+//   ┌──────────────────┐
+//   │(4)               │  points chip over the art
+//   │   full-bleed     │
+//   │   landscape      │  71.4% tall: exactly square on a 63.5 × 88.9 card
+//   ├──────────────────┤
+//   │ Name             │  14%
+//   │ ●●●●●●●          │  14%
+//   └──────────────────┘
+// ===========================================================================
+
+.pk-card-park {
+    .card-art-region {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 71.4%;
+        z-index: 1;
+    }
+    .card-art-content .expressive-vector-icon {
+        width: 100% !important; height: 100% !important;
+        max-width: 100% !important; max-height: 100% !important;
+    }
+
+    .card-header-region {
+        position: absolute;
+        top: 71.4%; left: 0; right: 0;
+        height: 13.2%;
+        min-height: 0;
+        padding: 0 3% !important;
+        z-index: 2;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+    }
+    .card-header-text { flex: 1 1 auto; min-width: 0; text-align: center; }
+    .card-header-title {
+        display: block;
+        font-size: 2.05em !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.01em !important;
+        line-height: 1 !important;
+        text-transform: none !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: clip;
+    }
+    .card-header-meta { display: none !important; }
+    &.name-l .card-header-title { font-size: 1.78em !important; }
+    &.name-xl .card-header-title { font-size: 1.58em !important; }
+
+    .card-data-icons-list {
+        position: absolute;
+        left: 0; right: 0; bottom: 0;
+        height: 15.4%;
+        padding: 0 2% !important;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+
+    .card-overlay-chip {
+        z-index: 4;
+        top: 3% !important;
+        left: 4% !important;
+    }
+    .card-chip-value { font-weight: 800; font-size: 2.3em !important; line-height: 1; }
+}
+
+// ===========================================================================
+// Site card — a scene over its action icons, with pieces standing on it
+// ===========================================================================
+
+.pk-card-site {
+    // a slight point on the right edge says the Trail runs left to right
+    .playing-card-container {
+        clip-path: polygon(
+            0 0, 88.65% 0, 91.3% 0.51%, 93.28% 1.91%, 94% 3.82%,
+            100% 50%,
+            94% 96.18%, 93.28% 98.09%, 91.3% 99.49%, 88.65% 100%, 0 100%
+        );
+    }
+    // clipped along with the card, so the selection ring is traced from the shape instead
+    &.picked {
+        filter: drop-shadow(2px 0 0 $gold) drop-shadow(-2px 0 0 $gold) drop-shadow(0 2px 0 $gold) drop-shadow(0 -2px 0 $gold);
+    }
+    .card-art-region {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 71.4%;
+        z-index: 1;
+    }
+    .card-art-content .expressive-vector-icon {
+        width: 100% !important; height: 100% !important;
+        max-width: 100% !important; max-height: 100% !important;
+    }
+    .card-data-icons-list {
+        position: absolute;
+        left: 0; right: 0; bottom: 0;
+        height: 28.6%;
+        padding: 0 !important;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+    .pawns, .weather, .fire, .camp { position: absolute; z-index: 6; pointer-events: none; line-height: 0; }
+    // five across a row, two rows for a full Start; a Weather token takes the end of the top row
+    .pawns { left: 2%; top: 2%; right: 4%; display: flex; flex-wrap: wrap; &.beside-weather { right: 34%; } }
+    .weather { right: 7%; top: 3%; border-radius: 50%; box-shadow: 0 0 0 1.5px #fff; }
+    .fire { right: 7%; bottom: 31%; }
+    // Nightfall: a Tent stands bottom left, clear of the pawns and the Weather
+    .camp { left: 6%; bottom: 31%; filter: drop-shadow(0 0 1px #fff); }
+}
+
+// Nightfall: the Campsite board and its tiles, one row under the Trail
+.pk-camps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+    gap: 6px;
+}
+.pk-campsite {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    padding: 6px 4px;
+    border: 1px solid $line;
+    border-radius: 10px;
+    background: #fdf8ec;
+    color: $ink;
+    font: inherit;
+    cursor: pointer;
+    small { font-size: 11px; font-weight: 700; color: $muted; text-align: center; line-height: 1.1; }
+    .pk-iconline { flex-wrap: wrap; justify-content: center; }
+    .tents {
+        display: flex;
+        gap: 3px;
+        min-height: 18px;
+        i { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px $rule; }
+    }
+    &.full { opacity: 0.55; }
+}
+.pk-facedown { display: flex; align-items: center; gap: 6px; }
+
+// ===========================================================================
+// Gear card — on its side, unlike the upright Parks
+//
+//   ┌────────────────────┐
+//   │ Name          ☀☀☀  │  30%
+//   ├───────┬────────────┤
+//   │object │  [effect]  │
+//   └───────┴────────────┘
+// ===========================================================================
+
+.pk-card-gear {
+    .card-header-region {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 30%;
+        min-height: 0;
+        padding: 0 31% 0 3.5% !important; // clear of a three-coin price
+        z-index: 2;
+        display: flex;
+        align-items: center;
+    }
+    .card-header-text { flex: 1 1 auto; min-width: 0; }
+    .card-header-title {
+        display: block;
+        font-size: 1.75em !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.01em !important;
+        line-height: 1 !important;
+        text-transform: none !important;
+        white-space: nowrap;
+    }
+    .card-header-meta { display: none !important; }
+    &.name-l .card-header-title { font-size: 1.38em !important; }
+
+    .card-art-region {
+        position: absolute;
+        top: 30%; left: 2%; bottom: 3%;
+        width: 30%;
+        z-index: 1;
+    }
+    .card-art-content .expressive-vector-icon {
+        width: 92% !important; height: 92% !important;
+        max-width: 92% !important; max-height: 92% !important;
+    }
+
+    .card-data-icons-list {
+        position: absolute;
+        top: 7%; right: 3%;
+        width: auto !important;
+        align-items: center;
+        padding: 0 !important;
+    }
+
+    .card-footer-region { top: 30%; left: 32%; bottom: 3%; }
+    .card-footer-text { color: $ink; }
+}
+
+// ===========================================================================
+// Canteen / Year — the same squat frame
+// ===========================================================================
+
+.pk-card-canteen {
+    .card-art-region {
+        position: absolute;
+        top: 4%; left: 0; right: 0;
+        height: 66%;
+        z-index: 1;
+    }
+    .card-art-content .expressive-vector-icon {
+        width: 92% !important; height: 92% !important;
+        max-width: 92% !important; max-height: 92% !important;
+    }
+    .card-footer-region { height: 27%; }
+}
+
+.pk-card-year {
+    .card-header-region {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 22%;
+        min-height: 0;
+        padding: 0 3.5% !important;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .card-header-text { flex: 1 1 auto; min-width: 0; text-align: center; }
+    .card-header-title {
+        display: block;
+        color: #fff !important;
+        font-size: 1.82em !important;
+        font-weight: 800 !important;
+        line-height: 1 !important;
+        text-transform: none !important;
+        white-space: nowrap;
+    }
+    .card-header-meta { display: none !important; }
+    .card-art-region {
+        position: absolute;
+        top: 24%; left: 2%; width: 36%;
+        height: 46%;
+        z-index: 1;
+    }
+    .card-art-content .expressive-vector-icon {
+        width: 100% !important; height: 100% !important;
+        max-width: 100% !important; max-height: 100% !important;
+    }
+    .card-data-region {
+        top: 24%; left: 40%; right: 4%; bottom: 30%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6%;
+    }
+    .card-data-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 2em;
+        font-weight: 700;
+        padding: 0 !important;
+        border: 0 !important;
+    }
+    .card-data-value {
+        background: #8f6a4c;
+        color: #fff;
+        font-weight: 800;
+        width: 1.3em;
+        height: 1.3em;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .card-footer-region { height: 27%; }
+}
+
+.pk-back {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    border-radius: 7%;
+    background: #dfe9dd;
+    font: 800 13px 'Outfit', 'Inter', sans-serif;
+    color: #3c5a4c;
+    cursor: pointer;
+    &:disabled { cursor: default; opacity: 0.6; }
+    &.selected { box-shadow: inset 0 0 0 3px $accent; }
+}
+
+.pk-empty {
+    flex: 0 0 auto;
+    border-radius: 7%;
+    background: repeating-linear-gradient(-45deg, #f2eee3 0, #f2eee3 5px, #f8f5ec 5px, #f8f5ec 10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: $muted;
+    text-align: center;
+}
+
+// ===========================================================================
+// Arena — plain white, each section a rounded panel as in Harmonies and Faraway
+// ===========================================================================
+
+.pk-arena {
+    padding: 8px 10px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 640px;
+    margin: 0 auto;
+    min-height: 100%;
+}
+
+// panels fill most of a phone, so they let a trace of the Season through
+.pk-panel {
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid $rule;
+    border-radius: $radius;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+    min-width: 0;
+}
+// solid, to match the action bar: it has to hide the Trail when it pins over it
+.pk-panel.pk-trail-panel { background: #fff; }
+// two groups sharing a panel, split by a hairline
+.pk-divided > * + * { margin-top: 10px; padding-top: 10px; border-top: 1px solid $line; }
+
+.pk-topbar {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    .sep { opacity: 0.45; }
+}
+
+.pk-season {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    .pk-iconline { flex: 0 0 auto; font-size: 13px; }
+}
+.pk-season-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    strong { font-size: 14px; font-weight: 800; }
+    span { font-size: 12px; color: $muted; }
+}
+
+.pk-trail, .pk-grid3 { display: grid; gap: 5px; justify-content: center; }
+.pk-grid3 { gap: 8px; }
+
+// A new Season deals its Trail left to right, Trail End last.
+$deal-wait: 250ms;
+$deal-step: 130ms;
+$deal-time: 400ms;
+.pk-trail.waiting > * { opacity: 0; }
+.pk-trail.dealing > * { animation: pk-deal $deal-time ease-out both; }
+@for $i from 1 through 12 {
+    .pk-trail.dealing > :nth-child(#{$i}) { animation-delay: $deal-wait + ($i - 1) * $deal-step; }
+}
+@keyframes pk-deal {
+    from { opacity: 0; transform: translateY(12px) scale(0.82); }
+    to { opacity: 1; transform: none; }
+}
+@keyframes pk-deal-still {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.pk-season-intro {
+    z-index: 2500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    animation: pk-intro-in 0.35s ease-out both;
+    &.leaving { pointer-events: none; animation: pk-intro-out 0.4s ease-in both; }
+}
+// behind everything in the shell, and fixed so the page scrolls over it
+.pk-season-bg {
+    z-index: -1;
+    pointer-events: none;
+    contain: strict; // nothing moving in here can touch the page's layout or scroll size
+    .sky, .weather { position: absolute; inset: 0; opacity: 0.6; }
+    // stops short of the scrollbar: a particle passing under it makes the bar flicker
+    .weather { right: 17px; overflow: hidden; }
+}
+.pk-season-intro, .pk-season-bg {
+    position: fixed;
+    inset: 0;
+    container-type: size; // particles travel by this box, however big the client's shell is
+    overflow: hidden;
+
+    .p {
+        position: absolute;
+        width: calc(12px * var(--s));
+        height: calc(12px * var(--s));
+        background: var(--c);
+        animation-duration: var(--t);
+        animation-delay: var(--d);
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
+    }
+    .fall { left: var(--x); top: 0; animation-name: pk-p-fall; }
+    .rise { left: var(--x); top: 0; animation-name: pk-p-rise; }
+    .drift { left: 0; top: var(--y); animation-name: pk-p-drift; }
+    .twinkle { left: var(--x); top: var(--y); animation-name: pk-p-twinkle; animation-timing-function: ease-in-out; }
+
+    .petal { border-radius: 60% 0 60% 0; }
+    .leaf { border-radius: 0 70% 0 70%; }
+    .drop { width: 2px; height: calc(20px * var(--s)); border-radius: 2px; animation-duration: calc(var(--t) / 3); }
+    .flake { border-radius: 50%; }
+    .bubble { border-radius: 50%; background: none; box-shadow: inset 0 0 0 1.5px var(--c); }
+    .spark { clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); width: calc(18px * var(--s)); height: calc(18px * var(--s)); }
+    .rock { clip-path: polygon(20% 8%, 80% 0, 100% 55%, 70% 100%, 15% 90%, 0 40%); width: calc(16px * var(--s)); height: calc(16px * var(--s)); }
+    .gust { width: calc(70px * var(--s)); height: 2px; border-radius: 2px; }
+    .wave { width: 70cqw; height: calc(34px * var(--s)); border-radius: 50%; animation-duration: calc(var(--t) * 2); }
+}
+.pk-season-reveal {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: min(300px, 90%);
+    box-sizing: border-box;
+    padding: 18px 16px;
+    border-radius: 18px;
+    background: #fff;
+    color: $ink;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    text-align: center;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
+    animation: pk-reveal 0.6s 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+    small { font-size: 12px; font-weight: 700; color: $muted; }
+    strong { font-size: 22px; font-weight: 800; line-height: 1.1; }
+    > span:last-child { font-size: 14px; color: $muted; line-height: 1.25; }
+}
+@keyframes pk-intro-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pk-intro-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes pk-reveal {
+    from { opacity: 0; transform: translateY(24px) scale(0.8); }
+    to { opacity: 1; transform: none; }
+}
+@keyframes pk-p-fall {
+    from { transform: translateY(-10cqh) rotate(0deg); }
+    to { transform: translateY(110cqh) rotate(320deg); }
+}
+@keyframes pk-p-rise {
+    from { transform: translateY(110cqh) rotate(0deg); }
+    to { transform: translateY(-10cqh) rotate(-240deg); }
+}
+@keyframes pk-p-drift {
+    from { transform: translateX(-80cqw); }
+    to { transform: translateX(120cqw); }
+}
+@keyframes pk-p-twinkle {
+    0%, 100% { opacity: 0.15; transform: scale(0.6); }
+    50% { opacity: 1; transform: scale(1.15); }
+}
+// no travel for anyone who asks for less motion: the weather holds still and things fade in, still in order
+@media (prefers-reduced-motion: reduce) {
+    .pk-season-intro .p, .pk-season-bg .p { animation: none; }
+    .pk-season-intro .fall, .pk-season-intro .rise, .pk-season-bg .fall, .pk-season-bg .rise { top: var(--y); }
+    .pk-season-intro .drift, .pk-season-bg .drift { left: var(--x); }
+    .pk-season-reveal { animation-name: pk-deal-still; }
+    .pk-trail.dealing > * { animation-name: pk-deal-still; }
+}
+
+.pk-card-end {
+    .areas {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        display: grid;
+        grid-template-rows: repeat(3, minmax(0, 1fr));
+        gap: 2px;
+        overflow: hidden;
+        background: #fff;
+    }
+    .area {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 0;
+        border: 0;
+        padding: 0;
+        font-family: inherit;
+        color: $ink;
+        cursor: pointer;
+        line-height: 0;
+
+        &.reserve { background: #f8e6cf; }
+        &.gear { background: #eee3da; }
+        &.visit { background: #dcebe2; }
+        &:disabled { cursor: default; }
+        // the area fades, but the pieces standing on it still need reading
+        &.faint > :not(.pawns) { opacity: 0.42; }
+        &.picked { box-shadow: inset 0 0 0 2.5px $gold; }
+    }
+    .pawns { position: absolute; left: 2%; bottom: 4%; display: flex; pointer-events: none; }
+    .extra { position: absolute; right: 2%; top: 50%; transform: translateY(-50%); pointer-events: none; }
+    // Season of Breeze: the token the first Hiker here takes
+    .season-tok { position: absolute; left: 3%; top: 50%; transform: translateY(-50%); pointer-events: none; line-height: 0; border-radius: 50%; box-shadow: 0 0 0 2px #fff; }
+    .bonus { display: inline-flex; align-items: center; gap: 1px; font-size: 10px; font-weight: 700; line-height: 1; color: #8f6a4c; }
+}
+
+.pk-solo {
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+}
+.pk-solo-track { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.pk-solo-row { display: flex; align-items: center; gap: 2px; span:last-child { margin-left: 4px; line-height: 1.1; } }
+.pk-pip {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #ececea;
+    display: inline-flex;
+    flex: 0 0 auto;
+    &.on { background: transparent; }
+}
+.pk-solo-meta {
+    flex: 0 0 auto;
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: $muted;
+    strong { color: $ink; }
+}
+
+// Canteens and Gear | tokens, 2 × 3 | Campfire, Marker, Camera. The right two blocks stretch to the card height.
+.pk-kit {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+}
+.pk-kit-cards {
+    display: flex;
+    flex: 1 1 0;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+.pk-kit-rule { flex: 0 0 1px; align-self: stretch; margin: 0 2px; background: $rule; }
+.pk-kit-tokens {
+    display: grid;
+    flex: 0 0 auto;
+    grid-template-columns: repeat(2, 40px);
+    grid-template-rows: repeat(3, 1fr);
+    align-items: center;
+}
+.pk-tok {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    b { font-size: 14px; font-weight: 800; }
+    &.zero { opacity: 0.3; }
+}
+.pk-kit-status {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    padding-left: 8px;
+    border-left: 1px solid $line;
+    line-height: 0;
+    .off { opacity: 0.2; }
+}
+
+.pk-actionbar {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    color: $ink;
+    .msg { flex: 1 1 auto; font-size: 14px; line-height: 1.2; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+    small { color: $muted; font-size: 12px; }
+    &:not(:has(.pk-actionrow)) { flex-direction: row; align-items: center; min-height: 44px; }
+    &.quiet { color: $muted; }
+}
+.pk-actionrow { display: flex; align-items: center; gap: 6px; min-height: 44px; .msg { min-width: 0; } }
+.pk-hikerpick {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 8px;
+    button {
+        display: flex;
+        padding: 0 0 3px;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        background: none;
+        opacity: 0.5;
+        cursor: pointer;
+        &.on { opacity: 1; border-bottom-color: $gold; }
+    }
+}
+
+.pk-btn {
+    min-height: 44px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    color: $ink;
+    font: 700 14px 'Outfit', 'Inter', sans-serif;
+    cursor: pointer;
+    flex: 0 0 auto;
+    &.primary { background: $gold; color: #3a2a08; padding: 0 22px; }
+    &.ghost { color: $muted; }
+    &.small { font-size: 13px; padding: 0 10px; }
+    &:disabled { opacity: 0.35; cursor: default; }
+}
+.pk-link {
+    border: 0;
+    background: none;
+    color: $accent-deep;
+    font: 700 13px 'Outfit', 'Inter', sans-serif;
+    cursor: pointer;
+    min-height: 36px;
+    white-space: nowrap;
+}
+
+// ===========================================================================
+// Sheets
+// ===========================================================================
+
+.pk-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(46, 59, 54, 0.4);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+.pk-sheet {
+    background: #fff;
+    color: $ink;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    border-radius: 18px 18px 0 0;
+    padding: 12px 12px 16px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 88%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+
+    &.center { align-items: center; text-align: center; h4 { margin: 2px 0 0; } p { margin: 0; } }
+    h4 { margin: 0; font-size: 17px; font-weight: 800; }
+}
+.pk-sheet-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    p { margin: 2px 0 0; font-size: 13px; color: $muted; line-height: 1.25; }
+}
+.pk-row {
+    display: flex;
+    gap: 8px;
+    justify-content: safe center;
+    &.wrap { flex-wrap: wrap; }
+    &.scroll { overflow-x: auto; padding: 4px 2px 6px; justify-content: flex-start; }
+    &.none { justify-content: flex-start; }
+    &.none:empty::before { content: 'None yet'; font-size: 13px; color: $muted; }
+}
+.pk-measure { height: 0; width: 100%; }
+.pk-labelled {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    align-items: center;
+    min-width: 0;
+    flex: 1 1 0;
+    small { font-size: 11px; line-height: 1.15; color: $muted; text-align: center; }
+}
+.pk-coinline { display: inline-flex; align-items: center; gap: 2px; font-weight: 800; color: $ink !important; font-size: 13px !important; }
+.pk-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: $muted;
+}
+.pk-choices { display: flex; flex-direction: column; gap: 2px; }
+.pk-choice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 54px;
+    padding: 4px;
+    background: none;
+    border: 0;
+    border-radius: 10px;
+    font: 700 14px 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+    text-align: left;
+    cursor: pointer;
+    small { display: block; font-weight: 500; font-size: 12px; color: $muted; margin-top: 1px; }
+    &:disabled { opacity: 0.4; cursor: default; }
+    &:hover:not(:disabled) { box-shadow: inset 0 0 0 2px $line; }
+}
+.pk-pair { display: inline-flex; gap: 2px; }
+.pk-thumb {
+    display: inline-flex;
+    border-radius: 9px;
+    overflow: hidden;
+    flex: 0 0 auto;
+}
+.pk-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 2px; }
+
+.pk-picker {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.pk-picker-coin {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 54px;
+    min-height: 56px;
+    padding: 5px 4px;
+    background: none;
+    border: 0;
+    border-radius: 10px;
+    cursor: pointer;
+    .count {
+        font: 800 14px 'Outfit', 'Inter', sans-serif;
+        color: $accent-deep;
+        min-height: 16px;
+        line-height: 1;
+        i { font-style: normal; font-weight: 600; color: $muted; font-size: 11px; margin-left: 3px; }
+    }
+    &.on { box-shadow: inset 0 0 0 2.5px $gold; }
+    &:disabled { opacity: 0.3; cursor: default; }
+}
+
+// ===========================================================================
+// Tableau / turn order / Journal
+// ===========================================================================
+
+.pk-section h5 {
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-weight: 800;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    span { font-weight: 500; font-size: 12px; color: $muted; }
+}
+.pk-yearline {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    p { margin: 0 0 4px; font-size: 13px; line-height: 1.25; }
+    .pk-progress { margin-top: 6px; }
+}
+.pk-year-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    max-width: 340px;
+    p { margin: 4px 0 0; font-size: 13px; line-height: 1.3; }
+}
+.pk-year-track {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    .bar { position: relative; flex: 1 1 auto; height: 78px; margin: 0 14px 0 6px; }
+    .rail, .fill { position: absolute; left: 0; top: 34px; height: 6px; border-radius: 3px; }
+    .rail { right: 0; background: $line; }
+    .tick {
+        position: absolute;
+        top: 31px;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 12px;
+        line-height: 1.05;
+        color: $muted;
+        i { display: block; width: 12px; height: 12px; margin-bottom: 7px; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 2px $rule; }
+        b { font-weight: 800; }
+        small { font-size: 10px; white-space: nowrap; }
+        &.met { color: $ink; }
+    }
+    .marker {
+        position: absolute;
+        top: 0;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1px;
+        font-size: 12px;
+        line-height: 1;
+        z-index: 1;
+    }
+}
+.pk-title { margin: 0; font-size: 16px; font-weight: 800; }
+.pk-sub { margin: 2px 0 6px; font-size: 13px; color: $muted; }
+.pk-tableau {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    > .pk-kit, > .pk-section { border-top: 1px solid $line; padding-top: 10px; }
+}
+.pk-tableau-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 16px;
+    b { font-weight: 800; }
+}
+// one row: Canteens, a column rule, Gear. It scrolls as a whole when a player collects a lot.
+.pk-order { display: flex; flex-wrap: wrap; gap: 6px; }
+.pk-order-seat {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    padding: 2px 9px 2px 3px;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    color: $muted;
+    &.on { color: $ink; font-weight: 800; }
+}
+.pk-log {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 340px;
+    overflow-y: auto;
+    font-size: 13px;
+}
+.pk-log-row {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+    & + & { border-top: 1px solid $line; padding-top: 6px; }
+    &.sys .pk-log-result { flex: 1 1 auto; justify-content: space-between; color: $accent-deep; }
+}
+.pk-log-head { display: flex; flex: 0 0 auto; align-items: center; gap: 4px; }
+.pk-log-results { display: flex; flex: 1 1 0; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; }
+.pk-log-result {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    .word { font-weight: 600; color: $muted; }
+    &.bonus .word { font-weight: 800; color: #b5801c; }
+}
+.pk-log-area {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 6px;
+    &.reserve { background: #f8e6cf; }
+    &.gear { background: #eee3da; }
+    &.visit { background: #dcebe2; }
+}
+.pk-log-event {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+}
+.pk-rowhead { display: inline-flex; align-items: center; gap: 4px; }
+.pk-final {
+    h3 { margin: 4px 0 10px; font-size: 19px; font-weight: 800; text-align: center; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 6px 3px; text-align: center; }
+    thead th { font-weight: 700; font-size: 12px; span { display: block; overflow: hidden; text-overflow: ellipsis; } }
+    tbody th { text-align: left; font-weight: 500; font-size: 12px; }
+    tr:nth-last-child(2) td { font-weight: 800; font-size: 17px; }
+}
+
+// ===========================================================================
+// Lobby, Rules, Settings
+// ===========================================================================
+
+.pk-lobby {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 620px;
+    margin: 0 auto;
+}
+.pk-lobby-opt { display: flex; flex-direction: column; gap: 8px; }
+.pk-opt-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+// Nightfall parts, each switchable on its own
+.pk-nf-parts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 6px;
+    button {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        text-align: left;
+        font-family: inherit;
+        color: $ink;
+        background: $panel;
+        border: 1px solid $line;
+        border-radius: $radius;
+        padding: 9px 11px;
+        min-height: 44px;
+        cursor: pointer;
+        b { display: block; font-size: 14px; }
+        small { display: block; color: $muted; font-size: 12px; line-height: 1.3; margin-top: 1px; }
+        &.on { border-color: $accent; background: #eef7f1; }
+    }
+}
+.pk-nf-check {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+    border: 2px solid $rule;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1;
+    .on & { background: $accent; border-color: $accent; }
+}
+.pk-warn {
+    color: #8a3324;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+}
+.pk-settings {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 420px;
+    margin: 0 auto;
+}
+.pk-rules {
+    padding: 12px 14px 28px;
+    max-width: 640px;
+    margin: 0 auto;
+    font-size: 14px;
+    line-height: 1.38;
+    h3 { margin: 18px 0 5px; font-size: 15px; font-weight: 800; color: $accent-deep; }
+    p { margin: 0 0 7px; }
+    ul { margin: 0 0 6px; padding-left: 18px; }
+}
+// Rules tab: base game / Nightfall sub-tabs, a segmented control at the top
+.pk-rules-tabs { font-family: 'Outfit', 'Inter', sans-serif; }
+.pk-subtabs {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    display: flex;
+    gap: 4px;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 10px 14px 4px;
+    background: $paper;
+    button {
+        flex: 1 1 0;
+        font-family: inherit;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 44px;
+        border: 1px solid $line;
+        border-radius: $radius;
+        background: $panel;
+        color: $muted;
+        font-weight: 700;
+        font-size: 0.88em;
+        cursor: pointer;
+        &.on { background: $accent; border-color: $accent; color: #fff; }
+    }
+}
+.pk-subtab-on {
+    font-size: 0.7em;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: #dff6ea;
+    color: #136c41;
+    border-radius: 6px;
+    padding: 1px 5px;
+}
+.pk-rule-row { display: flex; gap: 8px; align-items: flex-start; }
+.pk-rule-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    margin-bottom: 7px;
+    span { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+}
+.pk-rule-sites {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    > div { display: flex; gap: 8px; align-items: center; }
+    small { display: block; font-size: 12px; color: $muted; line-height: 1.25; }
+}
+.pk-rule-seasons {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    > div { display: flex; gap: 8px; align-items: center; }
+    .pk-iconline { width: 62px; flex: 0 0 auto; }
+}
+// Campsite actions: their icon lines vary in width, so the column fits the widest one
+.pk-rule-camps {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 7px 10px;
+    align-items: center;
+    margin-bottom: 7px;
+    > div { display: contents; }
+    .pk-iconline { flex-wrap: nowrap; white-space: nowrap; }
+}
