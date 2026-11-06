@@ -1,12 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-        <title>Multiplayr: P2P Join</title>
+        <title>Multiplayr: Join</title>
+        <!-- Favicon: the four header marks (square, circle, triangle, square). -->
+        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='1' y='1' width='14' height='14' fill='%23e1553a'/%3E%3Ccircle cx='24' cy='8' r='7' fill='%231c8c7d'/%3E%3Cpolygon points='8,17.5 15,31 1,31' fill='%23e3a81e'/%3E%3Crect x='17' y='17' width='14' height='14' fill='%2333507a'/%3E%3C/svg%3E">
 
+        <!-- Kept for the in-game client views, which were built against these. -->
         <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.2/semantic.min.css"></link>
         <link rel="stylesheet" href="/css/multiplayr.css" type="text/css" />
+
+        <!-- Geometric + text sans (shared with index / host_p2p) -->
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
         <script src="https://code.jquery.com/jquery-3.5.1.min.js"
                 integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
                 crossorigin="anonymous"></script>
@@ -16,73 +23,257 @@
         <script src="join_p2p.bundle.js?v=__MP_BUILD_VERSION__"></script>
         <script src="https://use.fontawesome.com/0c388157c6.js"></script>
         <style>
-          #container {
-             min-height: 100%;
-             height: 100%;
-             position: relative;
-          }
-         #join {
-             padding: 40px 10px;
-             text-align: center;
-             max-width: 500px;
-             margin: 0 auto;
-         }
-         #roomId {
-             display: block;
-             width: 100%;
-             padding: 10px 12px;
-             margin: 10px auto 25px auto;
-             font-size: 1.4em;
-             border-radius: 4px;
-             border: 1px solid #ccc;
-         }
-         #join-button {
-             padding: 12px 24px;
-             font-size: 1.2em;
-             background-color: #2980b9;
-             color: white;
-             border: none;
-             border-radius: 4px;
-             cursor: pointer;
-             width: 100%;
-         }
-         #join-button:hover {
-             background-color: #2471a3;
-         }
-         #error {
-             color: #c0392b;
-             font-size: 1.1em;
-             margin: 10px 0;
-             font-weight: bold;
-         }
-         #clientId {
-             display: block;
-             width: 100%;
-             padding: 10px 12px;
-             margin: 10px auto 25px auto;
-             font-size: 1.4em;
-             border-radius: 4px;
-             border: 1px solid #ccc;
-             background-color: #eee;
-         }
-         label {
-             font-size: 1.2em;
-             font-weight: bold;
-             color: #34495e;
-             display: block;
-             text-align: left;
-         }
+            /*
+             * Lobby styles are all scoped under #join (ID specificity) so they win over
+             * semantic-ui / multiplayr.css resets without leaking into the game view,
+             * which renders into #container once #join is hidden.
+             */
+            :root {
+                /* Mid-century palette — shared with index.html / host_p2p.html */
+                --bg:        #ece4d3;
+                --surface:   #fbf8f1;
+                --ink:       #221f1a;
+                --ink-soft:  #6b6455;
+                --hairline:  #ddd3bf;
+
+                --mustard:   #e3a81e;
+                --teal:      #1c8c7d;
+                --coral:     #e1553a;
+                --navy:      #33507a;
+                --cream:     #fbf8f1;
+            }
+
+            #container {
+                min-height: 100%;
+                height: 100%;
+                position: relative;
+            }
+
+            #join {
+                min-height: 100vh;
+                background: var(--bg);
+                color: var(--ink);
+                font-family: 'Inter', sans-serif;
+                font-size: 16px;
+                -webkit-font-smoothing: antialiased;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 48px 16px 64px;
+            }
+
+            #join .join__inner {
+                width: 100%;
+                max-width: 460px;
+            }
+
+            /* ---------- Header ---------- */
+            #join .join__back {
+                display: inline-block;
+                font-family: 'Outfit', sans-serif;
+                font-size: 0.85em;
+                font-weight: 800;
+                color: var(--ink-soft);
+                text-decoration: none;
+                margin-bottom: 28px;
+            }
+            #join .join__back:hover { color: var(--ink); }
+
+            #join .join__marks {
+                display: flex;
+                gap: 8px;
+                margin-bottom: 18px;
+            }
+            #join .join__marks span { width: 20px; height: 20px; }
+            #join .join__marks .m-sq   { background: var(--coral); }
+            #join .join__marks .m-cir  { background: var(--teal); border-radius: 50%; }
+            #join .join__marks .m-tri  {
+                width: 0; height: 0; background: transparent;
+                border-left: 10px solid transparent;
+                border-right: 10px solid transparent;
+                border-bottom: 20px solid var(--mustard);
+            }
+            #join .join__marks .m-navy { background: var(--navy); }
+
+            #join .join__title {
+                font-family: 'Outfit', sans-serif;
+                font-size: clamp(2.4em, 9vw, 3.2em);
+                font-weight: 900;
+                letter-spacing: -0.04em;
+                line-height: 0.95;
+                margin: 0;
+                color: var(--ink);
+            }
+
+            #join .join__subtitle {
+                font-size: 1.02em;
+                font-weight: 500;
+                line-height: 1.5;
+                color: var(--ink-soft);
+                margin: 12px 0 28px;
+            }
+
+            /* ---------- Card ---------- */
+            #join .join__card {
+                background: var(--surface);
+                border-top: 8px solid var(--teal);
+                padding: 26px 24px 28px;
+            }
+
+            #join label {
+                display: block;
+                font-family: 'Outfit', sans-serif;
+                font-size: 0.78em;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.14em;
+                color: var(--ink-soft);
+                margin: 0 0 10px;
+            }
+
+            #join input {
+                display: block;
+                width: 100%;
+                font-family: 'Inter', sans-serif;
+                border: 2px solid transparent;
+                border-radius: 0;
+                outline: none;
+                transition: border-color 0.15s ease, background-color 0.15s ease;
+            }
+
+            #join #roomId {
+                font-family: 'Outfit', sans-serif;
+                font-size: 1.7em;
+                font-weight: 800;
+                letter-spacing: 0.02em;
+                color: var(--ink);
+                background: var(--bg);
+                padding: 14px 16px;
+                margin: 0 0 26px;
+            }
+            #join #roomId::placeholder {
+                color: var(--ink-soft);
+                opacity: 0.55;
+                font-weight: 600;
+                letter-spacing: 0;
+            }
+            #join #roomId:focus {
+                border-color: var(--ink);
+                background: var(--cream);
+            }
+
+            #join #clientId {
+                font-size: 0.92em;
+                font-weight: 600;
+                color: var(--ink-soft);
+                background: rgba(34, 31, 26, 0.06);
+                padding: 10px 14px;
+                margin: 0 0 26px;
+                cursor: default;
+            }
+
+            #join #error {
+                min-height: 1.4em;
+                margin: 0 0 18px;
+                font-size: 0.92em;
+                font-weight: 600;
+                color: var(--coral);
+            }
+
+            #join #join-button {
+                display: block;
+                width: 100%;
+                font-family: 'Outfit', sans-serif;
+                font-size: 1.15em;
+                font-weight: 800;
+                letter-spacing: 0.01em;
+                color: var(--cream);
+                background: var(--coral);
+                border: none;
+                border-radius: 999px;
+                padding: 16px 28px;
+                cursor: pointer;
+                transition: background-color 0.15s ease, transform 0.1s ease;
+            }
+            #join #join-button:hover { background: #c9432a; transform: translateY(-2px); }
+            #join #join-button[disabled] {
+                background: var(--ink);
+                opacity: 0.55;
+                cursor: progress;
+                transform: none;
+            }
+
+            /* Shown while join_p2p.ts keeps the button hidden (transport still connecting). */
+            #join .join__pending {
+                display: none;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                font-weight: 600;
+                font-size: 0.95em;
+                color: var(--ink);
+                background: var(--mustard);
+                border-radius: 999px;
+                padding: 15px 24px;
+            }
+            #join #join-button[style*="display: none"] + .join__pending { display: flex; }
+            #join .join__pending::before {
+                content: '';
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: var(--ink);
+                animation: join-pulse 1s ease-in-out infinite alternate;
+            }
+            @keyframes join-pulse {
+                from { transform: scale(0.6); opacity: 0.4; }
+                to   { transform: scale(1);   opacity: 1; }
+            }
+
+            #join .join__footer {
+                margin: 22px 0 0;
+                font-size: 0.9em;
+                color: var(--ink-soft);
+                text-align: center;
+            }
+            #join .join__footer a {
+                color: var(--ink);
+                font-weight: 700;
+                text-decoration: none;
+                border-bottom: 2px solid var(--mustard);
+            }
+            #join .join__footer a:hover { border-bottom-color: var(--coral); }
         </style>
     </head>
     <body>
       <div id="container">
         <div id="join">
-            <div id="error">&nbsp;</div>
-            <label for="roomId">Room (Host Peer ID)</label>
-            <input type="text" id="roomId" placeholder="Enter Host Peer Room ID" />
-            <label for="clientId">My Client ID (Optional / Auto-Generated)</label>
-            <input disabled="disabled" type="text" id="clientId" />
-            <button id="join-button">Join Game</button>
+          <div class="join__inner">
+            <a class="join__back" href="index.html">&larr; Multiplayr</a>
+
+            <div class="join__marks" aria-hidden="true">
+                <span class="m-sq"></span>
+                <span class="m-cir"></span>
+                <span class="m-tri"></span>
+                <span class="m-navy"></span>
+            </div>
+            <h1 class="join__title">Join a game</h1>
+            <p class="join__subtitle">Enter the room code shown on the host&rsquo;s screen.</p>
+
+            <div class="join__card">
+                <label for="roomId">Room code</label>
+                <input type="text" id="roomId" placeholder="e.g. 482915" inputmode="numeric" autocomplete="off" spellcheck="false" />
+
+                <label for="clientId">Your player ID &middot; auto-generated</label>
+                <input disabled="disabled" type="text" id="clientId" />
+
+                <div id="error">&nbsp;</div>
+                <button id="join-button">Join Game</button>
+                <div class="join__pending">Connecting to the P2P network&hellip;</div>
+            </div>
+
+            <p class="join__footer">Want to run the table? <a href="host_p2p.html">Host a room</a></p>
+          </div>
         </div>
       </div>
     </body>

@@ -6,6 +6,8 @@
         <!-- Revalidate this page so republished bundles (new ?v=) are picked up. -->
         <meta http-equiv="Cache-Control" content="no-cache">
         <title>Multiplayr: Host</title>
+        <!-- Favicon: the four header marks (square, circle, triangle, square). -->
+        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='1' y='1' width='14' height='14' fill='%23e1553a'/%3E%3Ccircle cx='24' cy='8' r='7' fill='%231c8c7d'/%3E%3Cpolygon points='8,17.5 15,31 1,31' fill='%23e3a81e'/%3E%3Crect x='17' y='17' width='14' height='14' fill='%2333507a'/%3E%3C/svg%3E">
 
         <!-- Geometric + text sans -->
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -251,6 +253,75 @@
                 color: var(--cream);
             }
             .chip.is-active .chip__count { color: rgba(251, 248, 241, 0.6); }
+            .chip.is-empty { opacity: 0.45; }
+            .chip--num { min-width: 52px; text-align: center; }
+            .chip:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+            /* Filter groups: label column + chip row; stacks on narrow screens. */
+            .filter-bar {
+                display: grid;
+                gap: 18px;
+            }
+            .filter-group {
+                display: grid;
+                grid-template-columns: 120px 1fr;
+                align-items: start;
+                gap: 16px;
+            }
+            .filter-group .filter-bar__label {
+                margin: 0;
+                padding-top: 11px;
+            }
+            @media (max-width: 640px) {
+                .filter-group { grid-template-columns: 1fr; gap: 10px; }
+                .filter-group .filter-bar__label { padding-top: 0; }
+            }
+
+            /* Complexity meter: three rising bars, filled up to the level. */
+            .pips {
+                display: inline-flex;
+                align-items: flex-end;
+                gap: 2px;
+                height: 12px;
+                vertical-align: -1px;
+            }
+            .chip .pips { margin-right: 8px; }
+            .pips__bar {
+                width: 4px;
+                background: currentColor;
+                opacity: 0.22;
+            }
+            .pips__bar:nth-child(1) { height: 6px; }
+            .pips__bar:nth-child(2) { height: 9px; }
+            .pips__bar:nth-child(3) { height: 12px; }
+            .pips__bar.is-on { opacity: 1; }
+
+            /* Result count + clear, sits above the cards. */
+            .grid-summary {
+                grid-column: 1 / -1;
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                flex-wrap: wrap;
+                min-height: 34px;
+                margin-bottom: -8px;
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: var(--ink-soft);
+            }
+            .grid-summary__clear {
+                font-family: 'Outfit', sans-serif;
+                font-size: 0.85rem;
+                font-weight: 800;
+                padding: 6px 14px;
+                border: 2px solid var(--ink);
+                border-radius: 999px;
+                background: transparent;
+                color: var(--ink);
+                cursor: pointer;
+                transition: background-color 0.15s ease, color 0.15s ease;
+            }
+            .grid-summary__clear:hover { background: var(--ink); color: var(--cream); }
 
             /* ---------- Game grid ---------- */
             .game-grid {
@@ -341,6 +412,12 @@
                 font-weight: 600;
                 color: var(--ink-soft);
                 display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 7px 18px;
+            }
+            .game-card__meta-item {
+                display: inline-flex;
                 align-items: center;
                 gap: 7px;
             }

@@ -16,6 +16,10 @@ export interface HKPlayer {
     icon: number;
     revealed: string[];
     hiddenCount: number;
+    /** Cards in this classroom (players: setup.hand; the robot: setup.robot). */
+    handSize: number;
+    /** 2-player variant: the robot teacher's classroom. Never takes a turn or guesses. */
+    isRobot: boolean;
 }
 
 export interface HKPublic {
@@ -23,7 +27,7 @@ export interface HKPublic {
     phase: Phase;
     round: number;
     setup: Setup;
-    players: HKPlayer[];         // in turn order, start player first
+    players: HKPlayer[];         // in turn order, start player first; the robot classroom (2p) last
     activeId: string | null;
     turn: { asked: boolean; revealed: boolean };
     log: LogEntry[];

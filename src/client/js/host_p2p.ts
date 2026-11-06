@@ -301,86 +301,209 @@ $(() => {
         });
     }
 
-    // Currently selected mechanic filters (OR semantics; empty = show everything).
+    // Filters. Mechanics are OR'd together; the three groups are AND'd.
+    //   activePlayers    — table size; null = any. PLAYER_MAX means "that many or more".
+    //   activeComplexity — empty = any weight
+    //   activeMechanics  — empty = any mechanic
     const activeMechanics: { [mechanic: string]: boolean } = {};
+    const activeComplexity: { [level: string]: boolean } = {};
+    let activePlayers: number | null = null;
+
+    const PLAYER_MAX = 8;
+    const COMPLEXITY_LEVELS = [
+        { id: 'low', label: 'Low' },
+        { id: 'medium', label: 'Medium' },
+        { id: 'high', label: 'High' }
+    ];
+
+    type GameEntry = { name: string; rule: any };
+
+    function supportsPlayers(rule: any, n: number) {
+        if (!rule.minPlayers || !rule.maxPlayers) {
+            return true; // unknown range — don't hide it
+        }
+        if (n >= PLAYER_MAX) {
+            return rule.maxPlayers >= PLAYER_MAX;
+        }
+        return rule.minPlayers <= n && n <= rule.maxPlayers;
+    }
+
+    function selectedKeys(dict: { [k: string]: boolean }) {
+        return Object.keys(dict).filter((k) => dict[k]);
+    }
+
+    function hasAnyFilter() {
+        return activePlayers !== null ||
+            selectedKeys(activeComplexity).length > 0 ||
+            selectedKeys(activeMechanics).length > 0;
+    }
+
+    function matchesPlayers(g: GameEntry) {
+        return activePlayers === null || supportsPlayers(g.rule, activePlayers);
+    }
+
+    function matchesComplexity(g: GameEntry) {
+        const sel = selectedKeys(activeComplexity);
+        return sel.length === 0 || sel.indexOf(g.rule.complexity) !== -1;
+    }
+
+    function matchesMechanics(g: GameEntry) {
+        const sel = selectedKeys(activeMechanics);
+        if (sel.length === 0) {
+            return true;
+        }
+        const gm = g.rule.mechanics || [];
+        return sel.some((m) => gm.indexOf(m) !== -1);
+    }
 
     function renderGameBrowser() {
         // Collect non-debug games that are enabled (default: enabled).
-        const games = Object.keys(_mprules.MPRULES)
+        const games: GameEntry[] = Object.keys(_mprules.MPRULES)
             .map((name) => ({ name, rule: _mprules.MPRULES[name] }))
             .filter((g) => !g.rule.debug && g.rule.enabled !== false)
             .sort((a, b) => a.name.localeCompare(b.name));
 
-        // Tally mechanics across all games.
-        const counts: { [mechanic: string]: number } = {};
-        games.forEach((g) => {
-            (g.rule.mechanics || []).forEach((m: string) => {
-                counts[m] = (counts[m] || 0) + 1;
-            });
-        });
-        const mechanics = Object.keys(counts).sort((a, b) => a.localeCompare(b));
-
-        renderFilterBar(mechanics, counts, games);
+        renderFilterBar(games);
         renderGrid(games);
     }
 
-    function renderFilterBar(
-        mechanics: string[],
-        counts: { [mechanic: string]: number },
-        games: { name: string; rule: any }[]
-    ) {
+    function makeChip(label: string, count: number | null, active: boolean, onClick: () => void, showCount = true) {
+        const $chip = $('<span class="chip" role="button" tabindex="0" />').text(label);
+        if (count !== null && showCount) {
+            $('<span class="chip__count" />').text(String(count)).appendTo($chip);
+        }
+        if (active) {
+            $chip.addClass('is-active');
+        } else if (count === 0) {
+            $chip.addClass('is-empty');
+        }
+        $chip.on('click', onClick);
+        $chip.on('keydown', (ev) => {
+            if (ev.key === 'Enter' || ev.key === ' ') {
+                ev.preventDefault();
+                onClick();
+            }
+        });
+        return $chip;
+    }
+
+    function makeGroup($bar: JQuery, label: string) {
+        const $group = $('<div class="filter-group" />').appendTo($bar);
+        $('<p class="filter-bar__label" />').text(label).appendTo($group);
+        return $('<div class="filter-bar__chips" />').appendTo($group);
+    }
+
+    function renderFilterBar(games: GameEntry[]) {
         const $bar = $('#mechanic-filter').empty();
 
-        $('<p class="filter-bar__label">Filter by mechanic</p>').appendTo($bar);
-        const $chips = $('<div class="filter-bar__chips" />').appendTo($bar);
+        // Each group's counts honour the *other* groups' filters, so a count
+        // tells you how many games that chip would leave on screen.
+        const forPlayers = games.filter((g) => matchesComplexity(g) && matchesMechanics(g));
+        const forComplexity = games.filter((g) => matchesPlayers(g) && matchesMechanics(g));
+        const forMechanics = games.filter((g) => matchesPlayers(g) && matchesComplexity(g));
 
-        const hasActive = Object.keys(activeMechanics).some((m) => activeMechanics[m]);
-
-        // "All" resets every filter.
-        const $all = $('<span class="chip">All games <span class="chip__count">' + games.length + '</span></span>');
-        if (!hasActive) {
-            $all.addClass('is-active');
+        // ----- Players -----
+        const $players = makeGroup($bar, 'Players');
+        $players.append(makeChip('Any', null, activePlayers === null, () => {
+            activePlayers = null;
+            renderGameBrowser();
+        }));
+        for (let n = 1; n <= PLAYER_MAX; n++) {
+            const label = n === PLAYER_MAX ? PLAYER_MAX + '+' : String(n);
+            const count = forPlayers.filter((g) => supportsPlayers(g.rule, n)).length;
+            // A count beside a player number reads as another number ("4 4"), so the
+            // chip only dims when nothing fits; the count lives in the tooltip.
+            $players.append(makeChip(label, count, activePlayers === n, () => {
+                activePlayers = activePlayers === n ? null : n;
+                renderGameBrowser();
+            }, false).addClass('chip--num').attr('title', count + (count === 1 ? ' game' : ' games')));
         }
-        $all.on('click', () => {
+
+        // ----- Complexity -----
+        const $complexity = makeGroup($bar, 'Complexity');
+        const noComplexity = selectedKeys(activeComplexity).length === 0;
+        $complexity.append(makeChip('Any', null, noComplexity, () => {
+            Object.keys(activeComplexity).forEach((k) => delete activeComplexity[k]);
+            renderGameBrowser();
+        }));
+        COMPLEXITY_LEVELS.forEach((level) => {
+            const count = forComplexity.filter((g) => g.rule.complexity === level.id).length;
+            const $chip = makeChip(level.label, count, !!activeComplexity[level.id], () => {
+                toggle(activeComplexity, level.id);
+            });
+            $chip.prepend(complexityPips(level.id));
+            $complexity.append($chip);
+        });
+
+        // ----- Mechanics -----
+        const counts: { [mechanic: string]: number } = {};
+        games.forEach((g) => (g.rule.mechanics || []).forEach((m: string) => {
+            counts[m] = 0;
+        }));
+        forMechanics.forEach((g) => (g.rule.mechanics || []).forEach((m: string) => {
+            counts[m] += 1;
+        }));
+        const mechanics = Object.keys(counts).sort((a, b) => a.localeCompare(b));
+
+        const $mechanics = makeGroup($bar, 'Mechanic');
+        const noMechanic = selectedKeys(activeMechanics).length === 0;
+        $mechanics.append(makeChip('Any', null, noMechanic, () => {
             Object.keys(activeMechanics).forEach((m) => delete activeMechanics[m]);
             renderGameBrowser();
-        });
-        $chips.append($all);
-
+        }));
         mechanics.forEach((m) => {
-            const $chip = $('<span class="chip">' + escapeHtml(m) +
-                ' <span class="chip__count">' + counts[m] + '</span></span>');
-            if (activeMechanics[m]) {
-                $chip.addClass('is-active');
-            }
-            $chip.on('click', () => toggleMechanic(m));
-            $chips.append($chip);
+            $mechanics.append(makeChip(m, counts[m], !!activeMechanics[m], () => toggle(activeMechanics, m)));
         });
     }
 
-    function toggleMechanic(mechanic: string) {
-        if (activeMechanics[mechanic]) {
-            delete activeMechanics[mechanic];
+    function toggle(dict: { [k: string]: boolean }, key: string) {
+        if (dict[key]) {
+            delete dict[key];
         } else {
-            activeMechanics[mechanic] = true;
+            dict[key] = true;
         }
         renderGameBrowser();
     }
 
-    function renderGrid(games: { name: string; rule: any }[]) {
-        const $grid = $('#rules').empty();
-        const selected = Object.keys(activeMechanics).filter((m) => activeMechanics[m]);
+    function toggleMechanic(mechanic: string) {
+        toggle(activeMechanics, mechanic);
+    }
 
-        const visible = games.filter((g) => {
-            if (selected.length === 0) {
-                return true;
-            }
-            const gm = g.rule.mechanics || [];
-            return selected.some((m) => gm.indexOf(m) !== -1);
-        });
+    function clearAllFilters() {
+        activePlayers = null;
+        Object.keys(activeComplexity).forEach((k) => delete activeComplexity[k]);
+        Object.keys(activeMechanics).forEach((k) => delete activeMechanics[k]);
+        renderGameBrowser();
+    }
+
+    /** Three small bars filled up to the level, like a signal meter. */
+    function complexityPips(level: string) {
+        const filled = level === 'high' ? 3 : level === 'medium' ? 2 : level === 'low' ? 1 : 0;
+        const $pips = $('<span class="pips" aria-hidden="true" />');
+        for (let i = 1; i <= 3; i++) {
+            $('<span class="pips__bar" />').toggleClass('is-on', i <= filled).appendTo($pips);
+        }
+        return $pips;
+    }
+
+    function renderGrid(games: GameEntry[]) {
+        const $grid = $('#rules').empty();
+        const visible = games.filter((g) => matchesPlayers(g) && matchesComplexity(g) && matchesMechanics(g));
+
+        const $summary = $('<div class="grid-summary" />').appendTo($grid);
+        $('<span />')
+            .text(visible.length === games.length
+                ? 'Showing all ' + games.length + ' games'
+                : 'Showing ' + visible.length + ' of ' + games.length + ' games')
+            .appendTo($summary);
+        if (hasAnyFilter()) {
+            $('<button type="button" class="grid-summary__clear">Clear filters</button>')
+                .on('click', clearAllFilters)
+                .appendTo($summary);
+        }
 
         if (visible.length === 0) {
-            $grid.append('<p class="grid-empty">No games match that combination of mechanics. Try clearing a filter.</p>');
+            $grid.append('<p class="grid-empty">No games match those filters. Try clearing one.</p>');
             return;
         }
 
@@ -431,12 +554,22 @@ $(() => {
             });
         }
 
+        const $meta = $('<div class="game-card__players" />');
         if (rule.minPlayers && rule.maxPlayers) {
             const playersText = rule.minPlayers === rule.maxPlayers
                 ? `${rule.minPlayers} players`
                 : `${rule.minPlayers}–${rule.maxPlayers} players`;
-            $('<div class="game-card__players"><i class="fa fa-users"></i> ' + playersText + '</div>')
-                .appendTo($body);
+            $meta.append('<span class="game-card__meta-item"><i class="fa fa-users"></i> ' + playersText + '</span>');
+        }
+        if (rule.complexity) {
+            $('<span class="game-card__meta-item" />')
+                .attr('title', 'Complexity: ' + rule.complexity)
+                .append(complexityPips(rule.complexity))
+                .append(document.createTextNode(' ' + prettyRuleName(rule.complexity)))
+                .appendTo($meta);
+        }
+        if ($meta.children().length) {
+            $meta.appendTo($body);
         }
 
         return $card;

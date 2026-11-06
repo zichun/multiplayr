@@ -79,3 +79,11 @@ Start player is random and fixed for the whole game; turn order clockwise.
 - Deduction sheet notes are client-side only (localStorage `hooky_notes_<gameId>_<clientId>`), not in
   the shared game state, so marking a cell costs no network round trip.
 - Student names (Abby…Zed) and face doodles are original, not the published card art.
+
+## 2-player variant (added 2026-11-06, user spec)
+- 7 rounds; Hooky 3; Playground 4 (one turned up after each of rounds 1–4); each player holds 7.
+- A third classroom of 5 students is run by the **Robo-teacher** (seat id `__robot`). It never takes a
+  turn, gives no introduction, never reveals and never guesses. Players can ask it questions and peek at it.
+- Claude's choices (the spec didn't say): Hooky guesses come after rounds 5, 6 and 7 (the last three rounds,
+  as in other player counts). The final guess includes naming the robot's 5 students, scored like a player
+  hand (1 each, +1 if exact). The robot doesn't introduce itself.

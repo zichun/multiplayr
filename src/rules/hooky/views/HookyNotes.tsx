@@ -97,13 +97,13 @@ export interface SheetIssues {
 /**
  * Checks your marks against the hard facts of the deal: each student is in
  * exactly one place (a hand, Hooky, or the Playground), each hand holds exactly
- * `setup.hand` students and Hooky exactly 3. Only reports clashes; it never
+ * its own number of students (the robot's class is smaller) and Hooky exactly 3. Only reports clashes; it never
  * fills anything in.
  */
 export function sheetIssues(hk: HKPublic, my: HKPrivate, notes: Notes): SheetIssues {
     const owners = knownOwners(hk, my);
     const cols = [
-        ...opponentsOf(hk, my.me).map(p => ({ id: p.id, name: p.name, cap: hk.setup.hand })),
+        ...opponentsOf(hk, my.me).map(p => ({ id: p.id, name: p.name, cap: p.handSize })),
         { id: HOOKY_COL, name: 'Hooky', cap: HOOKY_COUNT }
     ];
     const out: SheetIssues = { rows: {}, recess: [], cols: {}, messages: [] };
@@ -164,7 +164,7 @@ export const Sheet: React.FC<{
     const opps = opponentsOf(hk, my.me);
     const owners = knownOwners(hk, my);
     const cols: { id: string; cap: number; head: React.ReactNode; name: string }[] = [
-        ...opps.map(p => ({ id: p.id, cap: hk.setup.hand, name: p.name, head: <Avatar p={p} size={26} /> })),
+        ...opps.map(p => ({ id: p.id, cap: p.handSize, name: p.name, head: <Avatar p={p} size={26} /> })),
         { id: HOOKY_COL, cap: HOOKY_COUNT, name: 'Hooky', head: <span className="hk-col-bell"><BellGlyph size={22} /></span> }
     ];
     const yesCount = (col: string) => LETTERS.filter(l => effectiveMark(notes, owners, l, col) === 'yes').length;
@@ -291,7 +291,7 @@ export const FocusGrid: React.FC<{
     const letters = compact ? LETTERS.filter(l => used.has(l)) : LETTERS;
     const markOf = (l: string) => effectiveMark(notes, owners, l, target);
     const found = LETTERS.filter(l => markOf(l) === 'yes').length;
-    const cap = hk.setup.hand;
+    const cap = p.handSize;
     const by = (id: string | null) => id === my.me ? 'You' : (hk.players.find(x => x.id === id)?.name || '');
     const portrait = orient !== 'landscape';
 
@@ -519,8 +519,11 @@ export const NotesView: React.FC<{
     onFilter: (f: string) => void; onClear: () => void;
     focus: string | null; onFocus: (id: string | null) => void; compact: boolean; onCompact: (v: boolean) => void;
     orient: GridOrient; onOrient: (o: GridOrient) => void;
+    /** Turn banner that needs the player's attention (e.g. the Show & tell countdown). */
+    banner?: React.ReactNode;
 }> = (p) => (
     <div className="hk-root hk-notes">
+        {p.banner}
         <div className="hk-seg wide">
             <button className={p.tab === 'sheet' ? 'on' : ''} onClick={() => p.onTab('sheet')}>Deduction sheet</button>
             <button className={p.tab === 'log' ? 'on' : ''} onClick={() => p.onTab('log')}>Questions ({p.hk.log.filter(e => e.kind === 'ask' || e.kind === 'clue').length})</button>

@@ -132,11 +132,11 @@ export const Stamp: React.FC<{ n: number; anim?: boolean; size?: number; delay?:
 // Players
 // ---------------------------------------------------------------------------
 
-export interface AvatarP { name: string; accent: string; icon: number; }
+export interface AvatarP { name: string; accent: string; icon: number; isRobot?: boolean; }
 
 export const Avatar: React.FC<{ p: AvatarP; size?: number }> = ({ p, size = 36 }) => (
-    <span className="hk-avatar" style={{ width: size, height: size, '--a': p.accent } as any} title={p.name}>
-        <FontAwesomeIcon icon={(LOBBY_ICONS[p.icon] || 'grin') as any} />
+    <span className={['hk-avatar', p.isRobot ? 'robot' : ''].join(' ')} style={{ width: size, height: size, '--a': p.accent } as any} title={p.name}>
+        <FontAwesomeIcon icon={(p.isRobot ? 'robot' : (LOBBY_ICONS[p.icon] || 'grin')) as any} />
     </span>
 );
 

@@ -9,7 +9,7 @@ import { strict as assert } from 'assert';
 
 import { HookyGameState, Phase } from '../../rules/hooky/HookyGameState';
 import {
-    SETUPS, LETTERS, STUDENTS, countIn, isListed, anagramKey, wordSet, hookyPointsFor
+    SETUPS, LETTERS, STUDENTS, ROBOT_ID, countIn, isListed, anagramKey, wordSet, hookyPointsFor
 } from '../../rules/hooky/HookyData';
 import { GameRuleTest } from '../GameRuleTest';
 import { nextMark, letterCounts, rowStatus, sheetIssues } from '../../rules/hooky/views/HookyNotes';
@@ -64,8 +64,7 @@ function guessAll(gs: HookyGameState, letters = ['A', 'B', 'C']) {
 /** A final guess that names no correct letter for any opponent. */
 function allWrong(gs: HookyGameState, id: string): Record<string, string[]> {
     const g: Record<string, string[]> = {};
-    const n = gs.setup().hand;
-    gs.order().filter(o => o !== id).forEach(o => { g[o] = LETTERS.filter(l => gs.hand(o).indexOf(l) === -1).slice(0, n); });
+    gs.classes().filter(o => o !== id).forEach(o => { g[o] = LETTERS.filter(l => gs.hand(o).indexOf(l) === -1).slice(0, gs.hand(o).length); });
     return g;
 }
 
@@ -88,9 +87,9 @@ describe('Hooky', () => {
         });
 
         it('setups use all 26 cards', () => {
-            for (const n of [3, 4, 5, 6]) {
+            for (const n of [2, 3, 4, 5, 6]) {
                 const s = SETUPS[n];
-                assert.equal(n * s.hand + s.playground + 3, 26, `${n} players`);
+                assert.equal(n * s.hand + (s.robot || 0) + s.playground + 3, 26, `${n} players`);
                 assert.equal(s.pgAtStart + s.pgAfter.length, s.playground, `${n}p playground reveals`);
                 assert.equal(s.guessAfter[s.guessAfter.length - 1], s.rounds);
             }
@@ -128,7 +127,7 @@ describe('Hooky', () => {
         const stub = (pgHidden = 2): any => ({
             hk: {
                 setup: SETUPS[4], playground: ['G'], playgroundHidden: pgHidden,
-                players: ['me', 'p1', 'p2', 'p3'].map(id => ({ id, name: id.toUpperCase(), revealed: id === 'p1' ? ['F'] : [] }))
+                players: ['me', 'p1', 'p2', 'p3'].map(id => ({ id, name: id.toUpperCase(), revealed: id === 'p1' ? ['F'] : [], handSize: 5, isRobot: false }))
             },
             my: { me: 'me', hand: ['A', 'B', 'C', 'D', 'E'], peeks: [] }
         });
@@ -176,11 +175,11 @@ describe('Hooky', () => {
 
     describe('Type A: setup', () => {
         it('deals per player count without overlap', () => {
-            for (const n of [3, 4, 5, 6]) {
+            for (const n of [2, 3, 4, 5, 6]) {
                 const ids = 'abcdef'.slice(0, n).split('');
                 const gs = fresh(ids, n);
                 const d = gs.get_data();
-                const all = [...ids.flatMap(id => d.hands[id]), ...d.playground, ...d.hooky];
+                const all = [...gs.classes().flatMap(id => d.hands[id]), ...d.playground, ...d.hooky];
                 assert.equal(new Set(all).size, 26);
                 ids.forEach(id => assert.equal(d.hands[id].length, SETUPS[n].hand));
                 assert.equal(d.pgShown, SETUPS[n].pgAtStart);
@@ -194,8 +193,66 @@ describe('Hooky', () => {
         });
 
         it('rejects too few or too many players', () => {
-            assert.throws(() => fresh(['a', 'b']));
+            assert.throws(() => fresh(['a']));
             assert.throws(() => fresh('abcdefg'.split('')));
+        });
+    });
+
+    describe('Type A: 2-player variant (robot classroom)', () => {
+        const two = () => fresh(['a', 'b'], 3);
+
+        it('deals 7 + 7 + 5 robot + 4 playground + 3 hooky', () => {
+            const gs = two();
+            const d = gs.get_data();
+            assert.deepEqual(gs.classes(), [...gs.order(), ROBOT_ID]);
+            assert.equal(d.hands[ROBOT_ID].length, 5);
+            gs.order().forEach(id => assert.equal(d.hands[id].length, 7));
+            assert.equal(d.playground.length, 4);
+            assert.equal(d.setup.rounds, 7);
+        });
+
+        it('the robot never takes a turn or introduces itself', () => {
+            const gs = two();
+            giveClues(gs);
+            assert.equal(gs.get_data().log.filter(e => e.kind === 'clue').length, 2);
+            const seen = new Set<string>();
+            for (let i = 0; i < 6; i++) { seen.add(gs.activeId()!); const id = gs.activeId()!; gs.ask(id, ROBOT_ID, freshWord(gs, ROBOT_ID)); if (gs.activeId() === id) gs.end_turn(id); }
+            assert.ok(!seen.has(ROBOT_ID));
+        });
+
+        it('players can ask the robot and peek at it', () => {
+            const gs = two();
+            giveClues(gs);
+            const [p0] = gs.order();
+            gs.ask(p0, ROBOT_ID, 'PLANT');
+            const e = gs.get_data().log[gs.get_data().log.length - 1];
+            assert.equal(e.target, ROBOT_ID);
+            assert.equal(e.count, countIn('PLANT', gs.hand(ROBOT_ID)));
+            playRound(gs);                                   // finish round 1
+            const p = gs.activeId()!;
+            assert.ok(gs.peekTargets(p).indexOf(ROBOT_ID) !== -1);
+            const peek = gs.reveal(p, gs.hidden(p)[0], ROBOT_ID);
+            assert.ok(gs.hand(ROBOT_ID).indexOf(peek.letter) !== -1);
+        });
+
+        it('playground after rounds 1–4, hooky guesses after 5–7, robot hand scored', () => {
+            const gs = two();
+            giveClues(gs);
+            for (let r = 1; r <= 4; r++) { playRound(gs); assert.equal(gs.playgroundShown().length, r); }
+            playRound(gs);
+            assert.equal(gs.phase(), Phase.Guess);
+            assert.equal(gs.get_data().round, 5);
+            playToFinal(gs);
+            assert.equal(gs.get_data().round, 7);
+            const [p0, p1] = gs.order();
+            assert.throws(() => gs.submit_final(p0, { [p1]: gs.hand(p1) }), /every other classroom/);
+            gs.submit_final(p0, { [p1]: gs.hand(p1), [ROBOT_ID]: gs.hand(ROBOT_ID) });
+            gs.submit_final(p1, allWrong(gs, p1));
+            const res = gs.get_data().results!;
+            const r0 = res.find(r => r.id === p0)!;
+            assert.equal(res.length, 2);
+            assert.equal(r0.handPoints, 12);
+            assert.equal(r0.bonus, 2);
         });
     });
 
@@ -448,8 +505,8 @@ describe('Hooky', () => {
             return { test, props, ids, as };
         }
 
-        it('refuses to start with fewer than 3 players', () => {
-            const test = new GameRuleTest('hooky', 1);
+        it('refuses to start with fewer than 2 players', () => {
+            const test = new GameRuleTest('hooky', 0);
             assert.throws(() => test.invokeHostMethod('startGame'));
         });
 

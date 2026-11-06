@@ -37,6 +37,9 @@ const nameOf = (hk: HKPublic, id: string | null, me?: string) =>
 
 const playerOf = (hk: HKPublic, id: string | null): HKPlayer | undefined => hk.players.find(p => p.id === id);
 
+/** The people at the table (not the robot classroom of the 2-player variant). */
+const humans = (hk: HKPublic) => hk.players.filter(p => !p.isRobot);
+
 // ---------------------------------------------------------------------------
 // Rules
 // ---------------------------------------------------------------------------
@@ -53,12 +56,14 @@ export const RulesView: React.FC = () => (
             <table className="hk-setup-table">
                 <thead><tr><th>Players</th><th>Hand</th><th>Playground</th><th>Rounds</th></tr></thead>
                 <tbody>
-                    {[3, 4, 5, 6].map(n => (
-                        <tr key={n}><td>{n}{n === 6 ? '*' : ''}</td><td>{SETUPS[n].hand}</td><td>{SETUPS[n].playground}</td><td>{SETUPS[n].rounds}</td></tr>
+                    {[2, 3, 4, 5, 6].map(n => (
+                        <tr key={n}><td>{n}{n === 2 || n === 6 ? '*' : ''}</td><td>{SETUPS[n].hand}{SETUPS[n].robot ? ` + ${SETUPS[n].robot}🤖` : ''}</td><td>{SETUPS[n].playground}</td><td>{SETUPS[n].rounds}</td></tr>
                     ))}
                 </tbody>
             </table>
-            <p className="hk-muted">* 6 players is a house variant: 3 Playground cards start face up and the game is 5 rounds long.</p>
+            <p className="hk-muted">* House variants. <b>2 players:</b> a third classroom of {SETUPS[2].robot} students is run by
+                the <b>Robo-teacher</b>. It never takes a turn, but you can ask it questions, peek at it, and name its students at
+                the end like anyone else&rsquo;s. <b>6 players:</b> 3 Playground cards start face up and the game is 5 rounds long.</p>
         </section>
         <section>
             <h3>Introductions</h3>
@@ -127,7 +132,7 @@ const LobbyBody: React.FC<{ mp: any; lobby?: HKLobbyInfo; host: boolean }> = ({ 
                 </div>
             )}
             {ok && s
-                ? <p className="hk-muted center">{n} players: {s.hand} cards each, {s.playground} on the Playground, {s.rounds} rounds.</p>
+                ? <p className="hk-muted center">{n} players: {s.hand} cards each{s.robot ? `, ${s.robot} in the Robo-teacher's classroom` : ''}, {s.playground} on the Playground, {s.rounds} rounds.</p>
                 : <p className="hk-warn">{n} player{n > 1 ? 's' : ''} here. Hooky needs {MIN_PLAYERS} to {MAX_PLAYERS}.{host ? ' Starting now will do nothing.' : ''}</p>}
             {!host && <div className="hk-waiting"><Face letter="Z" size={44} sleepy /> Waiting for the host to ring the bell…</div>}
         </div>
@@ -201,11 +206,11 @@ const Banner: React.FC<{ hk: HKPublic; my: HKPrivate }> = ({ hk, my }) => {
                 : (hk.turn.asked ? <>{active?.name} might show &amp; tell…</> : <>{active?.name} is thinking of a word…</>);
             break;
         case Phase.Guess:
-            text = <>Hooky check! Who&rsquo;s skipping class? ({hk.lockedIn.length}/{hk.players.length} locked)</>;
+            text = <>Hooky check! Who&rsquo;s skipping class? ({hk.lockedIn.length}/{humans(hk).length} locked)</>;
             cls = 'bell';
             break;
         case Phase.Final:
-            text = <>Final bell! Name everyone&rsquo;s hand. ({hk.finalSubmitted.length}/{hk.players.length} done)</>;
+            text = <>Final bell! Name everyone&rsquo;s hand. ({hk.finalSubmitted.length}/{humans(hk).length} done)</>;
             cls = 'bell';
             break;
         case Phase.Done:
@@ -222,6 +227,29 @@ const Banner: React.FC<{ hk: HKPublic; my: HKPrivate }> = ({ hk, my }) => {
     );
 };
 
+export const TELL_SECONDS = 10;
+
+/**
+ * After asking, while Show & tell is still on offer: a banner that counts down
+ * TELL_SECONDS and then ends the turn. Tapping it stops the clock and opens the
+ * card picker on the Class tab.
+ */
+const TellCountdown: React.FC<{ left: number; onTap: () => void }> = ({ left, onTap }) => {
+    const secs = Math.max(0, Math.ceil(left / 1000));
+    const frac = Math.max(0, Math.min(1, left / (TELL_SECONDS * 1000)));
+    return (
+        <button type="button" className="hk-banner mine hk-tell-banner" onClick={onTap}
+            aria-label={`Show and tell. Your turn ends in ${secs} seconds unless you tap.`}>
+            <span className="hk-tell-ring" style={{ '--f': frac } as any}><b>{secs}</b></span>
+            <span className="txt">
+                <span className="big">Show &amp; tell?</span>
+                <span className="small">Tap to flip a card &amp; peek · turn ends in {secs}s</span>
+            </span>
+            <span className="hk-tell-bar" style={{ transform: `scaleX(${frac})` }} />
+        </button>
+    );
+};
+
 const Classroom: React.FC<{ hk: HKPublic; my: HKPrivate }> = ({ hk, my }) => {
     const done = hk.phase === Phase.Done;
     return (
@@ -229,11 +257,11 @@ const Classroom: React.FC<{ hk: HKPublic; my: HKPrivate }> = ({ hk, my }) => {
             <div className="hk-desks" style={{ '--n': hk.players.length } as any}>
                 {hk.players.map(p => {
                     const active = p.id === hk.activeId;
-                    const status = hk.phase === Phase.Guess ? (hk.lockedIn.indexOf(p.id) !== -1 ? 'locked' : 'thinking')
+                    const status = p.isRobot ? '' : hk.phase === Phase.Guess ? (hk.lockedIn.indexOf(p.id) !== -1 ? 'locked' : 'thinking')
                         : hk.phase === Phase.Final ? (hk.finalSubmitted.indexOf(p.id) !== -1 ? 'locked' : 'thinking') : '';
                     const cards = done && hk.hands ? hk.hands[p.id] : null;
                     return (
-                        <div key={p.id} className={['hk-desk', active ? 'active' : '', p.id === my.me ? 'me' : '', status].join(' ')}>
+                        <div key={p.id} className={['hk-desk', active ? 'active' : '', p.id === my.me ? 'me' : '', p.isRobot ? 'robot' : '', status].join(' ')}>
                             <div className="hk-desk-who">
                                 <Avatar p={p} size={34} />
                                 {active && <span className="hk-pencil" aria-hidden="true">✎</span>}
@@ -448,23 +476,94 @@ interface MainState {
     finalOpp: string | null;
     finalPicks: Record<string, string[]> | null;
     plane: number | null;
+    /** Show & tell countdown: when the turn auto-ends (ms epoch), and the turn it belongs to. */
+    tellDeadline: number | null;
+    tellTurn: string | null;
+    now: number;
+    viewReq: { view: string; id: number } | null;
 }
 
 export class HKMainPage extends React.Component<HKViewProps, MainState> {
     public state: MainState = {
         notes: {}, notesGame: null, notesTab: 'sheet', focus: null, compact: false, orient: loadOrient(), filter: 'all',
         target: null, word: '', confirm: null, showTell: false, tellCard: null, tellTarget: null, peekShow: null,
-        guessPick: [], guessRound: null, finalOpp: null, finalPicks: null, plane: null
+        guessPick: [], guessRound: null, finalOpp: null, finalPicks: null, plane: null,
+        tellDeadline: null, tellTurn: null, now: Date.now(), viewReq: null
     };
     private timers: any[] = [];
+    private tellTick: any = null;
+    private tellRef = React.createRef<HTMLDivElement>();
 
     private mp(): any { return this.props.MP; }
     private later(fn: () => void, ms: number) { this.timers.push(setTimeout(fn, ms)); }
 
     // ---- lifecycle --------------------------------------------------------
 
-    componentDidMount() { this.syncNotes(); this.syncPhaseState(null); }
-    componentWillUnmount() { this.timers.forEach(t => clearTimeout(t)); }
+    componentDidMount() { this.syncNotes(); this.syncPhaseState(null); this.syncTellTimer(); }
+    componentWillUnmount() { this.timers.forEach(t => clearTimeout(t)); this.stopTellTick(); }
+
+    // ---- show & tell countdown -------------------------------------------
+
+    /** Key for "this turn of mine": the countdown runs at most once per turn. */
+    private turnKey(): string {
+        const { hk } = this.props;
+        return `${hk.gameId}-${hk.round}-${hk.activeId}`;
+    }
+
+    /** Asked, still allowed to reveal, and the card picker isn't open. */
+    private tellOffered(): boolean {
+        const { hk, my } = this.props;
+        return !!hk && !!my && hk.phase === Phase.Ask && hk.activeId === my.me && hk.turn.asked && my.canReveal && !this.state.showTell;
+    }
+
+    private syncTellTimer() {
+        if (!this.props.hk || !this.props.my) return;
+        const key = this.turnKey();
+        if (this.tellOffered()) {
+            if (this.state.tellTurn !== key) {
+                // first time this turn: start the clock
+                this.setState({ tellTurn: key, tellDeadline: Date.now() + TELL_SECONDS * 1000, now: Date.now() });
+                this.startTellTick();
+            }
+        } else if (this.state.tellDeadline != null) {
+            this.setState({ tellDeadline: null });
+            this.stopTellTick();
+        }
+    }
+
+    private startTellTick() {
+        this.stopTellTick();
+        this.tellTick = setInterval(() => {
+            const dl = this.state.tellDeadline;
+            if (dl == null) { this.stopTellTick(); return; }
+            const now = Date.now();
+            if (now >= dl) {
+                this.stopTellTick();
+                this.setState({ tellDeadline: null });
+                if (this.tellOffered()) this.mp().endTurn();
+            } else {
+                if (Math.ceil((dl - now) / 1000) !== Math.ceil((dl - this.state.now) / 1000)) sfx.tap();
+                this.setState({ now });
+            }
+        }, 100);
+    }
+
+    private stopTellTick() {
+        if (this.tellTick) { clearInterval(this.tellTick); this.tellTick = null; }
+    }
+
+    /** Banner tapped: stop the clock, jump to the Class tab and open the card picker. */
+    private openTell = () => {
+        this.stopTellTick();
+        sfx.select();
+        this.setState({ tellDeadline: null, showTell: true, viewReq: { view: 'home', id: Date.now() } });
+        this.later(() => this.tellRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 120);
+    };
+
+    private tellBanner(): React.ReactNode {
+        if (this.state.tellDeadline == null || !this.tellOffered()) return null;
+        return <TellCountdown left={this.state.tellDeadline - this.state.now} onTap={this.openTell} />;
+    }
 
     private syncNotes() {
         const { hk, my } = this.props;
@@ -494,6 +593,7 @@ export class HKMainPage extends React.Component<HKViewProps, MainState> {
 
     componentDidUpdate(prev: HKViewProps) {
         this.syncNotes();
+        this.syncTellTimer();
         const a = prev.hk, b = this.props.hk;
         const my = this.props.my;
         if (!a || !b || !my) return;
@@ -613,24 +713,25 @@ export class HKMainPage extends React.Component<HKViewProps, MainState> {
         opponentsOf(hk, my.me).forEach(p => {
             const sure = LETTERS.filter(l => owners[l] === p.id);
             const marked = LETTERS.filter(l => !owners[l] && notes[cellKey(l, p.id)] === 'yes');
-            out[p.id] = [...sure, ...marked].slice(0, hk.setup.hand);
+            out[p.id] = [...sure, ...marked].slice(0, p.handSize);
         });
         return out;
     }
 
     private toggleFinal = (l: string) => {
         const { hk } = this.props;
+        const size = (id: string) => playerOf(hk, id)?.handSize || hk.setup.hand;
         const opp = this.state.finalOpp;
         const picks = { ...(this.state.finalPicks || {}) };
         if (!opp) return;
         const cur = picks[opp] || [];
         if (cur.indexOf(l) !== -1) picks[opp] = cur.filter(x => x !== l);
-        else if (cur.length < hk.setup.hand) { sfx.pop(cur.length % 5); picks[opp] = [...cur, l]; }
+        else if (cur.length < size(opp)) { sfx.pop(cur.length % 5); picks[opp] = [...cur, l]; }
         else { sfx.buzz(); return; }
         this.setState({ finalPicks: picks });
         // hop to the next unfinished opponent once this hand is full
-        if (picks[opp].length === hk.setup.hand) {
-            const next = opponentsOf(hk, this.props.my.me).find(p => (picks[p.id] || []).length < hk.setup.hand);
+        if (picks[opp].length === size(opp)) {
+            const next = opponentsOf(hk, this.props.my.me).find(p => (picks[p.id] || []).length < p.handSize);
             if (next) this.later(() => this.setState({ finalOpp: next.id }), 350);
         }
     };
@@ -659,13 +760,13 @@ export class HKMainPage extends React.Component<HKViewProps, MainState> {
         const hidden = my.hand.filter(l => (playerOf(hk, my.me)?.revealed || []).indexOf(l) === -1);
         if (!this.state.showTell) {
             return (
-                <button className="hk-btn ghost hk-tell-open" onClick={() => this.setState({ showTell: true })}>
+                <button className="hk-btn ghost hk-tell-open" onClick={() => this.setState({ showTell: true, tellDeadline: null })}>
                     Show &amp; tell: flip a card, peek at someone
                 </button>
             );
         }
         return (
-            <div className="hk-tell">
+            <div className="hk-tell" ref={this.tellRef}>
                 <div className="hk-label">1 · Pick one of your cards to show everyone</div>
                 <div className="hk-cards-row">
                     {hidden.map(l => (
@@ -736,7 +837,7 @@ export class HKMainPage extends React.Component<HKViewProps, MainState> {
                 <div className="hk-panel hk-action locked">
                     <h3>Locked in!</h3>
                     <div className="hk-row center">{mine.map(l => <StudentCard key={l} letter={l} size="sm" />)}</div>
-                    <p className="hk-muted center">Waiting for {hk.players.filter(p => hk.lockedIn.indexOf(p.id) === -1).map(p => p.name).join(', ')}…</p>
+                    <p className="hk-muted center">Waiting for {humans(hk).filter(p => hk.lockedIn.indexOf(p.id) === -1).map(p => p.name).join(', ')}…</p>
                 </div>
             );
         }
@@ -781,7 +882,7 @@ export class HKMainPage extends React.Component<HKViewProps, MainState> {
             return (
                 <div className="hk-panel hk-action locked">
                     <h3>Handed in!</h3>
-                    <p className="hk-muted center">Waiting for {hk.players.filter(p => hk.finalSubmitted.indexOf(p.id) === -1).map(p => p.name).join(', ')}…</p>
+                    <p className="hk-muted center">Waiting for {humans(hk).filter(p => hk.finalSubmitted.indexOf(p.id) === -1).map(p => p.name).join(', ')}…</p>
                 </div>
             );
         }
@@ -789,7 +890,8 @@ export class HKMainPage extends React.Component<HKViewProps, MainState> {
         const picks = this.state.finalPicks || {};
         const opp = this.state.finalOpp || opps[0]?.id;
         const owners = knownOwners(hk, my);
-        const n = hk.setup.hand;
+        const sizeOf = (id: string) => playerOf(hk, id)?.handSize || hk.setup.hand;
+        const n = sizeOf(opp);
         const cur = picks[opp] || [];
         const keys: Record<string, KeyState> = {};
         LETTERS.forEach(l => {
@@ -802,18 +904,18 @@ export class HKMainPage extends React.Component<HKViewProps, MainState> {
                 badge: elsewhere ? <span className="who" style={{ background: elsewhere.accent }} /> : undefined
             };
         });
-        const complete = opps.every(p => (picks[p.id] || []).length === n);
+        const complete = opps.every(p => (picks[p.id] || []).length === p.handSize);
         return (
             <div className="hk-panel hk-action">
                 <h3>Who sits where?</h3>
-                <p className="hk-muted">Name all {n} students in each classmate&rsquo;s hand. 1 point each, +1 for a perfect hand.</p>
+                <p className="hk-muted">Name every student in each other classroom. 1 point each, +1 for a perfect classroom.</p>
                 <div className="hk-opp-tabs">
                     {opps.map(p => {
                         const c = (picks[p.id] || []).length;
                         return (
-                            <button key={p.id} className={['hk-opp-tab', p.id === opp ? 'on' : '', c === n ? 'full' : ''].join(' ')}
+                            <button key={p.id} className={['hk-opp-tab', p.id === opp ? 'on' : '', c === p.handSize ? 'full' : ''].join(' ')}
                                 onClick={() => this.setState({ finalOpp: p.id })}>
-                                <Avatar p={p} size={24} /><span className="nm">{p.name}</span><span className="c">{c}/{n}</span>
+                                <Avatar p={p} size={24} /><span className="nm">{p.name}</span><span className="c">{c}/{p.handSize}</span>
                             </button>
                         );
                     })}
@@ -830,7 +932,7 @@ export class HKMainPage extends React.Component<HKViewProps, MainState> {
                 <div className="hk-row">
                     <button className="hk-btn ghost small" onClick={() => this.setState({ finalPicks: this.picksFromNotes() })}>Refill from my notes</button>
                     <button className="hk-btn big" disabled={!complete} onClick={() => { sfx.lock(); this.mp().submitFinal(picks); }}>
-                        {complete ? 'Hand it in' : `${opps.filter(p => (picks[p.id] || []).length < n).length} hand(s) to finish`}
+                        {complete ? 'Hand it in' : `${opps.filter(p => (picks[p.id] || []).length < p.handSize).length} classroom(s) to finish`}
                     </button>
                 </div>
             </div>
@@ -881,7 +983,7 @@ export class HKMainPage extends React.Component<HKViewProps, MainState> {
                 <Backdrop />
                 {this.state.plane != null && <PaperPlane id={this.state.plane} />}
                 {!done && <RoundTrack hk={hk} />}
-                <Banner hk={hk} my={my} />
+                {this.tellBanner() || <Banner hk={hk} my={my} />}
                 {done && <Results hk={hk} my={my} onAgain={() => this.mp().restartGame()} onLobby={() => this.mp().backToLobby()} />}
                 <Classroom hk={hk} my={my} />
                 {!done && <Board hk={hk} my={my} notes={this.state.notes} />}
@@ -927,6 +1029,7 @@ export class HKMainPage extends React.Component<HKViewProps, MainState> {
                 'icon': 'clipboard-list', 'label': 'Notes',
                 'view': (
                     <NotesView hk={hk} my={my} notes={this.state.notes} tab={this.state.notesTab}
+                        banner={this.tellBanner()}
                         filter={this.state.filter}
                         onCell={this.onCell}
                         onTab={notesTab => this.setState({ notesTab })}
@@ -958,7 +1061,8 @@ export class HKMainPage extends React.Component<HKViewProps, MainState> {
             'links': links,
             'gameName': 'Hooky',
             'topBarContent': <span className="hk-topbar"><MuteToggle /></span>,
-            'roomClassName': needsMe ? 'attention-bg' : ''
+            'roomClassName': needsMe ? 'attention-bg' : '',
+            'requestView': this.state.viewReq
         });
     }
 }

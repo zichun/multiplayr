@@ -28,7 +28,10 @@ export interface GameRuleWrapperInterface {
     minPlayers?: number;
     maxPlayers?: number;
     mechanics?: string[];
+    complexity?: GameComplexity; // rough rules weight, used by the host page filter
 }
+
+export type GameComplexity = 'low' | 'medium' | 'high';
 
 export interface ViewPropsInterface {
     MP: MPType;

@@ -931,3 +931,49 @@ $clash: #e2394f;
 .hk-sheet-row.recess .hk-sheet-label { box-shadow: inset 4px 0 0 $mint; }
 .hk-cell.clash svg { background: $clash !important; animation: hk-shake .4s ease; }
 .hk-sheet-head.over { background: #ffd2d8; .cnt { color: $clash; font-weight: 900; } }
+
+// ---------------------------------------------------------------------------
+// Show & tell countdown banner
+// ---------------------------------------------------------------------------
+
+.hk-tell-banner {
+    appearance: none; font: inherit; color: $ink; cursor: pointer;
+    width: 100%; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: flex-start; gap: 10px; text-align: left;
+    padding: 8px 12px 12px;
+    -webkit-tap-highlight-color: transparent;
+    animation: hk-slide-in .3s ease both, hk-nudge 1s ease-in-out .3s infinite;
+    &:active { transform: translateY(2px); box-shadow: 0 1px 0 $ink; }
+    .txt { display: flex; flex-direction: column; line-height: 1.1; }
+    .big { font-family: $hand; font-size: 24px; }
+    .small { font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 700; opacity: .75; }
+}
+// A ring that drains as the seconds run out.
+.hk-tell-ring {
+    flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%;
+    background: conic-gradient($ink calc(var(--f) * 360deg), rgba($ink, .12) 0);
+    display: flex; align-items: center; justify-content: center;
+    b {
+        width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 2px solid $ink;
+        display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900;
+    }
+}
+.hk-tell-bar {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 5px;
+    background: $coral; transform-origin: left center; transition: transform .1s linear;
+}
+// On the Notes tab it stays on screen while the sheet scrolls.
+.hk-notes > .hk-tell-banner { position: sticky; top: 4px; z-index: 6; margin: 0 0 10px; }
+
+@keyframes hk-nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+
+// ---------------------------------------------------------------------------
+// 2-player variant: the Robo-teacher's classroom
+// ---------------------------------------------------------------------------
+
+.hk-avatar.robot { background: linear-gradient(160deg, #c7cedb, #8a94a6); color: $ink; }
+.hk-desk.robot {
+    background: repeating-linear-gradient(135deg, #f1f3f8 0 8px, #e8ebf2 8px 16px);
+    border-style: dashed;
+    .hk-avatar { animation: hk-bob 3s ease-in-out infinite; }
+}

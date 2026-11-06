@@ -20,7 +20,7 @@
  */
 
 import {
-    LETTERS, SETUPS, Setup, HOOKY_COUNT, MIN_PLAYERS, MAX_PLAYERS, WORD_LEN,
+    LETTERS, SETUPS, Setup, HOOKY_COUNT, MIN_PLAYERS, MAX_PLAYERS, WORD_LEN, ROBOT_ID,
     normaliseWord, isWellFormed, isListed, anagramKey, countIn, hookyPointsFor
 } from './HookyData';
 
@@ -170,6 +170,12 @@ export class HookyGameState {
             d.peeks[id] = [];
             d.hookyGuesses[id] = {};
         }
+        if (setup.robot) {
+            // 2-player variant: a third classroom run by the robot teacher. It never takes a
+            // turn, introduces itself, reveals or guesses; it only answers and can be peeked at.
+            d.hands[ROBOT_ID] = sorted(deck.splice(0, setup.robot));
+            d.revealed[ROBOT_ID] = [];
+        }
         d.playground = deck.splice(0, setup.playground);
         d.hooky = sorted(deck.splice(0, HOOKY_COUNT));
         if (deck.length !== 0) throw new Error('Deal did not use all 26 cards');
@@ -183,6 +189,12 @@ export class HookyGameState {
     public phase(): Phase { return this.data.phase; }
     public order(): string[] { return this.data.order; }
     public setup(): Setup { return this.data.setup; }
+
+    /** Every classroom that holds cards: the players in turn order, then the robot (2-player variant). */
+    public classes(): string[] {
+        const d = this.data;
+        return d.hands[ROBOT_ID] ? [...d.order, ROBOT_ID] : d.order;
+    }
 
     public activeId(): string | null {
         const d = this.data;
@@ -198,7 +210,7 @@ export class HookyGameState {
 
     /** Opponents this player may peek at after revealing (they still hold a hidden card). */
     public peekTargets(id: string): string[] {
-        return this.data.order.filter(o => o !== id && this.hidden(o).length > 0);
+        return this.classes().filter(o => o !== id && this.hidden(o).length > 0);
     }
 
     /** May `id` reveal right now? */
@@ -262,7 +274,7 @@ export class HookyGameState {
         if (d.phase !== Phase.Ask) throw new Error('Not the question phase');
         if (this.activeId() !== id) throw new Error('Not your turn');
         if (d.turn.asked) throw new Error('You already asked this turn');
-        if (target === id || d.order.indexOf(target) === -1) throw new Error('Ask another player');
+        if (target === id || this.classes().indexOf(target) === -1) throw new Error('Ask another player');
         const { word, unlisted } = this.checkWord(raw, force);
         if (this.usedKeys(target).has(anagramKey(word))) throw new Error('That player has already been asked those letters');
         const count = countIn(word, this.hand(target));
@@ -319,11 +331,12 @@ export class HookyGameState {
         if (d.order.indexOf(id) === -1) throw new Error('Not a player');
         if (d.finalGuesses[id]) throw new Error('Already submitted');
         const clean: Record<string, string[]> = {};
-        for (const opp of d.order) {
+        for (const opp of this.classes()) {
             if (opp === id) continue;
             const g = ((guesses || {})[opp] || []).map(l => String(l).toUpperCase());
-            if (g.length !== d.setup.hand || new Set(g).size !== g.length || g.some(l => LETTERS.indexOf(l) === -1)) {
-                throw new Error(`Name exactly ${d.setup.hand} different letters for every opponent`);
+            const size = this.hand(opp).length;
+            if (g.length !== size || new Set(g).size !== g.length || g.some(l => LETTERS.indexOf(l) === -1)) {
+                throw new Error(`Name exactly ${size} different letters for every other classroom`);
             }
             clean[opp] = sorted(g);
         }
@@ -384,7 +397,7 @@ export class HookyGameState {
                 return { round, letters, correct, points: correct.length * hookyPointsFor(d.setup, round) };
             });
             const fg = d.finalGuesses[id] || {};
-            const hands = d.order.filter(o => o !== id).map(target => {
+            const hands = this.classes().filter(o => o !== id).map(target => {
                 const guess = fg[target] || [];
                 const actual = new Set(d.hands[target]);
                 const correct = guess.filter(l => actual.has(l));

@@ -780,7 +780,7 @@ export const MPRULES = {
         rules: ['lobby', 'gameshell', 'hooky'],
         rule: HookyRule,
         icon: '🔔',
-        minPlayers: 3,
+        minPlayers: 2,
         maxPlayers: 6
     }
 };

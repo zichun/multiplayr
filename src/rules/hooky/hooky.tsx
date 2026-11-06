@@ -19,6 +19,7 @@ import {
 } from './HookyMethods';
 import { Phase } from './HookyGameState';
 import { HKPublic, HKPrivate, HKPlayer, HKLobbyInfo } from './HookyTypes';
+import { ROBOT_ID, ROBOT_NAME } from './HookyData';
 
 function identity(mp: MPType, id: string, idx: number) {
     const read = (key: string) => id === mp.hostId ? mp.getData(key) : mp.getPlayerData(id, key);
@@ -64,10 +65,14 @@ export const HookyRule: GameRuleInterface = {
 
         const seat = gs.get_player_order();
         const done = d.phase === Phase.Done;
-        const players: HKPlayer[] = d.order.map(id => ({
-            ...identity(mp, id, seat.indexOf(id)),
+        const players: HKPlayer[] = gs.classes().map(id => ({
+            ...(id === ROBOT_ID
+                ? { id, name: ROBOT_NAME, accent: '#8a94a6', icon: 0 }
+                : identity(mp, id, seat.indexOf(id))),
             revealed: [...d.revealed[id]],
-            hiddenCount: gs.hidden(id).length
+            hiddenCount: gs.hidden(id).length,
+            handSize: d.hands[id].length,
+            isRobot: id === ROBOT_ID
         }));
 
         const pub: HKPublic = {
@@ -96,7 +101,7 @@ export const HookyRule: GameRuleInterface = {
         const setProps = (clientId: string) => {
             const isPlayer = d.order.indexOf(clientId) !== -1;
             const usedKeys: Record<string, string[]> = {};
-            d.order.forEach(t => { usedKeys[t] = Array.from(gs.usedKeys(t)); });
+            gs.classes().forEach(t => { usedKeys[t] = Array.from(gs.usedKeys(t)); });
             const my: HKPrivate = {
                 me: clientId,
                 isHost: clientId === mp.hostId,

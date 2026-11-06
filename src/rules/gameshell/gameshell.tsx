@@ -36,7 +36,9 @@ interface HostShellMainInterface extends ViewPropsInterface {
     topBarContent?: any,
     gameName?: string,
     toastNotification?: ToastNotification | null,
-    roomClassName?: string
+    roomClassName?: string,
+    /** Ask the shell to switch tab; it switches once per new `id` (e.g. a button on one tab that leads to another). */
+    requestView?: { view: string, id: number | string } | null
 }
 
 interface HostShellMainState {
@@ -96,6 +98,10 @@ export const Shell: GameRuleInterface = {
                 const { toastNotification } = this.props;
                 if (toastNotification && toastNotification.id !== prevProps.toastNotification?.id) {
                     this.triggerToast(toastNotification);
+                }
+                const req = this.props.requestView;
+                if (req && req.id !== prevProps.requestView?.id && this.props.links && this.props.links[req.view]) {
+                    this.setState({ currentView: req.view });
                 }
             }
 

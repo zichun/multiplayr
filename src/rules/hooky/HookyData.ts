@@ -8,7 +8,7 @@ import { WORDS_RAW } from './HookyWords';
 export const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 export const WORD_LEN = 5;
 export const HOOKY_COUNT = 3;
-export const MIN_PLAYERS = 3;
+export const MIN_PLAYERS = 2;
 export const MAX_PLAYERS = 6;
 
 /** Original student names: one per letter card. */
@@ -28,10 +28,17 @@ export interface Setup {
     pgAfter: number[];
     /** After these rounds everyone secretly guesses the 3 Hooky letters. The last one is the final guess. */
     guessAfter: number[];
+    /** 2-player variant: size of the robot teacher's classroom (a hand nobody plays). */
+    robot?: number;
 }
 
-/** 3–5 from the rulebook; 6 is the house variant agreed with the user (see docs/hooky-design.md). */
+/** Seat id of the robot teacher's classroom in the 2-player variant. */
+export const ROBOT_ID = '__robot';
+export const ROBOT_NAME = 'Robo-teacher';
+
+/** 3–5 from the rulebook; 2 and 6 are house variants agreed with the user (see docs/hooky-design.md). */
 export const SETUPS: Record<number, Setup> = {
+    2: { hand: 7, playground: 4, rounds: 7, pgAtStart: 0, pgAfter: [1, 2, 3, 4], guessAfter: [5, 6, 7], robot: 5 },
     3: { hand: 7, playground: 2, rounds: 6, pgAtStart: 0, pgAfter: [1, 2], guessAfter: [4, 5, 6] },
     4: { hand: 5, playground: 3, rounds: 6, pgAtStart: 0, pgAfter: [1, 2, 3], guessAfter: [4, 5, 6] },
     5: { hand: 4, playground: 3, rounds: 6, pgAtStart: 0, pgAfter: [1, 2, 3], guessAfter: [4, 5, 6] },

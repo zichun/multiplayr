@@ -6,268 +6,264 @@
     <!-- Encourage the browser to revalidate this entry page rather than serve a stale copy. -->
     <meta http-equiv="Cache-Control" content="no-cache">
     <title>Multiplayr</title>
-    <!-- Grotesk Fonts for De Stijl Aesthetics -->
+    <!-- Favicon: the four header marks (square, circle, triangle, square). -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='1' y='1' width='14' height='14' fill='%23e1553a'/%3E%3Ccircle cx='24' cy='8' r='7' fill='%231c8c7d'/%3E%3Cpolygon points='8,17.5 15,31 1,31' fill='%23e3a81e'/%3E%3Crect x='17' y='17' width='14' height='14' fill='%2333507a'/%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;900&family=Outfit:wght@400;800&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
         :root {
-            --mondrian-red: #e62b1e;
-            --mondrian-red-hover: #ff3b30;
-            --mondrian-blue: #004d9b;
-            --mondrian-blue-hover: #007aff;
-            --mondrian-yellow: #facd15;
-            --mondrian-cream: #f4f3eb;
-            --mondrian-black: #000000;
-            --mondrian-white: #ffffff;
+            /* Mid-century palette — shared with host_p2p.html / join_p2p.html */
+            --bg:        #ece4d3;
+            --surface:   #fbf8f1;
+            --ink:       #221f1a;
+            --ink-soft:  #6b6455;
+            --hairline:  #ddd3bf;
+
+            --mustard:   #e3a81e;
+            --teal:      #1c8c7d;
+            --coral:     #e1553a;
+            --navy:      #33507a;
+            --olive:     #6e8b3d;
+            --plum:      #7b4b72;
+            --cream:     #fbf8f1;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; }
 
         body {
-            font-family: 'Space Grotesk', sans-serif;
-            background-color: var(--mondrian-cream);
+            background-color: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
-            overflow: hidden;
+            padding: 56px 24px 110px;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* The Mondrian Art Frame */
-        .art-frame {
-            border: 14px solid var(--mondrian-black);
-            background-color: var(--mondrian-black);
-            display: grid;
-            grid-template-columns: 1.6fr 2fr 1fr;
-            grid-template-rows: 140px 180px 140px;
-            gap: 12px; /* Thicker black grid lines */
-            max-width: 700px;
+        .landing {
             width: 100%;
-            box-shadow: 25px 25px 0px rgba(0, 0, 0, 0.12);
-            transition: box-shadow 0.3s ease;
+            max-width: 880px;
         }
 
-        .art-frame:hover {
-            box-shadow: 30px 30px 0px rgba(0, 0, 0, 0.18);
-        }
+        /* ---------- Header ---------- */
+        .site-header { margin-bottom: 44px; }
 
-        /* Base Cell Styles */
-        .cell {
-            background-color: var(--mondrian-white);
+        .site-header__marks {
             display: flex;
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+        .site-header__marks span { width: 26px; height: 26px; }
+        .site-header__marks .m-sq   { background: var(--coral); }
+        .site-header__marks .m-cir  { background: var(--teal); border-radius: 50%; }
+        .site-header__marks .m-tri  {
+            width: 0; height: 0; background: transparent;
+            border-left: 13px solid transparent;
+            border-right: 13px solid transparent;
+            border-bottom: 26px solid var(--mustard);
+        }
+        .site-header__marks .m-navy { background: var(--navy); }
+
+        .site-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(3rem, 9vw, 5.6rem);
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            line-height: 0.92;
+            margin: 0;
+        }
+
+        .site-subtitle {
+            font-size: 1.15rem;
+            font-weight: 500;
+            color: var(--ink-soft);
+            margin: 16px 0 0;
+            max-width: 44ch;
+        }
+
+        /* ---------- Action panels ---------- */
+        .actions {
+            display: grid;
+            grid-template-columns: 1.25fr 1fr;
+            gap: 22px;
+        }
+
+        .action {
             position: relative;
             overflow: hidden;
-        }
-
-        /* 1. Title Block (White, Spans Col 1 & 2) */
-        .cell-title {
-            grid-column: 1 / 3;
-            grid-row: 1 / 2;
-            align-items: flex-end;
-            padding: 24px;
-        }
-
-        h1 {
-            font-size: 3.5rem;
-            font-weight: 900;
-            color: var(--mondrian-black);
-            line-height: 0.9;
-            letter-spacing: -2px;
-            text-transform: uppercase;
-        }
-
-        /* 2. Yellow Block (Top Right) */
-        .cell-yellow {
-            grid-column: 3 / 4;
-            grid-row: 1 / 2;
-            background-color: var(--mondrian-yellow);
-        }
-
-        /* 3. Host Button Block (Red, Spans Row 2 & 3) */
-        .cell-host {
-            grid-column: 1 / 2;
-            grid-row: 2 / 4;
-            background-color: var(--mondrian-red);
-            transition: background-color 0.25s ease;
-        }
-
-        /* 4. Center-Right Decorative Block (Cream) */
-        .cell-cream {
-            grid-column: 2 / 4;
-            grid-row: 2 / 3;
-            background-color: var(--mondrian-cream);
-        }
-
-        /* 5. Bottom-Center Block (White) */
-        .cell-bottom-center {
-            grid-column: 2 / 3;
-            grid-row: 3 / 4;
-            background-color: var(--mondrian-white);
-        }
-
-        /* 6. Join Button Block (Blue, Bottom Right) */
-        .cell-join {
-            grid-column: 3 / 4;
-            grid-row: 3 / 4;
-            background-color: var(--mondrian-blue);
-            transition: background-color 0.25s ease;
-        }
-
-        /* Interactive Navigation Button Panels */
-        .nav-link {
             display: flex;
-            width: 100%;
-            height: 100%;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 260px;
+            padding: 28px 30px 30px;
             text-decoration: none;
-            align-items: center;
-            justify-content: center;
-            color: var(--mondrian-white);
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 900;
+            color: var(--cream);
+            transition: transform 0.14s ease;
+        }
+        .action:hover { transform: translateY(-5px); }
+        .action:focus-visible { outline: 4px solid var(--ink); outline-offset: 4px; }
+
+        .action--host { background: var(--coral); }
+        .action--join { background: var(--teal); }
+
+        .action__text,
+        .action__cta { position: relative; z-index: 1; }
+
+        .action__kicker {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 800;
             text-transform: uppercase;
-            text-align: center;
-            user-select: none;
-            cursor: pointer;
+            letter-spacing: 0.14em;
+            opacity: 0.8;
         }
 
-        /* Text inside the button cell */
-        .btn-text {
-            font-size: 1.8rem;
-            line-height: 1.1;
-            display: block;
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        .action__title {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(2.2rem, 5vw, 3rem);
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            line-height: 0.95;
+            margin: 10px 0 12px;
         }
 
-        /* Host Button Specifics */
-        .host-link .btn-text {
-            font-size: 2.2rem;
-            color: var(--mondrian-white);
-            transform: rotate(-90deg); /* Modern, asymmetrical text orientation */
+        .action__desc {
+            font-size: 1rem;
+            line-height: 1.5;
+            max-width: 30ch;
+            margin: 0 0 24px;
+            opacity: 0.92;
         }
 
-        /* Join Button Specifics */
-        .join-link .btn-text {
-            font-size: 1.4rem;
-            color: var(--mondrian-white);
+        .action__cta {
+            align-self: flex-start;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 800;
+            padding: 11px 24px;
+            border-radius: 999px;
+            background: var(--cream);
+            color: var(--ink);
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+        .action:hover .action__cta { background: var(--ink); color: var(--cream); }
+
+        /* Flat geometric shapes bled off the corner of each panel. */
+        .action__shape { position: absolute; pointer-events: none; z-index: 0; }
+        .action--host .shape-a {
+            right: -70px; bottom: -70px;
+            width: 220px; height: 220px;
+            border-radius: 50%;
+            background: var(--mustard);
+        }
+        .action--host .shape-b {
+            right: 120px; bottom: -28px;
+            width: 64px; height: 64px;
+            background: var(--navy);
+        }
+        .action--join .shape-a {
+            right: -36px; bottom: -20px;
+            width: 0; height: 0;
+            border-left: 90px solid transparent;
+            border-right: 90px solid transparent;
+            border-bottom: 150px solid var(--navy);
+        }
+        .action--join .shape-b {
+            right: 28px; top: 28px;
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            background: var(--mustard);
         }
 
-        /* Hover interactions reflecting retro print shift */
-        .cell-host:hover {
-            background-color: var(--mondrian-red-hover);
-        }
-
-        .cell-host:hover .btn-text {
-            transform: rotate(-90deg) translate(-4px, -4px);
-            text-shadow: 4px 4px 0px var(--mondrian-black);
-        }
-
-        .cell-join:hover {
-            background-color: var(--mondrian-blue-hover);
-        }
-
-        .cell-join:hover .btn-text {
-            transform: translate(-4px, -4px);
-            text-shadow: 4px 4px 0px var(--mondrian-black);
-        }
-
-        /* Build version + force-refresh control */
+        /* ---------- Build version + force refresh ---------- */
         .version-bar {
             position: fixed;
-            bottom: 12px;
+            bottom: 14px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             align-items: center;
             gap: 12px;
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 0.72rem;
-            color: var(--mondrian-black);
-            background: rgba(244, 243, 235, 0.92);
-            padding: 6px 10px 6px 14px;
-            border: 2px solid var(--mondrian-black);
+            font-size: 0.74rem;
+            color: var(--ink-soft);
+            background: rgba(251, 248, 241, 0.92);
+            padding: 5px 5px 5px 14px;
+            border: 1px solid var(--hairline);
+            border-radius: 999px;
             z-index: 100;
         }
         .version-label {
-            font-weight: 700;
-            letter-spacing: 0.02em;
+            font-weight: 600;
             white-space: nowrap;
         }
         .version-refresh {
-            font-family: inherit;
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: var(--mondrian-white);
-            background: var(--mondrian-black);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            color: var(--cream);
+            background: var(--ink);
             border: none;
-            padding: 5px 11px;
+            border-radius: 999px;
+            padding: 6px 14px;
             cursor: pointer;
             white-space: nowrap;
+            transition: background-color 0.15s ease;
         }
-        .version-refresh:hover { background: var(--mondrian-red); }
+        .version-refresh:hover { background: var(--coral); }
         .version-refresh:disabled { opacity: 0.6; cursor: default; }
 
-        /* Responsive scaling adjustments */
-        @media (max-width: 600px) {
-            .art-frame {
-                grid-template-rows: 100px 140px 100px;
-                gap: 8px;
-                border-width: 10px;
-            }
-            h1 {
-                font-size: 2.3rem;
-            }
-            .host-link .btn-text {
-                font-size: 1.6rem;
-            }
-            .join-link .btn-text {
-                font-size: 1.1rem;
-            }
+        @media (max-width: 640px) {
+            body { padding: 40px 16px 100px; align-items: flex-start; }
+            .site-header { margin-bottom: 32px; }
+            .actions { grid-template-columns: 1fr; gap: 16px; }
+            .action { min-height: 210px; padding: 24px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Piet Mondrian Grid Frame -->
-    <div class="art-frame">
-        
-        <!-- Row 1, Col 1-2: Title Cell -->
-        <div class="cell cell-title">
-            <h1>Multiplayr</h1>
-        </div>
+    <main class="landing">
+        <header class="site-header">
+            <div class="site-header__marks" aria-hidden="true">
+                <span class="m-sq"></span>
+                <span class="m-cir"></span>
+                <span class="m-tri"></span>
+                <span class="m-navy"></span>
+            </div>
+            <h1 class="site-title">Multiplayr</h1>
+            <p class="site-subtitle">Peer-to-peer game night. One screen hosts the table, everyone else joins from their phone.</p>
+        </header>
 
-        <!-- Row 1, Col 3: Decorative Yellow Block -->
-        <div class="cell cell-yellow"></div>
-
-        <!-- Row 2-3, Col 1: Red Host Room Action Cell -->
-        <div class="cell cell-host">
-            <a href="host_p2p.html" class="nav-link host-link">
-                <span class="btn-text">Host<br>Room</span>
+        <nav class="actions">
+            <a href="host_p2p.html" class="action action--host">
+                <span class="action__shape shape-a" aria-hidden="true"></span>
+                <span class="action__shape shape-b" aria-hidden="true"></span>
+                <div class="action__text">
+                    <div class="action__kicker">Start a table</div>
+                    <div class="action__title">Host a room</div>
+                    <p class="action__desc">Pick a game and share the room code with your friends.</p>
+                </div>
+                <span class="action__cta">Host &rarr;</span>
             </a>
-        </div>
 
-        <!-- Row 2, Col 2-3: Decorative Cream Block -->
-        <div class="cell cell-cream"></div>
-
-        <!-- Row 3, Col 2: Decorative White Block -->
-        <div class="cell cell-bottom-center"></div>
-
-        <!-- Row 3, Col 3: Blue Join Lobby Action Cell -->
-        <div class="cell cell-join">
-            <a href="join_p2p.html" class="nav-link join-link">
-                <span class="btn-text">Join<br>Lobby</span>
+            <a href="join_p2p.html" class="action action--join">
+                <span class="action__shape shape-a" aria-hidden="true"></span>
+                <span class="action__shape shape-b" aria-hidden="true"></span>
+                <div class="action__text">
+                    <div class="action__kicker">Got a code?</div>
+                    <div class="action__title">Join a game</div>
+                    <p class="action__desc">Enter the host&rsquo;s room code to take your seat.</p>
+                </div>
+                <span class="action__cta">Join &rarr;</span>
             </a>
-        </div>
-
-    </div>
+        </nav>
+    </main>
 
     <!-- Build version + manual cache buster -->
     <div class="version-bar">
