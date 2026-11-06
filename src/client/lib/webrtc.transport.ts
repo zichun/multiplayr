@@ -20,6 +20,21 @@
  *     game state (and the connectivity dot) reflect reality.
  *
  * isConnected() is derived from this liveness state, so the shell status dot is accurate.
+ *
+ * Network changes (e.g. 5G -> Wi-Fi)
+ * ----------------------------------
+ * A network switch kills both the data channels and the signaling WebSocket, usually
+ * without the old socket closing cleanly on the server. Two things keep us recoverable:
+ *
+ *   - Stable peer ID: the PeerServer only lets a peer re-register an ID it still holds if
+ *     it presents the same token. PeerJS generates a fresh random token per Peer, so we
+ *     pin one per peer ID (persisted per tab in sessionStorage) and always reconnect with it. Once
+ *     an ID has been opened we never regenerate it (that would silently change the room
+ *     ID for a host, or the player identity for a client); 'unavailable-id' is retried
+ *     with backoff instead.
+ *   - Fast detection: online / connection-change / tab-visible events trigger an immediate
+ *     heartbeat probe. If the probe gets no answer, the signaling socket is refreshed and
+ *     the data channel(s) rebuilt, instead of waiting for the full liveness timeout.
  */
 
 import { isFunction, uniqueId } from '../../common/utils';
@@ -59,6 +74,19 @@ export class WebRTCTransport implements ClientTransportInterface {
     // How many times we retry acquiring our peer ID when it is reported unavailable
     // (e.g. a stale previous session still holding the ID) before surfacing an error.
     private static readonly MAX_ID_ATTEMPTS = 3;
+    // How long a rejoin/resume (custom ID that has not opened yet in this page) keeps
+    // trying to reclaim an ID reported as taken. Must exceed the PeerServer's dead-socket
+    // timeout (60s by default) so a stale registration from a dropped network can expire.
+    private static readonly ID_RECLAIM_WINDOW_MS = 90000;
+    // Signaling (PeerServer WebSocket) reconnection backoff bounds.
+    private static readonly SIGNALING_RETRY_BASE_MS = 500;
+    private static readonly SIGNALING_RETRY_MAX_MS = 10000;
+    // After a network-change event, how long to wait for heartbeat traffic before treating
+    // the link as dead.
+    private static readonly PROBE_TIMEOUT_MS = 4000;
+    // Debounce for bursts of network-change events.
+    private static readonly NETWORK_CHANGE_DEBOUNCE_MS = 500;
+    private static readonly TOKEN_STORAGE_PREFIX = 'mp-peer-token:';
 
     private peer: any;
     private clientId: string;
@@ -103,6 +131,30 @@ export class WebRTCTransport implements ClientTransportInterface {
     // the background retry loops from spinning.
     private joinFailed = false;
 
+    // Signaling resilience state (see "Network changes" above).
+    private peerToken = '';
+    private peerHasOpened = false;
+    private idTakenSince = 0;
+    private signalingFailures = 0;
+    private signalingRetryTimeout: any = null;
+
+    // Network-change handling.
+    private networkChangeTimeout: any = null;
+    private probeTimeout: any = null;
+    private networkListenersAttached = false;
+    private readonly onNetworkChange = (event?: Event) => {
+        if (event && event.type === 'visibilitychange' &&
+            typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+            return;
+        }
+        const forceSignaling = !!(event && event.type === 'online');
+        if (this.networkChangeTimeout) clearTimeout(this.networkChangeTimeout);
+        this.networkChangeTimeout = setTimeout(() => {
+            this.networkChangeTimeout = null;
+            this.handleNetworkChange(forceSignaling);
+        }, WebRTCTransport.NETWORK_CHANGE_DEBOUNCE_MS);
+    };
+
     constructor(
         options: { roomId?: string; customPeerId?: string; iceServers?: any[] },
         cb?: (packet: ReturnPacketType) => any
@@ -113,11 +165,39 @@ export class WebRTCTransport implements ClientTransportInterface {
         this.clientId = options.customPeerId || ('mp-' + Math.floor(100000 + Math.random() * 900000).toString());
         this.roomId = options.roomId ? (options.roomId.startsWith('mp-') ? options.roomId : 'mp-' + options.roomId) : undefined;
 
+        this.peerToken = this.loadPeerToken(this.clientId);
+
         this.initPeer();
         this.startMonitor();
+        this.attachNetworkListeners();
+    }
+
+    /**
+     * The PeerServer token for a peer ID. Reusing it lets us re-register the same ID while
+     * the server still holds a stale registration (after a network switch or page reload).
+     */
+    private loadPeerToken(peerId: string): string {
+        const key = WebRTCTransport.TOKEN_STORAGE_PREFIX + peerId;
+        try {
+            const stored = window.sessionStorage.getItem(key);
+            if (stored) return stored;
+        } catch (e) {
+            // Storage unavailable (private mode etc.); fall back to an in-memory token.
+        }
+        const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+        try {
+            window.sessionStorage.setItem(key, token);
+        } catch (e) {
+            // Ignore
+        }
+        return token;
     }
 
     private initPeer() {
+        if (this.recreateTimeout) {
+            clearTimeout(this.recreateTimeout);
+            this.recreateTimeout = null;
+        }
         if (this.peer) {
             try {
                 this.peer.destroy();
@@ -138,6 +218,7 @@ export class WebRTCTransport implements ClientTransportInterface {
         console.log('Initializing PeerJS client with ID:', this.clientId);
         this.peer = new Peer(this.clientId, {
             debug: 2,
+            token: this.peerToken,
             config: {
                 iceServers: this.options.iceServers || [
                     { urls: 'stun:stun.l.google.com:19302' },
@@ -150,8 +231,13 @@ export class WebRTCTransport implements ClientTransportInterface {
         this.peer.on('open', (id: string) => {
             console.log('PeerJS connection established. My Peer ID is:', id);
             this.clientId = id;
-            // We successfully acquired our peer ID, so reset the collision counter.
+            // We successfully acquired our peer ID: from now on it is our identity (and,
+            // for a host, the room ID), so it must never be regenerated.
             this.idAttempts = 0;
+            this.peerHasOpened = true;
+            this.idTakenSince = 0;
+            this.signalingFailures = 0;
+            this.clearSignalingRetry();
             if (this.initialCallback) {
                 this.initialCallback({
                     success: true,
@@ -175,8 +261,10 @@ export class WebRTCTransport implements ClientTransportInterface {
         });
 
         this.peer.on('disconnected', () => {
-            console.warn('PeerJS disconnected from signaling server. Attempting to reconnect peer...');
-            this.attemptSignalingReconnect();
+            console.warn('PeerJS disconnected from signaling server. Scheduling signaling reconnect...');
+            // Scheduled (not immediate): PeerJS also emits 'disconnected' when the server
+            // rejects our ID, and reconnecting synchronously would hammer the server.
+            this.scheduleSignalingReconnect();
         });
 
         // Listen for incoming peer connections (only active on Host)
@@ -189,7 +277,22 @@ export class WebRTCTransport implements ClientTransportInterface {
         const errType = err.type;
         console.warn(`Handling PeerJS error: ${errType}`);
 
-        if (errType === 'unavailable-id') {
+        if (errType === 'unavailable-id' && (this.peerHasOpened || this.options.customPeerId)) {
+            // This ID is our identity (already opened here, or a rejoin/resume). Most likely
+            // the server still holds a stale registration from before a network switch or
+            // reload. Keep the ID and retry with backoff until that registration expires.
+            if (!this.idTakenSince) this.idTakenSince = Date.now();
+            const elapsed = Date.now() - this.idTakenSince;
+            if (!this.peerHasOpened && elapsed > WebRTCTransport.ID_RECLAIM_WINDOW_MS) {
+                console.error('Peer ID remained unavailable for the whole reclaim window. Giving up.');
+                this.failInit('This player is already connected (client ID "' + this.clientId +
+                    '" is in use). Close the other tab or device using it and try again, or join as a new player.');
+                return;
+            }
+            console.warn(`Peer ID ${this.clientId} is still registered on the server (${Math.round(elapsed / 1000)}s). Retrying with the same ID...`);
+            this.signalingFailures++;
+            this.scheduleSignalingReconnect();
+        } else if (errType === 'unavailable-id') {
             this.idAttempts++;
 
             if (this.idAttempts > WebRTCTransport.MAX_ID_ATTEMPTS) {
@@ -205,13 +308,11 @@ export class WebRTCTransport implements ClientTransportInterface {
 
             console.warn(`Peer ID is unavailable (attempt ${this.idAttempts}/${WebRTCTransport.MAX_ID_ATTEMPTS}). Retrying in 2 seconds...`);
 
-            // If the collision occurs on a generated ID, regenerate it before retrying.
-            // For a custom (rejoin) ID we keep it and wait, in case the previous session
-            // is still being torn down by the signaling server.
-            if (!this.options.customPeerId) {
-                this.clientId = 'mp-' + Math.floor(100000 + Math.random() * 900000).toString();
-                console.log('Regenerated client ID due to collision:', this.clientId);
-            }
+            // A freshly generated ID that has never opened collided with someone else's:
+            // pick a new one before retrying.
+            this.clientId = 'mp-' + Math.floor(100000 + Math.random() * 900000).toString();
+            this.peerToken = this.loadPeerToken(this.clientId);
+            console.log('Regenerated client ID due to collision:', this.clientId);
 
             if (this.recreateTimeout) clearTimeout(this.recreateTimeout);
             this.recreateTimeout = setTimeout(() => {
@@ -234,11 +335,58 @@ export class WebRTCTransport implements ClientTransportInterface {
             errType === 'socket-closed' ||
             errType === 'socket-error'
         ) {
-            this.attemptSignalingReconnect();
+            this.signalingFailures++;
+            this.scheduleSignalingReconnect();
         }
     }
 
+    private clearSignalingRetry() {
+        if (this.signalingRetryTimeout) {
+            clearTimeout(this.signalingRetryTimeout);
+            this.signalingRetryTimeout = null;
+        }
+    }
+
+    /** Reconnect signaling after a backoff delay; a no-op if a retry is already pending. */
+    private scheduleSignalingReconnect() {
+        if (this.joinFailed || this.kicked) return;
+        if (this.signalingRetryTimeout || this.recreateTimeout) return;
+        const delay = Math.min(
+            WebRTCTransport.SIGNALING_RETRY_BASE_MS * Math.pow(2, this.signalingFailures),
+            WebRTCTransport.SIGNALING_RETRY_MAX_MS
+        ) + Math.floor(Math.random() * 250);
+        this.signalingRetryTimeout = setTimeout(() => {
+            this.signalingRetryTimeout = null;
+            this.attemptSignalingReconnect();
+        }, delay);
+    }
+
+    /**
+     * Drop and re-establish the signaling socket. Used when a network change has left the
+     * WebSocket half-dead (still "connected" from the browser's point of view). Existing
+     * data channels are untouched, and the stable token lets the server re-attach our ID.
+     */
+    private refreshSignaling() {
+        if (!this.peer || this.peer.destroyed) {
+            this.attemptSignalingReconnect();
+            return;
+        }
+        console.warn('Refreshing PeerJS signaling connection after network change...');
+        if (!this.peer.disconnected) {
+            try {
+                this.peer.disconnect(); // emits 'disconnected', which schedules a retry...
+            } catch (e) {
+                // Ignore
+            }
+        }
+        // ...but we want it now, not after the backoff.
+        this.clearSignalingRetry();
+        this.signalingFailures = 0;
+        this.attemptSignalingReconnect();
+    }
+
     private attemptSignalingReconnect() {
+        if (this.joinFailed || this.kicked) return;
         if (this.peer && !this.peer.destroyed) {
             if (this.peer.disconnected) {
                 console.log('Attempting to reconnect PeerJS signaling...');
@@ -266,16 +414,14 @@ export class WebRTCTransport implements ClientTransportInterface {
     }
 
     private monitorTick() {
-        // Keep the signaling socket healthy for both roles.
-        if (!this.peer || this.peer.destroyed) {
-            console.warn('Monitor: PeerJS is destroyed or missing. Reinitializing...');
-            this.initPeer();
-            return;
+        // Keep the signaling socket healthy for both roles. Retries go through the backoff
+        // scheduler so the monitor never short-circuits an ID-reclaim wait.
+        if (!this.joinFailed && !this.kicked) {
+            if (!this.peer || this.peer.destroyed || this.peer.disconnected) {
+                this.scheduleSignalingReconnect();
+            }
         }
-        if (this.peer.disconnected) {
-            console.warn('Monitor: PeerJS disconnected from signaling. Reconnecting...');
-            this.attemptSignalingReconnect();
-        }
+        if (!this.peer || this.peer.destroyed) return;
 
         const isHost = this.session ? this.session.isHost() : false;
 
@@ -283,6 +429,147 @@ export class WebRTCTransport implements ClientTransportInterface {
             this.sweepClientLiveness();
         } else {
             this.pingHostAndCheckLiveness();
+        }
+    }
+
+    private attachNetworkListeners() {
+        if (this.networkListenersAttached || typeof window === 'undefined') return;
+        this.networkListenersAttached = true;
+        window.addEventListener('online', this.onNetworkChange);
+        if (typeof document !== 'undefined') {
+            document.addEventListener('visibilitychange', this.onNetworkChange);
+        }
+        const connection = (navigator as any).connection;
+        if (connection && typeof connection.addEventListener === 'function') {
+            connection.addEventListener('change', this.onNetworkChange);
+        }
+    }
+
+    private detachNetworkListeners() {
+        if (!this.networkListenersAttached) return;
+        this.networkListenersAttached = false;
+        window.removeEventListener('online', this.onNetworkChange);
+        if (typeof document !== 'undefined') {
+            document.removeEventListener('visibilitychange', this.onNetworkChange);
+        }
+        const connection = (navigator as any).connection;
+        if (connection && typeof connection.removeEventListener === 'function') {
+            connection.removeEventListener('change', this.onNetworkChange);
+        }
+        if (this.networkChangeTimeout) {
+            clearTimeout(this.networkChangeTimeout);
+            this.networkChangeTimeout = null;
+        }
+        if (this.probeTimeout) {
+            clearTimeout(this.probeTimeout);
+            this.probeTimeout = null;
+        }
+    }
+
+    /**
+     * The network may have changed (or the tab woke up). Probe the data channel(s) with an
+     * immediate heartbeat; only if the probe goes unanswered do we tear things down. This
+     * keeps spurious events (e.g. a cellular quality change) from disrupting a healthy link.
+     */
+    private handleNetworkChange(forceSignaling: boolean) {
+        if (this.joinFailed || this.kicked) return;
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) return; // wait for 'online'
+
+        console.log('Network change detected. Probing connection health...');
+
+        if (!this.peer || this.peer.destroyed || this.peer.disconnected) {
+            this.clearSignalingRetry();
+            this.signalingFailures = 0;
+            this.attemptSignalingReconnect();
+        }
+
+        const isHost = this.session ? this.session.isHost() : false;
+        const probeStartedAt = Date.now();
+
+        if (isHost) {
+            const clientIds = Object.keys(this.connections);
+            if (clientIds.length === 0) {
+                // Nobody to probe with; only a definite 'online' transition is worth a
+                // signaling refresh so joiners can still reach us.
+                if (forceSignaling) this.refreshSignaling();
+                return;
+            }
+            for (const clientId of clientIds) {
+                const conn = this.connections[clientId];
+                try {
+                    if (conn && conn.open) conn.send({ __hb: 'ping', t: probeStartedAt });
+                } catch (e) {
+                    // Treated as dead below.
+                }
+            }
+        } else {
+            if (!this.roomId) return;
+            if (!this.isHostLinkAlive()) {
+                // Already known dead: refresh signaling and reconnect right away rather
+                // than waiting out the current backoff.
+                this.refreshSignaling();
+                if (this.reconnectTimeout) {
+                    clearTimeout(this.reconnectTimeout);
+                    this.reconnectTimeout = null;
+                }
+                this.reconnectAttempts = 0;
+                this.attemptReconnectToHost();
+                return;
+            }
+            try {
+                this.hostConnection.send({ __hb: 'ping', t: probeStartedAt });
+            } catch (e) {
+                // Treated as dead below.
+            }
+        }
+
+        if (this.probeTimeout) clearTimeout(this.probeTimeout);
+        this.probeTimeout = setTimeout(() => {
+            this.probeTimeout = null;
+            this.checkProbe(probeStartedAt);
+        }, WebRTCTransport.PROBE_TIMEOUT_MS);
+    }
+
+    private checkProbe(probeStartedAt: number) {
+        if (this.joinFailed || this.kicked) return;
+        const isHost = this.session ? this.session.isHost() : false;
+
+        if (isHost) {
+            const clientIds = Object.keys(this.connections);
+            let dead = 0;
+            for (const clientId of clientIds) {
+                const conn = this.connections[clientId];
+                const lastSeen = conn && conn.__mpLastSeen ? conn.__mpLastSeen : 0;
+                if (!conn || conn.open === false || lastSeen < probeStartedAt) {
+                    console.warn(`Network probe: client ${clientId} did not answer. Tearing down.`);
+                    this.teardownClientConnection(clientId, conn);
+                    dead++;
+                }
+            }
+            // If every client went silent at once, the host's own network most likely
+            // changed: its signaling socket is probably half-dead too, and clients need it
+            // to reach us again.
+            if (clientIds.length > 0 && dead === clientIds.length) {
+                this.refreshSignaling();
+            }
+        } else {
+            if (this.isHostLinkAlive() && this.lastHostSeen >= probeStartedAt) {
+                console.log('Network probe: host link is healthy.');
+                return;
+            }
+            console.warn('Network probe: host did not answer. Refreshing signaling and reconnecting...');
+            this.markHostDisconnected();
+            this.refreshSignaling();
+            // Abandon any in-flight attempt; it was probably started on the old network.
+            this.clearConnectTimeout();
+            this.connecting = false;
+            this.isReconnecting = false;
+            if (this.reconnectTimeout) {
+                clearTimeout(this.reconnectTimeout);
+                this.reconnectTimeout = null;
+            }
+            this.reconnectAttempts = 0;
+            this.attemptReconnectToHost();
         }
     }
 
@@ -528,6 +815,7 @@ export class WebRTCTransport implements ClientTransportInterface {
         });
 
         conn.on('close', () => {
+            if (this.hostConnection !== conn) return; // A superseded connection; ignore.
             console.warn('Disconnected from Host.');
             this.connecting = false;
             this.markHostDisconnected();
@@ -538,6 +826,7 @@ export class WebRTCTransport implements ClientTransportInterface {
 
         conn.on('error', (err: any) => {
             console.error('WebRTC host connection error:', err);
+            if (this.hostConnection !== conn) return;
             this.connecting = false;
             this.markHostDisconnected();
             this.attemptReconnectToHost();
@@ -627,7 +916,8 @@ export class WebRTCTransport implements ClientTransportInterface {
         // Application-level heartbeat handling.
         if (data.__hb) {
             if (data.__hb === 'ping') {
-                // Only hosts answer pings.
+                // Clients ping the host on every monitor tick; the host only pings clients
+                // when probing after a network change. Either side answers.
                 try {
                     if (conn && conn.open) conn.send({ __hb: 'pong', t: data.t });
                 } catch (e) {
@@ -723,14 +1013,17 @@ export class WebRTCTransport implements ClientTransportInterface {
 
         if (!this.peer || this.peer.destroyed) {
             console.warn('Reconnect: peer is destroyed or null. Reinitializing and retrying...');
-            this.initPeer();
+            this.scheduleSignalingReconnect();
             this.scheduleReconnect();
             return;
         }
 
-        if (this.peer.disconnected) {
-            console.warn('Reconnect: peer disconnected from signaling. Reconnecting signaling first...');
-            this.attemptSignalingReconnect();
+        if (this.peer.disconnected || !this.peer.open) {
+            // PeerJS silently drops signaling messages (our offer) while its socket is
+            // (re)opening, so connecting now would just stall. The peer 'open' handler
+            // retries as soon as signaling is up; the scheduled retry is a fallback.
+            console.warn('Reconnect: signaling not ready yet. Waiting for it before connecting...');
+            if (this.peer.disconnected) this.scheduleSignalingReconnect();
             this.scheduleReconnect();
             return;
         }
@@ -741,8 +1034,12 @@ export class WebRTCTransport implements ClientTransportInterface {
         console.log(`Reconnection attempt #${this.reconnectAttempts} to Host Room ${this.roomId}...`);
 
         if (this.hostConnection) {
+            // Detach first: closing fires the old connection's 'close' handler, which must
+            // not reset the state of the attempt we are about to start.
+            const oldConn = this.hostConnection;
+            this.hostConnection = null;
             try {
-                this.hostConnection.close();
+                oldConn.close();
             } catch (e) {
                 // Ignore
             }
@@ -794,6 +1091,7 @@ export class WebRTCTransport implements ClientTransportInterface {
         });
 
         conn.on('close', () => {
+            if (this.hostConnection !== conn) return; // A superseded connection; ignore.
             console.warn('WebRTC reconnection closed.');
             this.connecting = false;
             this.markHostDisconnected();
@@ -803,6 +1101,7 @@ export class WebRTCTransport implements ClientTransportInterface {
 
         conn.on('error', (err: any) => {
             console.error('WebRTC reconnection error:', err);
+            if (this.hostConnection !== conn) return;
             this.connecting = false;
             this.markHostDisconnected();
             this.isReconnecting = false;
@@ -903,6 +1202,8 @@ export class WebRTCTransport implements ClientTransportInterface {
             this.reconnectTimeout = null;
         }
         this.clearConnectTimeout();
+        this.clearSignalingRetry();
+        this.detachNetworkListeners();
         if (this.monitorInterval) {
             clearInterval(this.monitorInterval);
             this.monitorInterval = null;
