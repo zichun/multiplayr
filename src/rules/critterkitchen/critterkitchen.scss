@@ -1,0 +1,706 @@
+/**
+ * critterkitchen.scss — flat, soft, bright "bistro" skin for Critter Kitchen.
+ *
+ * Flat minimalist skin (DESIGN_GUIDE §10.10): warm cream ground, white rounded
+ * panels with hairline borders, no offset shadows, selection as inset rings.
+ * Colour comes from the ingredients and locations themselves. Motion: tokens pop
+ * onto stalls, chefs hop into queues, the active stall breathes, cards flip in,
+ * stars bump, plates glow when they score, results cascade with confetti — all
+ * disabled under prefers-reduced-motion. Everything is scoped under `.ck-*`.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+
+$ink: #33313b;
+$muted: #8a8494;
+$cream: #fff8ef;
+$panel: #ffffff;
+$line: #f0e6d8;
+$soft: #fbf3e8;
+$coral: #ef7a54;
+$mint: #4bb780;
+$berry: #df5583;
+$gold: #f5b82e;
+$navy: #46508f;
+$bad: #e2506a;
+$r: 16px;
+
+@mixin panel {
+    background: $panel;
+    border: 1px solid $line;
+    border-radius: $r;
+}
+
+// ---------------------------------------------------------------------------
+// keyframes
+// ---------------------------------------------------------------------------
+
+@keyframes ck-pop { 0% { transform: scale(.4); opacity: 0; } 70% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes ck-hop { 0% { transform: translateY(-14px) scale(.7); opacity: 0; } 60% { transform: translateY(2px) scale(1.05); opacity: 1; } 100% { transform: none; } }
+@keyframes ck-breathe { 0%, 100% { box-shadow: 0 0 0 3px var(--loc), 0 0 0 0 rgba(0, 0, 0, 0); } 50% { box-shadow: 0 0 0 3px var(--loc), 0 0 0 9px rgba(255, 196, 120, .25); } }
+@keyframes ck-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes ck-flip { 0% { transform: perspective(500px) rotateY(90deg); opacity: .2; } 100% { transform: perspective(500px) rotateY(0); opacity: 1; } }
+@keyframes ck-bump { 0% { transform: scale(1); } 40% { transform: scale(1.5); color: $gold; } 100% { transform: scale(1); } }
+@keyframes ck-slide { 0% { transform: translateY(8px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes ck-fall { 0% { transform: translateY(-20px) rotate(0); opacity: 1; } 100% { transform: translateY(420px) rotate(540deg); opacity: 0; } }
+@keyframes ck-wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+@keyframes ck-shine { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+// ---------------------------------------------------------------------------
+// primitives
+// ---------------------------------------------------------------------------
+
+.ck-icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    vertical-align: middle;
+    svg, .expressive-vector-icon { width: 100% !important; height: 100% !important; display: block; }
+}
+
+.ck-muted { color: $muted; font-size: .86em; }
+.ck-warn { color: $bad; font-weight: 700; }
+.ck-ok { color: $mint; font-weight: 700; }
+
+.ck-btn {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    border: 0;
+    border-radius: 999px;
+    padding: 10px 18px;
+    min-height: 44px;
+    background: $soft;
+    color: $ink;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: transform .15s, background .2s, box-shadow .2s, opacity .2s;
+    &:hover:not(:disabled) { transform: translateY(-1px); background: #f6ebdc; }
+    &:active:not(:disabled) { transform: translateY(1px) scale(.98); }
+    &:disabled { opacity: .45; cursor: default; }
+    &.primary { background: $coral; color: #fff; box-shadow: 0 2px 0 #d45a33; &:hover:not(:disabled) { background: #f28a68; } }
+    &.ghost { background: transparent; box-shadow: inset 0 0 0 1.5px $line; &:hover:not(:disabled) { background: $soft; } }
+    &.small { min-height: 36px; padding: 6px 14px; font-size: 14px; }
+    &.tiny { min-height: 30px; padding: 4px 10px; font-size: 12px; }
+}
+
+// tokens
+.ck-tok {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    transition: transform .18s, filter .2s, opacity .2s, box-shadow .2s;
+    &.pop { animation: ck-pop .38s cubic-bezier(.2, .9, .3, 1.3) both; }
+    &.is-tap { cursor: pointer; &:hover { transform: translateY(-2px) scale(1.06); } }
+    &.is-sel { transform: translateY(-3px) scale(1.12); box-shadow: 0 0 0 3px #fff, 0 0 0 6px $ink; z-index: 2; }
+    &.is-dim { opacity: .32; filter: grayscale(.5); }
+    &.is-marked {
+        opacity: .45;
+        &::after {
+            content: '';
+            position: absolute; inset: 15%;
+            background: linear-gradient(45deg, transparent 44%, $bad 44%, $bad 56%, transparent 56%),
+                linear-gradient(-45deg, transparent 44%, $bad 44%, $bad 56%, transparent 56%);
+        }
+    }
+    &.k-spice, &.k-rumor { border-radius: 10px; }
+}
+.ck-tok-badge {
+    position: absolute;
+    top: -4px; right: -5px;
+    min-width: 1.45em; height: 1.45em;
+    padding: 0 .2em;
+    border-radius: 999px;
+    background: #fff;
+    color: $ink;
+    font-weight: 800;
+    line-height: 1.45em;
+    text-align: center;
+    box-shadow: 0 0 0 1.5px rgba(51, 49, 59, .12);
+    font-family: 'Outfit', sans-serif;
+}
+.ck-tok-spice { position: absolute; bottom: -5px; right: -6px; filter: drop-shadow(0 0 1.5px #fff); }
+.ck-tok-hat { position: absolute; bottom: -4px; left: -4px; }
+.ck-tok-count {
+    position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; font-weight: 800; background: $ink; color: #fff; border-radius: 8px; padding: 0 5px;
+}
+
+// chef heads
+.ck-chef {
+    position: relative;
+    display: inline-flex;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 2px var(--acc, #ccc);
+    animation: ck-hop .45s cubic-bezier(.2, .9, .3, 1.3) both;
+    &.zous { box-shadow: 0 0 0 2px var(--acc, #ccc), 0 0 0 4px #fff; }
+    &.ghost { opacity: .5; }
+    &.active { animation: ck-bob 1s ease-in-out infinite; box-shadow: 0 0 0 3px var(--acc, #ccc), 0 0 0 6px rgba(255, 255, 255, .9); }
+}
+.ck-chef-cap {
+    position: absolute; bottom: -4px; right: -4px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--acc, $ink); color: #fff;
+    font: 800 9px/14px 'Outfit', sans-serif; text-align: center;
+}
+
+.ck-starcount {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-weight: 800;
+    b { display: inline-block; min-width: 1ch; &.bump { animation: ck-bump .6s ease-out; } }
+}
+
+// cards
+.ck-card {
+    display: inline-block;
+    flex: 0 0 auto;
+    &.flip-in { animation: ck-flip .5s ease-out both; }
+    &.is-back { opacity: .9; }
+    &.secret .playing-card-face { box-shadow: inset 0 0 0 2px rgba(70, 80, 143, .35); }
+    &.jamie { position: relative; &::after { content: 'private'; position: absolute; bottom: -14px; left: 0; right: 0; text-align: center; font-size: 10px; color: $muted; } }
+    &.hippo .playing-card-face { box-shadow: inset 0 0 0 2px $berry; }
+
+    .playing-card-face.face-front { overflow: hidden; }
+    .card-header-region {
+        text-align: center;
+        padding: .6em 2.4em .5em !important;   // side room so corner chips never cover the name
+        min-height: 4.4em !important;
+        border-radius: 0 !important;
+    }
+    .card-header-text { width: 100%; align-items: center; }
+    .card-header-title {
+        color: #fff !important;
+        font-family: 'Outfit', sans-serif;
+        font-weight: 800 !important;
+        font-size: 1.5em !important;
+        line-height: 1.05;
+        letter-spacing: .01em;
+        text-transform: none !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        overflow-wrap: anywhere;
+    }
+    .card-header-subtitle {
+        color: rgba(255, 255, 255, .85) !important;
+        font-weight: 700 !important;
+        font-size: 1em !important;
+        letter-spacing: .08em;
+        margin-top: .15em;
+    }
+    .card-art-region { padding: .4em .8em 0 !important; }
+    .card-footer-region { padding: .55em .6em .7em !important; }
+    .card-footer-text {
+        font-family: 'Outfit', sans-serif;
+        line-height: 1.25 !important;
+        white-space: normal !important;
+        color: $ink !important;
+    }
+    .card-footer-inline-icon { vertical-align: -.22em; }
+    .card-data-region { padding: .3em 0 !important; }
+}
+.ck-card-challenge, .ck-card-rumor {
+    .card-data-region { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; }
+    .card-data-icon-item { background: transparent !important; padding: 0 !important; }
+}
+
+// ---------------------------------------------------------------------------
+// lobby
+// ---------------------------------------------------------------------------
+
+.ck-lobby {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 8px 12px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.ck-lobby-hero {
+    @include panel;
+    text-align: center;
+    padding: 18px 16px 14px;
+    background: linear-gradient(180deg, #fff3e3 0%, #fff 100%);
+    h2 { margin: 6px 0 4px; font-size: 28px; font-weight: 800; letter-spacing: .01em; color: $coral; }
+    p { margin: 0; color: $muted; }
+}
+.ck-hero-critters { display: flex; justify-content: center; gap: 6px; }
+.ck-hero-face { display: inline-flex; animation: ck-hop .6s cubic-bezier(.2, .9, .3, 1.3) both, ck-bob 2.4s 1s ease-in-out infinite; }
+.ck-lobby-opts { display: flex; flex-direction: column; gap: 8px; }
+.ck-toggle {
+    @include panel;
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; min-height: 52px;
+    text-align: left; cursor: pointer; font-family: inherit; color: $ink;
+    &:disabled { cursor: default; }
+    .ck-toggle-knob {
+        flex: 0 0 auto; width: 42px; height: 24px; border-radius: 999px; background: #e6ded2; position: relative; transition: background .2s;
+        &::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; }
+    }
+    &.on .ck-toggle-knob { background: $mint; &::after { transform: translateX(18px); } }
+    .ck-toggle-text { display: flex; flex-direction: column; small { color: $muted; } }
+}
+.ck-waiting { text-align: center; color: $muted; animation: ck-bob 2s ease-in-out infinite; }
+
+// ---------------------------------------------------------------------------
+// arena
+// ---------------------------------------------------------------------------
+
+.ck-arena {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+    background: $cream;
+    padding: 10px 10px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 100%;
+    box-sizing: border-box;
+}
+.ck-topbar { display: inline-flex; align-items: center; gap: 4px; font-weight: 800; }
+
+.ck-statusbar {
+    @include panel;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 8px 12px;
+    border-left: 5px solid var(--acc, $coral);
+}
+.ck-phase-line { font-weight: 800; font-size: 16px; animation: ck-slide .35s ease-out both; }
+
+.ck-track { display: flex; align-items: center; gap: 4px; }
+.ck-track-dot {
+    position: relative;
+    width: 26px; height: 26px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: $soft; color: $muted; font-size: 12px;
+    transition: background .3s, transform .3s;
+    b { position: relative; z-index: 1; }
+    .ck-icon { position: absolute; inset: 0; width: 100% !important; height: 100% !important; opacity: .55; }
+    &.past { background: #f2e7d6; color: #b9ad9c; }
+    &.now { background: $coral; color: #fff; transform: scale(1.18); .ck-icon { opacity: .25; } }
+    &.challenge.next b, &.critic.next b { color: $ink; }
+}
+.ck-track-day { width: 2px; height: 18px; background: $line; margin: 0 2px; border-radius: 2px; }
+
+// menu board
+.ck-menu {
+    @include panel;
+    display: flex; gap: 14px;
+    padding: 10px 12px 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.ck-menu-group { display: flex; flex-direction: column; gap: 6px; flex: 0 0 auto; }
+.ck-menu-label { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: $muted; small { font-weight: 600; letter-spacing: 0; text-transform: none; } }
+.ck-menu-cards { display: flex; gap: 6px; align-items: flex-start; }
+.ck-menu-sep { width: 2px; align-self: stretch; background: $line; border-radius: 2px; margin: 0 2px; }
+
+.ck-bench-slot { animation: ck-slide .35s ease-out both; }
+
+// panels
+.ck-panel {
+    @include panel;
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 10px;
+}
+.ck-panel-title {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px;
+    font-weight: 800; font-size: 17px;
+}
+
+// planning
+.ck-chefbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.ck-chefslot {
+    flex: 1 1 96px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 10px 6px 8px; min-height: 96px;
+    border: 0; border-radius: 14px;
+    background: $soft;
+    font-family: inherit; color: $ink; cursor: pointer;
+    box-shadow: inset 0 0 0 2px transparent;
+    transition: box-shadow .2s, background .2s, transform .15s;
+    &:hover:not(:disabled) { transform: translateY(-1px); }
+    &.sel { box-shadow: inset 0 0 0 3px $ink; background: #fff; }
+    &.set { background: #fff; box-shadow: inset 0 0 0 2px var(--loc); }
+    &.set.sel { box-shadow: inset 0 0 0 3px $ink; }
+    &:disabled { cursor: default; }
+}
+.ck-chefslot-name { font-weight: 800; font-size: 13px; }
+.ck-chefslot-loc { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: $muted; font-weight: 700; min-height: 18px; }
+.ck-chefbar-actions { display: flex; align-items: center; flex: 1 1 140px; justify-content: flex-end; }
+
+.ck-ready { display: flex; flex-wrap: wrap; gap: 6px; }
+.ck-ready-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 700; color: $muted;
+    padding: 4px 10px; border-radius: 999px; background: $soft;
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #d8cfc2; transition: background .3s; }
+    &.ready { color: $ink; .dot { background: var(--acc); box-shadow: 0 0 0 3px rgba(75, 183, 128, .18); } }
+}
+
+// shop banner
+.ck-shopbar {
+    @include panel;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px;
+    padding: 10px 12px;
+    border-left: 5px solid var(--acc, $coral);
+    &.mine { background: linear-gradient(90deg, #fff 0%, #fff6ea 100%); box-shadow: 0 0 0 2px var(--loc); }
+}
+.ck-shopbar-text { display: flex; flex-direction: column; flex: 1 1 160px; b { font-size: 16px; } span { color: $muted; font-size: 14px; } }
+.ck-shopbar-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ck-wild { display: inline-flex; align-items: center; gap: 4px; small { color: $muted; font-weight: 700; margin-right: 4px; } }
+
+// town board
+.ck-town {
+    display: flex; gap: 10px;
+    overflow-x: auto;
+    padding: 6px 4px 10px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+}
+.ck-loc {
+    flex: 0 0 168px;
+    scroll-snap-align: start;
+    display: flex; flex-direction: column;
+    background: #fff;
+    border-radius: $r;
+    box-shadow: 0 0 0 1px $line;
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s, opacity .3s;
+    &.tappable { cursor: pointer; &:hover { transform: translateY(-3px); box-shadow: 0 0 0 2px var(--loc); } }
+    &.now { animation: ck-breathe 1.8s ease-in-out infinite; }
+    &.mine { transform: translateY(-2px); }
+    &.done { opacity: .55; }
+}
+.ck-loc-head {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 10px;
+    background: var(--loc);
+    color: #fff;
+    .ck-loc-name { font-weight: 800; font-size: 13px; line-height: 1.1; flex: 1; }
+}
+.ck-loc-done { font-weight: 900; }
+.ck-loc-queues {
+    position: relative;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3px;
+    padding: 6px 6px 4px;
+    background: $soft;
+    min-height: 40px;
+}
+.ck-queue {
+    display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: 4px;
+    padding: 2px; border-radius: 10px; background: rgba(255, 255, 255, .7);
+    min-height: 32px;
+}
+.ck-queue-cap { width: 100%; text-align: center; font-size: 9px; font-weight: 800; color: #c4b8a6; line-height: 1; }
+.ck-queue-chef { position: relative; display: inline-flex; }
+.ck-queue-n {
+    position: absolute; top: -5px; left: -5px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: $gold; color: #fff; font: 800 9px/14px 'Outfit', sans-serif; text-align: center;
+}
+.ck-planned {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: rgba(255, 248, 239, .85);
+}
+.ck-loc-items {
+    display: flex; flex-wrap: wrap; gap: 8px 7px;
+    padding: 10px 10px 8px;
+    min-height: 44px;
+    align-items: center;
+}
+.ck-loc-empty { color: #c4b8a6; font-size: 12px; font-style: italic; }
+.ck-loc-mystery {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #ece4f8; color: #6a4c9c; font-weight: 900; font-size: 18px;
+    animation: ck-wiggle 2.4s ease-in-out infinite;
+}
+.ck-loc-hint { padding: 0 10px 8px; font-size: 11px; color: $muted; line-height: 1.2; }
+
+// priority track
+.ck-priority {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+    padding: 2px 4px;
+    font-size: 13px;
+}
+.ck-priority-label { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: $muted; }
+.ck-priority-hint { font-size: 11px; color: $muted; }
+.ck-hat {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px 3px 3px; border-radius: 999px;
+    background: #fff; box-shadow: inset 0 0 0 1.5px var(--acc);
+    font-weight: 700;
+    transition: transform .3s;
+    animation: ck-slide .4s ease-out both;
+}
+.ck-hat-n { width: 20px; height: 20px; border-radius: 50%; background: var(--acc); color: #fff; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
+
+// my kitchen
+.ck-kitchen {
+    @include panel;
+    padding: 10px 12px 12px;
+    border-top: 5px solid var(--acc, $coral);
+    display: flex; flex-direction: column; gap: 10px;
+}
+.ck-kitchen-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.ck-kitchen-title { font-weight: 800; font-size: 16px; }
+.ck-kitchen-meta { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 13px; color: $muted; }
+.ck-storage { display: flex; flex-wrap: wrap; gap: 10px 8px; padding: 4px 2px; }
+.ck-kitchen-cards { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
+.ck-next-zous { display: flex; flex-direction: column; align-items: center; small { font-size: 10px; color: $muted; } }
+
+.ck-rumorslots { display: inline-flex; gap: 4px; }
+.ck-rslot {
+    display: inline-flex; border-radius: 8px; opacity: .22; filter: grayscale(1);
+    transition: opacity .3s, filter .3s, transform .2s;
+    &.known { opacity: 1; filter: none; cursor: pointer; &:hover { transform: translateY(-2px); } }
+}
+
+// restaurateur choice
+.ck-rest-choices { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
+.ck-rest-choice { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 0 1 180px; p { margin: 0; font-size: 13px; color: $muted; text-align: center; } }
+.ck-guy { display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; }
+
+// ---------------------------------------------------------------------------
+// workbenches (challenge / critic / fridge)
+// ---------------------------------------------------------------------------
+
+.ck-bench {
+    @include panel;
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 12px;
+    &.done { background: linear-gradient(90deg, #fff 0%, #f1fbf5 100%); }
+}
+.ck-bench-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; b { font-size: 17px; } }
+.ck-bench-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; .ck-muted { margin-right: auto; display: inline-flex; align-items: center; gap: 4px; } }
+.ck-bench-error { color: $bad; font-weight: 700; font-size: 14px; }
+
+.ck-plates { display: flex; flex-wrap: wrap; gap: 10px; }
+.ck-plate {
+    flex: 1 1 220px;
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 10px;
+    border-radius: 14px;
+    background: $soft;
+    cursor: pointer;
+    box-shadow: inset 0 0 0 2px transparent;
+    transition: box-shadow .2s, background .25s;
+    &.active { background: #fff; box-shadow: inset 0 0 0 3px $coral; }
+    &.scoring { background-image: linear-gradient(110deg, transparent 30%, rgba(245, 184, 46, .14) 50%, transparent 70%); background-size: 200% 100%; animation: ck-shine 2.6s linear infinite; }
+}
+.ck-plate-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.ck-plate-name { font-weight: 800; font-size: 15px; }
+.ck-plate-req { display: inline-flex; gap: 3px; }
+.ck-req {
+    display: inline-flex; border-radius: 50%; opacity: .45; transition: opacity .2s, transform .2s;
+    &.met { opacity: 1; transform: scale(1.1); }
+    &.held { opacity: .8; }
+}
+.ck-plate-dish {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 8px;
+    min-height: 58px;
+    padding: 10px;
+    border-radius: 50px;
+    background: radial-gradient(circle at 50% 50%, #fff 55%, #f3ebdf 56%, #f3ebdf 62%, #fff 63%);
+    box-shadow: inset 0 0 0 2px #efe4d4;
+    justify-content: center;
+}
+.ck-plate-empty { color: #c4b8a6; font-size: 12px; font-style: italic; }
+.ck-dish-item { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
+.ck-unspice {
+    border: 0; background: transparent; color: $muted; font: 700 10px 'Outfit', sans-serif; cursor: pointer; padding: 2px 0 0;
+    &:hover { color: $bad; }
+}
+.ck-plate-foot {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px;
+    font-size: 13px;
+    .ok { color: #3a9a69; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+    .warn { color: #c98a1a; font-weight: 700; }
+    .bad { color: $bad; font-weight: 700; }
+}
+.ck-plate-actions { display: inline-flex; gap: 4px; }
+.ck-stars-inline { display: inline-flex; gap: 1px; }
+
+.ck-shelf { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 14px; background: $soft; }
+.ck-shelf-label { font-weight: 800; font-size: 13px; }
+.ck-shelf-row { display: flex; flex-wrap: wrap; gap: 10px 8px; &.big { gap: 12px 10px; } }
+
+.ck-courses {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+    gap: 8px;
+}
+.ck-course {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 8px 6px;
+    border-radius: 14px;
+    background: var(--tint);
+    cursor: pointer;
+    box-shadow: inset 0 0 0 2px transparent;
+    transition: box-shadow .2s, transform .2s;
+    min-height: 96px;
+    &.active { box-shadow: inset 0 0 0 3px var(--ing); transform: translateY(-2px); }
+    &.filled .ck-course-q { color: $ink; }
+}
+.ck-course-head { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800; em { font-style: normal; color: #fff; background: $bad; border-radius: 6px; padding: 0 4px; font-size: 11px; } }
+.ck-course-dish { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 4px; min-height: 40px; align-items: center; }
+.ck-course-q { font-weight: 800; font-size: 18px; color: #c4b8a6; }
+
+// ---------------------------------------------------------------------------
+// rivals / log
+// ---------------------------------------------------------------------------
+
+.ck-rivals, .ck-log {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+    background: $cream;
+    padding: 10px;
+    display: flex; flex-direction: column; gap: 10px;
+    min-height: 100%;
+    box-sizing: border-box;
+}
+.ck-rival {
+    @include panel;
+    padding: 10px 12px;
+    border-left: 5px solid var(--acc);
+    display: flex; flex-direction: column; gap: 8px;
+    animation: ck-slide .35s ease-out both;
+    &.me { background: linear-gradient(90deg, #fff 60%, #fff6ea 100%); }
+}
+.ck-rival-head { display: flex; align-items: center; justify-content: space-between; }
+.ck-rival-name { font-weight: 800; font-size: 16px; }
+.ck-rival-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+
+.ck-log { gap: 4px; }
+.ck-log-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: #fff;
+    border-left: 4px solid var(--acc);
+    font-size: 14px;
+    animation: ck-slide .3s ease-out both;
+    &.phase { background: $soft; font-weight: 700; }
+    &.star { background: #fff9e8; }
+}
+.ck-log-round { font-size: 11px; font-weight: 800; color: $muted; width: 22px; }
+.ck-log-dot { width: 22px; height: 22px; border-radius: 50%; background: $soft; display: inline-block; }
+
+// ---------------------------------------------------------------------------
+// results
+// ---------------------------------------------------------------------------
+
+.ck-results { position: relative; display: flex; flex-direction: column; gap: 10px; overflow: hidden; padding-bottom: 6px; }
+.ck-confetti {
+    position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    i { position: absolute; top: -10px; width: 8px; height: 12px; border-radius: 2px; animation: ck-fall 3.2s ease-in both; }
+}
+.ck-winner {
+    @include panel;
+    position: relative; z-index: 1;
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px;
+    background: linear-gradient(120deg, #fff6dd 0%, #fff 70%);
+    animation: ck-pop .5s ease-out both;
+}
+.ck-winner-label { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: $muted; }
+.ck-winner-name { font-size: 26px; font-weight: 800; color: $coral; }
+.ck-results-rumors { display: flex; gap: 6px; overflow-x: auto; position: relative; z-index: 1; padding: 2px; }
+.ck-result {
+    @include panel;
+    position: relative; z-index: 1;
+    padding: 10px 12px;
+    border-left: 5px solid var(--acc);
+    cursor: pointer;
+    animation: ck-slide .45s ease-out both;
+    &.first { box-shadow: 0 0 0 2px $gold; }
+}
+.ck-result-head { display: flex; align-items: center; gap: 10px; }
+.ck-result-rank { width: 26px; height: 26px; border-radius: 50%; background: var(--acc); color: #fff; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
+.ck-result-name { font-weight: 800; font-size: 17px; flex: 1; }
+.ck-result-plate { display: flex; gap: 6px; padding: 8px 0 2px; flex-wrap: wrap; }
+.ck-result-course {
+    display: inline-flex; align-items: center; gap: 2px;
+    padding: 3px; border-radius: 10px; background: #fbf6ef;
+    box-shadow: inset 0 -3px 0 var(--ing);
+    small { font-size: 10px; font-weight: 800; color: $muted; }
+}
+.ck-result-empty { width: 26px; height: 26px; border-radius: 50%; background: #efe6d8; display: inline-block; }
+.ck-result-lines { margin-top: 8px; display: flex; flex-direction: column; gap: 2px; animation: ck-slide .25s ease-out both; }
+.ck-result-line { display: flex; justify-content: space-between; font-size: 14px; padding: 3px 4px; border-bottom: 1px dashed $line; b { font-weight: 800; } }
+
+// ---------------------------------------------------------------------------
+// modal & detail
+// ---------------------------------------------------------------------------
+
+.ck-modal-back {
+    position: fixed; inset: 0; z-index: 10050; // above the host page's #game-container (z-index 9999): portaled to <body>
+    background: rgba(51, 49, 59, .35);
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+    animation: ck-slide .2s ease-out both;
+}
+.ck-modal-back.settled, .ck-modal-back.settled > * { animation: none !important; }
+.ck-modal {
+    position: relative;
+    @include panel;
+    max-width: 520px; width: 100%;
+    max-height: 90vh; overflow: auto;
+    padding: 18px 16px 16px;
+    font-family: 'Outfit', 'Inter', sans-serif; color: $ink;
+    animation: ck-pop .3s ease-out both;
+}
+.ck-modal-title { font-weight: 800; font-size: 18px; margin-bottom: 8px; }
+.ck-modal-x { position: absolute; top: 6px; right: 8px; border: 0; background: transparent; font-size: 26px; color: $muted; cursor: pointer; width: 44px; height: 44px; }
+.ck-detail { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: center; }
+.ck-detail-text { flex: 1 1 200px; p { line-height: 1.45; margin: 6px 0 0; } }
+.ck-detail-kind { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: $muted; }
+.ck-detail-title { font-size: 22px; font-weight: 800; }
+
+.ck-settings { padding: 16px; display: flex; flex-direction: column; gap: 10px; max-width: 360px; font-family: 'Outfit', sans-serif; }
+.ck-settings-note { font-size: 13px; color: $muted; }
+
+// ---------------------------------------------------------------------------
+// rules
+// ---------------------------------------------------------------------------
+
+.ck-rules {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+    padding: 14px 16px 28px;
+    max-width: 720px;
+    line-height: 1.5;
+    h3 { font-size: 24px; font-weight: 800; color: $coral; margin: 0 0 6px; }
+    h4 { font-size: 15px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; margin: 18px 0 8px; color: $navy; }
+    p { margin: 6px 0; }
+    ul { margin: 6px 0; padding-left: 20px; }
+    .ck-icon { margin: 0 2px; }
+}
+.ck-rule-chefs { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0 4px; }
+.ck-rule-chef { display: flex; align-items: center; gap: 8px; span { display: flex; flex-direction: column; small { color: $muted; } } }
+.ck-rule-step { display: flex; gap: 10px; margin: 8px 0; }
+.ck-rule-n { flex: 0 0 26px; height: 26px; border-radius: 50%; background: $coral; color: #fff; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
+.ck-rule-body { color: #4a4754; }
+.ck-rule-locs, .ck-rule-items { display: flex; flex-wrap: wrap; gap: 8px; }
+.ck-rule-loc, .ck-rule-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px 4px 4px; border-radius: 999px; background: #fff; box-shadow: inset 0 0 0 1px $line;
+    font-weight: 700; font-size: 13px;
+    small { font-weight: 500; color: $muted; margin-left: 2px; }
+}
+.ck-rule-card { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; p { flex: 1 1 220px; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .ck-tok, .ck-chef, .ck-loc, .ck-card, .ck-hat, .ck-plate, .ck-result, .ck-rival, .ck-log-row, .ck-hero-face,
+    .ck-confetti i, .ck-winner, .ck-bench-slot, .ck-phase-line, .ck-loc-mystery, .ck-modal, .ck-modal-back {
+        animation: none !important;
+    }
+}

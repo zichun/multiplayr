@@ -158,6 +158,10 @@ import { faGoogle } from "@fortawesome/free-brands-svg-icons/faGoogle";
 import { faAndroid } from "@fortawesome/free-brands-svg-icons/faAndroid";
 import { faLinux } from "@fortawesome/free-brands-svg-icons/faLinux";
 
+import { faWifi } from "@fortawesome/free-solid-svg-icons/faWifi";
+import { faServer } from "@fortawesome/free-solid-svg-icons/faServer";
+import { faRotateRight } from "@fortawesome/free-solid-svg-icons/faRotateRight";
+
 library.add(faAddressCard);
 library.add(faAdjust);
 library.add(faBars);
@@ -314,5 +318,9 @@ library.add(faTwitter);
 library.add(faGoogle);
 library.add(faAndroid);
 library.add(faLinux);
+
+library.add(faWifi);
+library.add(faServer);
+library.add(faRotateRight);
 
 dom.watch();

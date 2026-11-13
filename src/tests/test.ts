@@ -45,5 +45,8 @@ import './quacks/test_quacks_alchemists';
 import './parks/test_parks';
 import './jibberjabble/test_jibberjabble';
 import './hooky/test_hooky';
+import './critterkitchen/test_critterkitchen';
+import './decorum/test_decorum';
+import './schadenfreude/test_schadenfreude';
 
 import './undo/test_undo';

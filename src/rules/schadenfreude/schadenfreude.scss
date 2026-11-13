@@ -1,0 +1,728 @@
+/**
+ * schadenfreude.scss - "Seconds, Please!" — flat minimalist pastel skin, matching
+ * Cat in the Box (hairline borders, soft radii, no hard offset shadows).
+ * Everything game-specific is scoped under `.sf-root` (or an `sf-` class).
+ */
+
+$ink: #3a2f45;
+$muted: #8a7f99;
+$line: #ece4ef;
+$panel: #ffffff;
+$accent: #b0527a;      // raspberry
+$accent-soft: #fbeaf1;
+$danger: #e0554f;
+$good: #3fa77c;
+
+.sf-waiting {
+    background: $accent-soft;
+    color: $accent;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sf-lobby-warn {
+    color: $danger;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 20px;
+}
+
+// ---- Treat glyph chips ------------------------------------------------------
+.sf-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    vertical-align: middle;
+
+    .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+}
+
+// ---- Treat cards (mono tile, big number, bottom-right watermark) -----------
+// Same scoped layout recipe as Cat in the Box's `.cat-card`.
+.sf-card {
+    display: inline-flex;
+
+    .playing-card-face.face-front {
+        display: block !important;
+        position: relative;
+        padding: 0 !important;
+        overflow: hidden;
+    }
+
+    .card-art-region {
+        position: absolute;
+        inset: 0;
+        margin: 0;
+        z-index: 1;
+        overflow: hidden;
+    }
+    .card-art-frame {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        overflow: visible;
+    }
+    .card-art-content {
+        position: absolute;
+        width: 100%;
+        height: 71%;
+        right: -22%;
+        bottom: -12%;
+        top: auto;
+        left: auto;
+
+        .expressive-vector-icon {
+            max-width: none;
+            max-height: none;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    }
+
+    .card-header-region {
+        position: absolute;
+        inset: 0;
+        min-height: 0;
+        padding: 0;
+        background: transparent !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+    }
+    .card-header-text {
+        flex: none;
+        align-items: center;
+        justify-content: center;
+    }
+    .card-header-title {
+        font-size: 12em !important;
+        font-weight: 900;
+        text-transform: none;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        overflow: visible;
+    }
+    .card-header-meta { display: none; }
+
+    // Rainbow wilds: soft multi-stop gradient on the face.
+    &.sf-suit-wild .playing-card-face.face-front {
+        background: linear-gradient(160deg, #fbd0dc 0%, #fbe9b0 30%, #c9eedc 60%, #cfdcf7 85%, #e6d3f6 100%) !important;
+    }
+}
+
+// ---- Arena ------------------------------------------------------------------
+.sf-root {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    color: $ink;
+
+    .section-label {
+        font-size: 0.72em;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: $muted;
+        margin-top: 4px;
+    }
+
+    .phase-note {
+        color: $muted;
+        font-size: 0.9em;
+        margin: 8px 0;
+
+        &.turn-note { color: $accent; font-weight: 700; }
+    }
+
+    .primary-btn {
+        min-height: 46px;
+        padding: 0 22px;
+        border-radius: 14px;
+        border: none;
+        background: $accent;
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.95em;
+        cursor: pointer;
+        transition: transform 0.12s, filter 0.12s;
+        margin-top: 8px;
+
+        &:hover { transform: translateY(-2px); filter: brightness(1.05); }
+    }
+
+    .ghost-btn {
+        min-height: 46px;
+        padding: 0 22px;
+        border-radius: 14px;
+        border: 1px solid $line;
+        background: #fff;
+        color: $muted;
+        font-weight: 700;
+        font-size: 0.95em;
+        cursor: pointer;
+        margin-top: 8px;
+
+        &:hover { background: #f7f3f9; }
+    }
+
+    .sf-dot {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.15em;
+        height: 1.15em;
+        vertical-align: middle;
+
+        svg { width: 100%; height: 100%; }
+    }
+
+    .sf-lead-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.95em;
+        font-weight: 800;
+        padding: 3px 10px 3px 6px;
+        border-radius: 999px;
+        text-transform: none;
+        letter-spacing: 0;
+
+        &.sf-lead-open { background: #f1edf4; color: $muted; padding-left: 10px; }
+        .sf-chip { background: rgba(255, 255, 255, 0.7); border-radius: 50%; padding: 1px; }
+    }
+}
+
+.sf-arena {
+    padding: 12px 14px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 860px;
+    margin: 0 auto;
+
+    .arena-topline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+
+        .round-pill, .phase-pill {
+            font-size: 0.82em;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 999px;
+            letter-spacing: 0.4px;
+        }
+        .round-pill { background: #f1edf4; color: $muted; }
+        .phase-pill { background: $accent-soft; color: $accent; text-transform: uppercase; margin-left: auto; }
+    }
+
+    .sf-trick-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    // ---- Current trick ----
+    .trick-zone {
+        background: $panel;
+        border: 1px solid $line;
+        border-radius: 16px;
+        padding: 8px 12px 12px;
+        min-height: 118px;
+        display: flex;
+        align-items: center;
+
+        .trick-empty { color: $muted; font-size: 0.9em; width: 100%; text-align: center; }
+
+        .trick-plays {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: safe center;
+            width: 100%;
+            transition: opacity 0.35s ease;
+
+            // Taken cards slide together into a pile; discards drop away.
+            &.collapsing {
+                flex-wrap: nowrap;
+                justify-content: center;
+
+                .trick-play {
+                    margin-left: -40px;
+                    transform: rotate(-3deg);
+                    &:first-child { margin-left: 0; }
+                    &:nth-child(even) { transform: rotate(4deg); }
+                    &.is-discarded { opacity: 0; transform: translateY(16px) scale(0.85); }
+                }
+                .trick-play-name, .tp-tag { opacity: 0; }
+            }
+
+            &.fading { opacity: 0; }
+        }
+
+        .trick-play {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                margin 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.4s ease;
+
+            &.is-winner {
+                z-index: 2;
+                animation: sf-winner-pulse 0.6s ease-in-out infinite alternate;
+            }
+            &.is-taken { transform: translateY(-6px); }
+            &.is-discarded { opacity: 0.55; }
+            &.is-cancel .sf-card { animation: sf-twin-wobble 0.35s ease-in-out infinite alternate; }
+
+            .tp-tag {
+                height: 18px;
+                display: flex;
+                align-items: flex-end;
+                transition: opacity 0.3s ease;
+            }
+            .tp-rank {
+                font-size: 0.66em;
+                font-weight: 800;
+                padding: 1px 7px;
+                border-radius: 999px;
+                background: #f1edf4;
+                color: $muted;
+                text-transform: uppercase;
+                letter-spacing: 0.4px;
+
+                &.rank-win { background: $accent; color: #fff; }
+                &.rank-take { background: #e3f5ec; color: $good; }
+                &.rank-pop { background: #fde7e6; color: $danger; }
+            }
+
+            .trick-play-name {
+                font-size: 0.72em;
+                font-weight: 700;
+                max-width: 64px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                transition: opacity 0.3s ease;
+            }
+        }
+    }
+
+    // ---- Hand ----
+    .phase-controls {
+        background: $panel;
+        border: 1px solid $line;
+        border-radius: 16px;
+        padding: 12px 14px;
+
+        .phase-title {
+            font-weight: 800;
+            font-size: 1.02em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            .ph-hint {
+                font-size: 0.7em;
+                font-weight: 700;
+                color: $muted;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+        }
+    }
+
+    .hand-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        padding: 10px 4px 4px;
+        justify-content: safe center;
+
+        .hand-card {
+            flex: 0 0 auto;
+            transition: opacity 0.2s, filter 0.2s;
+
+            &.is-illegal { opacity: 0.38; filter: saturate(0.5); }
+        }
+    }
+
+    .sf-play-bar {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    // ---- Round end / game over ----
+    .round-end, .game-over {
+        background: $panel;
+        border: 1px solid $line;
+        border-radius: 16px;
+        padding: 16px 18px;
+        text-align: center;
+
+        .re-title, .go-title { font-size: 1.3em; font-weight: 900; letter-spacing: 0.5px; }
+        .re-sub { color: $muted; font-size: 0.9em; margin-top: 4px; }
+
+        .go-icon {
+            width: 72px;
+            height: 72px;
+            margin: 4px auto 8px;
+            .expressive-vector-icon { width: 100%; height: 100%; display: block; }
+        }
+        .go-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    }
+}
+
+// Score tables (round end, game over, history).
+.sf-root .re-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 0.88em;
+
+    th {
+        text-align: center;
+        color: $muted;
+        font-size: 0.82em;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 6px 4px;
+        border-bottom: 2px solid $line;
+    }
+    td {
+        padding: 8px 4px;
+        border-bottom: 1px solid $line;
+        text-align: center;
+        white-space: nowrap;
+    }
+    td:first-child, th:first-child { text-align: left; }
+
+    .neg { color: $danger; font-weight: 800; }
+    .busted-row { background: #fdeeee; }
+    .winner-row { background: #eaf7f0; }
+    .too-full {
+        margin-left: 6px;
+        font-size: 0.75em;
+        font-weight: 800;
+        color: #fff;
+        background: $danger;
+        padding: 1px 6px;
+        border-radius: 6px;
+        text-transform: uppercase;
+    }
+}
+
+// ---- Player panels ----------------------------------------------------------
+.sf-root .sf-player-panels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .sf-player-panel {
+        flex: 1 1 220px;
+        min-width: 0;
+        background: $panel;
+        border: 1px solid $line;
+        border-radius: 14px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transition: border-color 0.15s, box-shadow 0.15s;
+
+        &.active {
+            border-color: $accent;
+            box-shadow: inset 0 0 0 2px rgba(176, 82, 122, 0.3);
+        }
+
+        .pp-head {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            .pp-name {
+                font-weight: 800;
+                font-size: 0.92em;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .pp-badge {
+                font-size: 0.62em;
+                font-weight: 800;
+                text-transform: uppercase;
+                background: $accent-soft;
+                color: $accent;
+                padding: 2px 6px;
+                border-radius: 6px;
+            }
+            .pp-hand {
+                margin-left: auto;
+                font-size: 0.72em;
+                font-weight: 700;
+                color: $muted;
+                white-space: nowrap;
+            }
+        }
+
+        .pp-plate {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+
+            .pp-plate-total {
+                flex: 0 0 auto;
+                font-size: 0.74em;
+                font-weight: 800;
+                color: $good;
+                padding-top: 4px;
+                min-width: 54px;
+                &.neg { color: $danger; }
+            }
+            .pp-plate-tiles {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
+                min-width: 0;
+            }
+            .pp-empty { font-size: 0.74em; color: #bdb3c6; padding-top: 4px; }
+        }
+    }
+}
+
+.sf-root .sf-plate-tile {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    height: 22px;
+    padding: 0 6px 0 3px;
+    border-radius: 7px;
+    font-size: 0.78em;
+    font-weight: 900;
+
+    .sf-chip { background: rgba(255, 255, 255, 0.75); border-radius: 50%; }
+    &.sf-suit-wild {
+        background: linear-gradient(160deg, #fbd0dc 0%, #fbe9b0 35%, #c9eedc 65%, #cfdcf7 100%) !important;
+    }
+    // Plate card about to cancel with an incoming twin.
+    &.is-pop { animation: sf-twin-wobble 0.35s ease-in-out infinite alternate; outline: 2px solid $danger; }
+}
+
+// Tummy meter: 0..48 track with the danger zone past 40.
+.sf-root .sf-meter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .m-track {
+        position: relative;
+        flex: 1 1 auto;
+        height: 10px;
+        border-radius: 999px;
+        background: #f1edf4;
+        overflow: hidden;
+    }
+    .m-danger {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        background: repeating-linear-gradient(45deg, #f8c9c6, #f8c9c6 3px, #fde3e1 3px, #fde3e1 6px);
+    }
+    .m-fill {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #f6b6c8, $accent);
+        transition: width 0.5s ease;
+        &.over { background: $danger; }
+    }
+    .m-proj {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        background: repeating-linear-gradient(90deg, rgba(176, 82, 122, 0.45), rgba(176, 82, 122, 0.45) 4px, transparent 4px, transparent 6px);
+        transition: left 0.4s ease, width 0.4s ease;
+        &.down { background: repeating-linear-gradient(90deg, rgba(63, 167, 124, 0.55), rgba(63, 167, 124, 0.55) 4px, transparent 4px, transparent 6px); z-index: 1; }
+        &.over { background: repeating-linear-gradient(90deg, rgba(224, 85, 79, 0.6), rgba(224, 85, 79, 0.6) 4px, transparent 4px, transparent 6px); }
+    }
+    .m-limit {
+        position: absolute;
+        top: -2px;
+        bottom: -2px;
+        width: 2px;
+        margin-left: -1px;
+        background: $danger;
+    }
+    .m-label {
+        flex: 0 0 auto;
+        font-size: 0.78em;
+        font-weight: 700;
+        white-space: nowrap;
+        min-width: 70px;
+        text-align: right;
+
+        .m-over { color: $danger; font-weight: 900; }
+        .m-max { color: $muted; margin-left: 3px; font-weight: 600; }
+    }
+}
+
+@keyframes sf-winner-pulse {
+    from { transform: translateY(-2px) scale(1.0); filter: drop-shadow(0 0 2px rgba(240, 120, 170, 0.5)); }
+    to { transform: translateY(-8px) scale(1.09); filter: drop-shadow(0 0 12px rgba(240, 110, 160, 0.95)); }
+}
+
+@keyframes sf-twin-wobble {
+    from { transform: rotate(-5deg); }
+    to { transform: rotate(5deg); }
+}
+
+// ---- History ----------------------------------------------------------------
+.sf-history {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-width: 720px;
+    margin: 0 auto;
+
+    .history-round-title {
+        font-size: 0.74em;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: $muted;
+        border-bottom: 2px solid $line;
+        padding-bottom: 6px;
+        margin-bottom: 10px;
+    }
+
+    .setup-table-wrap { overflow-x: auto; }
+
+    .history-trick {
+        background: $panel;
+        border: 1px solid $line;
+        border-radius: 14px;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+    }
+
+    .history-trick-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+        font-size: 0.86em;
+
+        .ht-index { font-weight: 800; }
+        .sf-lead-tag { font-size: 0.82em; }
+        .ht-winner {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+        }
+    }
+
+    .history-trick-cards { display: flex; flex-wrap: wrap; gap: 10px; }
+
+    .ht-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+
+        &.ht-discard { opacity: 0.5; }
+        .ht-card-name {
+            font-size: 0.68em;
+            font-weight: 700;
+            max-width: 52px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .ht-flag {
+            font-size: 0.6em;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: $good;
+            &.pop { color: $danger; }
+        }
+    }
+}
+
+// ---- Settings / rules -------------------------------------------------------
+.sf-root.settings-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px;
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+.sf-rules-panel {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 80vh;
+    overflow-y: auto;
+
+    .rules-section {
+        background: #fff;
+        border: 1px solid $line;
+        border-radius: 14px;
+        padding: 14px 16px;
+
+        h3 {
+            margin: 0 0 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.95em;
+        }
+        p { margin: 0; line-height: 1.55; font-size: 0.9em; }
+        ul { margin: 0; padding-left: 18px; line-height: 1.7; font-size: 0.9em; }
+        li { margin-bottom: 3px; }
+        .sf-chip { vertical-align: -0.25em; }
+    }
+
+    .setup-table-wrap { overflow-x: auto; margin: 4px 0; }
+    .setup-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82em;
+        white-space: nowrap;
+
+        th {
+            text-align: center;
+            color: $muted;
+            font-size: 0.86em;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            font-weight: 800;
+            padding: 6px 8px;
+            border-bottom: 2px solid $line;
+        }
+        td { text-align: center; padding: 7px 8px; border-bottom: 1px solid $line; }
+        td:first-child, th:first-child { font-weight: 800; }
+        .setup-current { background: $accent-soft; td { color: $accent; font-weight: 800; } }
+    }
+    .setup-note { font-size: 0.82em !important; color: $muted; line-height: 1.5 !important; margin-top: 6px !important; }
+}

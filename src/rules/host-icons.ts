@@ -265,6 +265,20 @@ export const GAME_ICONS: Record<string, IconObject> = {
         CUT('wk2', 'rectangle', 74, 60, 0.24, 0.03)
     ]),
 
+    // 🧁 Seconds, Please! (Schadenfreude rules) — cupcake
+    schadenfreude: icon('cupcake', [
+        S('wrapper', 'bezier', 0, 0, 1, 1, 0, 'primary', { customPath: 'M 27 60 L 73 60 L 66 90 L 34 90 Z' }),
+        S('frost_l', 'circle', 33, 56, 0.56, 0.5),
+        S('frost_r', 'circle', 67, 56, 0.56, 0.5),
+        S('frost_m', 'circle', 50, 50, 0.92, 0.66),
+        S('frost_t', 'circle', 50, 35, 0.6, 0.48),
+        S('cherry', 'circle', 50, 16, 0.34, 0.34),
+        CUT('cherry_gap', 'rectangle', 50, 24, 0.4, 0.06),
+        CUT('band', 'rectangle', 50, 61, 0.96, 0.1),
+        CUT('stripe_1', 'rectangle', 43, 78, 0.1, 0.4),
+        CUT('stripe_2', 'rectangle', 57, 78, 0.1, 0.4)
+    ]),
+
     // 🔺 Trio — three rings
     trio: icon('trio', [
         S('c_top', 'circle', 50, 33, 0.72, 0.72),
@@ -438,6 +452,33 @@ export const GAME_ICONS: Record<string, IconObject> = {
         S('clapper', 'circle', 50, 86, 0.24, 0.24),
         CUT('tile', 'rectangle', 50, 46, 0.36, 0.36, -8),
         CUT('rim', 'rectangle', 50, 68, 0.9, 0.06)
+    ]),
+
+    // 🍲 Critter Kitchen — a chef's toque with mouse ears peeking out
+    critterkitchen: icon('toque', [
+        S('ear_l', 'circle', 18, 30, 0.5, 0.5),
+        S('ear_r', 'circle', 82, 30, 0.5, 0.5),
+        S('puff_l', 'circle', 32, 38, 0.66, 0.66),
+        S('puff_c', 'circle', 50, 28, 0.8, 0.8),
+        S('puff_r', 'circle', 68, 38, 0.66, 0.66),
+        S('body', 'rectangle', 50, 62, 0.88, 0.6),
+        S('band', 'rectangle', 50, 84, 0.96, 0.2),
+        CUT('pleat_a', 'rectangle', 38, 64, 0.05, 0.4),
+        CUT('pleat_b', 'rectangle', 62, 64, 0.05, 0.4),
+        CUT('seam', 'rectangle', 50, 77, 0.88, 0.05)
+    ]),
+
+    // 🛋️ Décorum — a dollhouse cross-section: roof over four rooms, a lamp and a frame punched out
+    decorum: icon('dollhouse', [
+        S('roof', 'triangle', 50, 22, 1.0, 0.36),
+        S('body', 'rectangle', 50, 62, 0.84, 0.6),
+        CUT('floor', 'rectangle', 50, 62, 0.84, 0.05),
+        CUT('wall', 'rectangle', 50, 62, 0.05, 0.6),
+        CUT('frame', 'rectangle', 31, 47, 0.18, 0.14),
+        CUT('lamp_shade', 'triangle', 69, 70, 0.18, 0.12),
+        CUT('lamp_pole', 'rectangle', 69, 80, 0.03, 0.12),
+        CUT('vase', 'circle', 69, 47, 0.12, 0.12),
+        CUT('rug', 'rectangle', 31, 85, 0.22, 0.04)
     ])
 };
 

@@ -6,6 +6,11 @@
         <title>Multiplayr: Join</title>
         <!-- Favicon: the four header marks (square, circle, triangle, square). -->
         <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='1' y='1' width='14' height='14' fill='%23e1553a'/%3E%3Ccircle cx='24' cy='8' r='7' fill='%231c8c7d'/%3E%3Cpolygon points='8,17.5 15,31 1,31' fill='%23e3a81e'/%3E%3Crect x='17' y='17' width='14' height='14' fill='%2333507a'/%3E%3C/svg%3E">
+        <!-- Progressive Web App: manifest, install icons, service worker + update prompt (pwa.js). -->
+        <link rel="manifest" href="manifest.webmanifest">
+        <meta name="theme-color" content="#ece4d3">
+        <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+        <script src="pwa.js?v=__MP_BUILD_VERSION__" defer></script>
 
         <!-- Kept for the in-game client views, which were built against these. -->
         <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.2/semantic.min.css"></link>
@@ -230,6 +235,122 @@
                 to   { transform: scale(1);   opacity: 1; }
             }
 
+            /* Connection attempts while join_p2p.ts retries in the background. */
+            #join .join__progress {
+                margin: 16px 0 0;
+                padding: 14px 16px;
+                background: var(--bg);
+                border-left: 6px solid var(--mustard);
+            }
+            #join .join__progress[hidden] { display: none; }
+            #join .join__progress.is-failed { border-left-color: var(--coral); }
+            #join .join__progress-dots {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin: 0 0 10px;
+            }
+            #join .join__progress-dots span {
+                width: 14px;
+                height: 14px;
+                border-radius: 50%;
+                border: 2px solid var(--ink-soft);
+                opacity: 0.45;
+            }
+            #join .join__progress-dots span.is-failed {
+                background: var(--coral);
+                border-color: var(--coral);
+                opacity: 1;
+            }
+            #join .join__progress-dots span.is-active {
+                background: var(--mustard);
+                border-color: var(--ink);
+                opacity: 1;
+                animation: join-pulse 0.8s ease-in-out infinite alternate;
+            }
+            #join .join__progress-dots span.is-done {
+                background: var(--teal);
+                border-color: var(--teal);
+                opacity: 1;
+            }
+            #join .join__progress-text {
+                font-family: 'Outfit', sans-serif;
+                font-weight: 800;
+                font-size: 1em;
+                color: var(--ink);
+            }
+            #join .join__progress-reason {
+                margin-top: 4px;
+                font-size: 0.88em;
+                line-height: 1.4;
+                color: var(--ink-soft);
+            }
+            #join .join__progress-reason:empty { display: none; }
+
+            /* ---------- Resume the last joined game ---------- */
+            #join .join__resume {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                background: var(--surface);
+                border-left: 8px solid var(--navy);
+                padding: 14px 12px 14px 16px;
+                margin: 0 0 18px;
+            }
+            #join .join__resume[hidden] { display: none; }
+            #join .join__resume-info {
+                flex: 1;
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+            }
+            #join .join__resume-label {
+                font-family: 'Outfit', sans-serif;
+                font-size: 0.72em;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.14em;
+                color: var(--ink-soft);
+            }
+            #join .join__resume-code {
+                font-family: 'Outfit', sans-serif;
+                font-size: 1.45em;
+                font-weight: 800;
+                color: var(--ink);
+                line-height: 1.1;
+            }
+            #join .join__resume-when {
+                font-size: 0.85em;
+                color: var(--ink-soft);
+            }
+            #join .join__resume-btn {
+                flex: none;
+                font-family: 'Outfit', sans-serif;
+                font-size: 1em;
+                font-weight: 800;
+                color: var(--cream);
+                background: var(--navy);
+                border: none;
+                border-radius: 999px;
+                padding: 12px 20px;
+                cursor: pointer;
+                transition: background-color 0.15s ease, transform 0.1s ease;
+            }
+            #join .join__resume-btn:hover { background: #263d5e; transform: translateY(-2px); }
+            #join .join__resume-dismiss {
+                flex: none;
+                width: 32px;
+                height: 32px;
+                font-size: 1.4em;
+                line-height: 1;
+                color: var(--ink-soft);
+                background: transparent;
+                border: none;
+                cursor: pointer;
+            }
+            #join .join__resume-dismiss:hover { color: var(--ink); }
+
             #join .join__footer {
                 margin: 22px 0 0;
                 font-size: 0.9em;
@@ -260,6 +381,16 @@
             <h1 class="join__title">Join a game</h1>
             <p class="join__subtitle">Enter the room code shown on the host&rsquo;s screen.</p>
 
+            <div id="resume" class="join__resume" hidden>
+                <div class="join__resume-info">
+                    <span class="join__resume-label">Your last game</span>
+                    <span class="join__resume-code"></span>
+                    <span class="join__resume-when"></span>
+                </div>
+                <button type="button" class="join__resume-btn"><i class="fa fa-play"></i> Resume</button>
+                <button type="button" class="join__resume-dismiss" title="Forget this game" aria-label="Forget this game">&times;</button>
+            </div>
+
             <div class="join__card">
                 <label for="roomId">Room code</label>
                 <input type="text" id="roomId" placeholder="e.g. 482915" inputmode="numeric" autocomplete="off" spellcheck="false" />
@@ -270,6 +401,11 @@
                 <div id="error">&nbsp;</div>
                 <button id="join-button">Join Game</button>
                 <div class="join__pending">Connecting to the P2P network&hellip;</div>
+                <div id="join-progress" class="join__progress" aria-live="polite" hidden>
+                    <div class="join__progress-dots"></div>
+                    <div class="join__progress-text"></div>
+                    <div class="join__progress-reason"></div>
+                </div>
             </div>
 
             <p class="join__footer">Want to run the table? <a href="host_p2p.html">Host a room</a></p>

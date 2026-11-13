@@ -53,10 +53,27 @@ import {
     ClientTransportInterface,
     ClientSessionInterface,
     SessionMessageType,
-    RoomMessageType
+    RoomMessageType,
+    ConnectionStatus,
+    NetworkDiagnostics,
+    PeerLinkDiagnostics,
+    TurnProbeResult
 } from '../../common/interfaces';
 
 declare const Peer: any;
+
+interface TurnServerEntry {
+    url: string;
+    username?: string;
+    credential?: string;
+}
+
+function describeIceError(code: number, text: string): string {
+    if (code === 401) return 'Credentials rejected (401)';
+    if (code === 701) return 'Could not reach the server';
+    if (code >= 300 && code < 700) return `Server error ${code}${text ? ': ' + text : ''}`;
+    return text || ('Error ' + code);
+}
 
 export class WebRTCTransport implements ClientTransportInterface {
     // How often clients ping the host (and how often the liveness sweep runs).
@@ -87,6 +104,9 @@ export class WebRTCTransport implements ClientTransportInterface {
     // Debounce for bursts of network-change events.
     private static readonly NETWORK_CHANGE_DEBOUNCE_MS = 500;
     private static readonly TOKEN_STORAGE_PREFIX = 'mp-peer-token:';
+    // TURN reachability probe: per-server timeout, and how long a result stays fresh.
+    private static readonly TURN_PROBE_TIMEOUT_MS = 8000;
+    private static readonly TURN_PROBE_TTL_MS = 5 * 60 * 1000;
 
     private peer: any;
     private clientId: string;
@@ -142,6 +162,17 @@ export class WebRTCTransport implements ClientTransportInterface {
     private networkChangeTimeout: any = null;
     private probeTimeout: any = null;
     private networkListenersAttached = false;
+
+    // Client connection progress, surfaced to the join page and the client network view.
+    private status: ConnectionStatus = { phase: 'signaling', attempt: 0 };
+    private statusListeners: Array<(status: ConnectionStatus) => void> = [];
+    private lastFailureReason: string | undefined = undefined;
+
+    // TURN reachability probe state.
+    private turnProbe: TurnProbeResult[] = [];
+    private turnProbePromise: Promise<TurnProbeResult[]> | null = null;
+    private turnProbeAt = 0;
+
     private readonly onNetworkChange = (event?: Event) => {
         if (event && event.type === 'visibilitychange' &&
             typeof document !== 'undefined' && document.visibilityState !== 'visible') {
@@ -290,6 +321,12 @@ export class WebRTCTransport implements ClientTransportInterface {
                 return;
             }
             console.warn(`Peer ID ${this.clientId} is still registered on the server (${Math.round(elapsed / 1000)}s). Retrying with the same ID...`);
+            if (!this.peerHasOpened) {
+                this.setStatus({
+                    phase: 'signaling',
+                    lastError: `Your player ID is still registered from a previous connection; waiting for it to free up (${Math.round(elapsed / 1000)}s)…`
+                });
+            }
             this.signalingFailures++;
             this.scheduleSignalingReconnect();
         } else if (errType === 'unavailable-id') {
@@ -320,6 +357,7 @@ export class WebRTCTransport implements ClientTransportInterface {
             }, 2000);
         } else if (errType === 'peer-unavailable') {
             console.warn('Target peer is unavailable (host offline). Retrying host connection...');
+            this.lastFailureReason = 'The host could not be found. Check the room code, or the host may be offline.';
             this.markHostDisconnected();
             // This connect attempt is definitively done; don't wait for the stall timeout
             // so the bounded retry loop can proceed at the backoff cadence. (peer-unavailable
@@ -335,6 +373,7 @@ export class WebRTCTransport implements ClientTransportInterface {
             errType === 'socket-closed' ||
             errType === 'socket-error'
         ) {
+            this.lastFailureReason = 'Lost contact with the signaling server.';
             this.signalingFailures++;
             this.scheduleSignalingReconnect();
         }
@@ -558,6 +597,7 @@ export class WebRTCTransport implements ClientTransportInterface {
                 return;
             }
             console.warn('Network probe: host did not answer. Refreshing signaling and reconnecting...');
+            this.lastFailureReason = 'Your network changed and the host stopped answering.';
             this.markHostDisconnected();
             this.refreshSignaling();
             // Abandon any in-flight attempt; it was probably started on the old network.
@@ -634,6 +674,7 @@ export class WebRTCTransport implements ClientTransportInterface {
         if (this.hostConnected && this.lastHostSeen > 0 &&
             Date.now() - this.lastHostSeen > WebRTCTransport.LIVENESS_TIMEOUT_MS) {
             console.warn('Client liveness: no traffic from host within timeout. Reconnecting...');
+            this.lastFailureReason = 'Stopped hearing from the host.';
             this.markHostDisconnected();
             this.attemptReconnectToHost();
             return;
@@ -777,8 +818,17 @@ export class WebRTCTransport implements ClientTransportInterface {
         this.joinAttempts = 0;
         this.reconnectAttempts = 0;
         this.joinFailed = false;
+        this.lastFailureReason = undefined;
 
         this.connecting = true;
+        this.setStatus({
+            phase: 'connecting',
+            attempt: 1,
+            maxAttempts: WebRTCTransport.MAX_JOIN_ATTEMPTS + 1,
+            nextRetryAt: undefined,
+            lastError: undefined,
+            reconnecting: false
+        });
         const conn = this.peer.connect(hostPeerId, {
             reliable: true
         });
@@ -797,6 +847,8 @@ export class WebRTCTransport implements ClientTransportInterface {
             this.joinAttempts = 0;
             this.lastHostSeen = Date.now();
             this.reconnectAttempts = 0;
+            this.lastFailureReason = undefined;
+            this.setStatus({ phase: 'connected', nextRetryAt: undefined, lastError: undefined });
 
             // Send handshake packet so host recognizes client ID
             conn.send({
@@ -817,6 +869,7 @@ export class WebRTCTransport implements ClientTransportInterface {
         conn.on('close', () => {
             if (this.hostConnection !== conn) return; // A superseded connection; ignore.
             console.warn('Disconnected from Host.');
+            this.lastFailureReason = 'The connection to the host was closed.';
             this.connecting = false;
             this.markHostDisconnected();
             // Do not resolve the join callback here; let the bounded retry loop decide
@@ -827,6 +880,7 @@ export class WebRTCTransport implements ClientTransportInterface {
         conn.on('error', (err: any) => {
             console.error('WebRTC host connection error:', err);
             if (this.hostConnection !== conn) return;
+            this.lastFailureReason = 'The connection to the host failed.';
             this.connecting = false;
             this.markHostDisconnected();
             this.attemptReconnectToHost();
@@ -967,6 +1021,7 @@ export class WebRTCTransport implements ClientTransportInterface {
         this.connectTimeout = setTimeout(() => {
             if (this.hostConnection === conn && !this.isHostLinkAlive()) {
                 console.warn('Connection to host stalled (never opened). Retrying...');
+                this.lastFailureReason = 'Could not open a connection to the host in time (network or firewall blocking it).';
                 this.markHostDisconnected();
                 try {
                     conn.close();
@@ -1023,6 +1078,7 @@ export class WebRTCTransport implements ClientTransportInterface {
             // (re)opening, so connecting now would just stall. The peer 'open' handler
             // retries as soon as signaling is up; the scheduled retry is a fallback.
             console.warn('Reconnect: signaling not ready yet. Waiting for it before connecting...');
+            if (!this.lastFailureReason) this.lastFailureReason = 'Waiting for the signaling server.';
             if (this.peer.disconnected) this.scheduleSignalingReconnect();
             this.scheduleReconnect();
             return;
@@ -1032,6 +1088,15 @@ export class WebRTCTransport implements ClientTransportInterface {
         this.connecting = true;
         this.reconnectAttempts++;
         console.log(`Reconnection attempt #${this.reconnectAttempts} to Host Room ${this.roomId}...`);
+        const initialJoin = !!(this.pendingConnectCb && !this.hasEverConnected);
+        this.setStatus({
+            phase: 'connecting',
+            attempt: initialJoin ? this.joinAttempts + 1 : this.reconnectAttempts,
+            maxAttempts: initialJoin ? WebRTCTransport.MAX_JOIN_ATTEMPTS + 1 : undefined,
+            nextRetryAt: undefined,
+            lastError: this.lastFailureReason,
+            reconnecting: this.hasEverConnected
+        });
 
         if (this.hostConnection) {
             // Detach first: closing fires the old connection's 'close' handler, which must
@@ -1062,6 +1127,8 @@ export class WebRTCTransport implements ClientTransportInterface {
             this.joinAttempts = 0;
             this.lastHostSeen = Date.now();
             this.reconnectAttempts = 0;
+            this.lastFailureReason = undefined;
+            this.setStatus({ phase: 'connected', nextRetryAt: undefined, lastError: undefined });
 
             if (this.reconnectTimeout) {
                 clearTimeout(this.reconnectTimeout);
@@ -1093,6 +1160,7 @@ export class WebRTCTransport implements ClientTransportInterface {
         conn.on('close', () => {
             if (this.hostConnection !== conn) return; // A superseded connection; ignore.
             console.warn('WebRTC reconnection closed.');
+            this.lastFailureReason = 'The connection to the host was closed.';
             this.connecting = false;
             this.markHostDisconnected();
             this.isReconnecting = false;
@@ -1102,6 +1170,7 @@ export class WebRTCTransport implements ClientTransportInterface {
         conn.on('error', (err: any) => {
             console.error('WebRTC reconnection error:', err);
             if (this.hostConnection !== conn) return;
+            this.lastFailureReason = 'The connection to the host failed.';
             this.connecting = false;
             this.markHostDisconnected();
             this.isReconnecting = false;
@@ -1132,6 +1201,7 @@ export class WebRTCTransport implements ClientTransportInterface {
         this.clearConnectTimeout();
         this.connecting = false;
         this.isReconnecting = false;
+        this.setStatus({ phase: 'failed', nextRetryAt: undefined, lastError: this.lastFailureReason || message });
 
         const cb = this.pendingConnectCb;
         this.pendingConnectCb = null;
@@ -1155,6 +1225,7 @@ export class WebRTCTransport implements ClientTransportInterface {
         const initCb = this.initialCallback;
         this.initialCallback = undefined;
         if (initCb) {
+            this.setStatus({ phase: 'failed', nextRetryAt: undefined, lastError: message });
             returnError(initCb, message);
         } else {
             this.failJoin(message);
@@ -1178,10 +1249,243 @@ export class WebRTCTransport implements ClientTransportInterface {
         const delay = backoff + jitter;
 
         console.log(`Scheduling reconnect in ${delay}ms.`);
+        this.setStatus({
+            phase: 'waiting-retry',
+            nextRetryAt: Date.now() + delay,
+            lastError: this.lastFailureReason
+        });
         this.reconnectTimeout = setTimeout(() => {
             this.reconnectTimeout = null;
             this.attemptReconnectToHost();
         }, delay);
+    }
+
+    /**
+     * Subscribe to client connection progress (attempts, retries, failures). The listener
+     * is called immediately with the current status. Returns an unsubscribe function.
+     */
+    public onStatusChange(listener: (status: ConnectionStatus) => void): () => void {
+        this.statusListeners.push(listener);
+        try {
+            listener({ ...this.status });
+        } catch (e) {
+            console.error('Connection status listener failed:', e);
+        }
+        return () => {
+            this.statusListeners = this.statusListeners.filter((l) => l !== listener);
+        };
+    }
+
+    public getStatus(): ConnectionStatus {
+        return { ...this.status };
+    }
+
+    private setStatus(patch: Partial<ConnectionStatus>) {
+        this.status = { ...this.status, ...patch };
+        const snapshot = { ...this.status };
+        this.statusListeners.forEach((listener) => {
+            try {
+                listener(snapshot);
+            } catch (e) {
+                console.error('Connection status listener failed:', e);
+            }
+        });
+    }
+
+    /** TURN servers from the ICE config, one entry per URL (credentials kept internal). */
+    private getTurnServers(): TurnServerEntry[] {
+        const result: TurnServerEntry[] = [];
+        (this.options.iceServers || []).forEach((server: any) => {
+            const urls: string[] = Array.isArray(server.urls) ? server.urls : [server.urls];
+            urls.forEach((url) => {
+                if (typeof url === 'string' && /^turns?:/i.test(url)) {
+                    result.push({ url, username: server.username, credential: server.credential });
+                }
+            });
+        });
+        return result;
+    }
+
+    /**
+     * Check each configured TURN server by asking it for a relay allocation, with a
+     * relay-only ICE policy so nothing else can satisfy the check. Concurrent callers
+     * share one run.
+     */
+    public probeTurnServers(): Promise<TurnProbeResult[]> {
+        if (this.turnProbePromise) return this.turnProbePromise;
+        const servers = this.getTurnServers();
+        this.turnProbe = servers.map((s) => ({ url: s.url, status: 'checking' as const }));
+        this.turnProbePromise = Promise.all(servers.map((server, i) =>
+            this.probeTurnServer(server).then((result) => {
+                this.turnProbe[i] = result;
+                return result;
+            })
+        )).then((results) => {
+            this.turnProbeAt = Date.now();
+            this.turnProbePromise = null;
+            return results;
+        });
+        return this.turnProbePromise;
+    }
+
+    private probeTurnServer(server: TurnServerEntry): Promise<TurnProbeResult> {
+        return new Promise((resolve) => {
+            const started = Date.now();
+            let pc: RTCPeerConnection;
+            try {
+                pc = new RTCPeerConnection({
+                    iceServers: [{ urls: server.url, username: server.username, credential: server.credential }],
+                    iceTransportPolicy: 'relay'
+                });
+            } catch (e) {
+                resolve({ url: server.url, status: 'failed', error: 'Invalid TURN configuration', checkedAt: Date.now() });
+                return;
+            }
+
+            let done = false;
+            let lastError: string | undefined;
+            const finish = (result: Partial<TurnProbeResult>) => {
+                if (done) return;
+                done = true;
+                clearTimeout(timer);
+                try {
+                    pc.close();
+                } catch (e) {
+                    // Ignore
+                }
+                resolve({ url: server.url, status: 'failed', ...result, checkedAt: Date.now() } as TurnProbeResult);
+            };
+            const timer = setTimeout(() => {
+                finish({ status: 'failed', error: lastError || 'No response from the TURN server' });
+            }, WebRTCTransport.TURN_PROBE_TIMEOUT_MS);
+
+            pc.onicecandidate = (event) => {
+                const candidate = event.candidate && event.candidate.candidate;
+                if (candidate && / typ relay /.test(candidate)) {
+                    const parts = candidate.split(' ');
+                    finish({
+                        status: 'ok',
+                        allocationMs: Date.now() - started,
+                        relayAddress: parts[4] + ':' + parts[5]
+                    });
+                } else if (!event.candidate) {
+                    finish({ status: 'failed', error: lastError || 'No relay address was allocated' });
+                }
+            };
+            (pc as any).onicecandidateerror = (event: any) => {
+                lastError = describeIceError(event.errorCode, event.errorText);
+            };
+
+            pc.createDataChannel('turn-probe');
+            pc.createOffer()
+                .then((offer) => pc.setLocalDescription(offer))
+                .catch((err) => finish({ status: 'failed', error: String(err && err.message || err) }));
+        });
+    }
+
+    /** Route, protocol and RTT of a data connection, from its selected ICE candidate pair. */
+    private async getLinkDiagnostics(conn: any, peerId: string, lastSeen: number): Promise<PeerLinkDiagnostics> {
+        const link: PeerLinkDiagnostics = {
+            peerId,
+            open: !!(conn && conn.open),
+            route: 'unknown',
+            lastSeenMsAgo: lastSeen ? Date.now() - lastSeen : undefined
+        };
+        const pc: RTCPeerConnection = conn && conn.peerConnection;
+        if (!pc || typeof pc.getStats !== 'function') return link;
+
+        try {
+            const stats = await pc.getStats();
+            let pair: any = null;
+            stats.forEach((s: any) => {
+                if (!pair && s.type === 'transport' && s.selectedCandidatePairId) {
+                    pair = stats.get(s.selectedCandidatePairId);
+                }
+            });
+            if (!pair) {
+                // Firefox flags the pair as selected; Safari may only mark it nominated.
+                stats.forEach((s: any) => {
+                    if (!pair && s.type === 'candidate-pair' &&
+                        (s.selected || (s.nominated && s.state === 'succeeded'))) {
+                        pair = s;
+                    }
+                });
+            }
+            if (!pair) return link;
+
+            const local: any = stats.get(pair.localCandidateId) || {};
+            const remote: any = stats.get(pair.remoteCandidateId) || {};
+            link.localCandidateType = local.candidateType;
+            link.remoteCandidateType = remote.candidateType;
+            if (typeof pair.currentRoundTripTime === 'number') {
+                link.rttMs = Math.round(pair.currentRoundTripTime * 1000);
+            }
+
+            const localRelay = local.candidateType === 'relay';
+            const remoteRelay = remote.candidateType === 'relay';
+            if (localRelay || remoteRelay) {
+                link.route = 'relay';
+                link.relayedBy = localRelay && remoteRelay ? 'both' : (localRelay ? 'this-device' : 'peer');
+                if (localRelay) {
+                    // e.g. 'turn:host:3478?transport=udp' -> 'host:3478' (protocol is reported separately).
+                    link.relayServer = typeof local.url === 'string'
+                        ? local.url.replace(/^turns?:/i, '').split('?')[0]
+                        : undefined;
+                    link.protocol = local.relayProtocol || local.protocol;
+                } else {
+                    link.protocol = local.protocol;
+                }
+            } else {
+                link.route = local.candidateType === 'host' && remote.candidateType === 'host' ? 'lan' : 'direct';
+                link.protocol = local.protocol;
+            }
+        } catch (e) {
+            // Stats unavailable; report what we know.
+        }
+        return link;
+    }
+
+    /** Snapshot of signaling, TURN reachability and data-link routing for the status views. */
+    public async getDiagnostics(): Promise<NetworkDiagnostics> {
+        const isHost = this.session ? this.session.isHost() : false;
+        const turnServers = this.getTurnServers();
+
+        // Kick off (or refresh) the TURN probe in the background; callers poll.
+        if (turnServers.length > 0 && !this.turnProbePromise &&
+            Date.now() - this.turnProbeAt > WebRTCTransport.TURN_PROBE_TTL_MS) {
+            this.probeTurnServers();
+        }
+
+        let signaling: NetworkDiagnostics['signaling'] = 'connecting';
+        if (!this.peer || this.peer.destroyed || this.peer.disconnected) {
+            signaling = 'disconnected';
+        } else if (this.peer.open) {
+            signaling = 'connected';
+        }
+
+        const diagnostics: NetworkDiagnostics = {
+            role: isHost ? 'host' : 'client',
+            peerId: this.clientId,
+            signaling,
+            turnConfigured: turnServers.length > 0,
+            turn: this.turnProbe.map((r) => ({ ...r }))
+        };
+
+        if (isHost) {
+            const clients: { [clientId: string]: PeerLinkDiagnostics } = {};
+            await Promise.all(Object.keys(this.connections).map(async (clientId) => {
+                const conn = this.connections[clientId];
+                clients[clientId] = await this.getLinkDiagnostics(conn, clientId, conn && conn.__mpLastSeen);
+            }));
+            diagnostics.clients = clients;
+        } else {
+            diagnostics.host = this.hostConnection
+                ? await this.getLinkDiagnostics(this.hostConnection, this.roomId, this.lastHostSeen)
+                : { peerId: this.roomId, open: false, route: 'unknown' };
+            diagnostics.host.open = this.isHostLinkAlive();
+            diagnostics.status = { ...this.status };
+        }
+        return diagnostics;
     }
 
     public isConnected(): boolean {

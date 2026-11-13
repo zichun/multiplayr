@@ -30,7 +30,21 @@ export interface Setup {
     guessAfter: number[];
     /** 2-player variant: size of the robot teacher's classroom (a hand nobody plays). */
     robot?: number;
+    /** 2-player variant: the robot introduces its class with a random word (worth 1 or 2) before the
+     *  players' introductions (0) and again at the start of these rounds. Set from the host's
+     *  "robot intros" lobby option (see robotCluesFor). */
+    robotClues?: number[];
 }
+
+/** How many times the robot introduces its class (2-player variant). Host option in the lobby. */
+export const ROBOT_INTROS_DEFAULT = 2;
+export const ROBOT_INTROS_MAX = 4;
+export const clampRobotIntros = (v: any) => {
+    const n = Math.round(Number(v));
+    return Number.isFinite(n) ? Math.max(0, Math.min(ROBOT_INTROS_MAX, n)) : ROBOT_INTROS_DEFAULT;
+};
+/** Intro rounds for `n` robot intros: before the players (0), then the start of rounds 1, 2, … */
+export const robotCluesFor = (n: number) => Array.from({ length: clampRobotIntros(n) }, (_, i) => i);
 
 /** Seat id of the robot teacher's classroom in the 2-player variant. */
 export const ROBOT_ID = '__robot';
@@ -38,7 +52,7 @@ export const ROBOT_NAME = 'Robo-teacher';
 
 /** 3–5 from the rulebook; 2 and 6 are house variants agreed with the user (see docs/hooky-design.md). */
 export const SETUPS: Record<number, Setup> = {
-    2: { hand: 7, playground: 4, rounds: 7, pgAtStart: 0, pgAfter: [1, 2, 3, 4], guessAfter: [5, 6, 7], robot: 5 },
+    2: { hand: 7, playground: 4, rounds: 7, pgAtStart: 0, pgAfter: [1, 2, 3, 4], guessAfter: [5, 6, 7], robot: 5, robotClues: [0, 1] },
     3: { hand: 7, playground: 2, rounds: 6, pgAtStart: 0, pgAfter: [1, 2], guessAfter: [4, 5, 6] },
     4: { hand: 5, playground: 3, rounds: 6, pgAtStart: 0, pgAfter: [1, 2, 3], guessAfter: [4, 5, 6] },
     5: { hand: 4, playground: 3, rounds: 6, pgAtStart: 0, pgAfter: [1, 2, 3], guessAfter: [4, 5, 6] },

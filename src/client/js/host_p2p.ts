@@ -6,6 +6,8 @@
 
 export {};
 
+import { getIceServersConfig } from './iceservers';
+
 import { iconToSvg } from '../lib/card-renderer/iconToSvg';
 
 /* eslint-disable no-var */
@@ -15,7 +17,6 @@ declare var _mprules;
 _mplib.MultiplayR.SetGameRules(_mprules.MPRULES);
 _mplib.MultiplayR.SetGamerulesPath('/gamerules/');
 
-declare var process: any;
 
 // Flat mid-century accents cycled across the game cards. `bg` is the bold banner
 // hue (and the watermark tone); `tint` is the same hue washed pale for the card
@@ -38,6 +39,21 @@ function accentFor(name: string) {
 }
 
 const RESUME_SESSION_KEY = 'mp-resume-session';
+
+// While a game is hosted the URL hash is a permalink to it, `#<ruleName>/<roomId>`,
+// so refreshing the host page drops straight back into that game instead of the
+// game browser.
+function permalinkHash(ruleName: string, roomId: string) {
+    return ruleName + '/' + encodeURIComponent(roomId);
+}
+
+function parsePermalink(hash: string): { ruleName: string, roomId: string } | null {
+    const match = /^#?([^/]+)\/(.+)$/.exec(hash || '');
+    if (!match) {
+        return null;
+    }
+    return { ruleName: decodeURIComponent(match[1]), roomId: decodeURIComponent(match[2]) };
+}
 
 function prettyRuleName(name: string) {
     return name.charAt(0).toUpperCase() + name.slice(1);
@@ -78,7 +94,11 @@ $(() => {
     const resumeSessionId = sessionStorage.getItem(RESUME_SESSION_KEY);
     sessionStorage.removeItem(RESUME_SESSION_KEY);
 
-    if (resumeSessionId && sessionStore) {
+    const permalink = resumeSessionId ? null : parsePermalink(location.hash);
+
+    if (permalink) {
+        resumeFromPermalink(permalink.ruleName, permalink.roomId);
+    } else if (resumeSessionId && sessionStore) {
         sessionStore.get(resumeSessionId).then((session) => {
             if (session) {
                 resumeSession(session);
@@ -91,6 +111,58 @@ $(() => {
         });
     } else {
         startFresh();
+    }
+
+    /**
+     * Page refreshed while hosting: resume the autosave for that room, or — if
+     * nothing was saved yet — host the same game again under the same room id so
+     * players' links keep working.
+     */
+    function resumeFromPermalink(ruleName: string, roomId: string) {
+        if (!_mprules.MPRULES[ruleName]) {
+            history.replaceState(null, '', location.pathname + location.search);
+            startFresh('"' + ruleName + '" is not available in this version of Multiplayr.');
+            return;
+        }
+
+        const lookup: Promise<any> = sessionStore ? sessionStore.get(roomId) : Promise.resolve(null);
+        lookup.catch((err) => {
+            console.error('Failed to read saved game', err);
+            return null;
+        }).then((session) => {
+            if (session && session.ruleName === ruleName) {
+                resumeSession(session);
+            } else {
+                hostInRoom(ruleName, roomId);
+            }
+        });
+    }
+
+    function hostInRoom(ruleName: string, roomId: string) {
+        const displayRoomId = roomId.startsWith('mp-') ? roomId.substring(3) : roomId;
+        $('#room-info').text('Starting ' + prettyRuleName(ruleName) + ' in room ' + displayRoomId + '…');
+        $('#saved-games, #mechanic-filter, #rules, #actions').hide();
+
+        transportOpts.customPeerId = roomId;
+        transport = new _mplib.WebRTCTransport(
+            transportOpts,
+            (data) => {
+                if (data && data.success === false) {
+                    showResumeFailure(data.message);
+                    return;
+                }
+                _mplib.messages.checkReturnMessage(data, 'clientId');
+                clientId = data.message;
+
+                const displayId = clientId.startsWith('mp-') ? clientId.substring(3) : clientId;
+                $('#room-info')
+                    .removeClass('connecting')
+                    .addClass('connected')
+                    .text('Host P2P is established. Room Code: ' + displayId);
+
+                hostGame(ruleName)();
+            }
+        );
     }
 
     function resumeSession(session: any) {
@@ -130,7 +202,7 @@ $(() => {
                 // Hide host setup UI, show game container, and set hash
                 $('#host-setup-ui').hide();
                 $('#game-container').show().empty();
-                location.hash = ruleName;
+                location.hash = permalinkHash(ruleName, roomId);
 
                 // Rehost the game using the saved state
                 _mplib.MultiplayR.ReHost(
@@ -580,7 +652,7 @@ $(() => {
             // Hide host setup UI, show game container, and set hash
             $('#host-setup-ui').hide();
             $('#game-container').show().empty();
-            location.hash = ruleName;
+            location.hash = permalinkHash(ruleName, clientId);
 
             // host game through WebRTCTransport
             _mplib.MultiplayR.Host(
@@ -599,40 +671,3 @@ $(() => {
     });
 });
 
-function getIceServersConfig() {
-    // Check Webpack injected DefinePlugin variables (from local .env file during build)
-    const envUrl = process.env.TURN_URL || '';
-    const envUsername = process.env.TURN_USERNAME || '';
-    const envCredential = process.env.TURN_CREDENTIAL || '';
-
-    if (envUrl) {
-        console.log('Using WebRTC credentials injected securely at build-time:', envUrl);
-        const servers = [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' }
-        ];
-
-        const stunUrl = envUrl.replace(/^turn:/i, 'stun:');
-        servers.push({
-            urls: stunUrl,
-            username: envUsername || undefined,
-            credential: envCredential || undefined
-        } as any);
-
-        servers.push({
-            urls: envUrl,
-            username: envUsername || undefined,
-            credential: envCredential || undefined
-        } as any);
-        return servers;
-    }
-
-    // Fallback default STUN configuration
-    console.log('Using default public STUN configurations.');
-    return [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' }
-    ];
-}

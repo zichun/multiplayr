@@ -320,7 +320,7 @@ export const FocusGrid: React.FC<{
     const questionLabel = (q: LogEntry, cls: string) => (
         <div key={`q-${q.id}`} className={[cls, rowStatus(q.word!, q.count!, markOf)].join(' ')}
             title={`${by(q.by)}${q.unlisted ? ' (unlisted)' : ''}`}>
-            <span className="rd">{q.kind === 'clue' ? 'Hi' : `R${q.round}`}</span>
+            <span className="rd">{q.kind === 'clue' && q.round === 0 ? 'Hi' : `R${q.round}`}</span>
             <span className="w">{q.word}</span>
             <span className={['hk-mini-stamp', q.count === 0 ? 'zero' : ''].join(' ')}>{q.count}</span>
         </div>
@@ -464,7 +464,9 @@ export const LogEntryRow: React.FC<{
                 {e.kind === 'ask' && target && <Avatar p={target} size={big ? 30 : 22} />}
                 <span className="nm">
                     {e.kind === 'clue'
-                        ? <><b>{nm(by)}</b> introduced {by && by.id === my.me ? 'yourself' : 'themself'}</>
+                        ? (by && by.isRobot
+                            ? <><b>{nm(by)}</b> {e.round === 0 ? 'introduced its class' : 'gave a hint'}</>
+                            : <><b>{nm(by)}</b> introduced {by && by.id === my.me ? 'yourself' : 'themself'}</>)
                         : <><b>{nm(by)}</b> asked <b>{target && target.id === my.me ? 'you' : nm(target)}</b></>}
                     {e.unlisted && <span className="hk-unlisted" title="Not in the word list — the asker used it anyway">unlisted</span>}
                 </span>

@@ -11,10 +11,11 @@
  */
 
 import * as React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ViewPropsInterface } from '../../../common/interfaces';
 
 import {
-    LETTERS, STUDENTS, SETUPS, MIN_PLAYERS, MAX_PLAYERS, HOOKY_COUNT, WORD_LEN, EARLY_POINTS, FINAL_POINTS,
+    LETTERS, STUDENTS, SETUPS, ROBOT_INTROS_DEFAULT, ROBOT_INTROS_MAX, MIN_PLAYERS, MAX_PLAYERS, HOOKY_COUNT, WORD_LEN, EARLY_POINTS, FINAL_POINTS,
     normaliseWord, isListed, anagramKey, countIn, hookyPointsFor
 } from '../HookyData';
 import { Phase, Peek, HookyResult } from '../HookyGameState';
@@ -62,7 +63,8 @@ export const RulesView: React.FC = () => (
                 </tbody>
             </table>
             <p className="hk-muted">* House variants. <b>2 players:</b> a third classroom of {SETUPS[2].robot} students is run by
-                the <b>Robo-teacher</b>. It never takes a turn, but you can ask it questions, peek at it, and name its students at
+                the <b>Robo-teacher</b>. It never takes a turn, but it introduces its class with a random word (worth 1 or 2): by default once before you do and again at
+                the start of round 1 (the host can choose 0–{ROBOT_INTROS_MAX} intros in the lobby). You can ask it questions, peek at it, and name its students at
                 the end like anyone else&rsquo;s. <b>6 players:</b> 3 Playground cards start face up and the game is 5 rounds long.</p>
         </section>
         <section>
@@ -111,6 +113,29 @@ export const RulesView: React.FC = () => (
 // Lobby
 // ---------------------------------------------------------------------------
 
+/** 2-player option: how many times the robot introduces its class. Host picks; clients see it. */
+const RobotIntrosOption: React.FC<{ mp: any; host: boolean; value: number }> = ({ mp, host, value }) => {
+    const when = (n: number) => n === 0 ? 'never'
+        : n === 1 ? 'before your introductions'
+        : `before your introductions, then at the start of round${n > 2 ? `s 1–${n - 1}` : ' 1'}`;
+    return (
+        <div className="hk-lobby-opt">
+            <span className="lbl"><FontAwesomeIcon icon={"robot" as any} /> Robo-teacher intros</span>
+            {host
+                ? <div className="hk-seg">
+                    {Array.from({ length: ROBOT_INTROS_MAX + 1 }, (_, n) => (
+                        <button key={n} className={n === value ? 'on' : ''} onClick={() => mp.setOption('robotIntros', n)}
+                            title={n === ROBOT_INTROS_DEFAULT ? 'Recommended' : undefined}>
+                            {n}{n === ROBOT_INTROS_DEFAULT ? ' ★' : ''}
+                        </button>
+                    ))}
+                </div>
+                : <b>{value}</b>}
+            <span className="hk-muted small">A random word worth 1 or 2, {when(value)}.{value === ROBOT_INTROS_DEFAULT ? ' (recommended)' : ''}</span>
+        </div>
+    );
+};
+
 const LobbyBody: React.FC<{ mp: any; lobby?: HKLobbyInfo; host: boolean }> = ({ mp, lobby, host }) => {
     // playersCount() exists on the host only; clients count the roster the rule sends.
     const n = lobby ? lobby.players.length : (typeof mp.playersCount === 'function' ? mp.playersCount() + 1 : 0);
@@ -134,6 +159,7 @@ const LobbyBody: React.FC<{ mp: any; lobby?: HKLobbyInfo; host: boolean }> = ({ 
             {ok && s
                 ? <p className="hk-muted center">{n} players: {s.hand} cards each{s.robot ? `, ${s.robot} in the Robo-teacher's classroom` : ''}, {s.playground} on the Playground, {s.rounds} rounds.</p>
                 : <p className="hk-warn">{n} player{n > 1 ? 's' : ''} here. Hooky needs {MIN_PLAYERS} to {MAX_PLAYERS}.{host ? ' Starting now will do nothing.' : ''}</p>}
+            {ok && s && s.robot && lobby && <RobotIntrosOption mp={mp} host={host} value={lobby.robotIntros} />}
             {!host && <div className="hk-waiting"><Face letter="Z" size={44} sleepy /> Waiting for the host to ring the bell…</div>}
         </div>
     );

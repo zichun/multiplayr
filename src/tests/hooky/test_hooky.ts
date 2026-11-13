@@ -211,10 +211,52 @@ describe('Hooky', () => {
             assert.equal(d.setup.rounds, 7);
         });
 
-        it('the robot never takes a turn or introduces itself', () => {
+        const robotClues = (gs: HookyGameState) => gs.get_data().log.filter(e => e.kind === 'clue' && e.by === ROBOT_ID);
+        const playTo = (gs: HookyGameState, round: number) => {
+            giveClues(gs);
+            for (let r = 1; r <= round; r++) playRound(gs);
+        };
+
+        it('by default the robot introduces its class twice: before the players, then at round 1', () => {
+            const gs = two();
+            assert.deepEqual(robotClues(gs).map(e => e.round), [0]);
+            assert.equal(gs.get_data().log[0].by, ROBOT_ID, 'robot speaks before the players');
+            playTo(gs, 4);
+            const clues = robotClues(gs);
+            assert.deepEqual(clues.map(e => e.round), [0, 1]);
+            clues.forEach(e => {
+                assert.ok(e.count === 1 || e.count === 2, `${e.word} = ${e.count}`);
+                assert.equal(e.count, countIn(e.word!, gs.hand(ROBOT_ID)));
+                assert.ok(isListed(e.word!));
+            });
+            assert.notEqual(anagramKey(clues[0].word!), anagramKey(clues[1].word!));
+            assert.equal(two().get_data().log[0].word, clues[0].word, 'seeded: same game, same words');
+        });
+
+        it('the host can choose 0 to 4 robot intros', () => {
+            const make = (n: number) => { const gs = new HookyGameState(['a', 'b']); gs.start_game({ seed: 3, robotIntros: n }); return gs; };
+            const none = make(0);
+            playTo(none, 4);
+            assert.equal(robotClues(none).length, 0);
+            const four = make(4);
+            playTo(four, 4);
+            assert.deepEqual(robotClues(four).map(e => e.round), [0, 1, 2, 3]);
+            assert.equal(new Set(robotClues(four).map(e => anagramKey(e.word!))).size, 4, 'no repeated anagrams');
+            assert.deepEqual(make(99).setup().robotClues, [0, 1, 2, 3], 'clamped to 4');
+            assert.deepEqual(SETUPS[2].robotClues, [0, 1], 'shared setup untouched');
+        });
+
+        it('no robot intros in other player counts', () => {
+            const gs = fresh(['a', 'b', 'c'], 3);
+            giveClues(gs);
+            playRound(gs);
+            assert.equal(gs.get_data().log.filter(e => e.kind === 'clue').length, 3);
+        });
+
+        it('the robot never takes a turn', () => {
             const gs = two();
             giveClues(gs);
-            assert.equal(gs.get_data().log.filter(e => e.kind === 'clue').length, 2);
+            assert.equal(gs.get_data().log.filter(e => e.kind === 'clue' && e.by !== ROBOT_ID).length, 2);
             const seen = new Set<string>();
             for (let i = 0; i < 6; i++) { seen.add(gs.activeId()!); const id = gs.activeId()!; gs.ask(id, ROBOT_ID, freshWord(gs, ROBOT_ID)); if (gs.activeId() === id) gs.end_turn(id); }
             assert.ok(!seen.has(ROBOT_ID));
@@ -224,10 +266,11 @@ describe('Hooky', () => {
             const gs = two();
             giveClues(gs);
             const [p0] = gs.order();
-            gs.ask(p0, ROBOT_ID, 'PLANT');
+            const w = freshWord(gs, ROBOT_ID);
+            gs.ask(p0, ROBOT_ID, w);
             const e = gs.get_data().log[gs.get_data().log.length - 1];
             assert.equal(e.target, ROBOT_ID);
-            assert.equal(e.count, countIn('PLANT', gs.hand(ROBOT_ID)));
+            assert.equal(e.count, countIn(w, gs.hand(ROBOT_ID)));
             playRound(gs);                                   // finish round 1
             const p = gs.activeId()!;
             assert.ok(gs.peekTargets(p).indexOf(ROBOT_ID) !== -1);

@@ -15,11 +15,11 @@ import { GameRuleInterface, MPType } from '../../common/interfaces';
 import { HKHostLobby, HKClientLobby, HKMainPage } from './views/HookyViews';
 import {
     HKStartGame, HKRestartGame, HKBackToLobby, HKGiveClue, HKAsk, HKReveal, HKEndTurn, HKGuessHooky, HKSubmitFinal,
-    rehydrate, collectPlayers
+    HKSetOption, rehydrate, collectPlayers, robotIntrosOf
 } from './HookyMethods';
 import { Phase } from './HookyGameState';
 import { HKPublic, HKPrivate, HKPlayer, HKLobbyInfo } from './HookyTypes';
-import { ROBOT_ID, ROBOT_NAME } from './HookyData';
+import { ROBOT_ID, ROBOT_NAME, ROBOT_INTROS_DEFAULT } from './HookyData';
 
 function identity(mp: MPType, id: string, idx: number) {
     const read = (key: string) => id === mp.hostId ? mp.getData(key) : mp.getPlayerData(id, key);
@@ -42,13 +42,14 @@ export const HookyRule: GameRuleInterface = {
         'gameshell': Shell
     },
     globalData: {
-        gameState: null
+        gameState: null,
+        hk_robot_intros: ROBOT_INTROS_DEFAULT
     },
     playerData: {},
 
     onDataChange: (mp: MPType) => {
         const showLobby = () => {
-            const info: HKLobbyInfo = { players: collectPlayers(mp).map((id, i) => identity(mp, id, i)) };
+            const info: HKLobbyInfo = { players: collectPlayers(mp).map((id, i) => identity(mp, id, i)), robotIntros: robotIntrosOf(mp) };
             mp.setViewProps(mp.hostId, 'hkLobby', info);
             mp.playersForEach((clientId) => mp.setViewProps(clientId, 'hkLobby', info));
             mp.setView(mp.hostId, 'host-lobby');
@@ -136,6 +137,7 @@ export const HookyRule: GameRuleInterface = {
 
     methods: {
         'startGame': HKStartGame,
+        'setOption': HKSetOption,
         'restartGame': HKRestartGame,
         'backToLobby': HKBackToLobby,
         'giveClue': HKGiveClue,

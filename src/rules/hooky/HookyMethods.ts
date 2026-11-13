@@ -6,7 +6,7 @@
 
 import { MPType } from '../../common/interfaces';
 import { HookyGameState, GameStateData } from './HookyGameState';
-import { MIN_PLAYERS, MAX_PLAYERS } from './HookyData';
+import { MIN_PLAYERS, MAX_PLAYERS, ROBOT_INTROS_DEFAULT, clampRobotIntros } from './HookyData';
 
 export function rehydrate(raw: any): HookyGameState {
     return typeof raw.get_data === 'function'
@@ -39,9 +39,20 @@ function startFresh(mp: MPType) {
         throw new Error(`Hooky needs ${MIN_PLAYERS} to ${MAX_PLAYERS} players.`);
     }
     const gs = new HookyGameState(players);
-    gs.start_game();
+    gs.start_game({ robotIntros: robotIntrosOf(mp) });
     mp.setData('gameState', gs);
 }
+
+/** The host's "robot intros" lobby option (2-player games). */
+export const robotIntrosOf = (mp: MPType): number => {
+    const v = mp.getData('hk_robot_intros');
+    return v === null || v === undefined ? ROBOT_INTROS_DEFAULT : clampRobotIntros(v);
+};
+
+export const HKSetOption = (mp: MPType, clientId: string, key: string, value: any) => {
+    if (clientId !== mp.hostId) throw new Error('Only the host can change options');
+    if (key === 'robotIntros') mp.setData('hk_robot_intros', clampRobotIntros(value));
+};
 
 export const HKStartGame = (mp: MPType) => {
     startFresh(mp);

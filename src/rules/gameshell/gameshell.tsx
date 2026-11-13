@@ -21,6 +21,14 @@ import {
 import { forEach } from '../../common/utils';
 import { SaveFile, saveFileName } from '../../client/lib/savedsessions';
 import type { UndoHistoryEntry } from '../../client/lib/gameobject';
+import type { NetworkDiagnostics } from '../../common/interfaces';
+import {
+    ClientNetworkView,
+    DiagnosticsPoller,
+    NetworkPanel,
+    RouteBadge,
+    isElementVisible
+} from './NetworkStatus';
 
 export interface ToastNotification {
     id: string;
@@ -179,6 +187,16 @@ export const Shell: GameRuleInterface = {
                     };
                 }
 
+                if (!isHost && this.props.MP && this.props.MP.getNetworkDiagnostics && !links['shell-network']) {
+                    links['shell-network'] = {
+                        icon: 'wifi',
+                        label: 'Network',
+                        view: React.createElement(ClientNetworkView, {
+                            MP: this.props.MP
+                        })
+                    };
+                }
+
                 const header = React.createElement(
                     Shell.views['HostShell-Main-Head'],
                     {
@@ -277,7 +295,7 @@ export const Shell: GameRuleInterface = {
                 forEach(
                     this.props.links,
                     (linkName: string, linkObj: any) => {
-                        if (linkName === 'shell-clients') return;
+                        if (linkName === 'shell-clients' || linkName === 'shell-network') return;
 
                         let className = 'icon';
 
@@ -305,6 +323,8 @@ export const Shell: GameRuleInterface = {
                                                  'shell-main-panel';
                 const info = this.props.MP && this.props.MP.getConnectionInfo ? this.props.MP.getConnectionInfo() : { isHost: false };
                 const isHost = info.isHost;
+                const statusView = isHost ? 'shell-clients'
+                    : (this.props.links && this.props.links['shell-network'] ? 'shell-network' : null);
 
                 return (
                     <div className={ pannelExtensionClassName }>
@@ -318,9 +338,10 @@ export const Shell: GameRuleInterface = {
                         { icons }
 
                         <div className="shell-status-container" 
-                             onClick={ isHost ? this.props.setView.bind(this, 'shell-clients') : undefined }
-                             style={{ cursor: isHost ? 'pointer' : 'help' }}>
-                            <span className={`shell-status-dot ${this.state.status}`} title={this.state.tooltip}></span>
+                             onClick={ statusView ? this.props.setView.bind(this, statusView) : undefined }
+                             style={{ cursor: statusView ? 'pointer' : 'help' }}
+                             title={ statusView ? this.state.tooltip + ' (click for network details)' : this.state.tooltip }>
+                            <span className={`shell-status-dot ${this.state.status}`}></span>
                         </div>
                     </div>
                 );
@@ -489,16 +510,45 @@ export const Shell: GameRuleInterface = {
                 copiedClientId: string | null,
                 pending: { [clientId: string]: 'disconnect' | 'remove' },
                 errors: { [clientId: string]: string },
-                saveError: string | null
+                saveError: string | null,
+                diagnostics: NetworkDiagnostics | null,
+                diagnosticsSupported: boolean,
+                retestingTurn: boolean
             }
         > {
             // Fallback timers keyed by clientId, in case an action never resolves.
             private pendingTimers: { [clientId: string]: any } = {};
+            private rootRef = React.createRef<HTMLDivElement>();
+            private diagnosticsPoller: DiagnosticsPoller;
 
             constructor(props: any) {
                 super(props);
-                this.state = { copied: false, copiedClientId: null, pending: {}, errors: {}, saveError: null };
+                this.state = {
+                    copied: false, copiedClientId: null, pending: {}, errors: {}, saveError: null,
+                    diagnostics: null, diagnosticsSupported: true, retestingTurn: false
+                };
                 this.copyRoomId = this.copyRoomId.bind(this);
+                this.diagnosticsPoller = new DiagnosticsPoller(
+                    () => this.props.MP,
+                    () => isElementVisible(this.rootRef.current),
+                    (diagnostics, supported) => this.setState({ diagnostics, diagnosticsSupported: supported })
+                );
+            }
+
+            public componentDidMount() {
+                this.diagnosticsPoller.start();
+            }
+
+            private retestTurn() {
+                const mp = this.props.MP;
+                const pending = mp && mp.retestTurnServers ? mp.retestTurnServers() : null;
+                if (!pending) return;
+                this.setState({ retestingTurn: true });
+                this.diagnosticsPoller.tick();
+                pending.then(() => {
+                    this.setState({ retestingTurn: false });
+                    this.diagnosticsPoller.tick();
+                }, () => this.setState({ retestingTurn: false }));
             }
 
             public componentDidUpdate() {
@@ -510,6 +560,7 @@ export const Shell: GameRuleInterface = {
             public componentWillUnmount() {
                 Object.keys(this.pendingTimers).forEach((id) => clearTimeout(this.pendingTimers[id]));
                 this.pendingTimers = {};
+                this.diagnosticsPoller.stop();
             }
 
             // Clear a pending action once the world reflects it: a disconnected client
@@ -880,6 +931,9 @@ export const Shell: GameRuleInterface = {
                                     <span className="status-dot"></span>
                                     {isConnected ? 'Active' : 'Offline'}
                                 </span>
+                                {clientId !== mp.hostId && isConnected && this.state.diagnostics && this.state.diagnostics.clients ? (
+                                    <RouteBadge link={this.state.diagnostics.clients[clientId]} viewer="host" />
+                                ) : null}
                             </div>
 
                             <div className="player-card-actions">
@@ -949,7 +1003,7 @@ export const Shell: GameRuleInterface = {
                 }
 
                 return (
-                    <div className="lobby-roommanagement-container">
+                    <div className="lobby-roommanagement-container" ref={this.rootRef}>
                         <div className="lobby-roommanagement-header">
                             <h2 className="lobby-roommanagement-title">
                                 <FontAwesomeIcon icon="users" style={{ marginRight: '10px', color: '#3498db' }} />
@@ -996,6 +1050,13 @@ export const Shell: GameRuleInterface = {
                                 </div>
                             )}
                         </div>
+
+                        <NetworkPanel
+                            diagnostics={this.state.diagnostics}
+                            supported={this.state.diagnosticsSupported}
+                            retesting={this.state.retestingTurn}
+                            onRetest={() => this.retestTurn()}
+                        />
 
                         {this.renderUndoSection(playersInfo)}
                     </div>

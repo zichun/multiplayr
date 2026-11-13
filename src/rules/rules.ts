@@ -489,6 +489,33 @@ export const MPRULES = {
         minPlayers: 2,
         maxPlayers: 5
     },
+    'schadenfreude': {
+        description: 'Seconds, Please! - Second-Highest-Wins Trick-Taking (Schadenfreude rules)',
+        mechanics: ['Trick-Taking', 'Push Your Luck'],
+        complexity: 'low',
+        glyph: GAME_ICONS.schadenfreude,
+        enabled: true,
+        rules: ['lobby', 'gameshell', 'schadenfreude'],
+        rule: () => import('./schadenfreude/schadenfreude').then(m => m.SchadenfreudeRule),
+        icon: '🧁',
+        minPlayers: 3,
+        maxPlayers: 5
+    },
+    'schadenfreude-debug': {
+        description: 'Seconds, Please! (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'schadenfreude', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./schadenfreude/schadenfreude')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('schadenfreude', orig.SchadenfreudeRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🧁',
+        minPlayers: 3,
+        maxPlayers: 5
+    },
     'splendorduel-debug': {
         description: 'Splendor Duel (Debug)',
         debug: true,
@@ -962,6 +989,60 @@ export const MPRULES = {
         icon: '🔔',
         minPlayers: 2,
         maxPlayers: 6
+    },
+    'critterkitchen': {
+        description: 'Critter Kitchen - Simultaneous Shopping & Cooking',
+        mechanics: ['Simultaneous Action', 'Drafting', 'Set Collection'],
+        complexity: 'medium',
+        glyph: GAME_ICONS.critterkitchen,
+        enabled: true,
+        rules: ['lobby', 'gameshell', 'critterkitchen'],
+        rule: () => import('./critterkitchen/critterkitchen').then(m => m.CritterKitchenRule),
+        icon: '🍲',
+        minPlayers: 2,
+        maxPlayers: 5
+    },
+    'critterkitchen-debug': {
+        description: 'Critter Kitchen (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'critterkitchen', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./critterkitchen/critterkitchen')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('critterkitchen', orig.CritterKitchenRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🍲',
+        minPlayers: 2,
+        maxPlayers: 5
+    },
+    'decorum': {
+        description: 'Décorum - Cooperative Home Decorating with Secret Wants',
+        mechanics: ['Cooperative', 'Hidden Information', 'Deduction'],
+        complexity: 'medium',
+        glyph: GAME_ICONS.decorum,
+        enabled: true,
+        rules: ['lobby', 'gameshell', 'decorum'],
+        rule: () => import('./decorum/decorum').then(m => m.DecorumRule),
+        icon: '🛋️',
+        minPlayers: 2,
+        maxPlayers: 4
+    },
+    'decorum-debug': {
+        description: 'Décorum (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'decorum', 'debugger'],
+        rule: () => Promise.all([
+            import('./debugger/debugger'),
+            import('./decorum/decorum')
+        ]).then(([dbg, orig]) => dbg.NewDebuggerRule('decorum', orig.DecorumRule, {
+            HistoryBufferSize: 10,
+            HistoryInSessionStorage: true
+        })),
+        icon: '🛋️',
+        minPlayers: 2,
+        maxPlayers: 4
     }
 };
 

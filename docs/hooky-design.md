@@ -83,7 +83,12 @@ Start player is random and fixed for the whole game; turn order clockwise.
 ## 2-player variant (added 2026-11-06, user spec)
 - 7 rounds; Hooky 3; Playground 4 (one turned up after each of rounds 1–4); each player holds 7.
 - A third classroom of 5 students is run by the **Robo-teacher** (seat id `__robot`). It never takes a
-  turn, gives no introduction, never reveals and never guesses. Players can ask it questions and peek at it.
+  turn, never reveals and never guesses. Players can ask it questions and peek at it.
+- Robot intros (user spec, 2026-11-06, revised 2026-11-09): the robot introduces its class with a random listed
+  word worth 1 or 2 before the players' introductions, then at the start of rounds 1, 2, … The count is a host
+  lobby option, 0–4, default and recommended **2** (before the players + round 1). Stored as `hk_robot_intros`,
+  passed to `start_game({ robotIntros })`, which writes `setup.robotClues` into that game's data.
+  Words are drawn with the seeded RNG and never repeat an anagram already put to the robot.
 - Claude's choices (the spec didn't say): Hooky guesses come after rounds 5, 6 and 7 (the last three rounds,
   as in other player counts). The final guess includes naming the robot's 5 students, scored like a player
-  hand (1 each, +1 if exact). The robot doesn't introduce itself.
+  hand (1 each, +1 if exact).

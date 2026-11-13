@@ -25,6 +25,7 @@ import { JaipurRule } from './jaipur/jaipur';
 import { SplendorDuelRule } from './splendorduel/splendorduel';
 import { SplendorRule } from './splendor/splendor';
 import { CatInTheBoxRule } from './catinthebox/catinthebox';
+import { SchadenfreudeRule } from './schadenfreude/schadenfreude';
 import { TrioRule } from './trio/trio';
 import { SeaSaltRule } from './seasalt/seasalt';
 import { RegicideRule } from './regicide/regicide';
@@ -42,6 +43,8 @@ import { QuacksRule } from './quacks/quacks';
 import { ParksRule } from './parks/parks';
 import { JibberJabbleRule } from './jibberjabble/jibberjabble';
 import { HookyRule } from './hooky/hooky';
+import { CritterKitchenRule } from './critterkitchen/critterkitchen';
+import { DecorumRule } from './decorum/decorum';
 
 
 const CoupDebugger = NewDebuggerRule(
@@ -183,6 +186,14 @@ const SplendorDebugger = NewDebuggerRule(
 const CatInTheBoxDebugger = NewDebuggerRule(
     'catinthebox',
     CatInTheBoxRule,
+    {
+        HistoryBufferSize: 10,
+        HistoryInSessionStorage: true
+    });
+
+const SchadenfreudeDebugger = NewDebuggerRule(
+    'schadenfreude',
+    SchadenfreudeRule,
     {
         HistoryBufferSize: 10,
         HistoryInSessionStorage: true
@@ -575,6 +586,23 @@ export const MPRULES = {
         minPlayers: 2,
         maxPlayers: 5
     },
+    'schadenfreude': {
+        description: 'Seconds, Please! - Second-Highest-Wins Trick-Taking (Schadenfreude rules)',
+        rules: ['lobby', 'gameshell', 'schadenfreude'],
+        rule: SchadenfreudeRule,
+        icon: '🧁',
+        minPlayers: 3,
+        maxPlayers: 5
+    },
+    'schadenfreude-debug': {
+        description: 'Seconds, Please! (Debug)',
+        debug: true,
+        rules: ['lobby', 'gameshell', 'schadenfreude', 'debugger'],
+        rule: SchadenfreudeDebugger,
+        icon: '🧁',
+        minPlayers: 3,
+        maxPlayers: 5
+    },
     'trio': {
         description: 'Trio - Memory & Deduction Number Game',
         rules: ['lobby', 'gameshell', 'trio'],
@@ -782,6 +810,22 @@ export const MPRULES = {
         icon: '🔔',
         minPlayers: 2,
         maxPlayers: 6
+    },
+    'critterkitchen': {
+        description: 'Critter Kitchen - Simultaneous Shopping & Cooking',
+        rules: ['lobby', 'gameshell', 'critterkitchen'],
+        rule: CritterKitchenRule,
+        icon: '🍲',
+        minPlayers: 2,
+        maxPlayers: 5
+    },
+    'decorum': {
+        description: 'Décorum - Cooperative Home Decorating with Secret Wants',
+        rules: ['lobby', 'gameshell', 'decorum'],
+        rule: DecorumRule,
+        icon: '🛋️',
+        minPlayers: 2,
+        maxPlayers: 4
     }
 };
 

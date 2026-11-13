@@ -62,4 +62,6 @@ export interface HKViewProps extends ViewPropsInterface {
 
 export interface HKLobbyInfo {
     players: { id: string; name: string; accent: string; icon: number }[];
+    /** Host option: how many times the robot introduces its class (2-player games). */
+    robotIntros: number;
 }

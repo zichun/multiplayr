@@ -10,6 +10,8 @@
  *
  * Clue  : each player in turn gives one 5-letter word holding ≥1 of their own
  *         letters; the count of their own letters in it is published.
+ *         2-player variant: the robot teacher goes first with a random word worth 1 or 2,
+ *         and says another at the start of each round in `setup.robotClues`.
  * Ask   : the active player asks one opponent one word (count is public). From
  *         round 2 they may also, once per turn, before or after asking, reveal one
  *         of their own hidden cards and then peek at a random hidden card of a
@@ -21,8 +23,12 @@
 
 import {
     LETTERS, SETUPS, Setup, HOOKY_COUNT, MIN_PLAYERS, MAX_PLAYERS, WORD_LEN, ROBOT_ID,
-    normaliseWord, isWellFormed, isListed, anagramKey, countIn, hookyPointsFor
+    normaliseWord, isWellFormed, isListed, anagramKey, countIn, hookyPointsFor, wordSet, robotCluesFor
 } from './HookyData';
+
+/** Words the robot teacher may say, in a fixed order so seeded games replay exactly. */
+let ROBOT_WORDS: string[] | null = null;
+const robotWords = () => (ROBOT_WORDS = ROBOT_WORDS || Array.from(wordSet()).sort());
 
 export enum Phase {
     Clue = 'clue',
@@ -87,7 +93,11 @@ export interface GameStateData {
     nextId: number;
 }
 
-export interface Options { seed?: number; }
+export interface Options {
+    seed?: number;
+    /** 2-player variant: how many times the robot introduces its class (default from SETUPS[2]). */
+    robotIntros?: number;
+}
 
 // ---------------------------------------------------------------------------
 // Seeded RNG (mulberry32) — state lives in the data so replays are exact.
@@ -137,7 +147,8 @@ export class HookyGameState {
         const n = this.playerIds.length;
         if (n < MIN_PLAYERS || n > MAX_PLAYERS) throw new Error(`Hooky needs ${MIN_PLAYERS} to ${MAX_PLAYERS} players`);
         const seed = opts.seed ?? Math.floor(Math.random() * 2 ** 31);
-        const setup = SETUPS[n];
+        const setup: Setup = { ...SETUPS[n] };
+        if (setup.robot && opts.robotIntros !== undefined) setup.robotClues = robotCluesFor(opts.robotIntros);
         const d: GameStateData = {
             gameId: seed,
             rngState: seed | 0,
@@ -172,7 +183,7 @@ export class HookyGameState {
         }
         if (setup.robot) {
             // 2-player variant: a third classroom run by the robot teacher. It never takes a
-            // turn, introduces itself, reveals or guesses; it only answers and can be peeked at.
+            // turn, reveals or guesses; it answers, can be peeked at, and gives automatic intros.
             d.hands[ROBOT_ID] = sorted(deck.splice(0, setup.robot));
             d.revealed[ROBOT_ID] = [];
         }
@@ -180,6 +191,7 @@ export class HookyGameState {
         d.hooky = sorted(deck.splice(0, HOOKY_COUNT));
         if (deck.length !== 0) throw new Error('Deal did not use all 26 cards');
         for (let i = 0; i < setup.pgAtStart; i++) this.showPlayground();
+        this.robotClue();
     }
 
     // ------------------------------------------------------------------
@@ -374,6 +386,22 @@ export class HookyGameState {
         d.turnIdx = 0;
         d.turn = { asked: false, revealed: false };
         d.phase = Phase.Ask;
+        this.robotClue();
+    }
+
+    /** 2-player variant: the robot introduces its class with a random unused word worth 1 or 2. */
+    private robotClue() {
+        const d = this.data;
+        if (!d.hands[ROBOT_ID] || (d.setup.robotClues || []).indexOf(d.round) === -1) return;
+        const hand = d.hands[ROBOT_ID];
+        const used = this.usedKeys(ROBOT_ID);
+        const pool = robotWords().filter(w => {
+            const n = countIn(w, hand);
+            return (n === 1 || n === 2) && !used.has(anagramKey(w));
+        });
+        if (!pool.length) return;
+        const word = pool[Math.floor(nextRandom(d) * pool.length)];
+        this.push({ kind: 'clue', round: d.round, by: ROBOT_ID, target: ROBOT_ID, word, count: countIn(word, hand), unlisted: false, letter: null });
     }
 
     private showPlayground() {

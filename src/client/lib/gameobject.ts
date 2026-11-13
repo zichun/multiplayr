@@ -448,6 +448,29 @@ export class GameObject {
         }
     }
 
+    /**
+     * Detailed network diagnostics from the root session's transport, or null when the
+     * transport does not provide them (e.g. socket.io / local transports).
+     */
+    public getNetworkDiagnostics(): Promise<any> | null {
+        const rootSession = this.getRootSession();
+        const transport: any = rootSession ? rootSession.getTransport() : null;
+        if (!transport || typeof transport.getDiagnostics !== 'function') {
+            return null;
+        }
+        return transport.getDiagnostics();
+    }
+
+    /** Re-run the TURN reachability probe, or null when unsupported. */
+    public retestTurnServers(): Promise<any> | null {
+        const rootSession = this.getRootSession();
+        const transport: any = rootSession ? rootSession.getTransport() : null;
+        if (!transport || typeof transport.probeTurnServers !== 'function') {
+            return null;
+        }
+        return transport.probeTurnServers();
+    }
+
     public getConnectionInfo() {
         const rootSession = this.getRootSession();
         const transport = rootSession ? rootSession.getTransport() : null;
@@ -1634,6 +1657,8 @@ export class GameObject {
             ruleName: gameObj.rule ? gameObj.rule.name : '',
             hostAsPlayer: gameObj.rule ? !!gameObj.rule.hostAsPlayer : false,
             getConnectionInfo: () => gameObj.getConnectionInfo(),
+            getNetworkDiagnostics: () => gameObj.getNetworkDiagnostics(),
+            retestTurnServers: () => gameObj.retestTurnServers(),
             hasAncestorPlugin: (pluginName: string) => gameObj.hasAncestorPlugin(pluginName),
             getPlayers: hostExposedMethodWrapper('getPlayers')
         };
